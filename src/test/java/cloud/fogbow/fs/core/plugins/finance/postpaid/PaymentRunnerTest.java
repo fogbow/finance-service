@@ -12,6 +12,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import cloud.fogbow.accs.api.http.response.Record;
+import cloud.fogbow.common.exceptions.FogbowException;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
@@ -51,7 +52,7 @@ public class PaymentRunnerTest {
 	
 	// TODO documentation
 	@Test
-	public void testRunIsBillingTime() {
+	public void testRunIsBillingTime() throws FogbowException {
 		//
 		// Setting up mocks
 		//
@@ -100,7 +101,7 @@ public class PaymentRunnerTest {
 	
 	// TODO documentation
 	@Test
-	public void testRunNotBillingTime() {
+	public void testRunNotBillingTime() throws FogbowException {
 		//
 		// Setting up mocks
 		//
@@ -159,7 +160,7 @@ public class PaymentRunnerTest {
 		userList.add(user2);
 	}
 
-	private void setUpAccounting() {
+	private void setUpAccounting() throws FogbowException {
 		this.userRecords = new ArrayList<Record>();
 		this.record1 = new Record(RECORD_ID_1, null, null, null, null, null, null, null, null, 0, null);
 		this.record2 = new Record(RECORD_ID_2, null, null, null, null, null, null, null, null, 0, null);

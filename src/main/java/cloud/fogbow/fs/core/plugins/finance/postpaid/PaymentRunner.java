@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.List;
 
 import cloud.fogbow.accs.api.http.response.Record;
+import cloud.fogbow.common.exceptions.FogbowException;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
@@ -58,15 +59,20 @@ public class PaymentRunner extends StoppableRunner {
 			long billingTime = this.timeUtils.getCurrentTimeMillis(); 
 			if ((billingTime - getUserLastBillingTime(user) >= getUserBillingInterval(user))) {
 				// get records
-				List<Record> userRecords = this.accountingServiceClient.getUserRecords(user.getId(), user.getProvider(),
-						toDate(getUserLastBillingTime(user)), toDate(billingTime));
-
-				// write records on db
-				user.setPeriodRecords(userRecords);
-
-				// generate invoice
-				this.paymentManager.startPaymentProcess(user.getId());
-				user.setProperty(USER_LAST_BILLING_TIME, String.valueOf(billingTime));
+				try {
+					List<Record> userRecords = this.accountingServiceClient.getUserRecords(user.getId(), user.getProvider(),
+							toDate(getUserLastBillingTime(user)), toDate(billingTime));
+					// write records on db
+					user.setPeriodRecords(userRecords);
+					
+					// generate invoice
+					this.paymentManager.startPaymentProcess(user.getId());
+					
+					user.setProperty(USER_LAST_BILLING_TIME, String.valueOf(billingTime));
+				} catch (FogbowException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		}
 		
