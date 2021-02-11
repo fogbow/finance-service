@@ -21,10 +21,16 @@ public class StubPostPaidPaymentManager implements PaymentManager {
 		FinanceUser user = databaseManager.getUserById(userId);
 		String paymentStatusString = user.getProperty(FinanceUser.PAYMENT_STATUS_KEY);
 
-		if (paymentStatusString.equals(PAYMENT_STATUS_OK) || paymentStatusString.equals(PAYMENT_STATUS_WAITING)) {
+		// TODO Improve
+		if (paymentStatusString == null) {
+			user.setProperty(FinanceUser.PAYMENT_STATUS_KEY, PAYMENT_STATUS_OK);
 			return true;
 		} else {
-			return false;
+			if (paymentStatusString.equals(PAYMENT_STATUS_OK) || paymentStatusString.equals(PAYMENT_STATUS_WAITING)) {
+				return true;
+			} else {
+				return false;
+			}
 		}
 	}
 

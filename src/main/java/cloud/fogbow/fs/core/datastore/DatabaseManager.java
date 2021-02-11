@@ -18,7 +18,7 @@ public class DatabaseManager {
 		FinanceUser user = new FinanceUser(financeOptions);
 
 		user.setId(userId);
-		user.setId(provider);
+		user.setProvider(provider);
 
 		financeUsers.add(user);
 	}

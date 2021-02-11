@@ -40,7 +40,16 @@ public class PaymentRunner extends StoppableRunner {
 	}
 
 	private long getUserLastBillingTime(FinanceUser user) {
-		return Long.valueOf(user.getProperty(USER_LAST_BILLING_TIME));
+		// TODO Improve
+		String lastBillingTimeProperty = user.getProperty(USER_LAST_BILLING_TIME);
+		
+		if (lastBillingTimeProperty == null) {
+			long billingTime = this.timeUtils.getCurrentTimeMillis();
+			user.setProperty(USER_LAST_BILLING_TIME, String.valueOf(billingTime));
+			return billingTime;
+		}
+		
+		return Long.valueOf(lastBillingTimeProperty);
 	}
 
 	private long getUserBillingInterval(FinanceUser user) {

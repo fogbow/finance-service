@@ -3,10 +3,12 @@ package cloud.fogbow.fs.core.models;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
+
 import cloud.fogbow.accs.api.http.response.Record;
 
 public class FinanceUser {
-
+	private static final Logger LOGGER = Logger.getLogger(FinanceUser.class);
 	public static final String PAYMENT_TYPE_KEY = "paymentType";
 	public static final String PAYMENT_STATUS_KEY = "paymentStatus";
 	
@@ -21,6 +23,7 @@ public class FinanceUser {
 	}
 	
 	public FinanceUser(Map<String, String> properties) {
+		LOGGER.info(properties);
 		this.properties = properties;
 	}
 	

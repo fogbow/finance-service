@@ -30,8 +30,10 @@ public class Main implements ApplicationRunner {
 			financePlugins.add(FinancePluginInstantiator.getFinancePlugin(financePluginClassName, databaseManager));
 		}
 
-		FinanceManager financeManager = new FinanceManager(financePlugins);
+		FinanceManager financeManager = new FinanceManager(financePlugins, databaseManager);
 
 		ApplicationFacade.getInstance().setFinanceManager(financeManager);
+		
+		financeManager.startPlugins();
 	}
 }

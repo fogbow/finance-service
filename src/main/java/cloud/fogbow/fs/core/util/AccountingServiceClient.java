@@ -76,7 +76,7 @@ public class AccountingServiceClient {
 	
     private HttpResponse doRequestAndCheckStatus(String token, String userId, String requester, 
     		String localProvider, String resourceType, String startDate, String endDate) throws URISyntaxException, FogbowException {
-        String endpoint = getAuthenticationEndpoint(cloud.fogbow.accs.api.http.request.ResourceUsage.USAGE_ENDPOINT, 
+        String endpoint = getAccountingEndpoint(cloud.fogbow.accs.api.http.request.ResourceUsage.USAGE_ENDPOINT, 
         		userId, requester, localProvider, resourceType, startDate, endDate);
         HttpResponse response = doRequest(token, endpoint);
 
@@ -89,7 +89,7 @@ public class AccountingServiceClient {
     }
     
     // http://{accs-address}:{accs-port}/accs/usage/{userId}/{requester-provider}/{local-provider}/{resource-type}/{start-date}/{end-date}
-    private String getAuthenticationEndpoint(String path, String userId, String requester, 
+    private String getAccountingEndpoint(String path, String userId, String requester, 
     		String localProvider, String resourceType, String startDate, String endDate) throws URISyntaxException {
         URI uri = new URI(accountingServiceAddress);
         uri = UriComponentsBuilder.fromUri(uri).port(accountingServicePort).path(path).path("/").

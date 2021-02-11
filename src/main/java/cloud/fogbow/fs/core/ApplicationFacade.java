@@ -1,6 +1,7 @@
 package cloud.fogbow.fs.core;
 
 import cloud.fogbow.fs.api.parameters.AuthorizableUser;
+import cloud.fogbow.fs.api.parameters.User;
 
 public class ApplicationFacade {
 
@@ -24,5 +25,11 @@ public class ApplicationFacade {
 	
 	public boolean isAuthorized(AuthorizableUser user) {
 		return this.financeManager.isAuthorized(user);
+	}
+
+	public void addUser(String systemUserToken, User user) {
+		// TODO authentication
+		// TODO authorization
+		this.financeManager.addUser(user);
 	}
 }
