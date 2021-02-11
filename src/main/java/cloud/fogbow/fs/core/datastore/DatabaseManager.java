@@ -23,6 +23,20 @@ public class DatabaseManager {
 		financeUsers.add(user);
 	}
 
+	public List<FinanceUser> getRegisteredUsers() {
+		return financeUsers;
+	}
+	
+	public FinanceUser getUserById(String id) {
+		for (FinanceUser user : financeUsers) {
+			if (user.getId().equals(id)) {
+				return user;
+			}
+		}
+		
+		return null;
+	}
+	
 	public List<FinanceUser> getRegisteredUsersByPaymentType(String pluginName) {
 		ArrayList<FinanceUser> selectedUsers = new ArrayList<FinanceUser>();
 
