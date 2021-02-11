@@ -2,9 +2,9 @@ package cloud.fogbow.fs.core.plugins.finance.postpaid;
 
 import java.util.Map;
 
-import cloud.fogbow.as.core.PropertiesHolder;
 import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
 import cloud.fogbow.fs.core.PaymentManagerInstantiator;
+import cloud.fogbow.fs.core.PropertiesHolder;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.plugins.FinancePlugin;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
@@ -31,7 +31,9 @@ public class PostPaidFinancePlugin implements FinancePlugin {
 		this.databaseManager = databaseManager;
 		
 		this.paymentManager = PaymentManagerInstantiator.getPaymentManager(
-				PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.POST_PAID_PAYMENT_MANAGER));
+				PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.POST_PAID_PAYMENT_MANAGER), 
+				databaseManager);
+		
 		this.invoiceWaitTime = Long.valueOf(PropertiesHolder.getInstance().
 				getProperty(ConfigurationPropertyKeys.INVOICE_WAIT_TIME));
 	}

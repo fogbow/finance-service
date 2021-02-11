@@ -11,6 +11,7 @@ import cloud.fogbow.fs.core.ApplicationFacade;
 import cloud.fogbow.fs.core.FinanceManager;
 import cloud.fogbow.fs.core.FinancePluginInstantiator;
 import cloud.fogbow.fs.core.PropertiesHolder;
+import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.plugins.FinancePlugin;
 
 @Component
@@ -18,13 +19,15 @@ public class Main implements ApplicationRunner {
 
 	@Override
 	public void run(ApplicationArguments args) throws Exception {
+		DatabaseManager databaseManager = new DatabaseManager();
+		
 		String financePluginsString = PropertiesHolder.getInstance()
 				.getProperty(ConfigurationPropertyKeys.FINANCE_PLUGINS_CLASS_NAMES);
 		ArrayList<FinancePlugin> financePlugins = new ArrayList<FinancePlugin>();
 
 		// FIXME constant
 		for (String financePluginClassName : financePluginsString.split(",")) {
-			financePlugins.add(FinancePluginInstantiator.getFinancePlugin(financePluginClassName));
+			financePlugins.add(FinancePluginInstantiator.getFinancePlugin(financePluginClassName, databaseManager));
 		}
 
 		FinanceManager financeManager = new FinanceManager(financePlugins);

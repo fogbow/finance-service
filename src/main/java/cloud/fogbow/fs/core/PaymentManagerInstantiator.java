@@ -1,12 +1,13 @@
 package cloud.fogbow.fs.core;
 
+import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
 
 public class PaymentManagerInstantiator {
 
-	public static PaymentManager getPaymentManager(String property) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	private static FsClassFactory classFactory = new FsClassFactory();
 
+	public static PaymentManager getPaymentManager(String className, DatabaseManager databaseManager) {
+		return (PaymentManager) classFactory.createPluginInstance(className, databaseManager);
+	}
 }

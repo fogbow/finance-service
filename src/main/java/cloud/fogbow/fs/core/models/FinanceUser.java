@@ -7,6 +7,9 @@ import cloud.fogbow.accs.api.http.response.Record;
 
 public class FinanceUser {
 
+	public static final String PAYMENT_TYPE_KEY = "paymentType";
+	public static final String PAYMENT_STATUS_KEY = "paymentStatus";
+	
 	private String id;
 	private String provider;
 	private List<Record> periodRecords;
