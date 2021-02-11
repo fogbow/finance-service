@@ -1,5 +1,7 @@
 package cloud.fogbow.fs.core;
 
+import java.util.HashMap;
+
 import cloud.fogbow.fs.api.parameters.AuthorizableUser;
 import cloud.fogbow.fs.api.parameters.User;
 
@@ -31,5 +33,23 @@ public class ApplicationFacade {
 		// TODO authentication
 		// TODO authorization
 		this.financeManager.addUser(user);
+	}
+
+	public void removeUser(String systemUserToken, String userId) {
+		// TODO authentication
+		// TODO authorization
+		this.financeManager.removeUser(userId);
+	}
+
+	public void changeOptions(String systemUserToken, String userId, HashMap<String, String> financeOptions) {
+		// TODO authentication
+		// TODO authorization
+		this.financeManager.changeOptions(userId, financeOptions);
+	}
+
+	public void updateFinanceState(String systemUserToken, String userId, HashMap<String, String> financeState) {
+		// TODO authentication
+		// TODO authorization
+		this.financeManager.updateFinanceState(userId, financeState);
 	}
 }

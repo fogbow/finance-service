@@ -1,5 +1,6 @@
 package cloud.fogbow.fs.core;
 
+import java.util.HashMap;
 import java.util.List;
 
 import cloud.fogbow.fs.api.parameters.AuthorizableUser;
@@ -37,5 +38,17 @@ public class FinanceManager {
 		for (FinancePlugin plugin : financePlugins) {
 			plugin.startThreads();
 		}
+	}
+
+	public void removeUser(String userId) {
+		this.databaseManager.removeUser(userId);
+	}
+
+	public void changeOptions(String userId, HashMap<String, String> financeOptions) {
+		this.databaseManager.changeOptions(userId, financeOptions);
+	}
+
+	public void updateFinanceState(String userId, HashMap<String, String> financeState) {
+		this.databaseManager.updateFinanceState(userId, financeState);
 	}
 }
