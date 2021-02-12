@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import cloud.fogbow.common.exceptions.FogbowException;
 import cloud.fogbow.fs.constants.SystemConstants;
 import cloud.fogbow.fs.core.ApplicationFacade;
 
@@ -27,7 +28,7 @@ public class Resources {
 	public ResponseEntity<Boolean> updateFinanceState(
 			@PathVariable String userId,
 			@RequestHeader(value = SystemConstants.SYSTEM_USER_TOKEN_HEADER_KEY) String systemUserToken,
-			@RequestBody HashMap<String, String> financeState) {
+			@RequestBody HashMap<String, String> financeState) throws FogbowException {
 		ApplicationFacade.getInstance().updateFinanceState(systemUserToken, userId, financeState);
 		return new ResponseEntity<Boolean>(HttpStatus.OK);
 	}

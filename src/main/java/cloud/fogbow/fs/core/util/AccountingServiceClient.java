@@ -56,6 +56,10 @@ public class AccountingServiceClient {
 	}
 	
 	public List<Record> getUserRecords(String userId, String requester, String startDate, String endDate) throws FogbowException {
+		// FIXME complete this list
+		// TODO This implementation does not look very efficient. We should
+		// try to find another solution, maybe adding a more powerful 
+		// API method to ACCS
 		List<String> resourceTypes = Arrays.asList("compute", "network");
 		List<Record> userRecords = new ArrayList<Record>();
 		
@@ -63,6 +67,7 @@ public class AccountingServiceClient {
 			String token = authenticationServiceClient.getToken(publicKey, managerUserName, managerPassword);
 		
 			for (String resourceType : resourceTypes) {
+				// TODO should rewrap the token before the request
 				HttpResponse response = doRequestAndCheckStatus(token, userId, requester, localProvider, resourceType, startDate, endDate);
 				userRecords.addAll(getRecordsFromResponse(response));
 			}

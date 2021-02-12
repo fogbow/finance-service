@@ -40,6 +40,12 @@ public class FinanceManager {
 		}
 	}
 
+	public void stopPlugins() {
+		for (FinancePlugin plugin : financePlugins) {
+			plugin.stopThreads();
+		}
+	}
+	
 	public void removeUser(String userId) {
 		this.databaseManager.removeUser(userId);
 	}

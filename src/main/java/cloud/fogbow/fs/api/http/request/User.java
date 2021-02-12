@@ -12,10 +12,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import cloud.fogbow.common.exceptions.FogbowException;
 import cloud.fogbow.fs.constants.SystemConstants;
 import cloud.fogbow.fs.core.ApplicationFacade;
 
 // TODO documentation
+// TODO should add translator from fogbowexception to error code
 @CrossOrigin
 @RestController
 @RequestMapping(value = User.USER_ENDPOINT)
@@ -26,7 +28,7 @@ public class User {
 	@RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<Boolean> addUser(
     		@RequestHeader(value = SystemConstants.SYSTEM_USER_TOKEN_HEADER_KEY) String systemUserToken,
-    		@RequestBody cloud.fogbow.fs.api.parameters.User user) {
+    		@RequestBody cloud.fogbow.fs.api.parameters.User user) throws FogbowException {
         ApplicationFacade.getInstance().addUser(systemUserToken, user);
         return new ResponseEntity<Boolean>(HttpStatus.OK);
     }
@@ -35,7 +37,7 @@ public class User {
 	@RequestMapping(value = "/{userId}", method = RequestMethod.DELETE)
     public ResponseEntity<Boolean> removeUser(
     		@PathVariable String userId,
-    		@RequestHeader(value = SystemConstants.SYSTEM_USER_TOKEN_HEADER_KEY) String systemUserToken) {
+    		@RequestHeader(value = SystemConstants.SYSTEM_USER_TOKEN_HEADER_KEY) String systemUserToken) throws FogbowException {
         ApplicationFacade.getInstance().removeUser(systemUserToken, userId);
         return new ResponseEntity<Boolean>(HttpStatus.OK);
     }
@@ -45,7 +47,7 @@ public class User {
 	public ResponseEntity<Boolean> changeOptions(
 			@PathVariable String userId,
 			@RequestHeader(value = SystemConstants.SYSTEM_USER_TOKEN_HEADER_KEY) String systemUserToken,
-			@RequestBody HashMap<String, String> financeOptions) {
+			@RequestBody HashMap<String, String> financeOptions) throws FogbowException {
 		ApplicationFacade.getInstance().changeOptions(systemUserToken, userId, financeOptions);
 		return new ResponseEntity<Boolean>(HttpStatus.OK);
 	}
