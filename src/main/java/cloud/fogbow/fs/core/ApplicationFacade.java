@@ -20,6 +20,7 @@ import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.plugins.FinancePlugin;
 import cloud.fogbow.fs.core.plugins.authorization.FsOperation;
+import cloud.fogbow.fs.core.util.SynchronizationManager;
 
 // TODO add logging
 public class ApplicationFacade {
@@ -29,8 +30,7 @@ public class ApplicationFacade {
 	private FinanceManager financeManager;
 	private DatabaseManager databaseManager;
 	private AuthorizationPlugin<FsOperation> authorizationPlugin;
-	private boolean reloading;
-	private long onGoingRequests;
+	private SynchronizationManager synchronizationManager;
 	
 	private ApplicationFacade() {
 		
@@ -56,74 +56,70 @@ public class ApplicationFacade {
 		
 	}
 	
+	public void setSynchronizationManager(SynchronizationManager synchronizationManager) {
+		this.synchronizationManager = synchronizationManager;
+	}
+	
 	public boolean isAuthorized(AuthorizableUser user) {
-		startOperation();
+		synchronizationManager.startOperation();
 		
 		try { 
 			return this.financeManager.isAuthorized(user);
 		} finally {
-			finishOperation();
+			synchronizationManager.finishOperation();
 		}
 	}
 
 	public void addUser(String userToken, User user) throws FogbowException {
 		authenticateAndAuthorize(userToken);
-		startOperation();
+		synchronizationManager.startOperation();
 		
 		try {
 			this.financeManager.addUser(user);
 		} finally {
-			finishOperation();
+			synchronizationManager.finishOperation();
 		}
 	}
 
 	public void removeUser(String userToken, String userId) throws UnauthorizedRequestException, FogbowException {
 		authenticateAndAuthorize(userToken);
-		startOperation();
+		synchronizationManager.startOperation();
 		
 		try {
 			this.financeManager.removeUser(userId);
 		} finally {
-			finishOperation();
+			synchronizationManager.finishOperation();
 		}
 	}
 
 	public void changeOptions(String userToken, String userId, HashMap<String, String> financeOptions) throws UnauthenticatedUserException, UnauthorizedRequestException, FogbowException {
 		authenticateAndAuthorize(userToken);
-		startOperation();
+		synchronizationManager.startOperation();
 		
 		try {
 			this.financeManager.changeOptions(userId, financeOptions);			
 		} finally {
-			finishOperation();
+			synchronizationManager.finishOperation();
 		}
 	}
 
 	public void updateFinanceState(String userToken, String userId, HashMap<String, String> financeState) throws UnauthenticatedUserException, UnauthorizedRequestException, FogbowException {
 		authenticateAndAuthorize(userToken);
-		startOperation();
+		synchronizationManager.startOperation();
 		
 		try {
 			this.financeManager.updateFinanceState(userId, financeState);			
 		} finally {
-			finishOperation();
+			synchronizationManager.finishOperation();
 		}
 	}
-
 	
 	public void reload(String userToken) throws UnauthenticatedUserException, UnauthorizedRequestException, FogbowException {
 		authenticateAndAuthorize(userToken);
-		setAsReloading();
+		synchronizationManager.setAsReloading();
 		
 		try {
-	        while (this.onGoingRequests != 0) {
-	            try {
-	                Thread.sleep(10);
-	            } catch (InterruptedException e) {
-	                e.printStackTrace();
-	            }
-	        }
-			
+			synchronizationManager.waitForRequests();
 	        
 			PropertiesHolder.reset();
 	        FSPublicKeysHolder.reset();
@@ -149,7 +145,7 @@ public class ApplicationFacade {
 			
 			financeManager.startPlugins();
 		} finally {
-			finishReloading();
+			synchronizationManager.finishReloading();
 		}
 	}
 	
@@ -160,24 +156,4 @@ public class ApplicationFacade {
         FsOperation operation = new FsOperation();
         this.authorizationPlugin.isAuthorized(systemUser, operation);
 	}
-	
-	private void setAsReloading() {
-        this.reloading = true;
-    }
-    
-    private void finishReloading() {
-    	this.reloading = false;
-    }
-	
-    private void startOperation() {
-        while (reloading)
-            ;
-        synchronized (this) {
-            this.onGoingRequests++;
-        }
-    }
-    
-    private synchronized void finishOperation() {
-        this.onGoingRequests--;
-    }
 }
