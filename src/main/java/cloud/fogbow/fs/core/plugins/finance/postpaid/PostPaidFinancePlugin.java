@@ -2,6 +2,7 @@ package cloud.fogbow.fs.core.plugins.finance.postpaid;
 
 import java.util.Map;
 
+import cloud.fogbow.common.exceptions.ConfigurationErrorException;
 import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
 import cloud.fogbow.fs.core.PaymentManagerInstantiator;
 import cloud.fogbow.fs.core.PropertiesHolder;
@@ -25,7 +26,7 @@ public class PostPaidFinancePlugin implements FinancePlugin {
 	private DatabaseManager databaseManager;
 	private long invoiceWaitTime;
 	
-	public PostPaidFinancePlugin(DatabaseManager databaseManager) {
+	public PostPaidFinancePlugin(DatabaseManager databaseManager) throws ConfigurationErrorException {
 		this.accountingServiceClient = new AccountingServiceClient();
 		this.rasClient = new RasClient();
 		this.databaseManager = databaseManager;

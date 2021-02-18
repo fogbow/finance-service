@@ -16,6 +16,8 @@ import com.google.gson.Gson;
 
 import cloud.fogbow.accs.api.http.response.Record;
 import cloud.fogbow.common.constants.HttpMethod;
+import cloud.fogbow.common.exceptions.ConfigurationErrorException;
+import cloud.fogbow.common.exceptions.FatalErrorException;
 import cloud.fogbow.common.exceptions.FogbowException;
 import cloud.fogbow.common.exceptions.UnavailableProviderException;
 import cloud.fogbow.common.util.connectivity.HttpRequestClient;
@@ -34,7 +36,7 @@ public class AccountingServiceClient {
 	private String accountingServicePort;
 	private String localProvider;
 	
-	public AccountingServiceClient() {
+	public AccountingServiceClient() throws ConfigurationErrorException {
 		this(new AuthenticationServiceClient(), PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.PUBLIC_KEY_KEY),
 				PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.PROVIDER_ID_KEY),
 				PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.MANAGER_USERNAME_KEY),
