@@ -1,7 +1,6 @@
 package cloud.fogbow.fs.core;
 
 import java.security.interfaces.RSAPublicKey;
-import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.apache.log4j.Logger;
@@ -16,9 +15,7 @@ import cloud.fogbow.common.plugins.authorization.AuthorizationPlugin;
 import cloud.fogbow.common.util.ServiceAsymmetricKeysHolder;
 import cloud.fogbow.fs.api.parameters.AuthorizableUser;
 import cloud.fogbow.fs.api.parameters.User;
-import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
-import cloud.fogbow.fs.core.plugins.FinancePlugin;
 import cloud.fogbow.fs.core.plugins.authorization.FsOperation;
 import cloud.fogbow.fs.core.util.SynchronizationManager;
 
@@ -129,20 +126,8 @@ public class ApplicationFacade {
 	        ServiceAsymmetricKeysHolder.reset(publicKeyFilePath, privateKeyFilePath);
 			
 			this.authorizationPlugin = AuthorizationPluginInstantiator.getAuthorizationPlugin();
-			
-			// TODO refactor
-			String financePluginsString = PropertiesHolder.getInstance()
-					.getProperty(ConfigurationPropertyKeys.FINANCE_PLUGINS_CLASS_NAMES);
-			ArrayList<FinancePlugin> financePlugins = new ArrayList<FinancePlugin>();
 
-			// FIXME constant
-			for (String financePluginClassName : financePluginsString.split(",")) {
-				LOGGER.info(financePluginClassName);
-				financePlugins.add(FinancePluginInstantiator.getFinancePlugin(financePluginClassName, databaseManager));
-			}
-			
-			this.financeManager = new FinanceManager(financePlugins, databaseManager);
-			
+			this.financeManager = new FinanceManager(databaseManager);
 			financeManager.startPlugins();
 		} finally {
 			synchronizationManager.finishReloading();
