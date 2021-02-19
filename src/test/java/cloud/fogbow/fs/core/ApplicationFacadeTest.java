@@ -24,7 +24,7 @@ import cloud.fogbow.fs.core.plugins.authorization.FsOperation;
 import cloud.fogbow.fs.core.util.SynchronizationManager;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({FSPublicKeysHolder.class, AuthenticationUtil.class})
+@PrepareForTest({FsPublicKeysHolder.class, AuthenticationUtil.class})
 public class ApplicationFacadeTest {
 
 	private String adminId = "adminId";
@@ -42,7 +42,7 @@ public class ApplicationFacadeTest {
 	private HashMap<String, String> newOptions = new HashMap<String, String>();
 	private HashMap<String, String> newState = new HashMap<String, String>();
 	
-	private FSPublicKeysHolder keysHolder;
+	private FsPublicKeysHolder keysHolder;
 	private RSAPublicKey asPublicKey;
 	private User user;
 	private FinanceManager financeManager;
@@ -238,10 +238,10 @@ public class ApplicationFacadeTest {
 	}
 
 	private void setUpPublicKeysHolder() throws FogbowException {
-		PowerMockito.mockStatic(FSPublicKeysHolder.class);
-		this.keysHolder = Mockito.mock(FSPublicKeysHolder.class);
+		PowerMockito.mockStatic(FsPublicKeysHolder.class);
+		this.keysHolder = Mockito.mock(FsPublicKeysHolder.class);
 		this.asPublicKey = Mockito.mock(RSAPublicKey.class);
-		BDDMockito.given(FSPublicKeysHolder.getInstance()).willReturn(keysHolder);
+		BDDMockito.given(FsPublicKeysHolder.getInstance()).willReturn(keysHolder);
 		Mockito.when(keysHolder.getAsPublicKey()).thenReturn(asPublicKey);
 	}
 	

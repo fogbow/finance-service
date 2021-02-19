@@ -6,18 +6,18 @@ import cloud.fogbow.common.exceptions.FogbowException;
 import cloud.fogbow.common.util.PublicKeysHolder;
 import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
 
-public class FSPublicKeysHolder {
+public class FsPublicKeysHolder {
 	private RSAPublicKey asPublicKey;
 	private RSAPublicKey accsPublicKey;
 	
-	private static FSPublicKeysHolder instance;
+	private static FsPublicKeysHolder instance;
 
-	private FSPublicKeysHolder() {
+	private FsPublicKeysHolder() {
 	}
 
-	public static synchronized FSPublicKeysHolder getInstance() {
+	public static synchronized FsPublicKeysHolder getInstance() {
 		if (instance == null) {
-			instance = new FSPublicKeysHolder();
+			instance = new FsPublicKeysHolder();
 		}
 		return instance;
 	}

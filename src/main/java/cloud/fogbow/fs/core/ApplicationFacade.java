@@ -132,7 +132,7 @@ public class ApplicationFacade {
 			PropertiesHolder.reset();
 			
 			LOGGER.info(Messages.Log.RELOADING_PUBLIC_KEYS_HOLDER);
-	        FSPublicKeysHolder.reset();
+	        FsPublicKeysHolder.reset();
 	        
 	        LOGGER.info(Messages.Log.RELOADING_FS_KEYS_HOLDER);
 	        String publicKeyFilePath = PropertiesHolder.getInstance().getProperty(FogbowConstants.PUBLIC_KEY_FILE_PATH);
@@ -152,7 +152,7 @@ public class ApplicationFacade {
 	
 	private void authenticateAndAuthorize(String userToken)
 			throws FogbowException, UnauthenticatedUserException, UnauthorizedRequestException {
-		RSAPublicKey asPublicKey = FSPublicKeysHolder.getInstance().getAsPublicKey();
+		RSAPublicKey asPublicKey = FsPublicKeysHolder.getInstance().getAsPublicKey();
         SystemUser systemUser = AuthenticationUtil.authenticate(asPublicKey, userToken);
         FsOperation operation = new FsOperation();
         this.authorizationPlugin.isAuthorized(systemUser, operation);
