@@ -33,6 +33,7 @@ import cloud.fogbow.common.constants.HttpMethod;
 import cloud.fogbow.common.exceptions.FogbowException;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.UnauthenticatedUserException;
+import cloud.fogbow.common.exceptions.UnavailableProviderException;
 import cloud.fogbow.common.util.CryptoUtil;
 import cloud.fogbow.common.util.ServiceAsymmetricKeysHolder;
 import cloud.fogbow.common.util.connectivity.HttpRequestClient;
@@ -104,13 +105,15 @@ public class AccountingServiceClientTest {
 	private String responseNetworkContent = "responseNetworkContent";
 	private String responseVolumeContent = "responseVolumeContent";
 	private int successCode = 200;
+	private int errorCode = 500;
 
+	// TODO documentation
 	@Test
 	public void testGetUserRecords() throws FogbowException, GeneralSecurityException {
 		setUpKeys();
 		setUpAuthentication();
 		setUpRecords();
-		setUpResponse();
+		setUpResponse(successCode, successCode, successCode);
 		setUpRequest();
 		
 		AccountingServiceClient accsClient = new AccountingServiceClient(authenticationServiceClient, 
@@ -124,6 +127,54 @@ public class AccountingServiceClientTest {
 		assertTrue(userRecords.contains(recordCompute2));
 		assertTrue(userRecords.contains(recordNetwork));
 		assertTrue(userRecords.contains(recordVolume));
+	}
+
+	// TODO documentation
+	@Test(expected = UnavailableProviderException.class)
+	public void testGetUserRecordsErrorReturnCodeComputeRequest() throws FogbowException, GeneralSecurityException {
+		setUpKeys();
+		setUpAuthentication();
+		setUpRecords();
+		setUpResponse(errorCode, successCode, successCode);
+		setUpRequest();
+		
+		AccountingServiceClient accsClient = new AccountingServiceClient(authenticationServiceClient, 
+				localProvider, managerUserName, managerPassword, 
+				accountingServiceAddress, accountingServicePort, jsonUtils);
+
+		accsClient.getUserRecords(userId, requester, requestStartDate, requestEndDate);
+	}
+	
+	// TODO documentation
+	@Test(expected = UnavailableProviderException.class)
+	public void testGetUserRecordsErrorReturnCodeNetworkRequest() throws FogbowException, GeneralSecurityException {
+		setUpKeys();
+		setUpAuthentication();
+		setUpRecords();
+		setUpResponse(successCode, errorCode, successCode);
+		setUpRequest();
+		
+		AccountingServiceClient accsClient = new AccountingServiceClient(authenticationServiceClient, 
+				localProvider, managerUserName, managerPassword, 
+				accountingServiceAddress, accountingServicePort, jsonUtils);
+
+		accsClient.getUserRecords(userId, requester, requestStartDate, requestEndDate);
+	}
+	
+	// TODO documentation
+	@Test(expected = UnavailableProviderException.class)
+	public void testGetUserRecordsErrorReturnCodeVolumeRequest() throws FogbowException, GeneralSecurityException {
+		setUpKeys();
+		setUpAuthentication();
+		setUpRecords();
+		setUpResponse(successCode, successCode, errorCode);
+		setUpRequest();
+		
+		AccountingServiceClient accsClient = new AccountingServiceClient(authenticationServiceClient, 
+				localProvider, managerUserName, managerPassword, 
+				accountingServiceAddress, accountingServicePort, jsonUtils);
+
+		accsClient.getUserRecords(userId, requester, requestStartDate, requestEndDate);
 	}
 
 	private void setUpKeys() throws InternalServerErrorException, FogbowException, UnauthenticatedUserException,
@@ -185,7 +236,7 @@ public class AccountingServiceClientTest {
 		this.responseVolumeRecords.add(recordVolume);
 	}
 	
-	private void setUpResponse() {
+	private void setUpResponse(int returnCodeComputeRequest, int returnCodeNetworkRequest, int returnCodeVolumeRequest) {
 		this.jsonUtils = Mockito.mock(JsonUtils.class);
 		
 		Mockito.when(this.jsonUtils.fromJson(responseComputeContent, ArrayList.class)).thenReturn(responseComputeRecords);
@@ -193,15 +244,15 @@ public class AccountingServiceClientTest {
 		Mockito.when(this.jsonUtils.fromJson(responseVolumeContent, ArrayList.class)).thenReturn(responseVolumeRecords);
 		
 		responseCompute = Mockito.mock(HttpResponse.class);
-		Mockito.when(responseCompute.getHttpCode()).thenReturn(successCode);
+		Mockito.when(responseCompute.getHttpCode()).thenReturn(returnCodeComputeRequest);
 		Mockito.when(responseCompute.getContent()).thenReturn(responseComputeContent);
 		
 		responseNetwork = Mockito.mock(HttpResponse.class);
-		Mockito.when(responseNetwork.getHttpCode()).thenReturn(successCode);
+		Mockito.when(responseNetwork.getHttpCode()).thenReturn(returnCodeNetworkRequest);
 		Mockito.when(responseNetwork.getContent()).thenReturn(responseNetworkContent);
 		
 		responseVolume = Mockito.mock(HttpResponse.class);
-		Mockito.when(responseVolume.getHttpCode()).thenReturn(successCode);
+		Mockito.when(responseVolume.getHttpCode()).thenReturn(returnCodeVolumeRequest);
 		Mockito.when(responseVolume.getContent()).thenReturn(responseVolumeContent);
 	}
 
