@@ -2,6 +2,8 @@ package cloud.fogbow.fs.core.util;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.GeneralSecurityException;
+import java.security.Key;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -15,14 +17,20 @@ import org.springframework.web.util.UriComponentsBuilder;
 import com.google.common.annotations.VisibleForTesting;
 
 import cloud.fogbow.accs.api.http.response.Record;
+import cloud.fogbow.as.core.util.TokenProtector;
+import cloud.fogbow.common.constants.FogbowConstants;
 import cloud.fogbow.common.constants.HttpMethod;
 import cloud.fogbow.common.exceptions.ConfigurationErrorException;
 import cloud.fogbow.common.exceptions.FogbowException;
+import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.UnavailableProviderException;
+import cloud.fogbow.common.util.CryptoUtil;
+import cloud.fogbow.common.util.ServiceAsymmetricKeysHolder;
 import cloud.fogbow.common.util.connectivity.HttpRequestClient;
 import cloud.fogbow.common.util.connectivity.HttpResponse;
 import cloud.fogbow.fs.api.http.CommonKeys;
 import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
+import cloud.fogbow.fs.core.FsPublicKeysHolder;
 import cloud.fogbow.fs.core.PropertiesHolder;
 
 public class AccountingServiceClient {
@@ -37,14 +45,14 @@ public class AccountingServiceClient {
 	private AuthenticationServiceClient authenticationServiceClient;
 	private String managerUserName;
 	private String managerPassword;
-	private String publicKey;
 	private String accountingServiceAddress;
 	private String accountingServicePort;
 	private String localProvider;
 	private JsonUtils jsonUtils;
+	private String publicKeyString;
 	
 	public AccountingServiceClient() throws ConfigurationErrorException {
-		this(new AuthenticationServiceClient(), PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.PUBLIC_KEY_KEY),
+		this(new AuthenticationServiceClient(),
 				PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.PROVIDER_ID_KEY),
 				PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.MANAGER_USERNAME_KEY),
 				PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.MANAGER_PASSWORD_KEY),
@@ -53,37 +61,46 @@ public class AccountingServiceClient {
 				new JsonUtils());
 	}
 	
-	public AccountingServiceClient(AuthenticationServiceClient authenticationServiceClient, 
-			String publicKey, String localProvider, String managerUserName, 
+	public AccountingServiceClient(AuthenticationServiceClient authenticationServiceClient, String localProvider, String managerUserName, 
 			String managerPassword, String accountingServiceAddress, String accountingServicePort, 
-			JsonUtils jsonUtils) {
+			JsonUtils jsonUtils) throws ConfigurationErrorException {
 		this.authenticationServiceClient = authenticationServiceClient;
-		this.publicKey = publicKey;
 		this.localProvider = localProvider;
 		this.managerUserName = managerUserName;
 		this.managerPassword = managerPassword;
 		this.accountingServiceAddress = accountingServiceAddress;
 		this.accountingServicePort = accountingServicePort;
 		this.jsonUtils = jsonUtils;
+		
+		try {
+			this.publicKeyString = CryptoUtil.toBase64(ServiceAsymmetricKeysHolder.getInstance().getPublicKey());
+		} catch (InternalServerErrorException e) {
+			throw new ConfigurationErrorException(e.getMessage());
+		} catch (GeneralSecurityException e) {
+			throw new ConfigurationErrorException(e.getMessage());
+		}
 	}
 	
 	public List<Record> getUserRecords(String userId, String requester, String startDate, String endDate) throws FogbowException {
-		// FIXME complete this list
-		// TODO This implementation does not look very efficient. We should
-		// try to find another solution, maybe adding a more powerful 
-		// API method to ACCS
 		List<Record> userRecords = new ArrayList<Record>();
 		
 		try {
-			String token = authenticationServiceClient.getToken(publicKey, managerUserName, managerPassword);
-		
+			// TODO We should not need to get this token in all the calls to getUserRecords
+			// I think we should keep the value and reacquire the token after a certain time
+			String token = authenticationServiceClient.getToken(publicKeyString, managerUserName, managerPassword);
+			Key keyToDecrypt = ServiceAsymmetricKeysHolder.getInstance().getPrivateKey();
+			Key keyToEncrypt = FsPublicKeysHolder.getInstance().getAccsPublicKey(); 
+			
+			String newToken = TokenProtector.rewrap(keyToDecrypt, keyToEncrypt, token, FogbowConstants.TOKEN_STRING_SEPARATOR);
+
+			// TODO This implementation does not look very efficient. We should
+			// try to find another solution, maybe adding a more powerful 
+			// API method to ACCS
 			for (String resourceType : RESOURCE_TYPES) {
-				// TODO should rewrap the token before the request
-				HttpResponse response = doRequestAndCheckStatus(token, userId, requester, localProvider, resourceType, startDate, endDate);
+				HttpResponse response = doRequestAndCheckStatus(newToken, userId, requester, localProvider, resourceType, startDate, endDate);
 				userRecords.addAll(getRecordsFromResponse(response));
 			}
 		} catch (URISyntaxException e) {
-			// TODO Improve
 			throw new FogbowException(e.getMessage());
 		}
 		

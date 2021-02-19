@@ -3,6 +3,9 @@ package cloud.fogbow.fs.core.util;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.security.GeneralSecurityException;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,14 +27,22 @@ import cloud.fogbow.accs.core.models.specs.NetworkAllocationMode;
 import cloud.fogbow.accs.core.models.specs.NetworkSpec;
 import cloud.fogbow.accs.core.models.specs.OrderSpec;
 import cloud.fogbow.accs.core.models.specs.VolumeSpec;
+import cloud.fogbow.as.core.util.TokenProtector;
+import cloud.fogbow.common.constants.FogbowConstants;
 import cloud.fogbow.common.constants.HttpMethod;
 import cloud.fogbow.common.exceptions.FogbowException;
+import cloud.fogbow.common.exceptions.InternalServerErrorException;
+import cloud.fogbow.common.exceptions.UnauthenticatedUserException;
+import cloud.fogbow.common.util.CryptoUtil;
+import cloud.fogbow.common.util.ServiceAsymmetricKeysHolder;
 import cloud.fogbow.common.util.connectivity.HttpRequestClient;
 import cloud.fogbow.common.util.connectivity.HttpResponse;
 import cloud.fogbow.fs.api.http.CommonKeys;
+import cloud.fogbow.fs.core.FsPublicKeysHolder;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({HttpRequestClient.class})
+@PrepareForTest({ HttpRequestClient.class, ServiceAsymmetricKeysHolder.class, 
+	FsPublicKeysHolder.class, TokenProtector.class, CryptoUtil.class })
 public class AccountingServiceClientTest {
 	
 	// authentication fields
@@ -43,6 +54,7 @@ public class AccountingServiceClientTest {
 	private String accountingServiceAddress = "http://localhost";
 	private String accountingServicePort = "5001";
 	private String adminToken = "adminToken";
+	private String rewrapAdminToken = "rewrapAdminToken";
 
 	// records fields
 	private String userId = "user";
@@ -94,14 +106,15 @@ public class AccountingServiceClientTest {
 	private int successCode = 200;
 
 	@Test
-	public void testGetUserRecords() throws FogbowException {
+	public void testGetUserRecords() throws FogbowException, GeneralSecurityException {
+		setUpKeys();
 		setUpAuthentication();
 		setUpRecords();
 		setUpResponse();
 		setUpRequest();
 		
 		AccountingServiceClient accsClient = new AccountingServiceClient(authenticationServiceClient, 
-				publicKey, localProvider, managerUserName, managerPassword, 
+				localProvider, managerUserName, managerPassword, 
 				accountingServiceAddress, accountingServicePort, jsonUtils);
 
 		List<Record> userRecords = accsClient.getUserRecords(userId, requester, requestStartDate, requestEndDate);
@@ -111,6 +124,34 @@ public class AccountingServiceClientTest {
 		assertTrue(userRecords.contains(recordCompute2));
 		assertTrue(userRecords.contains(recordNetwork));
 		assertTrue(userRecords.contains(recordVolume));
+	}
+
+	private void setUpKeys() throws InternalServerErrorException, FogbowException, UnauthenticatedUserException,
+			GeneralSecurityException {
+		RSAPublicKey fsPublicKey = Mockito.mock(RSAPublicKey.class);
+		RSAPrivateKey fsPrivateKey = Mockito.mock(RSAPrivateKey.class);
+		
+		PowerMockito.mockStatic(ServiceAsymmetricKeysHolder.class);
+		ServiceAsymmetricKeysHolder serviceAsymmetricKeysHolder = Mockito.mock(ServiceAsymmetricKeysHolder.class);
+		Mockito.when(serviceAsymmetricKeysHolder.getPublicKey()).thenReturn(fsPublicKey);
+		Mockito.when(serviceAsymmetricKeysHolder.getPrivateKey()).thenReturn(fsPrivateKey);
+		BDDMockito.given(ServiceAsymmetricKeysHolder.getInstance()).willReturn(serviceAsymmetricKeysHolder);
+
+		
+		RSAPublicKey accsPublicKey = Mockito.mock(RSAPublicKey.class);
+		
+		PowerMockito.mockStatic(FsPublicKeysHolder.class);
+		FsPublicKeysHolder fsPublicKeysHolder = Mockito.mock(FsPublicKeysHolder.class);
+		Mockito.when(fsPublicKeysHolder.getAccsPublicKey()).thenReturn(accsPublicKey);
+		BDDMockito.given(FsPublicKeysHolder.getInstance()).willReturn(fsPublicKeysHolder);
+		
+		
+		PowerMockito.mockStatic(TokenProtector.class);
+		BDDMockito.when(TokenProtector.rewrap(fsPrivateKey, accsPublicKey, adminToken, 
+				FogbowConstants.TOKEN_STRING_SEPARATOR)).thenReturn(rewrapAdminToken);
+		
+		PowerMockito.mockStatic(CryptoUtil.class);
+		BDDMockito.when(CryptoUtil.toBase64(fsPublicKey)).thenReturn(publicKey);
 	}
 
 	private void setUpAuthentication() throws FogbowException {
@@ -178,7 +219,7 @@ public class AccountingServiceClientTest {
 		
 		headers = new HashMap<String, String>();
 		headers.put(CommonKeys.CONTENT_TYPE_KEY, AccountingServiceClient.RECORDS_REQUEST_CONTENT_TYPE);
-		headers.put(CommonKeys.SYSTEM_USER_TOKEN_HEADER_KEY, adminToken);
+		headers.put(CommonKeys.SYSTEM_USER_TOKEN_HEADER_KEY, rewrapAdminToken);
 		body = new HashMap<String, String>();
 		
 		PowerMockito.mockStatic(HttpRequestClient.class);
