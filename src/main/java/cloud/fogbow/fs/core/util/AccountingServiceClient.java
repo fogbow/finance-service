@@ -26,8 +26,14 @@ import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
 import cloud.fogbow.fs.core.PropertiesHolder;
 
 public class AccountingServiceClient {
+	private static final String COMPUTE_RESOURCE = "compute";
+	private static final String NETWORK_RESOURCE = "network";
+	private static final String VOLUME_RESOURCE = "volume";
+	private static final List<String> RESOURCE_TYPES = Arrays.asList(COMPUTE_RESOURCE, 
+			NETWORK_RESOURCE, VOLUME_RESOURCE);
 	@VisibleForTesting
 	static final String RECORDS_REQUEST_CONTENT_TYPE = "application/json";
+
 	private AuthenticationServiceClient authenticationServiceClient;
 	private String managerUserName;
 	private String managerPassword;
@@ -66,13 +72,12 @@ public class AccountingServiceClient {
 		// TODO This implementation does not look very efficient. We should
 		// try to find another solution, maybe adding a more powerful 
 		// API method to ACCS
-		List<String> resourceTypes = Arrays.asList("compute", "network");
 		List<Record> userRecords = new ArrayList<Record>();
 		
 		try {
 			String token = authenticationServiceClient.getToken(publicKey, managerUserName, managerPassword);
 		
-			for (String resourceType : resourceTypes) {
+			for (String resourceType : RESOURCE_TYPES) {
 				// TODO should rewrap the token before the request
 				HttpResponse response = doRequestAndCheckStatus(token, userId, requester, localProvider, resourceType, startDate, endDate);
 				userRecords.addAll(getRecordsFromResponse(response));
