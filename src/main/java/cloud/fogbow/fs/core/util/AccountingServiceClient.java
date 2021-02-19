@@ -12,12 +12,11 @@ import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpResponseException;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import com.google.gson.Gson;
+import com.google.common.annotations.VisibleForTesting;
 
 import cloud.fogbow.accs.api.http.response.Record;
 import cloud.fogbow.common.constants.HttpMethod;
 import cloud.fogbow.common.exceptions.ConfigurationErrorException;
-import cloud.fogbow.common.exceptions.FatalErrorException;
 import cloud.fogbow.common.exceptions.FogbowException;
 import cloud.fogbow.common.exceptions.UnavailableProviderException;
 import cloud.fogbow.common.util.connectivity.HttpRequestClient;
@@ -27,7 +26,8 @@ import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
 import cloud.fogbow.fs.core.PropertiesHolder;
 
 public class AccountingServiceClient {
-	private static final String RECORDS_REQUEST_CONTENT_TYPE = "application/json";
+	@VisibleForTesting
+	static final String RECORDS_REQUEST_CONTENT_TYPE = "application/json";
 	private AuthenticationServiceClient authenticationServiceClient;
 	private String managerUserName;
 	private String managerPassword;
@@ -35,6 +35,7 @@ public class AccountingServiceClient {
 	private String accountingServiceAddress;
 	private String accountingServicePort;
 	private String localProvider;
+	private JsonUtils jsonUtils;
 	
 	public AccountingServiceClient() throws ConfigurationErrorException {
 		this(new AuthenticationServiceClient(), PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.PUBLIC_KEY_KEY),
@@ -42,12 +43,14 @@ public class AccountingServiceClient {
 				PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.MANAGER_USERNAME_KEY),
 				PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.MANAGER_PASSWORD_KEY),
 				PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.ACCS_URL_KEY),
-				PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.ACCS_PORT_KEY));
+				PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.ACCS_PORT_KEY),
+				new JsonUtils());
 	}
 	
 	public AccountingServiceClient(AuthenticationServiceClient authenticationServiceClient, 
 			String publicKey, String localProvider, String managerUserName, 
-			String managerPassword, String accountingServiceAddress, String accountingServicePort) {
+			String managerPassword, String accountingServiceAddress, String accountingServicePort, 
+			JsonUtils jsonUtils) {
 		this.authenticationServiceClient = authenticationServiceClient;
 		this.publicKey = publicKey;
 		this.localProvider = localProvider;
@@ -55,6 +58,7 @@ public class AccountingServiceClient {
 		this.managerPassword = managerPassword;
 		this.accountingServiceAddress = accountingServiceAddress;
 		this.accountingServicePort = accountingServicePort;
+		this.jsonUtils = jsonUtils;
 	}
 	
 	public List<Record> getUserRecords(String userId, String requester, String startDate, String endDate) throws FogbowException {
@@ -86,7 +90,6 @@ public class AccountingServiceClient {
         String endpoint = getAccountingEndpoint(cloud.fogbow.accs.api.http.request.ResourceUsage.USAGE_ENDPOINT, 
         		userId, requester, localProvider, resourceType, startDate, endDate);
         HttpResponse response = doRequest(token, endpoint);
-
         if (response.getHttpCode() > HttpStatus.SC_OK) {
             Throwable e = new HttpResponseException(response.getHttpCode(), response.getContent());
             throw new UnavailableProviderException(e.getMessage());
@@ -111,7 +114,6 @@ public class AccountingServiceClient {
         HashMap<String, String> headers = new HashMap<String, String>();
         headers.put(CommonKeys.CONTENT_TYPE_KEY, RECORDS_REQUEST_CONTENT_TYPE);
         headers.put(CommonKeys.SYSTEM_USER_TOKEN_HEADER_KEY, token);
-        
         // body
         Map<String, String> body = new HashMap<String, String>();
         
@@ -119,8 +121,7 @@ public class AccountingServiceClient {
     }
     
     private List<Record> getRecordsFromResponse(HttpResponse response) {
-        Gson gson = new Gson();
-        ArrayList<Record> records = gson.fromJson(response.getContent(), ArrayList.class);
+        ArrayList<Record> records = this.jsonUtils.fromJson(response.getContent(), ArrayList.class);
         return records;
     }
 }
