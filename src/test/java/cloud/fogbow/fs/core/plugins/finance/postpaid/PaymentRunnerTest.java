@@ -56,10 +56,10 @@ public class PaymentRunnerTest {
 		//
 		// Setting up mocks
 		//
-		this.timeUtils = Mockito.mock(TimeUtils.class);
+		this.timeUtils = Mockito.spy(TimeUtils.class);
 		timeValues = Arrays.asList(INITIAL_USER_1_LAST_BILLING_TIME + BILLING_INTERVAL, 
-				INITIAL_USER_1_LAST_BILLING_TIME + 2*BILLING_INTERVAL, 
-				INITIAL_USER_1_LAST_BILLING_TIME + 3*BILLING_INTERVAL);
+				INITIAL_USER_1_LAST_BILLING_TIME + BILLING_INTERVAL + 1, 
+				INITIAL_USER_1_LAST_BILLING_TIME + BILLING_INTERVAL + 2);
 		Mockito.when(timeUtils.getCurrentTimeMillis()).thenReturn(timeValues.get(0),
 				timeValues.get(1), timeValues.get(2));
 		
@@ -105,7 +105,7 @@ public class PaymentRunnerTest {
 		//
 		// Setting up mocks
 		//
-		this.timeUtils = Mockito.mock(TimeUtils.class);
+		this.timeUtils = Mockito.spy(TimeUtils.class);
 		timeValues = Arrays.asList(5L, 10L, 15L);
 		
 		Mockito.when(timeUtils.getCurrentTimeMillis()).thenReturn(timeValues.get(0),
@@ -139,6 +139,52 @@ public class PaymentRunnerTest {
 		assertEquals(String.valueOf(1), user2.getProperty(PaymentRunner.USER_LAST_BILLING_TIME));
 	}
 
+	// TODO documentation
+	@Test
+	public void testErrorOnAcquiringUserRecords() throws FogbowException {
+		//
+		// Setting up mocks
+		//
+		this.timeUtils = Mockito.spy(TimeUtils.class);
+		timeValues = Arrays.asList(INITIAL_USER_1_LAST_BILLING_TIME + BILLING_INTERVAL, 
+				INITIAL_USER_1_LAST_BILLING_TIME + BILLING_INTERVAL + 1, 
+				INITIAL_USER_1_LAST_BILLING_TIME + BILLING_INTERVAL + 2);
+		Mockito.when(timeUtils.getCurrentTimeMillis()).thenReturn(timeValues.get(0),
+				timeValues.get(1), timeValues.get(2));
+		
+		setUpDatabase();
+		setUpErrorAccounting();
+		
+		this.paymentManager = Mockito.mock(PaymentManager.class);
+		
+		PaymentRunner paymentRunner = new PaymentRunner(invoiceWaitTime, 
+				databaseManager, accountingServiceClient, paymentManager, timeUtils);
+		
+		
+		paymentRunner.doRun();
+		
+		//
+		// Checking payment state
+		//
+		
+		// PaymentRunner triggered payment correctly
+		Mockito.verify(paymentManager, Mockito.never()).startPaymentProcess(ID_USER_1);
+		Mockito.verify(paymentManager, Mockito.times(1)).startPaymentProcess(ID_USER_2);
+
+		// PaymentRunner set the last period records
+		List<Record> records = user1.getPeriodRecords();
+		assertNull(records);
+
+		List<Record> records2 = user2.getPeriodRecords();
+		assertEquals(2, records2.size());
+		assertEquals(RECORD_ID_1, records2.get(0).getId());
+		assertEquals(RECORD_ID_2, records2.get(1).getId());
+
+		// PaymentRunner changed users last billing time for user2 only
+		assertEquals(String.valueOf(INITIAL_USER_1_LAST_BILLING_TIME), user1.getProperty(PaymentRunner.USER_LAST_BILLING_TIME));
+		assertEquals(String.valueOf(timeValues.get(1)), user2.getProperty(PaymentRunner.USER_LAST_BILLING_TIME));
+	}
+	
 	private void setUpDatabase() {
 		this.databaseManager = Mockito.mock(DatabaseManager.class);
 		this.userList = new ArrayList<FinanceUser>();
@@ -170,5 +216,24 @@ public class PaymentRunnerTest {
 		this.accountingServiceClient = Mockito.mock(AccountingServiceClient.class);
 		Mockito.doReturn(userRecords).when(accountingServiceClient).getUserRecords(Mockito.anyString(), Mockito.anyString(), 
 				Mockito.anyString(), Mockito.anyString());
+	}
+	
+	private void setUpErrorAccounting() throws FogbowException {
+		this.userRecords = new ArrayList<Record>();
+		this.record1 = new Record(RECORD_ID_1, null, null, null, null, null, null, null, null, 0, null);
+		this.record2 = new Record(RECORD_ID_2, null, null, null, null, null, null, null, null, 0, null);
+		userRecords.add(record1);
+		userRecords.add(record2);
+		
+		TimeUtils timeUtils = new TimeUtils();
+		
+		this.accountingServiceClient = Mockito.mock(AccountingServiceClient.class);
+		Mockito.doThrow(FogbowException.class).when(accountingServiceClient).getUserRecords(ID_USER_1, 
+				PROVIDER_USER_1, timeUtils.toDate(PaymentRunner.SIMPLE_DATE_FORMAT, INITIAL_USER_1_LAST_BILLING_TIME), 
+						timeUtils.toDate(PaymentRunner.SIMPLE_DATE_FORMAT, timeValues.get(0)));
+		
+		Mockito.doReturn(userRecords).when(accountingServiceClient).getUserRecords(ID_USER_2, 
+				PROVIDER_USER_2, timeUtils.toDate(PaymentRunner.SIMPLE_DATE_FORMAT, INITIAL_USER_2_LAST_BILLING_TIME), 
+				timeUtils.toDate(PaymentRunner.SIMPLE_DATE_FORMAT, timeValues.get(1)));
 	}
 }

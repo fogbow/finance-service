@@ -1,11 +1,14 @@
 package cloud.fogbow.fs.core.plugins.finance.postpaid;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
+
+import org.apache.log4j.Logger;
+
+import com.google.common.annotations.VisibleForTesting;
 
 import cloud.fogbow.accs.api.http.response.Record;
 import cloud.fogbow.common.exceptions.FogbowException;
+import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
@@ -14,8 +17,10 @@ import cloud.fogbow.fs.core.util.AccountingServiceClient;
 import cloud.fogbow.fs.core.util.TimeUtils;
 
 public class PaymentRunner extends StoppableRunner {
+	private static Logger LOGGER = Logger.getLogger(PaymentRunner.class);
 	// TODO document this string
-	private static final String SIMPLE_DATE_FORMAT = "yyyy-MM-dd";
+	@VisibleForTesting
+	static final String SIMPLE_DATE_FORMAT = "yyyy-MM-dd";
 	public static final String USER_LAST_BILLING_TIME = "last_billing_time";
 	public static final String USER_BILLING_INTERVAL = "billing_interval";
 	private DatabaseManager databaseManager;
@@ -40,7 +45,6 @@ public class PaymentRunner extends StoppableRunner {
 	}
 
 	private long getUserLastBillingTime(FinanceUser user) {
-		// TODO Improve
 		String lastBillingTimeProperty = user.getProperty(USER_LAST_BILLING_TIME);
 		
 		if (lastBillingTimeProperty == null) {
@@ -58,19 +62,24 @@ public class PaymentRunner extends StoppableRunner {
 
 	@Override
 	public void doRun() {
-		// databaseManager.get registered users
+		// get registered users
 		List<FinanceUser> registeredUsers = this.databaseManager
 				.getRegisteredUsersByPaymentType(PostPaidFinancePlugin.PLUGIN_NAME);
 
 		// for each user
 		for (FinanceUser user : registeredUsers) {
 			// if it is billing time
-			long billingTime = this.timeUtils.getCurrentTimeMillis(); 
-			if ((billingTime - getUserLastBillingTime(user) >= getUserBillingInterval(user))) {
+			long billingTime = this.timeUtils.getCurrentTimeMillis();
+			long lastBillingTime = getUserLastBillingTime(user);
+			long billingInterval = getUserBillingInterval(user);
+			
+			if (isBillingTime(billingTime, lastBillingTime, billingInterval)) {
 				// get records
 				try {
-					List<Record> userRecords = this.accountingServiceClient.getUserRecords(user.getId(), user.getProvider(),
-							toDate(getUserLastBillingTime(user)), toDate(billingTime));
+					String invoiceStartDate = this.timeUtils.toDate(SIMPLE_DATE_FORMAT, lastBillingTime);
+					String invoiceEndDate = this.timeUtils.toDate(SIMPLE_DATE_FORMAT, billingTime); 
+					List<Record> userRecords = this.accountingServiceClient.getUserRecords(user.getId(), 
+							user.getProvider(), invoiceStartDate, invoiceEndDate);
 					// write records on db
 					user.setPeriodRecords(userRecords);
 					
@@ -79,8 +88,7 @@ public class PaymentRunner extends StoppableRunner {
 					
 					user.setProperty(USER_LAST_BILLING_TIME, String.valueOf(billingTime));
 				} catch (FogbowException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					LOGGER.error(String.format(Messages.Log.FAILED_TO_GENERATE_INVOICE, user.getId(), e.getMessage()));
 				}
 			}
 		}
@@ -88,8 +96,7 @@ public class PaymentRunner extends StoppableRunner {
 		checkIfMustStop();
 	}
 
-	private String toDate(long lastBillingTime) {
-		Date date = new Date(lastBillingTime); 
-		return new SimpleDateFormat(SIMPLE_DATE_FORMAT).format(date);
+	private boolean isBillingTime(long billingTime, long lastBillingTime, long billingInterval) {
+		return billingTime - lastBillingTime >= billingInterval;
 	}
 }

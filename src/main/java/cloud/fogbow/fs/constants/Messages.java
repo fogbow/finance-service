@@ -10,6 +10,7 @@ public class Messages {
 	public static class Log {
 		public static final String ADDING_USER = "Adding user: %s.";
 		public static final String CHANGING_OPTIONS = "Changing finance options for user: %s.";
+		public static final String FAILED_TO_GENERATE_INVOICE = "Failed to generate invoice for user %s. Error message: %s.";
 		public static final String RELOADING_AUTHORIZATION_PLUGIN = "Reloading authorization plugin.";
 		public static final String RELOADING_CONFIGURATION = "Reloading service configuration.";
 		public static final String RELOADING_FINANCE_PLUGINS = "Reloading finance plugins.";
