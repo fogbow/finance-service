@@ -17,7 +17,6 @@ import cloud.fogbow.fs.constants.SystemConstants;
 import cloud.fogbow.fs.core.ApplicationFacade;
 
 // TODO documentation
-// TODO should add translator from fogbowexception to error code
 @CrossOrigin
 @RestController
 @RequestMapping(value = User.USER_ENDPOINT)
