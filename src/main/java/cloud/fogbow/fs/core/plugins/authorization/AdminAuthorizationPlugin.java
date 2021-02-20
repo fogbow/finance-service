@@ -11,6 +11,7 @@ import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
 import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.PropertiesHolder;
 
+// TODO Tests
 public class AdminAuthorizationPlugin implements AuthorizationPlugin<FsOperation> {
 	private static final String SEPARATOR = ",";
 	private Set<String> adminsIds;

@@ -8,6 +8,7 @@ import cloud.fogbow.fs.core.plugins.PaymentManager;
 import cloud.fogbow.fs.core.plugins.finance.StoppableRunner;
 import cloud.fogbow.fs.core.util.RasClient;
 
+// TODO tests
 public class StopServiceRunner extends StoppableRunner {
 	private DatabaseManager databaseManager;
 	private PaymentManager paymentManager;
