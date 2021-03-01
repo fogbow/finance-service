@@ -8,7 +8,6 @@ import cloud.fogbow.fs.core.plugins.PaymentManager;
 import cloud.fogbow.fs.core.plugins.finance.StoppableRunner;
 import cloud.fogbow.fs.core.util.RasClient;
 
-// TODO tests
 public class StopServiceRunner extends StoppableRunner {
 	private DatabaseManager databaseManager;
 	private PaymentManager paymentManager;
@@ -24,6 +23,9 @@ public class StopServiceRunner extends StoppableRunner {
 
 	@Override
 	public void doRun() {
+		// This runner depends on PostPaidFinancePlugin. Maybe we should 
+		// pass the plugin name as an argument to the constructor, so we 
+		// can reuse this class.
 		List<FinanceUser> registeredUsers = this.databaseManager
 				.getRegisteredUsersByPaymentType(PostPaidFinancePlugin.PLUGIN_NAME);
 

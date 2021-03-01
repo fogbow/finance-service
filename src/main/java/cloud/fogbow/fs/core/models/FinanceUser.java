@@ -24,6 +24,7 @@ public class FinanceUser {
 	
 	public FinanceUser(Map<String, String> properties) {
 		LOGGER.info(properties);
+		this.stoppedResources = false;
 		this.properties = properties;
 	}
 	
