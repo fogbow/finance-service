@@ -39,4 +39,10 @@ public class StubPostPaidPaymentManager implements PaymentManager {
 		FinanceUser user = databaseManager.getUserById(userId);
 		user.setProperty(FinanceUser.PAYMENT_STATUS_KEY, PAYMENT_STATUS_WAITING);
 	}
+
+	@Override
+	public String getUserFinanceState(String userId, String property) {
+		// TODO implement
+		return property;
+	}
 }

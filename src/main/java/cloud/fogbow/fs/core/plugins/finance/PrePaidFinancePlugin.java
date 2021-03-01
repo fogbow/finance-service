@@ -24,4 +24,16 @@ public class PrePaidFinancePlugin implements FinancePlugin {
 		return false;
 	}
 
+	@Override
+	public boolean managesUser(String userId) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public String getUserFinanceState(String userId, String property) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

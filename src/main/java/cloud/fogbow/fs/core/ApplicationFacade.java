@@ -119,6 +119,19 @@ public class ApplicationFacade {
 		}
 	}
 	
+	public String getFinanceStateProperty(String userToken, String userId, String property) throws FogbowException {
+		LOGGER.info(String.format(Messages.Log.GETTING_FINANCE_STATE, userId, property));
+		
+		authenticateAndAuthorize(userToken);
+		synchronizationManager.startOperation();
+
+		try {
+			return this.financeManager.getFinanceStateProperty(userId, property);
+		} finally {
+			synchronizationManager.finishOperation();
+		}
+	}
+	
 	public void reload(String userToken) throws UnauthenticatedUserException, UnauthorizedRequestException, FogbowException {
 		LOGGER.info(String.format(Messages.Log.RELOADING_CONFIGURATION));
 		
@@ -157,4 +170,6 @@ public class ApplicationFacade {
         FsOperation operation = new FsOperation();
         this.authorizationPlugin.isAuthorized(systemUser, operation);
 	}
+
+	
 }

@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import cloud.fogbow.common.exceptions.FogbowException;
+import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.api.parameters.AuthorizableUser;
 import cloud.fogbow.fs.api.parameters.User;
 import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
@@ -25,6 +27,9 @@ public class FinanceManager {
 		for (String financePluginClassName : financePluginsString.split(FINANCE_PLUGINS_CLASS_NAMES_SEPARATOR)) {
 			financePlugins.add(FinancePluginInstantiator.getFinancePlugin(financePluginClassName, databaseManager));
 		}
+		
+		this.financePlugins = financePlugins;
+		this.databaseManager = databaseManager;
 	}
 	
 	public FinanceManager(List<FinancePlugin> financePlugins, 
@@ -36,8 +41,8 @@ public class FinanceManager {
 	// TODO test
 	public boolean isAuthorized(AuthorizableUser user) {
 		for (FinancePlugin plugin : financePlugins) {
-			if (!plugin.isAuthorized(user.getUserId(), user.getOperationParameters())) {
-				return false;
+			if (plugin.managesUser(user.getUserId())) {
+				return plugin.isAuthorized(user.getUserId(), user.getOperationParameters());
 			}
 		}
 		
@@ -70,5 +75,17 @@ public class FinanceManager {
 
 	public void updateFinanceState(String userId, HashMap<String, String> financeState) {
 		this.databaseManager.updateFinanceState(userId, financeState);
+	}
+
+	// TODO test
+	public String getFinanceStateProperty(String userId, String property) throws FogbowException {
+		for (FinancePlugin plugin : financePlugins) {
+			if (plugin.managesUser(userId)) {
+				return plugin.getUserFinanceState(userId, property);
+			}
+		}
+		
+		// TODO add message
+		throw new InvalidParameterException();
 	}
 }

@@ -32,4 +32,14 @@ public class Resources {
 		ApplicationFacade.getInstance().updateFinanceState(systemUserToken, userId, financeState);
 		return new ResponseEntity<Boolean>(HttpStatus.OK);
 	}
+	
+	// TODO documentation
+	@RequestMapping(value = "/{userId}/{property}", method = RequestMethod.GET)
+	public ResponseEntity<String> getFinanceStateProperty(
+			@PathVariable String userId,
+			@PathVariable String property,
+			@RequestHeader(value = SystemConstants.SYSTEM_USER_TOKEN_HEADER_KEY) String systemUserToken) throws FogbowException {
+		String propertyValue = ApplicationFacade.getInstance().getFinanceStateProperty(systemUserToken, userId, property);
+		return new ResponseEntity<String>(propertyValue, HttpStatus.OK);
+	}
 }

@@ -1,5 +1,6 @@
 package cloud.fogbow.fs.core.plugins.finance.postpaid;
 
+import java.util.List;
 import java.util.Map;
 
 import cloud.fogbow.common.exceptions.ConfigurationErrorException;
@@ -7,6 +8,7 @@ import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
 import cloud.fogbow.fs.core.PaymentManagerInstantiator;
 import cloud.fogbow.fs.core.PropertiesHolder;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
+import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.plugins.FinancePlugin;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
 import cloud.fogbow.fs.core.util.AccountingServiceClient;
@@ -27,16 +29,20 @@ public class PostPaidFinancePlugin implements FinancePlugin {
 	private long invoiceWaitTime;
 	
 	public PostPaidFinancePlugin(DatabaseManager databaseManager) throws ConfigurationErrorException {
-		this.accountingServiceClient = new AccountingServiceClient();
-		this.rasClient = new RasClient();
+		this(databaseManager, new AccountingServiceClient(), new RasClient(),
+				PaymentManagerInstantiator.getPaymentManager(
+						PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.POST_PAID_PAYMENT_MANAGER),
+						databaseManager),
+				Long.valueOf(PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.INVOICE_WAIT_TIME)));
+	}
+	
+	public PostPaidFinancePlugin(DatabaseManager databaseManager, AccountingServiceClient accountingServiceClient, 
+			RasClient rasClient, PaymentManager paymentManager, long invoiceWaitTime) {
+		this.accountingServiceClient = accountingServiceClient;
+		this.rasClient = rasClient;
 		this.databaseManager = databaseManager;
-		
-		this.paymentManager = PaymentManagerInstantiator.getPaymentManager(
-				PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.POST_PAID_PAYMENT_MANAGER), 
-				databaseManager);
-		
-		this.invoiceWaitTime = Long.valueOf(PropertiesHolder.getInstance().
-				getProperty(ConfigurationPropertyKeys.INVOICE_WAIT_TIME));
+		this.paymentManager = paymentManager;
+		this.invoiceWaitTime = invoiceWaitTime;
 	}
 	
 	@Override
@@ -62,5 +68,23 @@ public class PostPaidFinancePlugin implements FinancePlugin {
 	@Override
 	public boolean isAuthorized(String userId, Map<String, String> operationParameters) {
 		return this.paymentManager.hasPaid(userId);
+	}
+
+	@Override
+	public boolean managesUser(String userId) {
+		List<FinanceUser> financeUsers = this.databaseManager.getRegisteredUsersByPaymentType(PLUGIN_NAME); 
+		
+		for (FinanceUser financeUser : financeUsers) {
+			if (financeUser.getId().equals(userId)) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+
+	@Override
+	public String getUserFinanceState(String userId, String property) {
+		return this.paymentManager.getUserFinanceState(userId, property);
 	}
 }

@@ -6,4 +6,6 @@ public interface PaymentManager {
 	boolean hasPaid(String userId);
 	// TODO documentation
 	void startPaymentProcess(String userId);
+	// TODO documentation
+	String getUserFinanceState(String userId, String property);
 }
