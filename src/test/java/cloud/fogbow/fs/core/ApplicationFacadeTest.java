@@ -51,7 +51,9 @@ public class ApplicationFacadeTest {
 	private FsOperation operation;
 	private AuthorizationPlugin<FsOperation> authorizationPlugin;
 
-	// TODO documentation
+	// test case: When calling the addUser method, it must authorize the 
+	// operation and call the FinanceManager. Also, it must start and finish 
+	// operations correctly using the SynchronizationManager.
 	@Test
 	public void testAddUser() throws FogbowException {
 		setUpPublicKeysHolder();
@@ -69,7 +71,9 @@ public class ApplicationFacadeTest {
         Mockito.verify(financeManager, Mockito.times(1)).addUser(user);
 	}
 	
-	// TODO documentation
+	// test case: When calling the addUser method, if the call to 
+	// FinanceManager.addUser throws an exception, the method
+	// must rethrow the exception and finish the operation correctly.
 	@Test
 	public void testAddUserFinishesOperationIfOperationFails() throws FogbowException  {
 		setUpPublicKeysHolder();
@@ -97,7 +101,9 @@ public class ApplicationFacadeTest {
         Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
 	}
 	
-	// TODO documentation
+	// test case: When calling the removeUser method, it must authorize the
+	// operation and call the FinanceManager. Also, it must start and finish
+	// operations correctly using the SynchronizationManager.
 	@Test
 	public void testRemoveUser() throws FogbowException {
 		setUpPublicKeysHolder();
@@ -113,7 +119,9 @@ public class ApplicationFacadeTest {
 		Mockito.verify(financeManager, Mockito.times(1)).removeUser(this.userIdToRemove);
 	}
 	
-	// TODO documentation
+	// test case: When calling the removeUser method, if the call to
+	// FinanceManager.removeUser throws an exception, the method
+	// must rethrow the exception and finish the operation correctly.
 	@Test
 	public void testRemoveUserFinishesOperationIfOperationFails() throws FogbowException {
 		setUpPublicKeysHolder();
@@ -140,7 +148,9 @@ public class ApplicationFacadeTest {
 		Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
 	}
 
-	// TODO documentation
+	// test case: When calling the changeOptions method, it must authorize the
+	// operation and call the FinanceManager. Also, it must start and finish
+	// operations correctly using the SynchronizationManager.
 	@Test
 	public void testChangeOptions() throws FogbowException {
 		setUpPublicKeysHolder();
@@ -156,7 +166,9 @@ public class ApplicationFacadeTest {
 		Mockito.verify(financeManager, Mockito.times(1)).changeOptions(this.userIdToChange, this.newOptions);
 	}
 	
-	// TODO documentation
+	// test case: When calling the changeOptions method, if the call to
+	// FinanceManager.changeOptions throws an exception, the method
+	// must rethrow the exception and finish the operation correctly.
 	@Test
 	public void testChangeOptionsFinishesOperationIfOperationFails() throws FogbowException {
 		setUpPublicKeysHolder();
@@ -183,7 +195,9 @@ public class ApplicationFacadeTest {
 		Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
 	}
 	
-	// TODO documentation
+	// test case: When calling the updateFinanceState method, it must authorize the
+	// operation and call the FinanceManager. Also, it must start and finish
+	// operations correctly using the SynchronizationManager.
 	@Test
 	public void testUpdateFinanceState() throws FogbowException {
 		setUpPublicKeysHolder();
@@ -199,7 +213,9 @@ public class ApplicationFacadeTest {
 		Mockito.verify(financeManager, Mockito.times(1)).updateFinanceState(this.userIdToChange, this.newState);
 	}
 	
-	// TODO documentation
+	// test case: When calling the updateFinanceState method, if the call to
+	// FinanceManager.updateFinanceState throws an exception, the method
+	// must rethrow the exception and finish the operation correctly.
 	@Test
 	public void testUpdateFinanceStateFinishesOperationIfOperationFails() throws FogbowException {
 		setUpPublicKeysHolder();

@@ -39,7 +39,8 @@ public class AuthenticationServiceClientTest {
 	private Map<String, Object> body;
 	private HttpResponse response;
 
-	// TODO documentation
+	// test case: When calling the getToken method, it must set 
+	// up a request correctly and return the correct token.
 	@Test
 	public void testGetToken() throws FogbowException, URISyntaxException {
 		setUpRequest();
@@ -51,7 +52,9 @@ public class AuthenticationServiceClientTest {
 		assertEquals(userToken, returnedToken);
 	}
 	
-	// TODO documentation
+	// test case: When calling the getToken method, if the return code
+	// is not 201 or 401 (server or communication error), 
+	// it must throw an UnavailableProviderException.
 	@Test(expected = UnavailableProviderException.class)
 	public void testGetTokenErrorReturnCode() throws FogbowException, URISyntaxException {
 		setUpRequest();
@@ -61,7 +64,8 @@ public class AuthenticationServiceClientTest {
 		asClient.getToken(publicKey, username, password);
 	}
 
-	// TODO documentation
+	// test case: When calling the getToken method, if the return
+	// code is 401 (authentication failed), it must throw an UnauthenticatedUserException.
 	@Test(expected = UnauthenticatedUserException.class)
 	public void testGetTokenAuthenticationError() throws FogbowException, URISyntaxException {
 		setUpRequest();

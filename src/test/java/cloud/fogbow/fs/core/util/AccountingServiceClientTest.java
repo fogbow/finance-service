@@ -107,7 +107,9 @@ public class AccountingServiceClientTest {
 	private int successCode = 200;
 	private int errorCode = 500;
 
-	// TODO documentation
+	// test case: When calling the method getUserRecords, it must set up 
+	// one request for each resource type correctly and return the correct 
+	// records for the user.
 	@Test
 	public void testGetUserRecords() throws FogbowException, GeneralSecurityException {
 		setUpKeys();
@@ -129,7 +131,8 @@ public class AccountingServiceClientTest {
 		assertTrue(userRecords.contains(recordVolume));
 	}
 
-	// TODO documentation
+	// test case: When calling the method getUserRecords and the return code 
+	// for the compute request is not 200, it must throw an UnavailableProviderException.
 	@Test(expected = UnavailableProviderException.class)
 	public void testGetUserRecordsErrorReturnCodeComputeRequest() throws FogbowException, GeneralSecurityException {
 		setUpKeys();
@@ -145,7 +148,8 @@ public class AccountingServiceClientTest {
 		accsClient.getUserRecords(userId, requester, requestStartDate, requestEndDate);
 	}
 	
-	// TODO documentation
+	// test case: When calling the method getUserRecords and the return code
+	// for the network request is not 200, it must throw an UnavailableProviderException.
 	@Test(expected = UnavailableProviderException.class)
 	public void testGetUserRecordsErrorReturnCodeNetworkRequest() throws FogbowException, GeneralSecurityException {
 		setUpKeys();
@@ -161,7 +165,8 @@ public class AccountingServiceClientTest {
 		accsClient.getUserRecords(userId, requester, requestStartDate, requestEndDate);
 	}
 	
-	// TODO documentation
+	// test case: When calling the method getUserRecords and the return code
+	// for the volume request is not 200, it must throw an UnavailableProviderException.
 	@Test(expected = UnavailableProviderException.class)
 	public void testGetUserRecordsErrorReturnCodeVolumeRequest() throws FogbowException, GeneralSecurityException {
 		setUpKeys();

@@ -29,9 +29,16 @@ public class StopServiceRunnerTest {
 	private FinanceUser user1;
 	private FinanceUser user2;
 	
-	// TODO documentation
+	// test case: When calling the method doRun, it must get the
+	// list of users from the DatabaseManager. For each user, 
+	// if the user has not paid and its resources have not been stopped yet,
+	// then the method must call the RasClient to stop the resources
+	// and update the user state.
 	@Test
 	public void testStoppingUserServices() {
+		// 
+		// Set up
+		//
 		setUpDatabase();
 		
 		paymentManager = Mockito.mock(PaymentManager.class);
@@ -43,18 +50,31 @@ public class StopServiceRunnerTest {
 		
 		stopServiceRunner = new StopServiceRunner(stopServiceWaitTime ,databaseManager, paymentManager, rasClient);
 		
+		
+		
 		stopServiceRunner.doRun();
 		
+		
+		
 		assertTrue(this.user1.stoppedResources());
+		// User has paid. Therefore, its state must not change.
 		assertFalse(this.user2.stoppedResources());
 		
 		Mockito.verify(rasClient, Mockito.times(1)).pauseResourcesByUser(ID_USER_1);
+		// User has paid. Therefore, must not call RasClient to pause resources.
 		Mockito.verify(rasClient, Mockito.never()).pauseResourcesByUser(ID_USER_2);
 	}
 	
-	// TODO documentation
+	// test case: When calling the method doRun, it must get the
+	// list of users from the DatabaseManager. For each user,
+	// if the user has paid and its resources have not been resumed yet,
+	// then the method must call the RasClient to resume the resources
+	// and update the user state.
 	@Test
 	public void testResumingUserServices() {
+		//
+		// Set up
+		//
 		setUpDatabaseResumeResources();
 		
 		paymentManager = Mockito.mock(PaymentManager.class);
@@ -65,8 +85,12 @@ public class StopServiceRunnerTest {
 		rasClient = Mockito.mock(RasClient.class);
 		
 		stopServiceRunner = new StopServiceRunner(stopServiceWaitTime ,databaseManager, paymentManager, rasClient);
+
+		
 		
 		stopServiceRunner.doRun();
+		
+		
 		
 		assertTrue(this.user1.stoppedResources());
 		assertFalse(this.user2.stoppedResources());

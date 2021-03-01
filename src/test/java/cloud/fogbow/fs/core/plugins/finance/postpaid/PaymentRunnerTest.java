@@ -50,13 +50,19 @@ public class PaymentRunnerTest {
 	
 	private List<Long> timeValues;
 	
-	// TODO documentation
+	// test case: When calling the doRun method, it must get the 
+	// list of users from the DatabaseManager. For each user, 
+	// if it is billing time, it must get the user records, set
+	// the records in the database and start payment.
 	@Test
 	public void testRunIsBillingTime() throws FogbowException {
 		//
 		// Setting up mocks
 		//
 		this.timeUtils = Mockito.spy(TimeUtils.class);
+		// Set time values used by the PaymentRunner
+		// The first value is the billing time for the first user
+		// The second value is the billing time for the second user
 		timeValues = Arrays.asList(INITIAL_USER_1_LAST_BILLING_TIME + BILLING_INTERVAL, 
 				INITIAL_USER_1_LAST_BILLING_TIME + BILLING_INTERVAL + 1, 
 				INITIAL_USER_1_LAST_BILLING_TIME + BILLING_INTERVAL + 2);
@@ -99,13 +105,19 @@ public class PaymentRunnerTest {
 		assertEquals(String.valueOf(timeValues.get(1)), user2.getProperty(PaymentRunner.USER_LAST_BILLING_TIME));
 	}
 	
-	// TODO documentation
+	// test case: When calling the doRun method, it must get the
+	// list of users from the DatabaseManager. For each user,
+	// if it is not billing time, it must not change the user state
+	// nor start payment.
 	@Test
 	public void testRunNotBillingTime() throws FogbowException {
 		//
 		// Setting up mocks
 		//
 		this.timeUtils = Mockito.spy(TimeUtils.class);
+		// Set time values used by the PaymentRunner
+		// The first value is the billing time for the first user
+		// The second value is the billing time for the second user
 		timeValues = Arrays.asList(5L, 10L, 15L);
 		
 		Mockito.when(timeUtils.getCurrentTimeMillis()).thenReturn(timeValues.get(0),
@@ -139,13 +151,18 @@ public class PaymentRunnerTest {
 		assertEquals(String.valueOf(1), user2.getProperty(PaymentRunner.USER_LAST_BILLING_TIME));
 	}
 
-	// TODO documentation
+	// test case: When calling the doRun method and an exception
+	// is thrown when acquiring user records, it must handle the 
+	// exception and continue checking the remaining users.
 	@Test
 	public void testErrorOnAcquiringUserRecords() throws FogbowException {
 		//
 		// Setting up mocks
 		//
 		this.timeUtils = Mockito.spy(TimeUtils.class);
+		// Set time values used by the PaymentRunner
+		// The first value is the billing time for the first user
+		// The second value is the billing time for the second user
 		timeValues = Arrays.asList(INITIAL_USER_1_LAST_BILLING_TIME + BILLING_INTERVAL, 
 				INITIAL_USER_1_LAST_BILLING_TIME + BILLING_INTERVAL + 1, 
 				INITIAL_USER_1_LAST_BILLING_TIME + BILLING_INTERVAL + 2);
@@ -172,6 +189,9 @@ public class PaymentRunnerTest {
 		Mockito.verify(paymentManager, Mockito.times(1)).startPaymentProcess(ID_USER_2);
 
 		// PaymentRunner set the last period records
+		
+		// An exception is thrown when acquiring user1 records.
+		// Therefore, user1 state has no records.
 		List<Record> records = user1.getPeriodRecords();
 		assertNull(records);
 
