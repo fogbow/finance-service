@@ -1,4 +1,4 @@
-package cloud.fogbow.fs.core.plugins.finance;
+package cloud.fogbow.fs.core.plugins.finance.prepaid;
 
 import java.util.Map;
 

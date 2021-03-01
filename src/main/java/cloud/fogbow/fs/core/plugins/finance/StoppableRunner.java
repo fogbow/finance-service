@@ -1,5 +1,7 @@
 package cloud.fogbow.fs.core.plugins.finance;
 
+// Maybe we should move this class to common package and
+// remove this version and RAS'.
 public abstract class StoppableRunner implements Runnable {
 
     private boolean mustStop;
