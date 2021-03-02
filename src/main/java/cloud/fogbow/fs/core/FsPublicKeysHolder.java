@@ -40,7 +40,7 @@ public class FsPublicKeysHolder {
 		if (this.accsPublicKey == null) {
 			String accsAddress = PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.ACCS_URL_KEY);
 			String accsPort = PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.ACCS_PORT_KEY);
-			this.asPublicKey = PublicKeysHolder.getPublicKey(accsAddress, accsPort,
+			this.accsPublicKey = PublicKeysHolder.getPublicKey(accsAddress, accsPort,
 					cloud.fogbow.accs.api.http.request.PublicKey.PUBLIC_KEY_ENDPOINT);
 		}
 		return this.accsPublicKey;

@@ -5,10 +5,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
+
+import cloud.fogbow.fs.core.ApplicationFacade;
 import cloud.fogbow.fs.core.models.FinanceUser;
 
 public class DatabaseManager {
 
+	private static Logger LOGGER = Logger.getLogger(DatabaseManager.class);
 	private List<FinanceUser> financeUsers;
 
 	public DatabaseManager() {
@@ -44,14 +48,15 @@ public class DatabaseManager {
 	
 	public List<FinanceUser> getRegisteredUsersByPaymentType(String pluginName) {
 		ArrayList<FinanceUser> selectedUsers = new ArrayList<FinanceUser>();
-
+		LOGGER.info(pluginName);
+		
 		for (FinanceUser user : financeUsers) {
 			if (user.getProperty(FinanceUser.PAYMENT_TYPE_KEY).equals(pluginName)) {
 				selectedUsers.add(user);
 			}
 		}
 
-		return financeUsers;
+		return selectedUsers;
 	}
 
 	public void changeOptions(String userId, HashMap<String, String> financeOptions) {

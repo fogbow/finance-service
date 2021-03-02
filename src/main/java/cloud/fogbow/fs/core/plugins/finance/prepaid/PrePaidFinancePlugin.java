@@ -11,8 +11,6 @@ import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.plugins.FinancePlugin;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
-import cloud.fogbow.fs.core.plugins.finance.postpaid.PaymentRunner;
-import cloud.fogbow.fs.core.plugins.finance.postpaid.StopServiceRunner;
 import cloud.fogbow.fs.core.util.AccountingServiceClient;
 import cloud.fogbow.fs.core.util.RasClient;
 
@@ -39,12 +37,12 @@ public class PrePaidFinancePlugin implements FinancePlugin {
 	}
 	
 	public PrePaidFinancePlugin(DatabaseManager databaseManager, AccountingServiceClient accountingServiceClient, 
-			RasClient rasClient, PaymentManager paymentManager, long invoiceWaitTime) {
+			RasClient rasClient, PaymentManager paymentManager, long creditsDeductionWaitTime) {
 		this.accountingServiceClient = accountingServiceClient;
 		this.rasClient = rasClient;
 		this.databaseManager = databaseManager;
 		this.paymentManager = paymentManager;
-		this.creditsDeductionWaitTime = invoiceWaitTime;
+		this.creditsDeductionWaitTime = creditsDeductionWaitTime;
 	}
 	
 	@Override
