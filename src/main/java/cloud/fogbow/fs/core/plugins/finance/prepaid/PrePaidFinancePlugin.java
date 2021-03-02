@@ -1,39 +1,94 @@
 package cloud.fogbow.fs.core.plugins.finance.prepaid;
 
+import java.util.List;
 import java.util.Map;
 
+import cloud.fogbow.common.exceptions.ConfigurationErrorException;
+import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
+import cloud.fogbow.fs.core.PaymentManagerInstantiator;
+import cloud.fogbow.fs.core.PropertiesHolder;
+import cloud.fogbow.fs.core.datastore.DatabaseManager;
+import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.plugins.FinancePlugin;
+import cloud.fogbow.fs.core.plugins.PaymentManager;
+import cloud.fogbow.fs.core.plugins.finance.postpaid.PaymentRunner;
+import cloud.fogbow.fs.core.plugins.finance.postpaid.StopServiceRunner;
+import cloud.fogbow.fs.core.util.AccountingServiceClient;
+import cloud.fogbow.fs.core.util.RasClient;
 
 public class PrePaidFinancePlugin implements FinancePlugin {
 
+	public static final String PLUGIN_NAME = "prepaid";
+	
+	private Thread paymentThread;
+	private Thread stopServiceThread;
+	private PaymentManager paymentManager;
+	private AccountingServiceClient accountingServiceClient; 
+	private RasClient rasClient;
+	private PaymentRunner paymentRunner;
+	private StopServiceRunner stopServiceRunner;
+	private DatabaseManager databaseManager;
+	private long creditsDeductionWaitTime;
+	
+	public PrePaidFinancePlugin(DatabaseManager databaseManager) throws ConfigurationErrorException {
+		this(databaseManager, new AccountingServiceClient(), new RasClient(),
+				PaymentManagerInstantiator.getPaymentManager(
+						PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.PRE_PAID_PAYMENT_MANAGER),
+						databaseManager),
+				Long.valueOf(PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.CREDITS_DEDUCTION_WAIT_TIME)));
+	}
+	
+	public PrePaidFinancePlugin(DatabaseManager databaseManager, AccountingServiceClient accountingServiceClient, 
+			RasClient rasClient, PaymentManager paymentManager, long invoiceWaitTime) {
+		this.accountingServiceClient = accountingServiceClient;
+		this.rasClient = rasClient;
+		this.databaseManager = databaseManager;
+		this.paymentManager = paymentManager;
+		this.creditsDeductionWaitTime = invoiceWaitTime;
+	}
+	
 	@Override
 	public void startThreads() {
-		// TODO Auto-generated method stub
-
+		this.paymentRunner = new PaymentRunner(creditsDeductionWaitTime, databaseManager, accountingServiceClient, paymentManager);
+		this.paymentThread = new Thread(paymentRunner);
+		
+		this.stopServiceRunner = new StopServiceRunner(creditsDeductionWaitTime, databaseManager, paymentManager, rasClient);
+		this.stopServiceThread = new Thread(stopServiceRunner);
+		
+		this.paymentThread.start();
+		this.stopServiceThread.start();
+		
+		// TODO add a wait start
 	}
 
 	@Override
 	public void stopThreads() {
-		// TODO Auto-generated method stub
-
+		this.paymentRunner.stop();
+		this.stopServiceRunner.stop();
 	}
 
 	@Override
 	public boolean isAuthorized(String userId, Map<String, String> operationParameters) {
-		// TODO Auto-generated method stub
-		return false;
+		// I believe this implementation should be more complex
+		// and take into account the operation parameters
+		return this.paymentManager.hasPaid(userId);
 	}
 
 	@Override
 	public boolean managesUser(String userId) {
-		// TODO Auto-generated method stub
+		List<FinanceUser> financeUsers = this.databaseManager.getRegisteredUsersByPaymentType(PLUGIN_NAME);
+
+		for (FinanceUser financeUser : financeUsers) {
+			if (financeUser.getId().equals(userId)) {
+				return true;
+			}
+		}
+
 		return false;
 	}
 
 	@Override
 	public String getUserFinanceState(String userId, String property) {
-		// TODO Auto-generated method stub
-		return null;
+		return this.paymentManager.getUserFinanceState(userId, property);
 	}
-
 }

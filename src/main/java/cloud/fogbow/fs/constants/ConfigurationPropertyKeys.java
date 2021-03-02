@@ -7,6 +7,8 @@ public class ConfigurationPropertyKeys {
 	public static final String AS_PORT_KEY = "as_port";
 	public static final String AS_URL_KEY = "as_url";
 	public static final String AUTHORIZATION_PLUGIN_CLASS_KEY = "authorization_plugin_class";
+	// FIXME this constant is plugin-dependant
+	public static final String CREDITS_DEDUCTION_WAIT_TIME = "credits_deduction_wait_time";
 	public static final String FINANCE_PLUGINS_CLASS_NAMES = "finance_plugin_class_names";
 	// FIXME this constant is plugin-dependant
 	public static final String INVOICE_WAIT_TIME = "invoice_wait_time";
@@ -14,6 +16,8 @@ public class ConfigurationPropertyKeys {
 	public static final String MANAGER_PASSWORD_KEY = "manager_password";
 	// FIXME this constant is plugin-dependant
 	public static final String POST_PAID_PAYMENT_MANAGER = "post_paid_payment_manager";
+	// FIXME this constant is plugin-dependant
+	public static final String PRE_PAID_PAYMENT_MANAGER = "pre_paid_payment_manager";
 	public static final String PROVIDER_ID_KEY = "provider_id";
 	public static final String PUBLIC_KEY_KEY = "public_key";
 }
