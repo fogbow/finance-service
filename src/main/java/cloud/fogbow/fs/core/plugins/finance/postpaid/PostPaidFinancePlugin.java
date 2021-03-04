@@ -30,6 +30,7 @@ public class PostPaidFinancePlugin implements FinancePlugin {
 	private StopServiceRunner stopServiceRunner;
 	private DatabaseManager databaseManager;
 	private long invoiceWaitTime;
+	private boolean threadsAreRunning;
 
 	public PostPaidFinancePlugin(DatabaseManager databaseManager) throws ConfigurationErrorException {
 		this(databaseManager, new AccountingServiceClient(), new RasClient(),
@@ -46,26 +47,36 @@ public class PostPaidFinancePlugin implements FinancePlugin {
 		this.databaseManager = databaseManager;
 		this.paymentManager = paymentManager;
 		this.invoiceWaitTime = invoiceWaitTime;
+		this.threadsAreRunning = false;
 	}
 	
 	@Override
 	public void startThreads() {
-		this.paymentRunner = new PaymentRunner(invoiceWaitTime, databaseManager, accountingServiceClient, paymentManager);
-		this.paymentThread = new Thread(paymentRunner);
-		
-		this.stopServiceRunner = new StopServiceRunner(invoiceWaitTime, databaseManager, paymentManager, rasClient);
-		this.stopServiceThread = new Thread(stopServiceRunner);
-		
-		this.paymentThread.start();
-		this.stopServiceThread.start();
-		
-		// TODO add a wait start
+		if (!this.threadsAreRunning) {
+			this.paymentRunner = new PaymentRunner(invoiceWaitTime, databaseManager, accountingServiceClient, paymentManager);
+			this.paymentThread = new Thread(paymentRunner);
+			
+			this.stopServiceRunner = new StopServiceRunner(invoiceWaitTime, databaseManager, paymentManager, rasClient);
+			this.stopServiceThread = new Thread(stopServiceRunner);
+			
+			this.paymentThread.start();
+			this.stopServiceThread.start();
+			
+			while (!this.paymentRunner.isActive());
+			while (!this.stopServiceRunner.isActive());
+			
+			this.threadsAreRunning = true;
+		}
 	}
 
 	@Override
 	public void stopThreads() {
-		this.paymentRunner.stop();
-		this.stopServiceRunner.stop();
+		if (this.threadsAreRunning) {
+			this.paymentRunner.stop();
+			this.stopServiceRunner.stop();
+			
+			this.threadsAreRunning = false;
+		}
 	}
 
 	@Override
