@@ -3,6 +3,8 @@ package cloud.fogbow.fs.core.plugins.authorization;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import cloud.fogbow.common.exceptions.ConfigurationErrorException;
 import cloud.fogbow.common.exceptions.UnauthorizedRequestException;
 import cloud.fogbow.common.models.SystemUser;
@@ -11,9 +13,9 @@ import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
 import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.PropertiesHolder;
 
-// TODO Tests
 public class AdminAuthorizationPlugin implements AuthorizationPlugin<FsOperation> {
-	private static final String SEPARATOR = ",";
+	@VisibleForTesting
+	static final String SEPARATOR = ",";
 	private Set<String> adminsIds;
 	
 	public AdminAuthorizationPlugin() throws ConfigurationErrorException {
