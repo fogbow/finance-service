@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import cloud.fogbow.as.constants.Messages;
 import cloud.fogbow.common.exceptions.ConfigurationErrorException;
 import cloud.fogbow.common.exceptions.FogbowException;
@@ -15,12 +17,11 @@ import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.plugins.FinancePlugin;
 
 public class FinanceManager {
-
-	private static final String FINANCE_PLUGINS_CLASS_NAMES_SEPARATOR = ",";
+	@VisibleForTesting
+	static final String FINANCE_PLUGINS_CLASS_NAMES_SEPARATOR = ",";
 	private List<FinancePlugin> financePlugins;
 	private DatabaseManager databaseManager;
 	
-	// TODO test this constructor
 	public FinanceManager(DatabaseManager databaseManager) throws ConfigurationErrorException {
 		String financePluginsString = PropertiesHolder.getInstance()
 				.getProperty(ConfigurationPropertyKeys.FINANCE_PLUGINS_CLASS_NAMES);
@@ -39,20 +40,22 @@ public class FinanceManager {
 	}
 	
 	public FinanceManager(List<FinancePlugin> financePlugins, 
-			DatabaseManager databaseManager) {
+			DatabaseManager databaseManager) throws ConfigurationErrorException {
+		if (financePlugins.isEmpty()) {
+			throw new ConfigurationErrorException(Messages.Exception.NO_FINANCE_PLUGIN_SPECIFIED);
+		}
 		this.financePlugins = financePlugins;
 		this.databaseManager = databaseManager;
 	}
 
-	// TODO test
-	public boolean isAuthorized(AuthorizableUser user) {
+	public boolean isAuthorized(AuthorizableUser user) throws InvalidParameterException {
 		for (FinancePlugin plugin : financePlugins) {
 			if (plugin.managesUser(user.getUserId())) {
 				return plugin.isAuthorized(user.getUserId(), user.getOperationParameters());
 			}
 		}
 		
-		return true;
+		throw new InvalidParameterException(String.format(Messages.Exception.UNMANAGED_USER, user.getUserId()));
 	}
 
 	public void addUser(User user) {
@@ -83,7 +86,6 @@ public class FinanceManager {
 		this.databaseManager.updateFinanceState(userId, financeState);
 	}
 
-	// TODO test
 	public String getFinanceStateProperty(String userId, String property) throws FogbowException {
 		for (FinancePlugin plugin : financePlugins) {
 			if (plugin.managesUser(userId)) {
@@ -91,7 +93,6 @@ public class FinanceManager {
 			}
 		}
 		
-		// TODO add message
-		throw new InvalidParameterException();
+		throw new InvalidParameterException(String.format(Messages.Exception.UNMANAGED_USER, userId));
 	}
 }

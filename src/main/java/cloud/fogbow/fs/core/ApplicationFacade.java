@@ -8,6 +8,7 @@ import org.apache.log4j.Logger;
 import cloud.fogbow.as.core.util.AuthenticationUtil;
 import cloud.fogbow.common.constants.FogbowConstants;
 import cloud.fogbow.common.exceptions.FogbowException;
+import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.common.exceptions.UnauthenticatedUserException;
 import cloud.fogbow.common.exceptions.UnauthorizedRequestException;
 import cloud.fogbow.common.models.SystemUser;
@@ -57,7 +58,7 @@ public class ApplicationFacade {
 		this.synchronizationManager = synchronizationManager;
 	}
 	
-	public boolean isAuthorized(AuthorizableUser user) {
+	public boolean isAuthorized(AuthorizableUser user) throws InvalidParameterException {
 		synchronizationManager.startOperation();
 		
 		try { 
