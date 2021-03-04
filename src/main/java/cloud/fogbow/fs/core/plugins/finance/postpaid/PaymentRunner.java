@@ -18,7 +18,12 @@ import cloud.fogbow.fs.core.util.TimeUtils;
 
 public class PaymentRunner extends StoppableRunner {
 	private static Logger LOGGER = Logger.getLogger(PaymentRunner.class);
-	// TODO document this string
+	// This string represents the date format 
+	// expected by the AccountingService, as
+	// specified in the RecordService class. The format
+	// is specified through a private field, which 
+	// I think should be made public to possible
+	// clients of ACCS' API.
 	@VisibleForTesting
 	static final String SIMPLE_DATE_FORMAT = "yyyy-MM-dd";
 	public static final String USER_LAST_BILLING_TIME = "last_billing_time";
@@ -76,6 +81,7 @@ public class PaymentRunner extends StoppableRunner {
 			if (isBillingTime(billingTime, lastBillingTime, billingInterval)) {
 				// get records
 				try {
+					// Maybe move this conversion to ACCSClient
 					String invoiceStartDate = this.timeUtils.toDate(SIMPLE_DATE_FORMAT, lastBillingTime);
 					String invoiceEndDate = this.timeUtils.toDate(SIMPLE_DATE_FORMAT, billingTime); 
 					List<Record> userRecords = this.accountingServiceClient.getUserRecords(user.getId(), 

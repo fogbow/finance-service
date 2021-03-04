@@ -2,8 +2,11 @@ package cloud.fogbow.fs.core.plugins.finance.prepaid;
 
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import cloud.fogbow.accs.api.http.response.Record;
 import cloud.fogbow.common.exceptions.FogbowException;
+import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
@@ -12,7 +15,13 @@ import cloud.fogbow.fs.core.util.AccountingServiceClient;
 import cloud.fogbow.fs.core.util.TimeUtils;
 
 public class PaymentRunner extends StoppableRunner {
-
+	private static Logger LOGGER = Logger.getLogger(PaymentRunner.class);
+	// This string represents the date format
+	// expected by the AccountingService, as
+	// specified in the RecordService class. The format
+	// is specified through a private field, which
+	// I think should be made public to possible
+	// clients of ACCS' API.
 	static final String SIMPLE_DATE_FORMAT = "yyyy-MM-dd";
 	public static final String USER_LAST_BILLING_TIME = "last_billing_time";
 	public static final String USER_BILLING_INTERVAL = "billing_interval";
@@ -57,6 +66,7 @@ public class PaymentRunner extends StoppableRunner {
 			long billingTime = this.timeUtils.getCurrentTimeMillis();
 			long lastBillingTime = getUserLastBillingTime(user);
 			
+			// Maybe move this conversion to ACCSClient
 			String invoiceStartDate = this.timeUtils.toDate(SIMPLE_DATE_FORMAT, lastBillingTime);
 			String invoiceEndDate = this.timeUtils.toDate(SIMPLE_DATE_FORMAT, billingTime); 
 			
@@ -69,8 +79,7 @@ public class PaymentRunner extends StoppableRunner {
 				
 				user.setProperty(USER_LAST_BILLING_TIME, String.valueOf(billingTime));
 			} catch (FogbowException e) {
-				// TODO add log
-				e.printStackTrace();
+				LOGGER.error(String.format(Messages.Log.FAILED_TO_DEDUCT_CREDITS, user.getId(), e.getMessage()));
 			}
 		}
 		
