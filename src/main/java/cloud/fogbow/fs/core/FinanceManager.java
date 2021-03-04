@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import cloud.fogbow.as.constants.Messages;
+import cloud.fogbow.common.exceptions.ConfigurationErrorException;
 import cloud.fogbow.common.exceptions.FogbowException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.api.parameters.AuthorizableUser;
@@ -18,12 +20,16 @@ public class FinanceManager {
 	private List<FinancePlugin> financePlugins;
 	private DatabaseManager databaseManager;
 	
-	public FinanceManager(DatabaseManager databaseManager) {
+	// TODO test this constructor
+	public FinanceManager(DatabaseManager databaseManager) throws ConfigurationErrorException {
 		String financePluginsString = PropertiesHolder.getInstance()
 				.getProperty(ConfigurationPropertyKeys.FINANCE_PLUGINS_CLASS_NAMES);
 		ArrayList<FinancePlugin> financePlugins = new ArrayList<FinancePlugin>();
 
-		// TODO add empty string treatment
+		if (financePluginsString.isEmpty()) {
+			throw new ConfigurationErrorException(Messages.Exception.NO_FINANCE_PLUGIN_SPECIFIED);
+		}
+		
 		for (String financePluginClassName : financePluginsString.split(FINANCE_PLUGINS_CLASS_NAMES_SEPARATOR)) {
 			financePlugins.add(FinancePluginInstantiator.getFinancePlugin(financePluginClassName, databaseManager));
 		}
