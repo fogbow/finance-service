@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 
 import cloud.fogbow.common.exceptions.ConfigurationErrorException;
-import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
 import cloud.fogbow.fs.core.PaymentManagerInstantiator;
 import cloud.fogbow.fs.core.PropertiesHolder;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
@@ -15,8 +14,12 @@ import cloud.fogbow.fs.core.util.AccountingServiceClient;
 import cloud.fogbow.fs.core.util.RasClient;
 
 public class PrePaidFinancePlugin implements FinancePlugin {
-
+	// TODO documentation
 	public static final String PLUGIN_NAME = "prepaid";
+	// TODO documentation
+	public static final String PRE_PAID_PAYMENT_MANAGER = "pre_paid_payment_manager";
+	// TODO documentation
+	public static final String CREDITS_DEDUCTION_WAIT_TIME = "credits_deduction_wait_time";
 	
 	private Thread paymentThread;
 	private Thread stopServiceThread;
@@ -31,9 +34,9 @@ public class PrePaidFinancePlugin implements FinancePlugin {
 	public PrePaidFinancePlugin(DatabaseManager databaseManager) throws ConfigurationErrorException {
 		this(databaseManager, new AccountingServiceClient(), new RasClient(),
 				PaymentManagerInstantiator.getPaymentManager(
-						PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.PRE_PAID_PAYMENT_MANAGER),
+						PropertiesHolder.getInstance().getProperty(PRE_PAID_PAYMENT_MANAGER),
 						databaseManager),
-				Long.valueOf(PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.CREDITS_DEDUCTION_WAIT_TIME)));
+				Long.valueOf(PropertiesHolder.getInstance().getProperty(CREDITS_DEDUCTION_WAIT_TIME)));
 	}
 	
 	public PrePaidFinancePlugin(DatabaseManager databaseManager, AccountingServiceClient accountingServiceClient, 
