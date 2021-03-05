@@ -14,11 +14,25 @@ import cloud.fogbow.fs.core.util.AccountingServiceClient;
 import cloud.fogbow.fs.core.util.RasClient;
 
 public class PostPaidFinancePlugin implements FinancePlugin {
-	// TODO documentation
+	/**
+	 * A textual reference to this plugin. 
+	 * Normally used as a user property to set this class
+	 * as the one to be used to manage the user.
+	 */
 	public static final String PLUGIN_NAME = "postpaid";
-	// TODO documentation
+	/**
+	 * The key to use in the configuration property which 
+	 * indicates the {@link cloud.fogbow.fs.core.plugins.PaymentManager}
+	 * to use.
+	 * Required in the configuration file. 
+	 */
 	public static final String POST_PAID_PAYMENT_MANAGER = "post_paid_payment_manager";
-	// TODO documentation
+	/**
+	 * The key to use in the configuration property which
+	 * indicates the delay between invoice generation attempts.
+	 * Normally the PaymentRunner checks if the user configuration
+	 * allows the invoice generation at each attempt.
+	 */
 	public static final String INVOICE_WAIT_TIME = "invoice_wait_time";
 
 	private Thread paymentThread;

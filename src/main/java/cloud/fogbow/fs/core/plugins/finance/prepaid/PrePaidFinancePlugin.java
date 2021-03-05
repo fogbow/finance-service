@@ -14,11 +14,23 @@ import cloud.fogbow.fs.core.util.AccountingServiceClient;
 import cloud.fogbow.fs.core.util.RasClient;
 
 public class PrePaidFinancePlugin implements FinancePlugin {
-	// TODO documentation
+	/**
+	 * A textual reference to this plugin. 
+	 * Normally used as a user property to set this class
+	 * as the one to be used to manage the user.
+	 */
 	public static final String PLUGIN_NAME = "prepaid";
-	// TODO documentation
+	/**
+	 * The key to use in the configuration property which 
+	 * indicates the {@link cloud.fogbow.fs.core.plugins.PaymentManager}
+	 * to use.
+	 * Required in the configuration file. 
+	 */
 	public static final String PRE_PAID_PAYMENT_MANAGER = "pre_paid_payment_manager";
-	// TODO documentation
+	/**
+	 * The key to use in the configuration property which
+	 * indicates the delay between credits deduction attempts.
+	 */
 	public static final String CREDITS_DEDUCTION_WAIT_TIME = "credits_deduction_wait_time";
 	
 	private Thread paymentThread;
