@@ -9,6 +9,7 @@ import java.util.HashMap;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import cloud.fogbow.common.exceptions.FogbowException;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
@@ -35,7 +36,7 @@ public class StopServiceRunnerTest {
 	// then the method must call the RasClient to stop the resources
 	// and update the user state.
 	@Test
-	public void testStoppingUserServices() {
+	public void testStoppingUserServices() throws FogbowException {
 		// 
 		// Set up
 		//
@@ -71,7 +72,7 @@ public class StopServiceRunnerTest {
 	// then the method must call the RasClient to resume the resources
 	// and update the user state.
 	@Test
-	public void testResumingUserServices() {
+	public void testResumingUserServices() throws FogbowException {
 		//
 		// Set up
 		//

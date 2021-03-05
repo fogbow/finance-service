@@ -2,6 +2,7 @@ package cloud.fogbow.fs.core.plugins.finance.prepaid;
 
 import java.util.List;
 
+import cloud.fogbow.common.exceptions.FogbowException;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
@@ -38,7 +39,12 @@ public class StopServiceRunner extends StoppableRunner {
 			// if user has not paid
 			if (!paid && !stoppedResources) {
 				// stop resources
-				this.rasClient.pauseResourcesByUser(user.getId());
+				try {
+					this.rasClient.pauseResourcesByUser(user.getId());
+				} catch (FogbowException e) {
+					// TODO add logging
+					e.printStackTrace();
+				}
 				// write status in the db
 				user.setStoppedResources(true);
 			}
@@ -46,7 +52,12 @@ public class StopServiceRunner extends StoppableRunner {
 			// if user has stopped resources but paid
 			if (paid && stoppedResources) {
 				// start resources
-				this.rasClient.resumeResourcesByUser(user.getId());
+				try {
+					this.rasClient.resumeResourcesByUser(user.getId());
+				} catch (FogbowException e) {
+					// TODO add logging 
+					e.printStackTrace();
+				}
 				// write status in db
 				user.setStoppedResources(false);
 			}
