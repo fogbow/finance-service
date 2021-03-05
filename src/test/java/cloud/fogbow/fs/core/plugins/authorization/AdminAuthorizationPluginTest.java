@@ -33,7 +33,9 @@ public class AdminAuthorizationPluginTest {
 	private SystemUser user2;
 	private SystemUser userNotAdmin;
 
-	// TODO documentation
+	// test case: When calling the isAuthorized plugin, it must check if the 
+	// user belongs to the list of administrators. If the user belongs, it 
+	// must return true.
 	@Test
 	public void testIsAuthorized() throws ConfigurationErrorException, UnauthorizedRequestException {
 		setUpPlugin();
@@ -47,7 +49,9 @@ public class AdminAuthorizationPluginTest {
 		assertTrue(authorizationPlugin.isAuthorized(user2, new FsOperation()));
 	}
 	
-	// TODO documentation
+	// test case: When calling the isAuthorized plugin, it must check if the
+	// user belongs to the list of administrators. If the user does not belong, 
+	// it must throw an UnauthorizedRequestException.
 	@Test(expected = UnauthorizedRequestException.class)
 	public void testIsAuthorizedUserIsNotAuthorized() throws ConfigurationErrorException, UnauthorizedRequestException {
 		setUpPlugin();
@@ -59,7 +63,8 @@ public class AdminAuthorizationPluginTest {
 		authorizationPlugin.isAuthorized(userNotAdmin, new FsOperation());
 	}
 	
-	// TODO documentation
+	// test case: When calling the constructor and the list of administrators
+	// is empty, it must throw a ConfigurationErrorException.
 	@Test(expected = ConfigurationErrorException.class)
 	public void testConstructorThrowsExceptionIfNoAdminIsGiven() throws ConfigurationErrorException {
 		setUpPluginNoAdmin();

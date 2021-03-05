@@ -48,7 +48,10 @@ public class PaymentRunnerTest {
 	
 	private List<Long> timeValues;
 	
-	// TODO documentation
+	// test case: When calling the doRun method, it must get the
+	// list of users from the DatabaseManager. For each user 
+	// it must get the user records, set the records in the database and 
+	// start payment.
 	@Test
 	public void testDoRun() throws FogbowException {
 		//
@@ -100,7 +103,9 @@ public class PaymentRunnerTest {
 		assertEquals(String.valueOf(timeValues.get(1)), user2.getProperty(PaymentRunner.USER_LAST_BILLING_TIME));
 	}
 	
-	// TODO documentation
+	// test case: When calling the doRun method and an exception
+	// is thrown when acquiring user records, it must handle the
+	// exception and continue checking the remaining users.
 	@Test
 	public void testErrorOnAcquiringUserRecords() throws FogbowException {
 		//

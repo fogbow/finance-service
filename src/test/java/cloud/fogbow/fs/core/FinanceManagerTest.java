@@ -46,7 +46,10 @@ public class FinanceManagerTest {
 	private AuthorizableUser user2;
 	private AuthorizableUser user3;
 
-	// TODO documentation
+	// test case: When calling the constructor, it must get
+	// the names of the finance plugins from a PropertiesHolder
+	// instance and call the FinancePluginInstantiator to 
+	// instantiate the finance plugins.
 	@Test
 	public void testConstructor() throws ConfigurationErrorException {
 		setUpFinancePlugin();
@@ -79,7 +82,8 @@ public class FinanceManagerTest {
 		FinancePluginInstantiator.getFinancePlugin(pluginName2, databaseManager);
 	}
 	
-	// TODO documentation
+	// test case: When calling the constructor and the list
+	// of finance plugins is empty, it must throw a ConfigurationErrorException.
 	@Test(expected = ConfigurationErrorException.class)
 	public void testConstructorThrowsExceptionIfNoFinancePluginIsGiven() throws ConfigurationErrorException {
 		String pluginString = "";
@@ -93,7 +97,8 @@ public class FinanceManagerTest {
 		new FinanceManager(databaseManager);
 	}
 	
-	// TODO documentation
+	// test case: When calling the constructor passing an empty list
+	// of finance plugins, it must throw a ConfigurationErrorException.
 	@Test(expected = ConfigurationErrorException.class)
 	public void testConstructorChecksPluginsListIsNotEmpty() throws ConfigurationErrorException {
 		financePlugins = new ArrayList<FinancePlugin>();
@@ -103,7 +108,9 @@ public class FinanceManagerTest {
 		new FinanceManager(financePlugins, databaseManager);
 	}
 	
-	// TODO documentation
+	// test case: When calling the isAuthorized method passing an AuthorizableUser,
+	// it must check which finance plugin manages the user and call the isAuthorized 
+	// method of the plugin.
 	@Test
 	public void testIsAuthorized() throws InvalidParameterException, ConfigurationErrorException {
 		setUpFinancePlugin();
@@ -115,7 +122,8 @@ public class FinanceManagerTest {
 		assertFalse(financeManager.isAuthorized(user3));
 	}
 
-	// TODO documentation
+	// test case: When calling the isAuthorized method passing an AuthorizableUser which
+	// is not managed by any finance plugin, it must throw an InvalidParameterException.
 	@Test(expected = InvalidParameterException.class)
 	public void testIsAuthorizedUserIsNotManaged() throws InvalidParameterException, ConfigurationErrorException {
 		setUpFinancePluginUnmanagedUser();
@@ -124,7 +132,9 @@ public class FinanceManagerTest {
 		financeManager.isAuthorized(user1);
 	}
 	
-	// TODO documentation
+	// test case: When calling the getFinanceStateProperty method passing an AuthorizableUser, 
+	// it must check which finance plugin manages the user and call the getUserFinanceState
+	// method of the plugin.
 	@Test
 	public void testGetFinanceStateProperty() throws FogbowException {
 		setUpFinancePlugin();
@@ -136,7 +146,8 @@ public class FinanceManagerTest {
 		assertEquals(PROPERTY_VALUE_3, financeManager.getFinanceStateProperty(USER_ID_3, PROPERTY_NAME_3));
 	}
 	
-	// TODO documentation
+	// test case: When calling the getFinanceStateProperty method passing an AuthorizableUser
+	// which is not managed by any finance plugin, it must throw an InvalidParameterException.
 	@Test(expected = InvalidParameterException.class)
 	public void testGetFinanceStatePropertyUserIsNotManaged() throws FogbowException {
 		setUpFinancePluginUnmanagedUser();
@@ -145,7 +156,8 @@ public class FinanceManagerTest {
 		financeManager.getFinanceStateProperty(USER_ID_1, PROPERTY_NAME_1);
 	}
 	
-	// TODO documentation
+	// test case: When calling the startPlugins method, it must call the startThreads
+	// method of all the known finance plugins.
 	@Test
 	public void testStartThreads() throws ConfigurationErrorException {
 		setUpFinancePlugin();
@@ -158,7 +170,8 @@ public class FinanceManagerTest {
 		Mockito.verify(plugin2, Mockito.times(1)).startThreads();
 	}
 
-	// TODO documentation
+	// test case: When calling the stopPlugins method, it must call the stopThreads
+	// method of all the known finance plugins.
 	@Test
 	public void testStopThreads() throws ConfigurationErrorException {
 		setUpFinancePlugin();

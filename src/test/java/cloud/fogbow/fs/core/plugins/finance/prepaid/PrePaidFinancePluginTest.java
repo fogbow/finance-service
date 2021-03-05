@@ -25,7 +25,9 @@ public class PrePaidFinancePluginTest {
 	private PaymentManager paymentManager;
 	private long creditsDeductionWaitTime = 1L;
 	
-	// TODO documentation
+	// test case: When calling the managesUser method, it must
+	// get all managed users from a DatabaseManager instance and
+	// check if the given user belongs to the managed users list.
 	@Test
 	public void testManagesUser() {
 		FinanceUser financeUser1 = new FinanceUser();
