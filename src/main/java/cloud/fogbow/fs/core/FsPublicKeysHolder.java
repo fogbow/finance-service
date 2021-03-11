@@ -9,6 +9,7 @@ import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
 public class FsPublicKeysHolder {
 	private RSAPublicKey asPublicKey;
 	private RSAPublicKey accsPublicKey;
+	private RSAPublicKey rasPublicKey;
 	
 	private static FsPublicKeysHolder instance;
 
@@ -44,5 +45,15 @@ public class FsPublicKeysHolder {
 					cloud.fogbow.accs.api.http.request.PublicKey.PUBLIC_KEY_ENDPOINT);
 		}
 		return this.accsPublicKey;
+	}
+	
+	public RSAPublicKey getRasPublicKey() throws FogbowException {
+		if (this.rasPublicKey == null) {
+			String rasAddress = PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.RAS_URL_KEY);
+			String rasPort = PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.RAS_PORT_KEY);
+			this.rasPublicKey = PublicKeysHolder.getPublicKey(rasAddress, rasPort,
+					cloud.fogbow.ras.api.http.request.PublicKey.PUBLIC_KEY_ENDPOINT);
+		}
+		return this.rasPublicKey;
 	}
 }

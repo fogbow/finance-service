@@ -12,4 +12,6 @@ public class ConfigurationPropertyKeys {
 	public static final String MANAGER_PASSWORD_KEY = "manager_password";
 	public static final String PROVIDER_ID_KEY = "provider_id";
 	public static final String PUBLIC_KEY_KEY = "public_key";
+	public static final String RAS_PORT_KEY = "ras_port";
+	public static final String RAS_URL_KEY = "ras_url";
 }

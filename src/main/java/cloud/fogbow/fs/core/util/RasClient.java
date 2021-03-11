@@ -2,20 +2,31 @@ package cloud.fogbow.fs.core.util;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.GeneralSecurityException;
+import java.security.Key;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpResponseException;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import cloud.fogbow.as.core.util.TokenProtector;
+import cloud.fogbow.common.constants.FogbowConstants;
 import cloud.fogbow.common.constants.HttpMethod;
+import cloud.fogbow.common.exceptions.ConfigurationErrorException;
 import cloud.fogbow.common.exceptions.FogbowException;
+import cloud.fogbow.common.exceptions.InternalServerErrorException;
+import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.common.exceptions.UnavailableProviderException;
+import cloud.fogbow.common.util.CryptoUtil;
+import cloud.fogbow.common.util.ServiceAsymmetricKeysHolder;
 import cloud.fogbow.common.util.connectivity.HttpRequestClient;
 import cloud.fogbow.common.util.connectivity.HttpResponse;
 import cloud.fogbow.fs.api.http.CommonKeys;
+import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
+import cloud.fogbow.fs.core.FsPublicKeysHolder;
+import cloud.fogbow.fs.core.PropertiesHolder;
 
 public class RasClient {
 	
@@ -28,74 +39,52 @@ public class RasClient {
 	private String rasAddress;
 	private String rasPort;
 	
-	public void pauseResourcesByUser(String userId) throws FogbowException {
-		String token = authenticationServiceClient.getToken(publicKey, managerUsername, managerPassword);
+	public RasClient() throws ConfigurationErrorException {
+		this(new AuthenticationServiceClient(),
+				PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.MANAGER_USERNAME_KEY),
+				PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.MANAGER_PASSWORD_KEY),
+				PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.RAS_URL_KEY),
+				PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.RAS_PORT_KEY));
+	}
+	
+	public RasClient(AuthenticationServiceClient authenticationServiceClient, String managerUserName, 
+			String managerPassword, String rasAddress, String rasPort) throws ConfigurationErrorException {
+		this.authenticationServiceClient = authenticationServiceClient;
+		this.managerUsername = managerUserName;
+		this.managerPassword = managerPassword;
+		this.rasAddress = rasAddress;
+		this.rasPort = rasPort;
 		
 		try {
-			List<String> computeIds = getComputesList(userId, token);
-
-			for (String computeId : computeIds) {
-				pauseCompute(computeId, token);
-			}
+			this.publicKey = CryptoUtil.toBase64(ServiceAsymmetricKeysHolder.getInstance().getPublicKey());
+		} catch (InternalServerErrorException e) {
+			throw new ConfigurationErrorException(e.getMessage());
+		} catch (GeneralSecurityException e) {
+			throw new ConfigurationErrorException(e.getMessage());
+		}
+	}
+	
+	public void pauseResourcesByUser(String userId) throws FogbowException {
+		try {
+			// TODO We should not need to get this token in all the calls to pauseUserComputes.
+			// I think we should keep the value and reacquire the token after a certain time.
+			String token = authenticationServiceClient.getToken(publicKey, managerUsername, managerPassword);
+			Key keyToDecrypt = ServiceAsymmetricKeysHolder.getInstance().getPrivateKey();
+			Key keyToEncrypt = FsPublicKeysHolder.getInstance().getRasPublicKey(); 
+			
+			String newToken = TokenProtector.rewrap(keyToDecrypt, keyToEncrypt, token, FogbowConstants.TOKEN_STRING_SEPARATOR);
+			pauseComputesForUser(userId, newToken);
 		} catch (URISyntaxException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (FogbowException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new InvalidParameterException(e.getMessage());
 		}
 	}
 	
-	private List<String> getComputesList(String userId, String token) throws URISyntaxException, FogbowException {
-		HttpResponse response = doComputesListRequestAndCheckStatus(token, userId);
-		return getComputesListFromResponse(response);
+	private void pauseComputesForUser(String userId, String token) throws URISyntaxException, FogbowException {
+		doPauseRequestAndCheckStatus(userId, token);
 	}
 
-	private HttpResponse doComputesListRequestAndCheckStatus(String token, String userId) throws URISyntaxException, FogbowException {
-		// TODO Add base endpoint
-		String endpoint = getComputesListEndpoint("", userId);
-		HttpResponse response = doComputesListRequest(token, endpoint, userId);
-		if (response.getHttpCode() > HttpStatus.SC_OK) {
-			Throwable e = new HttpResponseException(response.getHttpCode(), response.getContent());
-			throw new UnavailableProviderException(e.getMessage());
-		}
-
-		return response;
-	}
-
-	private String getComputesListEndpoint(String computesListEndpoint, String userId) throws URISyntaxException {
-		// TODO Currently this endpoint does not exist
-		URI uri = new URI(rasAddress);
-        uri = UriComponentsBuilder.fromUri(uri).port(rasPort).path(computesListEndpoint).path("/").path(userId).
-                build(true).toUri();
-        return uri.toString();
-	}
-
-	private HttpResponse doComputesListRequest(String token, String endpoint, String userId) throws URISyntaxException, FogbowException {
-		// header
-		HashMap<String, String> headers = new HashMap<String, String>();
-		headers.put(CommonKeys.CONTENT_TYPE_KEY, RECORDS_REQUEST_CONTENT_TYPE);
-		headers.put(CommonKeys.SYSTEM_USER_TOKEN_HEADER_KEY, token);
-		
-		// TODO implement
-		// body
-		Map<String, String> body = new HashMap<String, String>();
-
-		return HttpRequestClient.doGenericRequest(HttpMethod.GET, endpoint, headers, body);
-	}
-
-	// TODO implement
-	private List<String> getComputesListFromResponse(HttpResponse response) {
-		return null;
-	}
-	
-	private void pauseCompute(String computeId, String token) throws URISyntaxException, FogbowException {
-		doPauseRequestAndCheckStatus(token, computeId);
-	}
-	
-	private void doPauseRequestAndCheckStatus(String token, String computeId) throws URISyntaxException, FogbowException {
-		// TODO Add base endpoint
-		String endpoint = getPauseEndpoint("", computeId);
+	private void doPauseRequestAndCheckStatus(String userId, String token) throws URISyntaxException, FogbowException {
+		String endpoint = getPauseEndpoint(cloud.fogbow.ras.api.http.request.Compute.PAUSE_COMPUTE_ENDPOINT, userId);
 		HttpResponse response = doPauseRequest(token, endpoint);
 		if (response.getHttpCode() > HttpStatus.SC_OK) {
 			Throwable e = new HttpResponseException(response.getHttpCode(), response.getContent());
@@ -103,12 +92,10 @@ public class RasClient {
 		}
 	}
 
-	private String getPauseEndpoint(String pauseApiBaseEndpoint, String computeId) throws URISyntaxException {
+	private String getPauseEndpoint(String pauseApiBaseEndpoint, String userId) throws URISyntaxException {
 		URI uri = new URI(rasAddress);
-        uri = UriComponentsBuilder.fromUri(uri).port(rasPort).path(pauseApiBaseEndpoint).path("/").
-        		// FIXME constant
-        		path(computeId).path("/").path("pause").
-                build(true).toUri();
+        uri = UriComponentsBuilder.fromUri(uri).port(rasPort).path(pauseApiBaseEndpoint).
+        		path("/").path(userId).build(true).toUri();
         return uri.toString();
 	}
 	
@@ -125,30 +112,26 @@ public class RasClient {
 	}
 
 	public void resumeResourcesByUser(String userId) throws FogbowException {
-		String token = authenticationServiceClient.getToken(publicKey, managerUsername, managerPassword);
-		
 		try {
-			List<String> computeIds = getComputesList(userId, token);
-
-			for (String computeId : computeIds) {
-				resumeCompute(computeId, token);
-			}
+			// TODO We should not need to get this token in all the calls to resumeUserComputes.
+			// I think we should keep the value and reacquire the token after a certain time.
+			String token = authenticationServiceClient.getToken(publicKey, managerUsername, managerPassword);
+			Key keyToDecrypt = ServiceAsymmetricKeysHolder.getInstance().getPrivateKey();
+			Key keyToEncrypt = FsPublicKeysHolder.getInstance().getRasPublicKey(); 
+			
+			String newToken = TokenProtector.rewrap(keyToDecrypt, keyToEncrypt, token, FogbowConstants.TOKEN_STRING_SEPARATOR);
+			resumeComputesForUser(userId, newToken);
 		} catch (URISyntaxException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (FogbowException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new InvalidParameterException(e.getMessage());
 		}
 	}
 
-	private void resumeCompute(String computeId, String token) throws URISyntaxException, FogbowException {
-		doResumeRequestAndCheckStatus(token, computeId);
+	private void resumeComputesForUser(String userId, String token) throws URISyntaxException, FogbowException {
+		doResumeRequestAndCheckStatus(userId, token);
 	}
 	
-	private void doResumeRequestAndCheckStatus(String token, String computeId) throws URISyntaxException, FogbowException {
-		// TODO Add base endpoint
-		String endpoint = getResumeEndpoint("", computeId);
+	private void doResumeRequestAndCheckStatus(String userId, String token) throws URISyntaxException, FogbowException {
+		String endpoint = getResumeEndpoint(cloud.fogbow.ras.api.http.request.Compute.RESUME_COMPUTE_ENDPOINT, userId);
 		HttpResponse response = doResumeRequest(token, endpoint);
 		if (response.getHttpCode() > HttpStatus.SC_OK) {
 			Throwable e = new HttpResponseException(response.getHttpCode(), response.getContent());
@@ -156,12 +139,10 @@ public class RasClient {
 		}
 	}
 	
-	private String getResumeEndpoint(String pauseApiBaseEndpoint, String computeId) throws URISyntaxException {
+	private String getResumeEndpoint(String resumeApiBaseEndpoint, String userId) throws URISyntaxException {
 		URI uri = new URI(rasAddress);
-        uri = UriComponentsBuilder.fromUri(uri).port(rasPort).path(pauseApiBaseEndpoint).path("/").
-        		// FIXME constant
-        		path(computeId).path("/").path("resume").
-                build(true).toUri();
+        uri = UriComponentsBuilder.fromUri(uri).port(rasPort).path(resumeApiBaseEndpoint).path("/").
+        		path(userId).build(true).toUri();
         return uri.toString();
 	}
 	
