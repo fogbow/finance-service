@@ -32,6 +32,24 @@
 			<artifactId>common</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
+		
+		<dependency>
+			<groupId>fogbow</groupId>
+			<artifactId>fogbow-as</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+
+		<dependency>
+			<groupId>fogbow</groupId>
+			<artifactId>fogbow-accounting-service</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+
+		<dependency>
+			<groupId>fogbow</groupId>
+			<artifactId>fogbow-ras</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -67,24 +85,6 @@
 			<artifactId>springfox-swagger-ui</artifactId>
 			<version>2.8.0</version>
 			<scope>compile</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>fogbow</groupId>
-			<artifactId>fogbow-as</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-		</dependency>
-
-		<dependency>
-			<groupId>fogbow</groupId>
-			<artifactId>fogbow-accounting-service</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-		</dependency>
-
-		<dependency>
-			<groupId>fogbow</groupId>
-			<artifactId>fogbow-ras</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>
