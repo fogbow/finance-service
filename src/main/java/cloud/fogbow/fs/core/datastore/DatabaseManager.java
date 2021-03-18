@@ -76,4 +76,9 @@ public class DatabaseManager {
 			user.setProperty(option, financeState.get(option));
 		}
 	}
+
+	public Map<String, String> getPlan(String planName) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
