@@ -1,4 +1,4 @@
-package cloud.fogbow.fs.core.plugins.payment;
+package cloud.fogbow.fs.core.plugins.payment.stub;
 
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.models.FinanceUser;
