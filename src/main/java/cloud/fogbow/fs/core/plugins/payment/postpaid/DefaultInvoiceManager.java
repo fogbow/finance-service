@@ -8,14 +8,17 @@ import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.models.Invoice;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
+import cloud.fogbow.fs.core.plugins.payment.ResourceItem;
+import cloud.fogbow.fs.core.plugins.payment.ResourceItemFactory;
 
-public class DefaultPostPaidPaymentManager implements PaymentManager {
+public class DefaultInvoiceManager implements PaymentManager {
 	public static final String PAYMENT_STATUS_OK = "payment_ok";
 	public static final String PAYMENT_STATUS_WAITING = "payment_waiting";
 	public static final String PAYMENT_STATUS_DEFAULTING = "payment_defaulting";
 	
 	private String planName;
 	private DatabaseManager databaseManager;
+	private ResourceItemFactory resourceItemFactory;
 	
 	@Override
 	public boolean hasPaid(String userId) {
@@ -28,14 +31,14 @@ public class DefaultPostPaidPaymentManager implements PaymentManager {
 		FinanceUser user = databaseManager.getUserById(userId);
 		
 		Map<String, String> basePlan = databaseManager.getPlan(planName);
-		Map<PostPaidResourceItem, Double> plan = getPlan(basePlan);
+		Map<ResourceItem, Double> plan = resourceItemFactory.getPlan(basePlan);
 		List<Record> records = user.getPeriodRecords();
 		InvoiceBuilder invoiceBuilder = new InvoiceBuilder(userId);
 		
 		for (Record record : records) {
-			PostPaidResourceItem resourceItem = getItemFromRecord(record);
+			ResourceItem resourceItem = resourceItemFactory.getItemFromRecord(record);
 			Double valueToPayPerTimeUnit = plan.get(resourceItem);
-			Double timeUsed = getTimeFromRecord(record);
+			Double timeUsed = resourceItemFactory.getTimeFromRecord(record);
 			
 			invoiceBuilder.addItem(resourceItem, valueToPayPerTimeUnit, timeUsed);
 		}
@@ -44,21 +47,6 @@ public class DefaultPostPaidPaymentManager implements PaymentManager {
 		
 		// add invoice to database
 		
-	}
-
-	private Double getTimeFromRecord(Record record) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private PostPaidResourceItem getItemFromRecord(Record record) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private Map<PostPaidResourceItem, Double> getPlan(Map<String, String> basePlan) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	@Override
