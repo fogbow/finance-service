@@ -1,9 +1,11 @@
 package cloud.fogbow.fs.core.plugins.finance.postpaid;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import cloud.fogbow.common.exceptions.ConfigurationErrorException;
+import cloud.fogbow.common.models.SystemUser;
 import cloud.fogbow.fs.core.PaymentManagerInstantiator;
 import cloud.fogbow.fs.core.PropertiesHolder;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
@@ -12,6 +14,7 @@ import cloud.fogbow.fs.core.plugins.FinancePlugin;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
 import cloud.fogbow.fs.core.util.AccountingServiceClient;
 import cloud.fogbow.fs.core.util.RasClient;
+import cloud.fogbow.ras.core.models.RasOperation;
 
 public class PostPaidFinancePlugin implements FinancePlugin {
 	/**
@@ -65,6 +68,11 @@ public class PostPaidFinancePlugin implements FinancePlugin {
 	}
 	
 	@Override
+	public String getName() {
+		return PLUGIN_NAME;
+	}
+	
+	@Override
 	public void startThreads() {
 		if (!this.threadsAreRunning) {
 			this.paymentRunner = new PaymentRunner(invoiceWaitTime, databaseManager, accountingServiceClient, paymentManager);
@@ -94,12 +102,12 @@ public class PostPaidFinancePlugin implements FinancePlugin {
 	}
 
 	@Override
-	public boolean isAuthorized(String userId, Map<String, String> operationParameters) {
-		return this.paymentManager.hasPaid(userId);
+	public boolean isAuthorized(SystemUser user, RasOperation operation) {
+		return this.paymentManager.hasPaid(user.getId(), user.getIdentityProviderId());
 	}
 
 	@Override
-	public boolean managesUser(String userId) {
+	public boolean managesUser(String userId, String provider) {
 		List<FinanceUser> financeUsers = this.databaseManager.getRegisteredUsersByPaymentType(PLUGIN_NAME); 
 		
 		for (FinanceUser financeUser : financeUsers) {
@@ -112,7 +120,31 @@ public class PostPaidFinancePlugin implements FinancePlugin {
 	}
 
 	@Override
-	public String getUserFinanceState(String userId, String property) {
-		return this.paymentManager.getUserFinanceState(userId, property);
+	public String getUserFinanceState(String userId, String provider, String property) {
+		return this.paymentManager.getUserFinanceState(userId, provider, property);
+	}
+
+	@Override
+	public void addUser(String userId, String provider, Map<String, String> financeOptions) {
+		// TODO validation
+		this.databaseManager.registerUser(userId, provider, PLUGIN_NAME, financeOptions);
+	}
+
+	@Override
+	public void removeUser(String userId, String provider) {
+		// TODO validation
+		this.databaseManager.removeUser(userId, provider);
+	}
+
+	@Override
+	public void changeOptions(String userId, String provider, HashMap<String, String> financeOptions) {
+		// TODO validation
+		this.databaseManager.changeOptions(userId, provider, financeOptions);
+	}
+
+	@Override
+	public void updateFinanceState(String userId, String provider, HashMap<String, String> financeState) {
+		// TODO validation
+		this.databaseManager.updateFinanceState(userId, provider, financeState);
 	}
 }

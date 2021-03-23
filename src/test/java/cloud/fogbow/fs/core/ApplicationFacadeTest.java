@@ -37,8 +37,10 @@ public class ApplicationFacadeTest {
 	private Map<String, String> userFinanceOptionsToAdd = new HashMap<String, String>();
 
 	private String userIdToRemove = "userIdToRemove";
+	private String userProviderToRemove = "userProviderToRemove";
 	
 	private String userIdToChange = "userIdToChange";
+	private String userProviderToChange = "userProviderToChange";
 	private HashMap<String, String> newOptions = new HashMap<String, String>();
 	private HashMap<String, String> newState = new HashMap<String, String>();
 	
@@ -111,12 +113,12 @@ public class ApplicationFacadeTest {
 		setUpAuthorization();
 		setUpApplicationFacade();
 
-		ApplicationFacade.getInstance().removeUser(adminToken, this.userIdToRemove);
+		ApplicationFacade.getInstance().removeUser(adminToken, this.userIdToRemove, this.userProviderToRemove);
 
 		Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
         Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
 		Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
-		Mockito.verify(financeManager, Mockito.times(1)).removeUser(this.userIdToRemove);
+		Mockito.verify(financeManager, Mockito.times(1)).removeUser(this.userIdToRemove, this.userProviderToRemove);
 	}
 	
 	// test case: When calling the removeUser method, if the call to
@@ -135,10 +137,11 @@ public class ApplicationFacadeTest {
 		ApplicationFacade.getInstance().setFinanceManager(financeManager);
 		ApplicationFacade.getInstance().setSynchronizationManager(synchronizationManager);
 
-		Mockito.doThrow(FogbowException.class).when(this.financeManager).removeUser(userIdToRemove);
+		Mockito.doThrow(FogbowException.class).when(this.financeManager).removeUser(userIdToRemove, 
+				this.userProviderToRemove);
 
 		try {
-			ApplicationFacade.getInstance().removeUser(adminToken, userIdToRemove);
+			ApplicationFacade.getInstance().removeUser(adminToken, userIdToRemove, this.userProviderToRemove);
 			Assert.fail("removeUser is expected to throw exception.");
 		} catch (FogbowException e) {
 		}
@@ -158,12 +161,14 @@ public class ApplicationFacadeTest {
 		setUpAuthorization();
 		setUpApplicationFacade();
 
-		ApplicationFacade.getInstance().changeOptions(adminToken, this.userIdToChange, this.newOptions);
+		ApplicationFacade.getInstance().changeOptions(adminToken, this.userIdToChange, 
+				this.userProviderToChange, this.newOptions);
 
 		Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
         Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
 		Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
-		Mockito.verify(financeManager, Mockito.times(1)).changeOptions(this.userIdToChange, this.newOptions);
+		Mockito.verify(financeManager, Mockito.times(1)).changeOptions(this.userIdToChange, 
+				this.userProviderToChange, this.newOptions);
 	}
 	
 	// test case: When calling the changeOptions method, if the call to
@@ -182,10 +187,12 @@ public class ApplicationFacadeTest {
 		ApplicationFacade.getInstance().setFinanceManager(financeManager);
 		ApplicationFacade.getInstance().setSynchronizationManager(synchronizationManager);
 
-		Mockito.doThrow(FogbowException.class).when(this.financeManager).changeOptions(this.userIdToChange, this.newOptions);
+		Mockito.doThrow(FogbowException.class).when(this.financeManager).changeOptions(this.userIdToChange, 
+				this.userProviderToChange, this.newOptions);
 
 		try {
-			ApplicationFacade.getInstance().changeOptions(this.adminToken, this.userIdToChange, this.newOptions);
+			ApplicationFacade.getInstance().changeOptions(this.adminToken, this.userIdToChange, 
+					this.userProviderToChange, this.newOptions);
 			Assert.fail("changeOptions is expected to throw exception.");
 		} catch (FogbowException e) {
 		}
@@ -205,12 +212,14 @@ public class ApplicationFacadeTest {
 		setUpAuthorization();
 		setUpApplicationFacade();
 
-		ApplicationFacade.getInstance().updateFinanceState(adminToken, this.userIdToChange, this.newState);
+		ApplicationFacade.getInstance().updateFinanceState(adminToken, this.userIdToChange, 
+				this.userProviderToChange, this.newState);
 
 		Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
         Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
 		Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
-		Mockito.verify(financeManager, Mockito.times(1)).updateFinanceState(this.userIdToChange, this.newState);
+		Mockito.verify(financeManager, Mockito.times(1)).updateFinanceState(this.userIdToChange,
+				this.userProviderToChange, this.newState);
 	}
 	
 	// test case: When calling the updateFinanceState method, if the call to
@@ -229,10 +238,12 @@ public class ApplicationFacadeTest {
 		ApplicationFacade.getInstance().setFinanceManager(financeManager);
 		ApplicationFacade.getInstance().setSynchronizationManager(synchronizationManager);
 
-		Mockito.doThrow(FogbowException.class).when(this.financeManager).updateFinanceState(this.userIdToChange, this.newState);
+		Mockito.doThrow(FogbowException.class).when(this.financeManager).updateFinanceState(this.userIdToChange, 
+				this.userProviderToChange, this.newState);
 
 		try {
-			ApplicationFacade.getInstance().updateFinanceState(this.adminToken, this.userIdToChange, this.newState);
+			ApplicationFacade.getInstance().updateFinanceState(this.adminToken, this.userIdToChange, 
+					this.userProviderToChange, this.newState);
 			Assert.fail("updateFinanceState is expected to throw exception.");
 		} catch (FogbowException e) {
 		}

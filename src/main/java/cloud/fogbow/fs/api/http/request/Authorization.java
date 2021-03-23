@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import cloud.fogbow.common.exceptions.InvalidParameterException;
+import cloud.fogbow.common.exceptions.FogbowException;
 import cloud.fogbow.common.plugins.authorization.RemoteAuthorizationResponse;
 import cloud.fogbow.fs.api.parameters.AuthorizableUser;
 import cloud.fogbow.fs.constants.ApiDocumentation;
@@ -26,7 +26,7 @@ public class Authorization {
 	// TODO documentation
     @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<RemoteAuthorizationResponse> isAuthorized(
-            @RequestBody AuthorizableUser user) throws InvalidParameterException {
+            @RequestBody AuthorizableUser user) throws FogbowException {
         boolean authorized = ApplicationFacade.getInstance().isAuthorized(user);
         return new ResponseEntity<RemoteAuthorizationResponse>(new RemoteAuthorizationResponse(authorized), HttpStatus.OK);
     }

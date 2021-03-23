@@ -17,8 +17,8 @@ public class StubPostPaidPaymentManager implements PaymentManager {
 	}
 	
 	@Override
-	public boolean hasPaid(String userId) {
-		FinanceUser user = databaseManager.getUserById(userId);
+	public boolean hasPaid(String userId, String provider) {
+		FinanceUser user = databaseManager.getUserById(userId, provider);
 		String paymentStatusString = user.getProperty(FinanceUser.PAYMENT_STATUS_KEY);
 
 		// TODO Improve
@@ -35,13 +35,13 @@ public class StubPostPaidPaymentManager implements PaymentManager {
 	}
 
 	@Override
-	public void startPaymentProcess(String userId) {
-		FinanceUser user = databaseManager.getUserById(userId);
+	public void startPaymentProcess(String userId, String provider) {
+		FinanceUser user = databaseManager.getUserById(userId, provider);
 		user.setProperty(FinanceUser.PAYMENT_STATUS_KEY, PAYMENT_STATUS_WAITING);
 	}
 
 	@Override
-	public String getUserFinanceState(String userId, String property) {
+	public String getUserFinanceState(String userId, String provider, String property) {
 		// TODO implement
 		return property;
 	}

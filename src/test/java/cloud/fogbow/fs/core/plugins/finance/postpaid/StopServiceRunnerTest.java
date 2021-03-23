@@ -44,8 +44,8 @@ public class StopServiceRunnerTest {
 		
 		paymentManager = Mockito.mock(PaymentManager.class);
 		
-		Mockito.doReturn(false).when(paymentManager).hasPaid(ID_USER_1);
-		Mockito.doReturn(true).when(paymentManager).hasPaid(ID_USER_2);
+		Mockito.doReturn(false).when(paymentManager).hasPaid(ID_USER_1, PROVIDER_USER_1);
+		Mockito.doReturn(true).when(paymentManager).hasPaid(ID_USER_2, PROVIDER_USER_2);
 		
 		rasClient = Mockito.mock(RasClient.class);
 		
@@ -80,8 +80,8 @@ public class StopServiceRunnerTest {
 		
 		paymentManager = Mockito.mock(PaymentManager.class);
 		
-		Mockito.doReturn(false).when(paymentManager).hasPaid(ID_USER_1);
-		Mockito.doReturn(true).when(paymentManager).hasPaid(ID_USER_2);
+		Mockito.doReturn(false).when(paymentManager).hasPaid(ID_USER_1, PROVIDER_USER_1);
+		Mockito.doReturn(true).when(paymentManager).hasPaid(ID_USER_2, PROVIDER_USER_2);
 		
 		rasClient = Mockito.mock(RasClient.class);
 		

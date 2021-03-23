@@ -20,11 +20,12 @@ public interface PaymentManager {
 	 * @param userId the id of the user whose state must be evaluated.
 	 * @return a boolean stating whether the user state is adequate or not.
 	 */
-	boolean hasPaid(String userId);
+	boolean hasPaid(String userId, String provider);
 	
 	/**
 	 * Starts payment for the resources consumed by the 
-	 * given user. The meaning of this operation depends on the
+	 * given user. The meaning of this operati@Override
+	on depends on the
 	 * payment type. For example, in a postpaid scenario, 
 	 * this operation is an invoice generation process, 
 	 * whereas in a prepaid scenario, this operation is a user 
@@ -32,7 +33,7 @@ public interface PaymentManager {
 	 * 
 	 * @param userId the id of the user to start payment.
 	 */
-	void startPaymentProcess(String userId);
+	void startPaymentProcess(String userId, String provider);
 	
 	/**
 	 * Generates and returns a representation of the given property of
@@ -42,5 +43,5 @@ public interface PaymentManager {
 	 * @param property a description of the property to generate.
 	 * @return a representation of the property.
 	 */
-	String getUserFinanceState(String userId, String property);
+	String getUserFinanceState(String userId, String provider, String property);
 }

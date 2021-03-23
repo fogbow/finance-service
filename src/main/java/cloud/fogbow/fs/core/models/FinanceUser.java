@@ -14,6 +14,7 @@ public class FinanceUser {
 	
 	private String id;
 	private String provider;
+	private String financePluginName;
 	private List<Record> periodRecords;
 	private boolean stoppedResources;
 	private Map<String, String> properties;
@@ -23,7 +24,6 @@ public class FinanceUser {
 	}
 	
 	public FinanceUser(Map<String, String> properties) {
-		LOGGER.info(properties);
 		this.stoppedResources = false;
 		this.properties = properties;
 	}
@@ -66,5 +66,13 @@ public class FinanceUser {
 	
 	public void setProperty(String propertyName, String propertyValue) {
 		this.properties.put(propertyName, propertyValue);
+	}
+	
+	public String getFinancePluginName() {
+		return financePluginName;
+	}
+
+	public void setFinancePluginName(String financePluginName) {
+		this.financePluginName = financePluginName;
 	}
 }

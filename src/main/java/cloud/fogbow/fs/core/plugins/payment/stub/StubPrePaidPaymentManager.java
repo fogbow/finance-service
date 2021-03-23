@@ -14,8 +14,8 @@ public class StubPrePaidPaymentManager implements PaymentManager {
 	}
 	
 	@Override
-	public boolean hasPaid(String userId) {
-		FinanceUser user = databaseManager.getUserById(userId);
+	public boolean hasPaid(String userId, String provider) {
+		FinanceUser user = databaseManager.getUserById(userId, provider);
 		String creditsString = user.getProperty(USER_CREDITS);
 		
 		if (creditsString == null) {
@@ -27,8 +27,8 @@ public class StubPrePaidPaymentManager implements PaymentManager {
 	}
 
 	@Override
-	public void startPaymentProcess(String userId) {
-		FinanceUser user = databaseManager.getUserById(userId);
+	public void startPaymentProcess(String userId, String provider) {
+		FinanceUser user = databaseManager.getUserById(userId, provider);
 		String creditsString = user.getProperty(USER_CREDITS);
 		
 		if (creditsString != null) {
@@ -42,9 +42,9 @@ public class StubPrePaidPaymentManager implements PaymentManager {
 	}
 
 	@Override
-	public String getUserFinanceState(String userId, String property) {
+	public String getUserFinanceState(String userId, String provider, String property) {
 		// TODO Implement
-		FinanceUser user = databaseManager.getUserById(userId);
+		FinanceUser user = databaseManager.getUserById(userId, provider);
 		return user.getProperty(USER_CREDITS);
 	}
 }

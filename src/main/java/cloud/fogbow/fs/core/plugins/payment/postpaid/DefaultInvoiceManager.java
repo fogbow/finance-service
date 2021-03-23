@@ -21,14 +21,14 @@ public class DefaultInvoiceManager implements PaymentManager {
 	private ResourceItemFactory resourceItemFactory;
 	
 	@Override
-	public boolean hasPaid(String userId) {
+	public boolean hasPaid(String userId, String provider) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public void startPaymentProcess(String userId) {
-		FinanceUser user = databaseManager.getUserById(userId);
+	public void startPaymentProcess(String userId, String provider) {
+		FinanceUser user = databaseManager.getUserById(userId, provider);
 		
 		Map<String, String> basePlan = databaseManager.getPlan(planName);
 		Map<ResourceItem, Double> plan = resourceItemFactory.getPlan(basePlan);
@@ -50,7 +50,7 @@ public class DefaultInvoiceManager implements PaymentManager {
 	}
 
 	@Override
-	public String getUserFinanceState(String userId, String property) {
+	public String getUserFinanceState(String userId, String provider, String property) {
 		// TODO Auto-generated method stub
 		return null;
 	}

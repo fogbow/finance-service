@@ -1,6 +1,10 @@
 package cloud.fogbow.fs.core.plugins;
 
+import java.util.HashMap;
 import java.util.Map;
+
+import cloud.fogbow.common.models.SystemUser;
+import cloud.fogbow.ras.core.models.RasOperation;
 
 /**
  * A {@link cloud.fogbow.fs.core.models.FinanceUser} manager, 
@@ -30,7 +34,7 @@ public interface FinancePlugin {
 	 * @param operationParameters a map containing the operation parameters.
 	 * @return a boolean stating whether the user is authorized or not.
 	 */
-	boolean isAuthorized(String userId, Map<String, String> operationParameters);
+	boolean isAuthorized(SystemUser user, RasOperation operation);
 	
 	/**
 	 * Verifies if this plugin manages the financial state
@@ -39,7 +43,7 @@ public interface FinancePlugin {
 	 * @param userId the id of the user to verify.
 	 * @return a boolean stating whether the user is managed by this plugin or not.
 	 */
-	boolean managesUser(String userId);
+	boolean managesUser(String userId, String provider);
 	
 	/**
 	 * Generates and returns a representation of the given property of
@@ -49,5 +53,20 @@ public interface FinancePlugin {
 	 * @param property a description of the property to generate.
 	 * @return a representation of the property.
 	 */
-	String getUserFinanceState(String userId, String property);
+	String getUserFinanceState(String userId, String provider, String property);
+
+	// TODO documentation
+	String getName();
+	
+	// TODO documentation
+	void addUser(String userId, String provider, Map<String, String> financeOptions);
+	
+	// TODO documentation
+	void removeUser(String userId, String provider);
+
+	// TODO documentation
+	void changeOptions(String userId, String provider, HashMap<String, String> financeOptions);
+	
+	// TODO documentation
+	void updateFinanceState(String userId, String provider, HashMap<String, String> financeState);
 }

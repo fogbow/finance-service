@@ -18,7 +18,10 @@ public class PostPaidFinancePluginTest {
 
 	private static final String USER_ID_1 = "userId1";
 	private static final String USER_ID_2 = "userId2";
+	private static final String PROVIDER_USER_1 = "providerUser1";
+	private static final String PROVIDER_USER_2 = "providerUser2";
 	private static final String USER_NOT_MANAGED = "userNotManaged";
+	private static final String PROVIDER_USER_NOT_MANAGED = "providerUserNotManaged";
 	private DatabaseManager databaseManager;
 	private AccountingServiceClient accountingServiceClient;
 	private RasClient rasClient;
@@ -32,9 +35,11 @@ public class PostPaidFinancePluginTest {
 	public void testManagesUser() {
 		FinanceUser financeUser1 = new FinanceUser();
 		financeUser1.setId(USER_ID_1);
+		financeUser1.setProvider(PROVIDER_USER_1);
 		
 		FinanceUser financeUser2 = new FinanceUser();
 		financeUser2.setId(USER_ID_2);
+		financeUser2.setProvider(PROVIDER_USER_2);
 		
 		ArrayList<FinanceUser> users = new ArrayList<>();
 		users.add(financeUser1);
@@ -46,8 +51,8 @@ public class PostPaidFinancePluginTest {
 		PostPaidFinancePlugin postPaidFinancePlugin = new PostPaidFinancePlugin(databaseManager, 
 				accountingServiceClient, rasClient, paymentManager, invoiceWaitTime);
 		
-		assertTrue(postPaidFinancePlugin.managesUser(USER_ID_1));
-		assertTrue(postPaidFinancePlugin.managesUser(USER_ID_2));
-		assertFalse(postPaidFinancePlugin.managesUser(USER_NOT_MANAGED));
+		assertTrue(postPaidFinancePlugin.managesUser(USER_ID_1, PROVIDER_USER_1));
+		assertTrue(postPaidFinancePlugin.managesUser(USER_ID_2, PROVIDER_USER_2));
+		assertFalse(postPaidFinancePlugin.managesUser(USER_NOT_MANAGED, PROVIDER_USER_NOT_MANAGED));
 	}
 }

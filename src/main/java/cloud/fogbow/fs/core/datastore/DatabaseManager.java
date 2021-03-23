@@ -7,7 +7,6 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
-import cloud.fogbow.fs.core.ApplicationFacade;
 import cloud.fogbow.fs.core.models.FinanceUser;
 
 public class DatabaseManager {
@@ -19,39 +18,41 @@ public class DatabaseManager {
 		financeUsers = new ArrayList<FinanceUser>();
 	}
 
-	public void registerUser(String userId, String provider, Map<String, String> financeOptions) {
+	public void registerUser(String userId, String provider, String pluginName, Map<String, String> financeOptions) {
 		FinanceUser user = new FinanceUser(financeOptions);
 
 		user.setId(userId);
 		user.setProvider(provider);
+		user.setFinancePluginName(pluginName);
 
 		financeUsers.add(user);
 	}
 	
-	public void removeUser(String userId) {
-		financeUsers.remove(getUserById(userId));
+	public void removeUser(String userId, String provider) {
+		financeUsers.remove(getUserById(userId, provider));
 	}
 
 	public List<FinanceUser> getRegisteredUsers() {
 		return financeUsers;
 	}
 	
-	public FinanceUser getUserById(String id) {
+	public FinanceUser getUserById(String id, String provider) {
 		for (FinanceUser user : financeUsers) {
-			if (user.getId().equals(id)) {
+			if (user.getId().equals(id) && 
+					user.getProvider().equals(provider)) {
 				return user;
 			}
 		}
 		
+		// TODO treat this
 		return null;
 	}
 	
 	public List<FinanceUser> getRegisteredUsersByPaymentType(String pluginName) {
 		ArrayList<FinanceUser> selectedUsers = new ArrayList<FinanceUser>();
-		LOGGER.info(pluginName);
 		
 		for (FinanceUser user : financeUsers) {
-			if (user.getProperty(FinanceUser.PAYMENT_TYPE_KEY).equals(pluginName)) {
+			if (user.getFinancePluginName().equals(pluginName)) {
 				selectedUsers.add(user);
 			}
 		}
@@ -59,18 +60,18 @@ public class DatabaseManager {
 		return selectedUsers;
 	}
 
-	public void changeOptions(String userId, HashMap<String, String> financeOptions) {
+	public void changeOptions(String userId, String provider, HashMap<String, String> financeOptions) {
 		// TODO validation
-		FinanceUser user = getUserById(userId);
+		FinanceUser user = getUserById(userId, provider);
 		
 		for (String option : financeOptions.keySet()) {
 			user.setProperty(option, financeOptions.get(option));
 		}
 	}
 
-	public void updateFinanceState(String userId, HashMap<String, String> financeState) {
+	public void updateFinanceState(String userId, String provider, HashMap<String, String> financeState) {
 		// TODO validation
-		FinanceUser user = getUserById(userId);
+		FinanceUser user = getUserById(userId, provider);
 
 		for (String option : financeState.keySet()) {
 			user.setProperty(option, financeState.get(option));

@@ -24,22 +24,24 @@ public class Resources {
 	public static final String RESOURCES_ENDPOINT = SystemConstants.SERVICE_BASE_ENDPOINT + "resources";
 	
 	// TODO documentation
-	@RequestMapping(value = "/{userId}", method = RequestMethod.PUT)
+	@RequestMapping(value = "/{provider}/{userId}", method = RequestMethod.PUT)
 	public ResponseEntity<Boolean> updateFinanceState(
 			@PathVariable String userId,
+			@PathVariable String provider,
 			@RequestHeader(value = SystemConstants.SYSTEM_USER_TOKEN_HEADER_KEY) String systemUserToken,
 			@RequestBody HashMap<String, String> financeState) throws FogbowException {
-		ApplicationFacade.getInstance().updateFinanceState(systemUserToken, userId, financeState);
+		ApplicationFacade.getInstance().updateFinanceState(systemUserToken, userId, provider, financeState);
 		return new ResponseEntity<Boolean>(HttpStatus.OK);
 	}
 	
 	// TODO documentation
-	@RequestMapping(value = "/{userId}/{property}", method = RequestMethod.GET)
+	@RequestMapping(value = "/{provider}/{userId}/{property}", method = RequestMethod.GET)
 	public ResponseEntity<String> getFinanceStateProperty(
 			@PathVariable String userId,
+			@PathVariable String provider,
 			@PathVariable String property,
 			@RequestHeader(value = SystemConstants.SYSTEM_USER_TOKEN_HEADER_KEY) String systemUserToken) throws FogbowException {
-		String propertyValue = ApplicationFacade.getInstance().getFinanceStateProperty(systemUserToken, userId, property);
+		String propertyValue = ApplicationFacade.getInstance().getFinanceStateProperty(systemUserToken, userId, provider, property);
 		return new ResponseEntity<String>(propertyValue, HttpStatus.OK);
 	}
 }

@@ -33,21 +33,23 @@ public class User {
     }
 	
 	// TODO documentation
-	@RequestMapping(value = "/{userId}", method = RequestMethod.DELETE)
+	@RequestMapping(value = "/{provider}/{userId}", method = RequestMethod.DELETE)
     public ResponseEntity<Boolean> removeUser(
     		@PathVariable String userId,
+    		@PathVariable String provider,
     		@RequestHeader(value = SystemConstants.SYSTEM_USER_TOKEN_HEADER_KEY) String systemUserToken) throws FogbowException {
-        ApplicationFacade.getInstance().removeUser(systemUserToken, userId);
+        ApplicationFacade.getInstance().removeUser(systemUserToken, userId, provider);
         return new ResponseEntity<Boolean>(HttpStatus.OK);
     }
 	
 	// TODO documentation
-	@RequestMapping(value = "/{userId}", method = RequestMethod.PUT)
+	@RequestMapping(value = "/{provider}/{userId}", method = RequestMethod.PUT)
 	public ResponseEntity<Boolean> changeOptions(
 			@PathVariable String userId,
+			@PathVariable String provider,
 			@RequestHeader(value = SystemConstants.SYSTEM_USER_TOKEN_HEADER_KEY) String systemUserToken,
 			@RequestBody HashMap<String, String> financeOptions) throws FogbowException {
-		ApplicationFacade.getInstance().changeOptions(systemUserToken, userId, financeOptions);
+		ApplicationFacade.getInstance().changeOptions(systemUserToken, userId, provider, financeOptions);
 		return new ResponseEntity<Boolean>(HttpStatus.OK);
 	}
 }

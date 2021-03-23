@@ -1,5 +1,6 @@
 package cloud.fogbow.fs.core;
 
+import java.security.GeneralSecurityException;
 import java.security.interfaces.RSAPublicKey;
 import java.util.HashMap;
 
@@ -8,11 +9,12 @@ import org.apache.log4j.Logger;
 import cloud.fogbow.as.core.util.AuthenticationUtil;
 import cloud.fogbow.common.constants.FogbowConstants;
 import cloud.fogbow.common.exceptions.FogbowException;
-import cloud.fogbow.common.exceptions.InvalidParameterException;
+import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.UnauthenticatedUserException;
 import cloud.fogbow.common.exceptions.UnauthorizedRequestException;
 import cloud.fogbow.common.models.SystemUser;
 import cloud.fogbow.common.plugins.authorization.AuthorizationPlugin;
+import cloud.fogbow.common.util.CryptoUtil;
 import cloud.fogbow.common.util.ServiceAsymmetricKeysHolder;
 import cloud.fogbow.fs.api.parameters.AuthorizableUser;
 import cloud.fogbow.fs.api.parameters.User;
@@ -58,7 +60,19 @@ public class ApplicationFacade {
 		this.synchronizationManager = synchronizationManager;
 	}
 	
-	public boolean isAuthorized(AuthorizableUser user) throws InvalidParameterException {
+	public String getPublicKey() throws InternalServerErrorException {
+		synchronizationManager.startOperation();
+        // There is no need to authenticate the user or authorize this operation
+        try {
+            return CryptoUtil.toBase64(ServiceAsymmetricKeysHolder.getInstance().getPublicKey());
+        } catch (GeneralSecurityException e) {
+            throw new InternalServerErrorException(e.getMessage());
+        } finally {
+			synchronizationManager.finishOperation(); 
+		}
+	}
+	
+	public boolean isAuthorized(AuthorizableUser user) throws FogbowException {
 		synchronizationManager.startOperation();
 		
 		try { 
@@ -81,53 +95,53 @@ public class ApplicationFacade {
 		}
 	}
 
-	public void removeUser(String userToken, String userId) throws UnauthorizedRequestException, FogbowException {
+	public void removeUser(String userToken, String userId, String provider) throws UnauthorizedRequestException, FogbowException {
 		LOGGER.info(String.format(Messages.Log.REMOVING_USER, userId));
 		
 		authenticateAndAuthorize(userToken);
 		synchronizationManager.startOperation();
 		
 		try {
-			this.financeManager.removeUser(userId);
+			this.financeManager.removeUser(userId, provider);
 		} finally {
 			synchronizationManager.finishOperation();
 		}
 	}
 
-	public void changeOptions(String userToken, String userId, HashMap<String, String> financeOptions) throws UnauthenticatedUserException, UnauthorizedRequestException, FogbowException {
+	public void changeOptions(String userToken, String userId, String provider, HashMap<String, String> financeOptions) throws UnauthenticatedUserException, UnauthorizedRequestException, FogbowException {
 		LOGGER.info(String.format(Messages.Log.CHANGING_OPTIONS, userId));
 		
 		authenticateAndAuthorize(userToken);
 		synchronizationManager.startOperation();
 		
 		try {
-			this.financeManager.changeOptions(userId, financeOptions);			
+			this.financeManager.changeOptions(userId, provider, financeOptions);			
 		} finally {
 			synchronizationManager.finishOperation();
 		}
 	}
 
-	public void updateFinanceState(String userToken, String userId, HashMap<String, String> financeState) throws UnauthenticatedUserException, UnauthorizedRequestException, FogbowException {
+	public void updateFinanceState(String userToken, String userId, String provider, HashMap<String, String> financeState) throws UnauthenticatedUserException, UnauthorizedRequestException, FogbowException {
 		LOGGER.info(String.format(Messages.Log.UPDATING_FINANCE_STATE, userId));
 		
 		authenticateAndAuthorize(userToken);
 		synchronizationManager.startOperation();
 		
 		try {
-			this.financeManager.updateFinanceState(userId, financeState);			
+			this.financeManager.updateFinanceState(userId, provider, financeState);			
 		} finally {
 			synchronizationManager.finishOperation();
 		}
 	}
 	
-	public String getFinanceStateProperty(String userToken, String userId, String property) throws FogbowException {
+	public String getFinanceStateProperty(String userToken, String userId, String provider, String property) throws FogbowException {
 		LOGGER.info(String.format(Messages.Log.GETTING_FINANCE_STATE, userId, property));
 		
 		authenticateAndAuthorize(userToken);
 		synchronizationManager.startOperation();
 
 		try {
-			return this.financeManager.getFinanceStateProperty(userId, property);
+			return this.financeManager.getFinanceStateProperty(userId, provider, property);
 		} finally {
 			synchronizationManager.finishOperation();
 		}

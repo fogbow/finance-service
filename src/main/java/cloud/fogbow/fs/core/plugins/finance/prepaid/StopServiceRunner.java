@@ -33,7 +33,7 @@ public class StopServiceRunner extends StoppableRunner {
 
 		// for each user
 		for (FinanceUser user : registeredUsers) {
-			boolean paid = this.paymentManager.hasPaid(user.getId());
+			boolean paid = this.paymentManager.hasPaid(user.getId(), user.getProvider());
 			boolean stoppedResources = user.stoppedResources();
 
 			// if user has not paid

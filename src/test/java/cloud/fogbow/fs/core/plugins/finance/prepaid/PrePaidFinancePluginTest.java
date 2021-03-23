@@ -19,6 +19,9 @@ public class PrePaidFinancePluginTest {
 	private static final String USER_ID_1 = "userId1";
 	private static final String USER_ID_2 = "userId2";
 	private static final String USER_NOT_MANAGED = "userNotManaged";
+	private static final String PROVIDER_USER_1 = "providerUser1";
+	private static final String PROVIDER_USER_2 = "providerUser2";
+	private static final String PROVIDER_USER_NOT_MANAGED = "providerUserNotManaged";
 	private DatabaseManager databaseManager;
 	private AccountingServiceClient accountingServiceClient;
 	private RasClient rasClient;
@@ -46,8 +49,8 @@ public class PrePaidFinancePluginTest {
 		PrePaidFinancePlugin prePaidFinancePlugin = new PrePaidFinancePlugin(databaseManager, 
 				accountingServiceClient, rasClient, paymentManager, creditsDeductionWaitTime);
 		
-		assertTrue(prePaidFinancePlugin.managesUser(USER_ID_1));
-		assertTrue(prePaidFinancePlugin.managesUser(USER_ID_2));
-		assertFalse(prePaidFinancePlugin.managesUser(USER_NOT_MANAGED));
+		assertTrue(prePaidFinancePlugin.managesUser(USER_ID_1, PROVIDER_USER_1));
+		assertTrue(prePaidFinancePlugin.managesUser(USER_ID_2, PROVIDER_USER_2));
+		assertFalse(prePaidFinancePlugin.managesUser(USER_NOT_MANAGED, PROVIDER_USER_NOT_MANAGED));
 	}
 }

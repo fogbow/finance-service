@@ -2,6 +2,7 @@ package cloud.fogbow.fs.constants;
 
 public class Messages {
 	public static class Exception {
+		public static final String GENERIC_EXCEPTION_S = "Operation returned error: %s.";
 		public static final String NO_ADMIN_SPECIFIED = "No admin specified in the configuration file.";
 		public static final String NO_FINANCE_PLUGIN_SPECIFIED = "No finance plugin specified in the configuration file.";
 		public static final String UNABLE_TO_FIND_CLASS_S = "Unable to find class %s.";
@@ -15,6 +16,7 @@ public class Messages {
 		public static final String FAILED_TO_GENERATE_INVOICE = "Failed to generate invoice for user %s. Error message: %s.";
 		public static final String FAILED_TO_DEDUCT_CREDITS = "Failed to deduct credits for user %s. Error message: %s.";
 		public static final String GETTING_FINANCE_STATE = "Getting finance state: user '%s' and property '%s'";
+		public static final String GET_PUBLIC_KEY = "Get public key received.";
 		public static final String RELOADING_AUTHORIZATION_PLUGIN = "Reloading authorization plugin.";
 		public static final String RELOADING_CONFIGURATION = "Reloading service configuration.";
 		public static final String RELOADING_FINANCE_PLUGINS = "Reloading finance plugins.";

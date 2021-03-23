@@ -5,6 +5,7 @@ import java.util.Map;
 public class User {
 	private String userId;
 	private String provider;
+	private String financePluginName;
 	private Map<String, String> financeOptions;
 	
 	public User() {
@@ -23,6 +24,10 @@ public class User {
 	
 	public String getProvider() {
 		return provider;
+	}
+	
+	public String getFinancePluginName() {
+		return financePluginName;
 	}
 	
 	public Map<String, String> getFinanceOptions() {
