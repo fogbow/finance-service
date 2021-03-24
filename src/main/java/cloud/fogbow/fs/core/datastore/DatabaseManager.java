@@ -9,6 +9,7 @@ import org.apache.log4j.Logger;
 
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.models.Invoice;
+import cloud.fogbow.fs.core.models.UserCredits;
 
 public class DatabaseManager {
 
@@ -92,5 +93,15 @@ public class DatabaseManager {
 	public Invoice getInvoice(String invoiceId) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	public UserCredits getUserCreditsByUserId(String userId) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public void saveUserCredits(UserCredits credits) {
+		// TODO Auto-generated method stub
+		
 	}
 }
