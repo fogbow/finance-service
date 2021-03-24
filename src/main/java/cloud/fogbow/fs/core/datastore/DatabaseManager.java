@@ -15,9 +15,11 @@ public class DatabaseManager {
 
 	private static Logger LOGGER = Logger.getLogger(DatabaseManager.class);
 	private List<FinanceUser> financeUsers;
+	private List<Invoice> invoices;
 
 	public DatabaseManager() {
 		financeUsers = new ArrayList<FinanceUser>();
+		invoices = new ArrayList<Invoice>();
 	}
 
 	public void registerUser(String userId, String provider, String pluginName, Map<String, String> financeOptions) {
@@ -86,15 +88,39 @@ public class DatabaseManager {
 	}
 
 	public void saveInvoice(Invoice invoice) {
-		// TODO Auto-generated method stub
+		for (Invoice savedInvoice : invoices) {
+			if (savedInvoice.getInvoiceId().equals(invoice.getInvoiceId())) {
+				invoices.remove(savedInvoice);
+			}
+		}
 		
+		invoices.add(invoice);
 	}
 
 	public Invoice getInvoice(String invoiceId) {
-		// TODO Auto-generated method stub
+		for (Invoice invoice : invoices) {
+			if (invoice.getInvoiceId().equals(invoiceId)) {
+				return invoice;
+			}
+		}
+		
+		// FIXME treat this
 		return null;
 	}
 
+	public List<Invoice> getInvoiceByUserId(String userId, String provider) {
+		List<Invoice> userInvoices = new ArrayList<Invoice>();
+		
+		for (Invoice invoice : invoices) {
+			if (invoice.getUserId().equals(userId)
+					&& invoice.getProviderId().equals(provider)) {
+				userInvoices.add(invoice);
+			}
+		}
+		
+		return userInvoices;
+	}
+	
 	public UserCredits getUserCreditsByUserId(String userId) {
 		// TODO Auto-generated method stub
 		return null;
