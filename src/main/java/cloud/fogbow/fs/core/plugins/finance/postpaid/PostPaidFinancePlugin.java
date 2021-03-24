@@ -10,6 +10,8 @@ import cloud.fogbow.fs.core.PaymentManagerInstantiator;
 import cloud.fogbow.fs.core.PropertiesHolder;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.models.FinanceUser;
+import cloud.fogbow.fs.core.models.Invoice;
+import cloud.fogbow.fs.core.models.InvoiceState;
 import cloud.fogbow.fs.core.plugins.FinancePlugin;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
 import cloud.fogbow.fs.core.util.AccountingServiceClient;
@@ -145,6 +147,11 @@ public class PostPaidFinancePlugin implements FinancePlugin {
 	@Override
 	public void updateFinanceState(String userId, String provider, HashMap<String, String> financeState) {
 		// TODO validation
-		this.databaseManager.updateFinanceState(userId, provider, financeState);
+
+		for (String invoiceId : financeState.keySet()) {
+			Invoice invoice = this.databaseManager.getInvoice(invoiceId);
+			invoice.setState(InvoiceState.fromValue(financeState.get(invoiceId)));
+			this.databaseManager.saveInvoice(invoice);
+		}
 	}
 }

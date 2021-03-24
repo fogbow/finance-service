@@ -44,9 +44,7 @@ public class DefaultInvoiceManager implements PaymentManager {
 		}
 		
 		Invoice invoice = invoiceBuilder.buildInvoice();
-		
-		// add invoice to database
-		
+		databaseManager.saveInvoice(invoice);
 	}
 
 	@Override

@@ -8,6 +8,7 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 
 import cloud.fogbow.fs.core.models.FinanceUser;
+import cloud.fogbow.fs.core.models.Invoice;
 
 public class DatabaseManager {
 
@@ -79,6 +80,16 @@ public class DatabaseManager {
 	}
 
 	public Map<String, String> getPlan(String planName) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public void saveInvoice(Invoice invoice) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public Invoice getInvoice(String invoiceId) {
 		// TODO Auto-generated method stub
 		return null;
 	}
