@@ -13,9 +13,11 @@ public class Messages {
 	public static class Log {
 		public static final String ADDING_USER = "Adding user: %s.";
 		public static final String CHANGING_OPTIONS = "Changing finance options for user: %s.";
+		public static final String CREATING_FINANCE_PLAN = "Creating finance plan: %s.";
 		public static final String FAILED_TO_GENERATE_INVOICE = "Failed to generate invoice for user %s. Error message: %s.";
 		public static final String FAILED_TO_DEDUCT_CREDITS = "Failed to deduct credits for user %s. Error message: %s.";
 		public static final String GETTING_FINANCE_STATE = "Getting finance state: user '%s' and property '%s'";
+		public static final String GETTING_FINANCE_PLAN = "Getting finance plan: %s.";
 		public static final String GET_PUBLIC_KEY = "Get public key received.";
 		public static final String RELOADING_AUTHORIZATION_PLUGIN = "Reloading authorization plugin.";
 		public static final String RELOADING_CONFIGURATION = "Reloading service configuration.";
@@ -23,7 +25,9 @@ public class Messages {
 		public static final String RELOADING_FS_KEYS_HOLDER = "Reloading service keys.";
 		public static final String RELOADING_PROPERTIES_HOLDER = "Reloading properties holder.";
 		public static final String RELOADING_PUBLIC_KEYS_HOLDER = "Reloading public keys holder.";
+		public static final String REMOVING_FINANCE_PLAN = "Removing finance plan: %s.";
 		public static final String REMOVING_USER = "Removing user: %s.";
 		public static final String UPDATING_FINANCE_STATE = "Updating finance state of user: %s.";
+		public static final String UPDATING_FINANCE_PLAN = "Updating finance plan: %s.";
 	}
 }

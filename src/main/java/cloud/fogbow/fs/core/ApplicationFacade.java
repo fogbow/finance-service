@@ -149,7 +149,7 @@ public class ApplicationFacade {
 	}
 	
 	public void createFinancePlan(String userToken, String planName, Map<String, String> planInfo) throws FogbowException {
-		// TODO add logging
+		LOGGER.info(String.format(Messages.Log.CREATING_FINANCE_PLAN, planName));
 		
 		authenticateAndAuthorize(userToken);
 		synchronizationManager.startOperation();
@@ -162,7 +162,7 @@ public class ApplicationFacade {
 	}
 
 	public Map<String, String> getFinancePlan(String userToken, String planName) throws FogbowException {
-		// TODO add logging
+		LOGGER.info(String.format(Messages.Log.GETTING_FINANCE_PLAN, planName));
 		
 		authenticateAndAuthorize(userToken);
 		synchronizationManager.startOperation();
@@ -176,7 +176,7 @@ public class ApplicationFacade {
 
 	public void updateFinancePlan(String userToken, String planName,
 			Map<String, String> planInfo) throws FogbowException {
-		// TODO add logging
+		LOGGER.info(String.format(Messages.Log.UPDATING_FINANCE_PLAN, planName));
 		
 		authenticateAndAuthorize(userToken);
 		synchronizationManager.startOperation();
@@ -189,7 +189,7 @@ public class ApplicationFacade {
 	}
 
 	public void removeFinancePlan(String userToken, String planName) throws FogbowException {
-		// TODO add logging
+		LOGGER.info(String.format(Messages.Log.REMOVING_FINANCE_PLAN, planName));
 		
 		authenticateAndAuthorize(userToken);
 		synchronizationManager.startOperation();
