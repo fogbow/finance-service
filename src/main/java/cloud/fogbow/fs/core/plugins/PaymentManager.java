@@ -1,5 +1,7 @@
 package cloud.fogbow.fs.core.plugins;
 
+import cloud.fogbow.common.exceptions.InternalServerErrorException;
+
 /**
  * A payment management abstraction, capable of starting
  * payment for users based in their financial state. This 
@@ -32,8 +34,9 @@ public interface PaymentManager {
 	 * credits update process.
 	 * 
 	 * @param userId the id of the user to start payment.
+	 * @throws InternalServerErrorException 
 	 */
-	void startPaymentProcess(String userId, String provider);
+	void startPaymentProcess(String userId, String provider) throws InternalServerErrorException;
 	
 	/**
 	 * Generates and returns a representation of the given property of

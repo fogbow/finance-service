@@ -35,6 +35,7 @@ import cloud.fogbow.fs.core.PropertiesHolder;
 
 public class AccountingServiceClient {
 	private static final String COMPUTE_RESOURCE = "compute";
+	// FIXME the client should not get network records
 	private static final String NETWORK_RESOURCE = "network";
 	private static final String VOLUME_RESOURCE = "volume";
 	private static final List<String> RESOURCE_TYPES = Arrays.asList(COMPUTE_RESOURCE, 

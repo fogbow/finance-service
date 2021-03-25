@@ -3,6 +3,8 @@ package cloud.fogbow.fs.core.plugins.payment.prepaid;
 import java.util.List;
 
 import cloud.fogbow.accs.api.http.response.Record;
+import cloud.fogbow.common.exceptions.InternalServerErrorException;
+import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.models.FinancePlan;
 import cloud.fogbow.fs.core.models.FinanceUser;
@@ -24,14 +26,21 @@ public class DefaultCreditsManager implements PaymentManager {
 	}
 
 	@Override
-	public void startPaymentProcess(String userId, String provider) {
+	public void startPaymentProcess(String userId, String provider) throws InternalServerErrorException {
 		FinanceUser user = databaseManager.getUserById(userId, provider);
 		UserCredits credits = databaseManager.getUserCreditsByUserId(userId);
 		FinancePlan plan = databaseManager.getFinancePlan(planName);
 		List<Record> records = user.getPeriodRecords();
 		
 		for (Record record : records) {
-			ResourceItem resourceItem = resourceItemFactory.getItemFromRecord(record);
+			ResourceItem resourceItem;
+			
+			try {
+				resourceItem = resourceItemFactory.getItemFromRecord(record);
+			} catch (InvalidParameterException e) {
+				throw new InternalServerErrorException(e.getMessage());
+			}
+			
 			Double valueToPayPerTimeUnit = plan.getItemFinancialValue(resourceItem);
 			Double timeUsed = resourceItemFactory.getTimeFromRecord(record);
 			

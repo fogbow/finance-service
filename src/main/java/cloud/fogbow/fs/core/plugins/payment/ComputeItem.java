@@ -1,6 +1,8 @@
 package cloud.fogbow.fs.core.plugins.payment;
 
 public class ComputeItem extends ResourceItem {
+	public static final String ITEM_TYPE_NAME = "compute";
+	
 	private int vCPU;
 	private int ram;
 	

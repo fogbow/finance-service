@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cloud.fogbow.accs.api.http.response.Record;
+import cloud.fogbow.common.exceptions.InternalServerErrorException;
+import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.models.FinancePlan;
 import cloud.fogbow.fs.core.models.FinanceUser;
@@ -36,14 +38,21 @@ public class DefaultInvoiceManager implements PaymentManager {
 	}
 
 	@Override
-	public void startPaymentProcess(String userId, String provider) {
+	public void startPaymentProcess(String userId, String provider) throws InternalServerErrorException {
 		FinanceUser user = databaseManager.getUserById(userId, provider);
 		FinancePlan plan = databaseManager.getFinancePlan(planName);
 		List<Record> records = user.getPeriodRecords();
 		InvoiceBuilder invoiceBuilder = new InvoiceBuilder(userId, provider);
 		
 		for (Record record : records) {
-			ResourceItem resourceItem = resourceItemFactory.getItemFromRecord(record);
+			ResourceItem resourceItem;
+			
+			try {
+				resourceItem = resourceItemFactory.getItemFromRecord(record);
+			} catch (InvalidParameterException e) {
+				throw new InternalServerErrorException(e.getMessage());
+			}
+			
 			Double valueToPayPerTimeUnit = plan.getItemFinancialValue(resourceItem);
 			Double timeUsed = resourceItemFactory.getTimeFromRecord(record);
 			

@@ -1,6 +1,8 @@
 package cloud.fogbow.fs.core.plugins.payment;
 
 public class VolumeItem extends ResourceItem {
+	public static final String ITEM_TYPE_NAME = "volume";
+	
 	private int size;
 
 	public VolumeItem(int size) {
