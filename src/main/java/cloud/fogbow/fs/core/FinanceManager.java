@@ -69,16 +69,6 @@ public class FinanceManager {
 		throw new InvalidParameterException(String.format(Messages.Exception.UNMANAGED_USER, authenticatedUser.getId()));
 	}
 
-	public void addUser(User user) {
-		for (FinancePlugin plugin : financePlugins) {
-			if (plugin.getName().equals(user.getFinancePluginName())) {
-				plugin.addUser(user.getUserId(), user.getProvider(), user.getFinanceOptions());
-			}
-		}
-		
-		// TODO handle this case
-	}
-	
 	public void startPlugins() {
 		for (FinancePlugin plugin : financePlugins) {
 			plugin.startThreads();
@@ -91,34 +81,49 @@ public class FinanceManager {
 		}
 	}
 	
-	public void removeUser(String userId, String provider) {
+	// TODO test
+	// TODO refactor this, removing the duplicated code
+	public void addUser(User user) throws InvalidParameterException {
+		for (FinancePlugin plugin : financePlugins) {
+			if (plugin.getName().equals(user.getFinancePluginName())) {
+				plugin.addUser(user.getUserId(), user.getProvider(), user.getFinanceOptions());
+			}
+		}
+		
+		throw new InvalidParameterException(String.format(Messages.Exception.UNMANAGED_USER, user.getUserId()));
+	}
+	
+	// TODO test
+	public void removeUser(String userId, String provider) throws InvalidParameterException {
 		for (FinancePlugin plugin : financePlugins) {
 			if (plugin.managesUser(userId, provider)) {
 				plugin.removeUser(userId, provider);
 			}
 		}
 		
-		// TODO handle this case
+		throw new InvalidParameterException(String.format(Messages.Exception.UNMANAGED_USER, userId));
 	}
 
-	public void changeOptions(String userId, String provider, HashMap<String, String> financeOptions) {
+	// TODO test
+	public void changeOptions(String userId, String provider, HashMap<String, String> financeOptions) throws InvalidParameterException {
 		for (FinancePlugin plugin : financePlugins) {
 			if (plugin.managesUser(userId, provider)) {
 				plugin.changeOptions(userId, provider, financeOptions);
 			}
 		}
 		
-		// TODO handle this case
+		throw new InvalidParameterException(String.format(Messages.Exception.UNMANAGED_USER, userId));
 	}
 
-	public void updateFinanceState(String userId, String provider, HashMap<String, String> financeState) {
+	// TODO test
+	public void updateFinanceState(String userId, String provider, HashMap<String, String> financeState) throws InvalidParameterException {
 		for (FinancePlugin plugin : financePlugins) {
 			if (plugin.managesUser(userId, provider)) {
 				plugin.updateFinanceState(userId, provider, financeState);
 			}
 		}
 		
-		// TODO handle this case
+		throw new InvalidParameterException(String.format(Messages.Exception.UNMANAGED_USER, userId));
 	}
 
 	public String getFinanceStateProperty(String userId, String provider, String property) throws FogbowException {
