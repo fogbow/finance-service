@@ -3,6 +3,7 @@ package cloud.fogbow.fs.core;
 import java.security.GeneralSecurityException;
 import java.security.interfaces.RSAPublicKey;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 
@@ -147,6 +148,26 @@ public class ApplicationFacade {
 		}
 	}
 	
+	public void createFinancePlan(String systemUserToken, String planName, Map<String, String> planInfo) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public Map<String, String> getFinancePlan(String systemUserToken, String planName) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public void updateFinancePlan(String systemUserToken, String planName,
+			Map<String, String> planInfo) {
+		// TODO Auto-generated method stub
+	}
+
+	public void remoteFinancePlan(String systemUserToken, String planName) {
+		// TODO Auto-generated method stub
+		
+	}
+	
 	public void reload(String userToken) throws UnauthenticatedUserException, UnauthorizedRequestException, FogbowException {
 		LOGGER.info(String.format(Messages.Log.RELOADING_CONFIGURATION));
 		
@@ -184,7 +205,5 @@ public class ApplicationFacade {
         SystemUser systemUser = AuthenticationUtil.authenticate(asPublicKey, userToken);
         FsOperation operation = new FsOperation();
         this.authorizationPlugin.isAuthorized(systemUser, operation);
-	}
-
-	
+	}	
 }
