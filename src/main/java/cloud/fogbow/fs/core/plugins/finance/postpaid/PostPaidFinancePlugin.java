@@ -105,6 +105,8 @@ public class PostPaidFinancePlugin implements FinancePlugin {
 
 	@Override
 	public boolean isAuthorized(SystemUser user, RasOperation operation) {
+		// TODO isAuthorized should check if the RasOperation type
+		// is related to resource allocation
 		return this.paymentManager.hasPaid(user.getId(), user.getIdentityProviderId());
 	}
 

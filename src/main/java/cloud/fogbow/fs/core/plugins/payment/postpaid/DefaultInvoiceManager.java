@@ -72,6 +72,8 @@ public class DefaultInvoiceManager implements PaymentManager {
 			
 			// FIXME constant
 			propertyValue = String.join(",", invoiceJsonReps);
+		} else {
+			// FIXME treat this
 		}
 		
 		return propertyValue;

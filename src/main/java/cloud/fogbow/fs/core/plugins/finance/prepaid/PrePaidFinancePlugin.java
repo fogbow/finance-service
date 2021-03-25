@@ -103,8 +103,8 @@ public class PrePaidFinancePlugin implements FinancePlugin {
 
 	@Override
 	public boolean isAuthorized(SystemUser user, RasOperation operation) {
-		// I believe this implementation should be more complex
-		// and take into account the operation parameters
+		// TODO isAuthorized should check if the RasOperation type
+		// is related to resource allocation
 		return this.paymentManager.hasPaid(user.getId(), user.getIdentityProviderId());
 	}
 
