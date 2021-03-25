@@ -4,6 +4,7 @@ import java.security.interfaces.RSAPublicKey;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -17,12 +18,14 @@ import cloud.fogbow.fs.api.parameters.User;
 import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
 import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
+import cloud.fogbow.fs.core.models.FinancePlan;
 import cloud.fogbow.fs.core.plugins.FinancePlugin;
 
 public class FinanceManager {
 	@VisibleForTesting
 	static final String FINANCE_PLUGINS_CLASS_NAMES_SEPARATOR = ",";
 	private List<FinancePlugin> financePlugins;
+	private DatabaseManager databaseManager;
 	
 	public FinanceManager(DatabaseManager databaseManager) throws ConfigurationErrorException {
 		String financePluginsString = PropertiesHolder.getInstance()
@@ -38,13 +41,15 @@ public class FinanceManager {
 		}
 		
 		this.financePlugins = financePlugins;
+		this.databaseManager = databaseManager;
 	}
 	
-	public FinanceManager(List<FinancePlugin> financePlugins) throws ConfigurationErrorException {
+	public FinanceManager(List<FinancePlugin> financePlugins, DatabaseManager databaseManager) throws ConfigurationErrorException {
 		if (financePlugins.isEmpty()) {
 			throw new ConfigurationErrorException(Messages.Exception.NO_FINANCE_PLUGIN_SPECIFIED);
 		}
 		this.financePlugins = financePlugins;
+		this.databaseManager = databaseManager;
 	}
 
 	public boolean isAuthorized(AuthorizableUser user) throws FogbowException {
@@ -124,5 +129,26 @@ public class FinanceManager {
 		}
 		
 		throw new InvalidParameterException(String.format(Messages.Exception.UNMANAGED_USER, userId));
+	}
+
+	public void createFinancePlan(String planName, Map<String, String> planInfo) {
+		FinancePlan financePlan = new FinancePlan(planName, planInfo); 
+		this.databaseManager.saveFinancePlan(financePlan);
+	}
+
+	public Map<String, String> getFinancePlan(String planName) {
+		FinancePlan financePlan = this.databaseManager.getFinancePlan(planName);
+		return financePlan.getRulesAsMap();
+	}
+
+	public void updateFinancePlan(String planName, Map<String, String> planInfo) {
+		FinancePlan financePlan = this.databaseManager.getFinancePlan(planName);
+		financePlan.update(planInfo);
+		this.databaseManager.saveFinancePlan(financePlan);
+	}
+
+	public void removeFinancePlan(String planName) {
+		// TODO I think this operation needs further validation
+		this.databaseManager.removeFinancePlan(planName);
 	}
 }

@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
+import cloud.fogbow.fs.core.models.FinancePlan;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.models.Invoice;
 import cloud.fogbow.fs.core.models.UserCredits;
@@ -16,6 +17,7 @@ public class DatabaseManager {
 	private static Logger LOGGER = Logger.getLogger(DatabaseManager.class);
 	private List<FinanceUser> financeUsers;
 	private List<Invoice> invoices;
+	private List<FinancePlan> financePlans;
 
 	public DatabaseManager() {
 		financeUsers = new ArrayList<FinanceUser>();
@@ -129,5 +131,34 @@ public class DatabaseManager {
 	public void saveUserCredits(UserCredits credits) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	public void saveFinancePlan(FinancePlan financePlan) {
+		for (FinancePlan savedFinancePlan : financePlans) {
+			if (savedFinancePlan.getName().equals(financePlan.getName())) {
+				financePlans.remove(savedFinancePlan);
+			}
+		}
+		
+		// FIXME treat this
+		financePlans.add(financePlan);
+	}
+
+	public FinancePlan getFinancePlan(String planName) {
+		for (FinancePlan financePlan : financePlans) {
+			if (financePlan.getName().equals(planName)) {
+				return financePlan;
+			}
+		}
+		
+		return null;
+	}
+
+	public void removeFinancePlan(String planName) {
+		for (FinancePlan financePlan : financePlans) {
+			if (financePlan.getName().equals(planName)) {
+				financePlans.remove(financePlan);
+			}
+		}
 	}
 }

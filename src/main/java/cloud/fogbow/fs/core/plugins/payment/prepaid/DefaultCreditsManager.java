@@ -1,10 +1,10 @@
 package cloud.fogbow.fs.core.plugins.payment.prepaid;
 
 import java.util.List;
-import java.util.Map;
 
 import cloud.fogbow.accs.api.http.response.Record;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
+import cloud.fogbow.fs.core.models.FinancePlan;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.models.UserCredits;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
@@ -27,14 +27,12 @@ public class DefaultCreditsManager implements PaymentManager {
 	public void startPaymentProcess(String userId, String provider) {
 		FinanceUser user = databaseManager.getUserById(userId, provider);
 		UserCredits credits = databaseManager.getUserCreditsByUserId(userId);
-		
-		Map<String, String> basePlan = databaseManager.getPlan(planName);
-		Map<ResourceItem, Double> plan = resourceItemFactory.getPlan(basePlan);
+		FinancePlan plan = databaseManager.getFinancePlan(planName);
 		List<Record> records = user.getPeriodRecords();
 		
 		for (Record record : records) {
 			ResourceItem resourceItem = resourceItemFactory.getItemFromRecord(record);
-			Double valueToPayPerTimeUnit = plan.get(resourceItem);
+			Double valueToPayPerTimeUnit = plan.getItemFinancialValue(resourceItem);
 			Double timeUsed = resourceItemFactory.getTimeFromRecord(record);
 			
 			credits.deduct(resourceItem, valueToPayPerTimeUnit, timeUsed);

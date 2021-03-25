@@ -148,24 +148,57 @@ public class ApplicationFacade {
 		}
 	}
 	
-	public void createFinancePlan(String systemUserToken, String planName, Map<String, String> planInfo) {
-		// TODO Auto-generated method stub
+	public void createFinancePlan(String userToken, String planName, Map<String, String> planInfo) throws FogbowException {
+		// TODO add logging
 		
+		authenticateAndAuthorize(userToken);
+		synchronizationManager.startOperation();
+
+		try {
+			this.financeManager.createFinancePlan(planName, planInfo);
+		} finally {
+			synchronizationManager.finishOperation();
+		}
 	}
 
-	public Map<String, String> getFinancePlan(String systemUserToken, String planName) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public void updateFinancePlan(String systemUserToken, String planName,
-			Map<String, String> planInfo) {
-		// TODO Auto-generated method stub
-	}
-
-	public void remoteFinancePlan(String systemUserToken, String planName) {
-		// TODO Auto-generated method stub
+	public Map<String, String> getFinancePlan(String userToken, String planName) throws FogbowException {
+		// TODO add logging
 		
+		authenticateAndAuthorize(userToken);
+		synchronizationManager.startOperation();
+
+		try {
+			return this.financeManager.getFinancePlan(planName);
+		} finally {
+			synchronizationManager.finishOperation();
+		}
+	}
+
+	public void updateFinancePlan(String userToken, String planName,
+			Map<String, String> planInfo) throws FogbowException {
+		// TODO add logging
+		
+		authenticateAndAuthorize(userToken);
+		synchronizationManager.startOperation();
+
+		try {
+			this.financeManager.updateFinancePlan(planName, planInfo);
+		} finally {
+			synchronizationManager.finishOperation();
+		}
+	}
+
+	public void removeFinancePlan(String userToken, String planName) throws FogbowException {
+		// TODO add logging
+		
+		authenticateAndAuthorize(userToken);
+		synchronizationManager.startOperation();
+
+		try {
+			this.financeManager.removeFinancePlan(planName);
+		} finally {
+			synchronizationManager.finishOperation();
+		}
 	}
 	
 	public void reload(String userToken) throws UnauthenticatedUserException, UnauthorizedRequestException, FogbowException {

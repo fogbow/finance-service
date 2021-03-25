@@ -84,7 +84,7 @@ public class Resources {
 	public ResponseEntity<Boolean> removeFinancePlan(
 			@PathVariable String planName,
 			@RequestHeader(value = SystemConstants.SYSTEM_USER_TOKEN_HEADER_KEY) String systemUserToken) throws FogbowException {
-		ApplicationFacade.getInstance().remoteFinancePlan(systemUserToken, planName);
+		ApplicationFacade.getInstance().removeFinancePlan(systemUserToken, planName);
 		return new ResponseEntity<Boolean>(HttpStatus.OK);
 	}
 }

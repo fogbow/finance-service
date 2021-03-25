@@ -123,7 +123,7 @@ public class FinanceManagerTest {
 		
 		databaseManager = Mockito.mock(DatabaseManager.class);
 		
-		new FinanceManager(financePlugins);
+		new FinanceManager(financePlugins, databaseManager);
 	}
 	
 	// test case: When calling the isAuthorized method passing an AuthorizableUser,
@@ -134,7 +134,7 @@ public class FinanceManagerTest {
 		setUpFinancePlugin();
 		setUpAuthentication();
 		
-		FinanceManager financeManager = new FinanceManager(financePlugins);
+		FinanceManager financeManager = new FinanceManager(financePlugins, databaseManager);
 		
 		assertTrue(financeManager.isAuthorized(user1));
 		assertTrue(financeManager.isAuthorized(user2));
@@ -148,7 +148,7 @@ public class FinanceManagerTest {
 		setUpFinancePluginUnmanagedUser();
 		setUpAuthentication();
 		
-		FinanceManager financeManager = new FinanceManager(financePlugins);
+		FinanceManager financeManager = new FinanceManager(financePlugins, databaseManager);
 		financeManager.isAuthorized(user1);
 	}
 	
@@ -159,7 +159,7 @@ public class FinanceManagerTest {
 	public void testGetFinanceStateProperty() throws FogbowException {
 		setUpFinancePlugin();
 		
-		FinanceManager financeManager = new FinanceManager(financePlugins);
+		FinanceManager financeManager = new FinanceManager(financePlugins, databaseManager);
 		
 		assertEquals(PROPERTY_VALUE_1, financeManager.getFinanceStateProperty(USER_ID_1, PROVIDER_USER_1, PROPERTY_NAME_1));
 		assertEquals(PROPERTY_VALUE_2, financeManager.getFinanceStateProperty(USER_ID_2, PROVIDER_USER_2, PROPERTY_NAME_2));
@@ -172,7 +172,7 @@ public class FinanceManagerTest {
 	public void testGetFinanceStatePropertyUserIsNotManaged() throws FogbowException {
 		setUpFinancePluginUnmanagedUser();
 
-		FinanceManager financeManager = new FinanceManager(financePlugins);
+		FinanceManager financeManager = new FinanceManager(financePlugins, databaseManager);
 		financeManager.getFinanceStateProperty(USER_ID_1, PROVIDER_USER_1, PROPERTY_NAME_1);
 	}
 	
@@ -182,7 +182,7 @@ public class FinanceManagerTest {
 	public void testStartThreads() throws FogbowException {
 		setUpFinancePlugin();
 		
-		FinanceManager financeManager = new FinanceManager(financePlugins);
+		FinanceManager financeManager = new FinanceManager(financePlugins, databaseManager);
 		
 		financeManager.startPlugins();
 		
@@ -196,7 +196,7 @@ public class FinanceManagerTest {
 	public void testStopThreads() throws FogbowException {
 		setUpFinancePlugin();
 
-		FinanceManager financeManager = new FinanceManager(financePlugins);
+		FinanceManager financeManager = new FinanceManager(financePlugins, databaseManager);
 
 		financeManager.stopPlugins();
 
