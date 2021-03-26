@@ -1,6 +1,5 @@
 package cloud.fogbow.fs.core.plugins.finance.postpaid;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -145,13 +144,13 @@ public class PostPaidFinancePlugin implements FinancePlugin {
 	}
 
 	@Override
-	public void changeOptions(String userId, String provider, HashMap<String, String> financeOptions) {
+	public void changeOptions(String userId, String provider, Map<String, String> financeOptions) {
 		// TODO validation
 		this.databaseManager.changeOptions(userId, provider, financeOptions);
 	}
 
 	@Override
-	public void updateFinanceState(String userId, String provider, HashMap<String, String> financeState) throws InvalidParameterException {
+	public void updateFinanceState(String userId, String provider, Map<String, String> financeState) throws InvalidParameterException {
 		// TODO validation
 
 		for (String invoiceId : financeState.keySet()) {

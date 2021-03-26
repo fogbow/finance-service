@@ -21,7 +21,6 @@ public class StubPostPaidPaymentManager implements PaymentManager {
 		FinanceUser user = databaseManager.getUserById(userId, provider);
 		String paymentStatusString = user.getProperty(FinanceUser.PAYMENT_STATUS_KEY);
 
-		// TODO Improve
 		if (paymentStatusString == null) {
 			user.setProperty(FinanceUser.PAYMENT_STATUS_KEY, PAYMENT_STATUS_OK);
 			return true;
@@ -42,13 +41,11 @@ public class StubPostPaidPaymentManager implements PaymentManager {
 
 	@Override
 	public String getUserFinanceState(String userId, String provider, String property) {
-		// TODO implement
 		return property;
 	}
 
 	@Override
 	public void setFinancePlan(String planName) {
-		// TODO Auto-generated method stub
-		
+		// do nothing
 	}
 }

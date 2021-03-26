@@ -6,7 +6,9 @@ import static org.junit.Assert.assertTrue;
 
 import java.security.interfaces.RSAPublicKey;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -22,6 +24,7 @@ import cloud.fogbow.common.exceptions.FogbowException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.common.models.SystemUser;
 import cloud.fogbow.fs.api.parameters.AuthorizableUser;
+import cloud.fogbow.fs.api.parameters.User;
 import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.plugins.FinancePlugin;
@@ -35,12 +38,16 @@ public class FinanceManagerTest {
 	private static final String USER_ID_1 = "userId1";
 	private static final String USER_ID_2 = "userId2";
 	private static final String USER_ID_3 = "userId3";
+	private static final String USER_ID_TO_ADD_1 = "userIdToAdd1";
+	private static final String USER_ID_TO_ADD_2 = "userIdToAdd1";
 	private static final String USER_NAME_1 = "userName1";
 	private static final String USER_NAME_2 = "userName2";
 	private static final String USER_NAME_3 = "userName3";
 	private static final String PROVIDER_USER_1 = "providerUserId1";
 	private static final String PROVIDER_USER_2 = "providerUserId2";
 	private static final String PROVIDER_USER_3 = "providerUserId3";
+	private static final String PROVIDER_USER_TO_ADD_1 = "providerUserToAdd1";
+	private static final String PROVIDER_USER_TO_ADD_2 = "providerUserToAdd1";
 	private static final String PROPERTY_NAME_1 = "propertyName1";
 	private static final String PROPERTY_VALUE_1 = "propertyValue1";
 	private static final String PROPERTY_NAME_2 = "propertyName2";
@@ -50,6 +57,9 @@ public class FinanceManagerTest {
 	private static final String USER_1_TOKEN = "user1Token";
 	private static final String USER_2_TOKEN = "user2Token";
 	private static final String USER_3_TOKEN = "user3Token";
+	private static final String PLUGIN_1_NAME = "plugin1";
+	private static final String PLUGIN_2_NAME = "plugin2";
+	private static final String UNKNOWN_PLUGIN_NAME = "unknownplugin";
 	private List<FinancePlugin> financePlugins;
 	private DatabaseManager databaseManager;
 	private FinancePlugin plugin1;
@@ -176,6 +186,116 @@ public class FinanceManagerTest {
 		financeManager.getFinanceStateProperty(USER_ID_1, PROVIDER_USER_1, PROPERTY_NAME_1);
 	}
 	
+	// test case: When calling the addUser method, it must add the 
+	// user using the correct FinancePlugin.
+	@Test
+	public void testAddUser() throws FogbowException {
+		setUpFinancePlugin();
+		
+		FinanceManager financeManager = new FinanceManager(financePlugins, databaseManager);
+		Map<String, String> financeOptions = new HashMap<String, String>();
+		User user1 = new User(USER_ID_TO_ADD_1, PROVIDER_USER_TO_ADD_1, PLUGIN_1_NAME, financeOptions);
+		User user2 = new User(USER_ID_TO_ADD_2, PROVIDER_USER_TO_ADD_2, PLUGIN_2_NAME, financeOptions);
+		
+		financeManager.addUser(user1);
+		financeManager.addUser(user2);
+
+		Mockito.verify(plugin1, Mockito.times(1)).addUser(USER_ID_TO_ADD_1, PROVIDER_USER_TO_ADD_1, financeOptions);
+		Mockito.verify(plugin2, Mockito.times(1)).addUser(USER_ID_TO_ADD_2, PROVIDER_USER_TO_ADD_2, financeOptions);
+	}
+	
+	// test case: When calling the addUser method and the FinanceManager
+	// does not know the finance plugin, it must throw an InvalidParameterException.
+	@Test(expected = InvalidParameterException.class)
+	public void testAddUserUnknownPlugin() throws FogbowException {
+		setUpFinancePlugin();
+		
+		FinanceManager financeManager = new FinanceManager(financePlugins, databaseManager);
+		Map<String, String> financeOptions = new HashMap<String, String>();
+		User user1 = new User(USER_ID_TO_ADD_1, PROVIDER_USER_TO_ADD_1, UNKNOWN_PLUGIN_NAME, financeOptions);
+		
+		financeManager.addUser(user1);
+	}
+	
+	// test case: When calling the removeUser method, it must remove 
+	// the user using the correct FinancePlugin.
+	@Test
+	public void testRemoveUser() throws FogbowException {
+		setUpFinancePlugin();
+		
+		FinanceManager financeManager = new FinanceManager(financePlugins, databaseManager);
+		
+		financeManager.removeUser(USER_ID_1, PROVIDER_USER_1);
+		financeManager.removeUser(USER_ID_2, PROVIDER_USER_2);
+		financeManager.removeUser(USER_ID_3, PROVIDER_USER_3);
+		
+		Mockito.verify(plugin1, Mockito.times(1)).removeUser(USER_ID_1, PROVIDER_USER_1);
+		Mockito.verify(plugin1, Mockito.times(1)).removeUser(USER_ID_3, PROVIDER_USER_3);
+		Mockito.verify(plugin2, Mockito.times(1)).removeUser(USER_ID_2, PROVIDER_USER_2);
+	}
+	
+	// test case: When calling the removeUser method and the user
+	// to be removed is not managed by any finance plugin, it must 
+	// throw an InvalidParameterException.
+	@Test(expected = InvalidParameterException.class)
+	public void testRemoveUserUnmanagedUser() throws ConfigurationErrorException, InvalidParameterException {
+		setUpFinancePluginUnmanagedUser();
+		
+		FinanceManager financeManager = new FinanceManager(financePlugins, databaseManager);
+		
+		financeManager.removeUser(USER_ID_1, PROVIDER_USER_1);
+	}
+	
+	// test case: When calling the changeOptions method, it must
+	// change the user's options using the correct FinancePlugin. 
+	@Test
+	public void testChangeOptions() throws FogbowException {
+		setUpFinancePlugin();
+		Map<String, String> newFinanceOptions = new HashMap<String, String>();
+		
+		FinanceManager financeManager = new FinanceManager(financePlugins, databaseManager);
+		financeManager.changeOptions(USER_ID_1, PROVIDER_USER_1, newFinanceOptions);
+		
+		Mockito.verify(plugin1, Mockito.times(1)).changeOptions(USER_ID_1, PROVIDER_USER_1, newFinanceOptions);
+	}
+	
+	// test case: When calling the changeOptions method and the user
+	// is not managed by any finance plugin, it must throw an InvalidParameterException.
+	@Test(expected = InvalidParameterException.class)
+	public void testChangeOptionsUnmanagedUser() throws ConfigurationErrorException, InvalidParameterException {
+		setUpFinancePluginUnmanagedUser();
+		Map<String, String> newFinanceOptions = new HashMap<String, String>();
+		
+		FinanceManager financeManager = new FinanceManager(financePlugins, databaseManager);
+		
+		financeManager.changeOptions(USER_ID_1, PROVIDER_USER_1, newFinanceOptions);
+	}
+	
+	// test case: When calling the updateFinanceState method, it must
+	// change the user's finance state using the correct FinancePlugin.
+	@Test
+	public void testUpdateFinanceState() throws FogbowException {
+		setUpFinancePlugin();
+		Map<String, String> newFinanceState = new HashMap<String, String>();
+		
+		FinanceManager financeManager = new FinanceManager(financePlugins, databaseManager);
+		financeManager.updateFinanceState(USER_ID_1, PROVIDER_USER_1, newFinanceState);
+		
+		Mockito.verify(plugin1, Mockito.times(1)).updateFinanceState(USER_ID_1, PROVIDER_USER_1, newFinanceState);
+	}
+	
+	// test case: When calling the updateFinanceState method and the user
+	// is not managed by any finance plugin, it must throw an InvalidParameterException.
+	@Test(expected = InvalidParameterException.class)
+	public void testUpdateFinanceStateUnmanagedUser() throws InvalidParameterException, ConfigurationErrorException {
+		setUpFinancePluginUnmanagedUser();
+		
+		Map<String, String> newFinanceState = new HashMap<String, String>();
+		
+		FinanceManager financeManager = new FinanceManager(financePlugins, databaseManager);
+		financeManager.updateFinanceState(USER_ID_1, PROVIDER_USER_1, newFinanceState);
+	}
+	
 	// test case: When calling the startPlugins method, it must call the startThreads
 	// method of all the known finance plugins.
 	@Test
@@ -219,6 +339,7 @@ public class FinanceManagerTest {
 		Mockito.when(plugin1.managesUser(USER_ID_1, PROVIDER_USER_1)).thenReturn(true);
 		Mockito.when(plugin1.managesUser(USER_ID_2, PROVIDER_USER_2)).thenReturn(false);
 		Mockito.when(plugin1.managesUser(USER_ID_3, PROVIDER_USER_3)).thenReturn(true);
+		Mockito.when(plugin1.getName()).thenReturn(PLUGIN_1_NAME);
 		Mockito.when(plugin1.isAuthorized(systemUser1, operation1)).thenReturn(true);
 		Mockito.when(plugin1.isAuthorized(systemUser3, operation3)).thenReturn(false);
 		Mockito.when(plugin1.getUserFinanceState(USER_ID_1, PROVIDER_USER_1, PROPERTY_NAME_1)).thenReturn(PROPERTY_VALUE_1);
@@ -226,6 +347,7 @@ public class FinanceManagerTest {
 		
 		this.plugin2 = Mockito.mock(FinancePlugin.class);
 		Mockito.when(plugin2.managesUser(USER_ID_2, PROVIDER_USER_2)).thenReturn(true);
+		Mockito.when(plugin2.getName()).thenReturn(PLUGIN_2_NAME);
 		Mockito.when(plugin2.isAuthorized(systemUser2, operation2)).thenReturn(true);
 		Mockito.when(plugin2.getUserFinanceState(USER_ID_2, PROVIDER_USER_2, PROPERTY_NAME_2)).thenReturn(PROPERTY_VALUE_2);
 		

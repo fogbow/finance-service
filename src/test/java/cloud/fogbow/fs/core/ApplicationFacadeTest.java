@@ -34,6 +34,7 @@ public class ApplicationFacadeTest {
 	
 	private String userIdToAdd = "userIdToAdd";
 	private String userProviderToAdd = "userProviderToAdd";
+	private String financePluginUserToAdd = "financePluginUserToAdd";
 	private Map<String, String> userFinanceOptionsToAdd = new HashMap<String, String>();
 
 	private String userIdToRemove = "userIdToRemove";
@@ -63,7 +64,7 @@ public class ApplicationFacadeTest {
         setUpAuthorization();
         setUpApplicationFacade();
         
-        this.user = new User(userIdToAdd, userProviderToAdd, userFinanceOptionsToAdd);
+        this.user = new User(userIdToAdd, userProviderToAdd, financePluginUserToAdd, userFinanceOptionsToAdd);
         
         ApplicationFacade.getInstance().addUser(adminToken, user);
         
@@ -89,7 +90,7 @@ public class ApplicationFacadeTest {
         ApplicationFacade.getInstance().setFinanceManager(financeManager);
         ApplicationFacade.getInstance().setSynchronizationManager(synchronizationManager);
         
-        this.user = new User(userIdToAdd, userProviderToAdd, userFinanceOptionsToAdd);
+        this.user = new User(userIdToAdd, userProviderToAdd, financePluginUserToAdd, userFinanceOptionsToAdd);
         Mockito.doThrow(FogbowException.class).when(this.financeManager).addUser(user);
         
         try {

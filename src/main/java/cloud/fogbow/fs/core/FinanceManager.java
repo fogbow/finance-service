@@ -2,7 +2,6 @@ package cloud.fogbow.fs.core;
 
 import java.security.interfaces.RSAPublicKey;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -81,77 +80,75 @@ public class FinanceManager {
 		}
 	}
 	
-	// TODO test
-	// TODO refactor this, removing the duplicated code
+	/*
+	 * User Management
+	 */
+	
 	public void addUser(User user) throws InvalidParameterException {
 		for (FinancePlugin plugin : financePlugins) {
 			if (plugin.getName().equals(user.getFinancePluginName())) {
 				plugin.addUser(user.getUserId(), user.getProvider(), user.getFinanceOptions());
+				return;
 			}
 		}
 		
 		throw new InvalidParameterException(String.format(Messages.Exception.UNMANAGED_USER, user.getUserId()));
 	}
 	
-	// TODO test
 	public void removeUser(String userId, String provider) throws InvalidParameterException {
-		for (FinancePlugin plugin : financePlugins) {
-			if (plugin.managesUser(userId, provider)) {
-				plugin.removeUser(userId, provider);
-			}
-		}
-		
-		throw new InvalidParameterException(String.format(Messages.Exception.UNMANAGED_USER, userId));
+		FinancePlugin plugin = getUserPlugin(userId, provider);
+		plugin.removeUser(userId, provider);
 	}
 
-	// TODO test
-	public void changeOptions(String userId, String provider, HashMap<String, String> financeOptions) throws InvalidParameterException {
-		for (FinancePlugin plugin : financePlugins) {
-			if (plugin.managesUser(userId, provider)) {
-				plugin.changeOptions(userId, provider, financeOptions);
-			}
-		}
-		
-		throw new InvalidParameterException(String.format(Messages.Exception.UNMANAGED_USER, userId));
+	public void changeOptions(String userId, String provider, Map<String, String> financeOptions) throws InvalidParameterException {
+		FinancePlugin plugin = getUserPlugin(userId, provider);
+		plugin.changeOptions(userId, provider, financeOptions);
 	}
 
-	// TODO test
-	public void updateFinanceState(String userId, String provider, HashMap<String, String> financeState) throws InvalidParameterException {
-		for (FinancePlugin plugin : financePlugins) {
-			if (plugin.managesUser(userId, provider)) {
-				plugin.updateFinanceState(userId, provider, financeState);
-			}
-		}
-		
-		throw new InvalidParameterException(String.format(Messages.Exception.UNMANAGED_USER, userId));
+	public void updateFinanceState(String userId, String provider, Map<String, String> financeState) throws InvalidParameterException {
+		FinancePlugin plugin = getUserPlugin(userId, provider);
+		plugin.updateFinanceState(userId, provider, financeState);
 	}
 
 	public String getFinanceStateProperty(String userId, String provider, String property) throws FogbowException {
+		FinancePlugin plugin = getUserPlugin(userId, provider);
+		return plugin.getUserFinanceState(userId, provider, property);
+	}
+	
+	private FinancePlugin getUserPlugin(String userId, String provider) throws InvalidParameterException {
 		for (FinancePlugin plugin : financePlugins) {
 			if (plugin.managesUser(userId, provider)) {
-				return plugin.getUserFinanceState(userId, provider, property);
+				return plugin;
 			}
 		}
 		
 		throw new InvalidParameterException(String.format(Messages.Exception.UNMANAGED_USER, userId));
 	}
 
+	/*
+	 * Plan management
+	 */
+	
+	// TODO test
 	public void createFinancePlan(String planName, Map<String, String> planInfo) throws InvalidParameterException {
 		FinancePlan financePlan = new FinancePlan(planName, planInfo); 
 		this.databaseManager.saveFinancePlan(financePlan);
 	}
 
+	// TODO test
 	public Map<String, String> getFinancePlan(String planName) {
 		FinancePlan financePlan = this.databaseManager.getFinancePlan(planName);
 		return financePlan.getRulesAsMap();
 	}
 
+	// TODO test
 	public void updateFinancePlan(String planName, Map<String, String> planInfo) throws InvalidParameterException {
 		FinancePlan financePlan = this.databaseManager.getFinancePlan(planName);
 		financePlan.update(planInfo);
 		this.databaseManager.saveFinancePlan(financePlan);
 	}
 
+	// TODO test
 	public void removeFinancePlan(String planName) {
 		// TODO I think this operation needs further validation
 		this.databaseManager.removeFinancePlan(planName);

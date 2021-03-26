@@ -1,6 +1,5 @@
 package cloud.fogbow.fs.core.plugins.finance.prepaid;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -143,13 +142,13 @@ public class PrePaidFinancePlugin implements FinancePlugin {
 	}
 
 	@Override
-	public void changeOptions(String userId, String provider, HashMap<String, String> financeOptions) {
+	public void changeOptions(String userId, String provider, Map<String, String> financeOptions) {
 		// TODO validation
 		this.databaseManager.changeOptions(userId, provider, financeOptions);
 	}
 
 	@Override
-	public void updateFinanceState(String userId, String provider, HashMap<String, String> financeState) {
+	public void updateFinanceState(String userId, String provider, Map<String, String> financeState) {
 		// TODO validation
 		this.databaseManager.updateFinanceState(userId, provider, financeState);
 	}

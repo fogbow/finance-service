@@ -12,9 +12,10 @@ public class User {
 		
 	}
 	
-	public User(String userId, String provider, Map<String, String> financeOptions) {
+	public User(String userId, String provider, String financePluginName, Map<String, String> financeOptions) {
 		this.userId = userId;
 		this.provider = provider;
+		this.financePluginName = financePluginName;
 		this.financeOptions = financeOptions;
 	}
 

@@ -1,6 +1,5 @@
 package cloud.fogbow.fs.core.plugins;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import cloud.fogbow.common.exceptions.InvalidParameterException;
@@ -67,8 +66,8 @@ public interface FinancePlugin {
 	void removeUser(String userId, String provider);
 
 	// TODO documentation
-	void changeOptions(String userId, String provider, HashMap<String, String> financeOptions);
+	void changeOptions(String userId, String provider, Map<String, String> financeOptions);
 	
 	// TODO documentation
-	void updateFinanceState(String userId, String provider, HashMap<String, String> financeState) throws InvalidParameterException;
+	void updateFinanceState(String userId, String provider, Map<String, String> financeState) throws InvalidParameterException;
 }

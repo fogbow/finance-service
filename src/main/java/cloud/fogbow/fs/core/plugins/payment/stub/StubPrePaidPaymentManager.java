@@ -43,14 +43,12 @@ public class StubPrePaidPaymentManager implements PaymentManager {
 
 	@Override
 	public String getUserFinanceState(String userId, String provider, String property) {
-		// TODO Implement
 		FinanceUser user = databaseManager.getUserById(userId, provider);
 		return user.getProperty(USER_CREDITS);
 	}
 
 	@Override
 	public void setFinancePlan(String planName) {
-		// TODO Auto-generated method stub
-		
+		// do nothing
 	}
 }

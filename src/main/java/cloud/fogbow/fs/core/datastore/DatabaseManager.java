@@ -1,7 +1,6 @@
 package cloud.fogbow.fs.core.datastore;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -66,7 +65,7 @@ public class DatabaseManager {
 		return selectedUsers;
 	}
 
-	public void changeOptions(String userId, String provider, HashMap<String, String> financeOptions) {
+	public void changeOptions(String userId, String provider, Map<String, String> financeOptions) {
 		// TODO validation
 		FinanceUser user = getUserById(userId, provider);
 		
@@ -75,7 +74,7 @@ public class DatabaseManager {
 		}
 	}
 
-	public void updateFinanceState(String userId, String provider, HashMap<String, String> financeState) {
+	public void updateFinanceState(String userId, String provider, Map<String, String> financeState) {
 		// TODO validation
 		FinanceUser user = getUserById(userId, provider);
 
