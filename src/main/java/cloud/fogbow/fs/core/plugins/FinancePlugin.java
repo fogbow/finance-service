@@ -70,5 +70,5 @@ public interface FinancePlugin {
 	void changeOptions(String userId, String provider, HashMap<String, String> financeOptions);
 	
 	// TODO documentation
-	void updateFinanceState(String userId, String provider, HashMap<String, String> financeState);
+	void updateFinanceState(String userId, String provider, HashMap<String, String> financeState) throws InvalidParameterException;
 }

@@ -1,5 +1,8 @@
 package cloud.fogbow.fs.core.models;
 
+import cloud.fogbow.common.exceptions.InvalidParameterException;
+import cloud.fogbow.fs.constants.Messages;
+
 public enum InvoiceState {
 	PAID("PAID"),
 	WAITING("WAITING"),
@@ -11,14 +14,13 @@ public enum InvoiceState {
 		this.value = value;
 	}
 	
-	public static InvoiceState fromValue(String value) {
+	public static InvoiceState fromValue(String value) throws InvalidParameterException {
 		for (InvoiceState state: InvoiceState.values()) {
 			if (state.value.equals(value)) {
 				return state;
 			}
 		}
 		
-		// FIXME treat this
-		return null;
+		throw new InvalidParameterException(String.format(Messages.Exception.UNKNOWN_INVOICE_STATE, value));
 	}
 }

@@ -151,7 +151,7 @@ public class PostPaidFinancePlugin implements FinancePlugin {
 	}
 
 	@Override
-	public void updateFinanceState(String userId, String provider, HashMap<String, String> financeState) {
+	public void updateFinanceState(String userId, String provider, HashMap<String, String> financeState) throws InvalidParameterException {
 		// TODO validation
 
 		for (String invoiceId : financeState.keySet()) {
