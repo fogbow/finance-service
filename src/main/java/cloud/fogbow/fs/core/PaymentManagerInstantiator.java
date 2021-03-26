@@ -7,7 +7,8 @@ public class PaymentManagerInstantiator {
 
 	private static FsClassFactory classFactory = new FsClassFactory();
 
-	public static PaymentManager getPaymentManager(String className, DatabaseManager databaseManager) {
-		return (PaymentManager) classFactory.createPluginInstance(className, databaseManager);
+	public static PaymentManager getPaymentManager(String className, DatabaseManager databaseManager, 
+			String planName) {
+		return (PaymentManager) classFactory.createPluginInstance(className, databaseManager, planName);
 	}
 }

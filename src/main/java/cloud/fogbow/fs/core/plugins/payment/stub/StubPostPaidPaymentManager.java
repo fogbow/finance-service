@@ -45,4 +45,10 @@ public class StubPostPaidPaymentManager implements PaymentManager {
 		// TODO implement
 		return property;
 	}
+
+	@Override
+	public void setFinancePlan(String planName) {
+		// TODO Auto-generated method stub
+		
+	}
 }

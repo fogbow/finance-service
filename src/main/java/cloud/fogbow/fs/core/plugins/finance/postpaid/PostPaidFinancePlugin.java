@@ -32,6 +32,8 @@ public class PostPaidFinancePlugin implements FinancePlugin {
 	 * Required in the configuration file. 
 	 */
 	public static final String POST_PAID_PAYMENT_MANAGER = "post_paid_payment_manager";
+	// TODO documentation
+	public static final String POST_PAID_DEFAULT_FINANCE_PLAN = "post_paid_default_finance_plan";
 	/**
 	 * The key to use in the configuration property which
 	 * indicates the delay between invoice generation attempts.
@@ -55,7 +57,8 @@ public class PostPaidFinancePlugin implements FinancePlugin {
 		this(databaseManager, new AccountingServiceClient(), new RasClient(),
 				PaymentManagerInstantiator.getPaymentManager(
 						PropertiesHolder.getInstance().getProperty(POST_PAID_PAYMENT_MANAGER),
-						databaseManager),
+						databaseManager,
+						PropertiesHolder.getInstance().getProperty(POST_PAID_DEFAULT_FINANCE_PLAN)),
 				Long.valueOf(PropertiesHolder.getInstance().getProperty(INVOICE_WAIT_TIME)));
 	}
 	

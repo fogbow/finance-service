@@ -24,6 +24,12 @@ public class DefaultInvoiceManager implements PaymentManager {
 	private DatabaseManager databaseManager;
 	private ResourceItemFactory resourceItemFactory;
 	
+	public DefaultInvoiceManager(DatabaseManager databaseManager, String planName) {
+		this.planName = planName;
+		this.databaseManager = databaseManager;
+		this.resourceItemFactory = new ResourceItemFactory();
+	}
+
 	@Override
 	public boolean hasPaid(String userId, String provider) {
 		List<Invoice> userInvoices = databaseManager.getInvoiceByUserId(userId, provider);
@@ -84,5 +90,10 @@ public class DefaultInvoiceManager implements PaymentManager {
 		}
 		
 		return propertyValue;
+	}
+
+	@Override
+	public void setFinancePlan(String planName) {
+		this.planName = planName;
 	}
 }

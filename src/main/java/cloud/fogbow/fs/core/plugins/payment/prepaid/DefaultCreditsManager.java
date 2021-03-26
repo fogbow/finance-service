@@ -56,4 +56,10 @@ public class DefaultCreditsManager implements PaymentManager {
 		return null;
 	}
 
+	@Override
+	public void setFinancePlan(String planName) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

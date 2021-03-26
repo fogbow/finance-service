@@ -30,6 +30,8 @@ public class PrePaidFinancePlugin implements FinancePlugin {
 	 * Required in the configuration file. 
 	 */
 	public static final String PRE_PAID_PAYMENT_MANAGER = "pre_paid_payment_manager";
+	// TODO documentation
+	private static final String PRE_PAID_DEFAULT_FINANCE_PLAN = "pre_paid_default_finance_plan";
 	/**
 	 * The key to use in the configuration property which
 	 * indicates the delay between credits deduction attempts.
@@ -51,7 +53,8 @@ public class PrePaidFinancePlugin implements FinancePlugin {
 		this(databaseManager, new AccountingServiceClient(), new RasClient(),
 				PaymentManagerInstantiator.getPaymentManager(
 						PropertiesHolder.getInstance().getProperty(PRE_PAID_PAYMENT_MANAGER),
-						databaseManager),
+						databaseManager,
+						PropertiesHolder.getInstance().getProperty(PRE_PAID_DEFAULT_FINANCE_PLAN)),
 				Long.valueOf(PropertiesHolder.getInstance().getProperty(CREDITS_DEDUCTION_WAIT_TIME)));
 	}
 	

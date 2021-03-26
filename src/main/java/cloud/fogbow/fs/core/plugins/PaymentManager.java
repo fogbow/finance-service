@@ -47,4 +47,7 @@ public interface PaymentManager {
 	 * @return a representation of the property.
 	 */
 	String getUserFinanceState(String userId, String provider, String property);
+	
+	// TODO documentation
+	void setFinancePlan(String planName);
 }

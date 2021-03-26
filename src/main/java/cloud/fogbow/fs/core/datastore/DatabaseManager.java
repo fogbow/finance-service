@@ -84,11 +84,6 @@ public class DatabaseManager {
 		}
 	}
 
-	public Map<String, String> getPlan(String planName) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 	public void saveInvoice(Invoice invoice) {
 		for (Invoice savedInvoice : invoices) {
 			if (savedInvoice.getInvoiceId().equals(invoice.getInvoiceId())) {

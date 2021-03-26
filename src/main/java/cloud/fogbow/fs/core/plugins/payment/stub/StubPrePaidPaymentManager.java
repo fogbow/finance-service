@@ -47,4 +47,10 @@ public class StubPrePaidPaymentManager implements PaymentManager {
 		FinanceUser user = databaseManager.getUserById(userId, provider);
 		return user.getProperty(USER_CREDITS);
 	}
+
+	@Override
+	public void setFinancePlan(String planName) {
+		// TODO Auto-generated method stub
+		
+	}
 }
