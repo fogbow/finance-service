@@ -3,6 +3,7 @@ package cloud.fogbow.fs.core.plugins;
 import java.util.HashMap;
 import java.util.Map;
 
+import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.common.models.SystemUser;
 import cloud.fogbow.ras.core.models.RasOperation;
 
@@ -52,8 +53,9 @@ public interface FinancePlugin {
 	 * @param userId the id of the user whose state is used in the operation.
 	 * @param property a description of the property to generate.
 	 * @return a representation of the property.
+	 * @throws InvalidParameterException 
 	 */
-	String getUserFinanceState(String userId, String provider, String property);
+	String getUserFinanceState(String userId, String provider, String property) throws InvalidParameterException;
 
 	// TODO documentation
 	String getName();

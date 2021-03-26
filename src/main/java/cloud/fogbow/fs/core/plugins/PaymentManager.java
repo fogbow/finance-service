@@ -1,6 +1,7 @@
 package cloud.fogbow.fs.core.plugins;
 
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
+import cloud.fogbow.common.exceptions.InvalidParameterException;
 
 /**
  * A payment management abstraction, capable of starting
@@ -45,8 +46,9 @@ public interface PaymentManager {
 	 * @param userId the id of the user whose state is used in the operation.
 	 * @param property a description of the property to generate.
 	 * @return a representation of the property.
+	 * @throws InvalidParameterException 
 	 */
-	String getUserFinanceState(String userId, String provider, String property);
+	String getUserFinanceState(String userId, String provider, String property) throws InvalidParameterException;
 	
 	// TODO documentation
 	void setFinancePlan(String planName);

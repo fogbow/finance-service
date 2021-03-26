@@ -6,6 +6,7 @@ import java.util.List;
 import cloud.fogbow.accs.api.http.response.Record;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
+import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.models.FinancePlan;
 import cloud.fogbow.fs.core.models.FinanceUser;
@@ -16,6 +17,9 @@ import cloud.fogbow.fs.core.plugins.payment.ResourceItem;
 import cloud.fogbow.fs.core.plugins.payment.ResourceItemFactory;
 
 public class DefaultInvoiceManager implements PaymentManager {
+	public static final String PROPERTY_VALUES_SEPARATOR = ",";
+	public static final String ALL_USER_INVOICES_PROPERTY_NAME = "ALL_USER_INVOICES";
+	
 	public static final String PAYMENT_STATUS_OK = "payment_ok";
 	public static final String PAYMENT_STATUS_WAITING = "payment_waiting";
 	public static final String PAYMENT_STATUS_DEFAULTING = "payment_defaulting";
@@ -70,11 +74,10 @@ public class DefaultInvoiceManager implements PaymentManager {
 	}
 
 	@Override
-	public String getUserFinanceState(String userId, String provider, String property) {
+	public String getUserFinanceState(String userId, String provider, String property) throws InvalidParameterException {
 		String propertyValue = "";
 		
-		// FIXME constant
-		if (property.equals("ALL_USER_INVOICES")) {
+		if (property.equals(ALL_USER_INVOICES_PROPERTY_NAME)) {
 			List<Invoice> userInvoices = databaseManager.getInvoiceByUserId(userId, provider);
 			List<String> invoiceJsonReps = new ArrayList<String>();
 			
@@ -83,10 +86,10 @@ public class DefaultInvoiceManager implements PaymentManager {
 				invoiceJsonReps.add(invoiceJson);
 			}
 			
-			// FIXME constant
-			propertyValue = String.join(",", invoiceJsonReps);
+			propertyValue = String.join(PROPERTY_VALUES_SEPARATOR, invoiceJsonReps);
 		} else {
-			// FIXME treat this
+			throw new InvalidParameterException(
+					String.format(Messages.Exception.UNKNOWN_FINANCE_PROPERTY, property));
 		}
 		
 		return propertyValue;

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import cloud.fogbow.common.exceptions.ConfigurationErrorException;
+import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.common.models.SystemUser;
 import cloud.fogbow.fs.core.PaymentManagerInstantiator;
 import cloud.fogbow.fs.core.PropertiesHolder;
@@ -125,7 +126,7 @@ public class PrePaidFinancePlugin implements FinancePlugin {
 	}
 
 	@Override
-	public String getUserFinanceState(String userId, String provider, String property) {
+	public String getUserFinanceState(String userId, String provider, String property) throws InvalidParameterException {
 		return this.paymentManager.getUserFinanceState(userId, provider, property);
 	}
 
