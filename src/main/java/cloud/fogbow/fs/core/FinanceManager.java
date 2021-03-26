@@ -136,7 +136,7 @@ public class FinanceManager {
 		throw new InvalidParameterException(String.format(Messages.Exception.UNMANAGED_USER, userId));
 	}
 
-	public void createFinancePlan(String planName, Map<String, String> planInfo) {
+	public void createFinancePlan(String planName, Map<String, String> planInfo) throws InvalidParameterException {
 		FinancePlan financePlan = new FinancePlan(planName, planInfo); 
 		this.databaseManager.saveFinancePlan(financePlan);
 	}
@@ -146,7 +146,7 @@ public class FinanceManager {
 		return financePlan.getRulesAsMap();
 	}
 
-	public void updateFinancePlan(String planName, Map<String, String> planInfo) {
+	public void updateFinancePlan(String planName, Map<String, String> planInfo) throws InvalidParameterException {
 		FinancePlan financePlan = this.databaseManager.getFinancePlan(planName);
 		financePlan.update(planInfo);
 		this.databaseManager.saveFinancePlan(financePlan);

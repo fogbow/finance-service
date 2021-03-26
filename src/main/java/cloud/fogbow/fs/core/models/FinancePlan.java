@@ -3,17 +3,29 @@ package cloud.fogbow.fs.core.models;
 import java.util.HashMap;
 import java.util.Map;
 
+import cloud.fogbow.common.exceptions.InvalidParameterException;
+import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.plugins.payment.ComputeItem;
 import cloud.fogbow.fs.core.plugins.payment.ResourceItem;
 import cloud.fogbow.fs.core.plugins.payment.VolumeItem;
 
 public class FinancePlan {
 
+	private static final String ITEM_FIELDS_SEPARATOR = ",";
+	private static final int RESOURCE_TYPE_FIELD_INDEX = 0;
+	private static final String COMPUTE_RESOURCE_TYPE = "compute";
+	private static final int COMPUTE_VCPU_FIELD_INDEX = 1;
+	private static final int COMPUTE_RAM_FIELD_INDEX = 2;
+	private static final int COMPUTE_VALUE_FIELD_INDEX = 3;
+	private static final String VOLUME_RESOURCE_TYPE = "volume";
+	private static final int VOLUME_SIZE_FIELD_INDEX = 1;
+	private static final int VOLUME_VALUE_FIELD_INDEX = 2;
+	
 	private String name;
 	private Map<ResourceItem, Double> plan;
 	private Map<String, String> basePlan;
 	
-	public FinancePlan(String planName, Map<String, String> planInfo) {
+	public FinancePlan(String planName, Map<String, String> planInfo) throws InvalidParameterException {
 		Map<ResourceItem, Double> plan = validatePlanInfo(planInfo);
 		this.name = planName;
 		this.basePlan = planInfo;
@@ -24,40 +36,30 @@ public class FinancePlan {
 		return name;
 	}
 
-	private Map<ResourceItem, Double> validatePlanInfo(Map<String, String> planInfo) {
+	private Map<ResourceItem, Double> validatePlanInfo(Map<String, String> planInfo) throws InvalidParameterException {
 		Map<ResourceItem, Double> plan = new HashMap<ResourceItem, Double>();
 		
 		for (String itemString : planInfo.keySet()) {
-			// FIXME constant
-			String[] fields = itemString.split(",");
-			// FIXME constant
-			String resourceType = fields[0];
+			String[] fields = itemString.split(ITEM_FIELDS_SEPARATOR);
+			String resourceType = fields[RESOURCE_TYPE_FIELD_INDEX];
 			
 			ResourceItem newItem;
 			double value;
 			
-			// FIXME constant
-			if (resourceType.equals("compute")) {
-				// FIXME constant
-				int vCPU = Integer.parseInt(fields[1]);
-				// FIXME constant
-				int ram = Integer.parseInt(fields[2]);
-				// FIXME constant
-				value = Double.parseDouble(fields[3]);
+			if (resourceType.equals(COMPUTE_RESOURCE_TYPE)) {
+				int vCPU = Integer.parseInt(fields[COMPUTE_VCPU_FIELD_INDEX]);
+				int ram = Integer.parseInt(fields[COMPUTE_RAM_FIELD_INDEX]);
+				value = Double.parseDouble(fields[COMPUTE_VALUE_FIELD_INDEX]);
 				
 				newItem = new ComputeItem(vCPU, ram);
-			// FIXME constant
-			} else if (resourceType.equals("volume")) {
-				// FIXME constant
-				int size = Integer.parseInt(fields[1]);
-				// FIXME constant
-				value = Double.parseDouble(fields[2]);
+			} else if (resourceType.equals(VOLUME_RESOURCE_TYPE)) {
+				int size = Integer.parseInt(fields[VOLUME_SIZE_FIELD_INDEX]);
+				value = Double.parseDouble(fields[VOLUME_VALUE_FIELD_INDEX]);
 				
 				newItem = new VolumeItem(size);
 			} else {
-				// FIXME treat this
-				newItem = null;
-				value = 0;
+				throw new InvalidParameterException(
+						String.format(Messages.Exception.UNKNOWN_RESOURCE_ITEM_TYPE, resourceType));
 			}
 			
 			plan.put(newItem, value);
@@ -70,7 +72,7 @@ public class FinancePlan {
 		return basePlan;
 	}
 
-	public void update(Map<String, String> planInfo) {
+	public void update(Map<String, String> planInfo) throws InvalidParameterException {
 		Map<ResourceItem, Double> newPlan = validatePlanInfo(planInfo);
 		this.plan = newPlan;
 	}
