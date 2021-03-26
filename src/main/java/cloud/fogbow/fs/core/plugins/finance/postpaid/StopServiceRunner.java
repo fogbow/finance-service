@@ -2,7 +2,10 @@ package cloud.fogbow.fs.core.plugins.finance.postpaid;
 
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import cloud.fogbow.common.exceptions.FogbowException;
+import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
@@ -10,6 +13,8 @@ import cloud.fogbow.fs.core.plugins.finance.StoppableRunner;
 import cloud.fogbow.fs.core.util.RasClient;
 
 public class StopServiceRunner extends StoppableRunner {
+	private static Logger LOGGER = Logger.getLogger(StopServiceRunner.class);
+	
 	private DatabaseManager databaseManager;
 	private PaymentManager paymentManager;
 	private RasClient rasClient;
@@ -41,8 +46,8 @@ public class StopServiceRunner extends StoppableRunner {
 				try {
 					this.rasClient.pauseResourcesByUser(user.getId());
 				} catch (FogbowException e) {
-					// TODO add logging
-					e.printStackTrace();
+					LOGGER.error(String.format(Messages.Log.FAILED_TO_PAUSE_USER_RESOURCES, user.getId(), 
+							e.getMessage()));
 				}
 				// write status in the db
 				user.setStoppedResources(true);
@@ -54,8 +59,8 @@ public class StopServiceRunner extends StoppableRunner {
 				try {
 					this.rasClient.resumeResourcesByUser(user.getId());
 				} catch (FogbowException e) {
-					// TODO add logging
-					e.printStackTrace();
+					LOGGER.error(String.format(Messages.Log.FAILED_TO_RESUME_USER_RESOURCES, user.getId(), 
+							e.getMessage()));
 				}
 				// write status in db
 				user.setStoppedResources(false);

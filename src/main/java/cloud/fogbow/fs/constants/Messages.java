@@ -19,6 +19,8 @@ public class Messages {
 		public static final String CREATING_FINANCE_PLAN = "Creating finance plan: %s.";
 		public static final String FAILED_TO_GENERATE_INVOICE = "Failed to generate invoice for user %s. Error message: %s.";
 		public static final String FAILED_TO_DEDUCT_CREDITS = "Failed to deduct credits for user %s. Error message: %s.";
+		public static final String FAILED_TO_PAUSE_USER_RESOURCES = "Failed to pause resources for user %s. Error message: %s.";
+		public static final String FAILED_TO_RESUME_USER_RESOURCES = "Failed to resume resources for user %s. Error message: %s.";
 		public static final String GETTING_FINANCE_STATE = "Getting finance state: user '%s' and property '%s'";
 		public static final String GETTING_FINANCE_PLAN = "Getting finance plan: %s.";
 		public static final String GET_PUBLIC_KEY = "Get public key received.";
