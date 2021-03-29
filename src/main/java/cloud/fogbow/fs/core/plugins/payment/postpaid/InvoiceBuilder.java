@@ -22,12 +22,14 @@ public class InvoiceBuilder {
 		invoiceTotal = 0.0;
 	}
 
+	// TODO test
 	public void addItem(ResourceItem resourceItem, Double valueToPayPerTimeUnit, Double timeUsed) {
 		Double itemValue = valueToPayPerTimeUnit * timeUsed;
 		items.put(resourceItem, itemValue);
 		invoiceTotal += itemValue;
 	}
 
+	// TODO test
 	public Invoice buildInvoice() {
 		return new Invoice(UUID.randomUUID().toString(), userId, providerId, InvoiceState.WAITING, items, invoiceTotal);
 	}

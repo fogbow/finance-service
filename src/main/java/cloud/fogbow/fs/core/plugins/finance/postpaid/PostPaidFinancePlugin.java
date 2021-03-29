@@ -152,6 +152,7 @@ public class PostPaidFinancePlugin implements FinancePlugin {
 	@Override
 	public void updateFinanceState(String userId, String provider, Map<String, String> financeState) throws InvalidParameterException {
 		// TODO validation
+		// TODO test
 
 		for (String invoiceId : financeState.keySet()) {
 			Invoice invoice = this.databaseManager.getInvoice(invoiceId);

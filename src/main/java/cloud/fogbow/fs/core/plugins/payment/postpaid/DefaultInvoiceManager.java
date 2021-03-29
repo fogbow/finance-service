@@ -34,6 +34,7 @@ public class DefaultInvoiceManager implements PaymentManager {
 		this.resourceItemFactory = new ResourceItemFactory();
 	}
 
+	// TODO test
 	@Override
 	public boolean hasPaid(String userId, String provider) {
 		List<Invoice> userInvoices = databaseManager.getInvoiceByUserId(userId, provider);
@@ -47,6 +48,7 @@ public class DefaultInvoiceManager implements PaymentManager {
 		return true;
 	}
 
+	// TODO test
 	@Override
 	public void startPaymentProcess(String userId, String provider) throws InternalServerErrorException {
 		FinanceUser user = databaseManager.getUserById(userId, provider);
@@ -73,6 +75,7 @@ public class DefaultInvoiceManager implements PaymentManager {
 		databaseManager.saveInvoice(invoice);
 	}
 
+	// TODO test 
 	@Override
 	public String getUserFinanceState(String userId, String provider, String property) throws InvalidParameterException {
 		String propertyValue = "";
@@ -95,6 +98,7 @@ public class DefaultInvoiceManager implements PaymentManager {
 		return propertyValue;
 	}
 
+	// TODO test
 	@Override
 	public void setFinancePlan(String planName) {
 		this.planName = planName;

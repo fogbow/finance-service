@@ -36,6 +36,7 @@ public class FinancePlan {
 		return name;
 	}
 
+	// TODO test
 	private Map<ResourceItem, Double> validatePlanInfo(Map<String, String> planInfo) throws InvalidParameterException {
 		Map<ResourceItem, Double> plan = new HashMap<ResourceItem, Double>();
 		
@@ -72,11 +73,13 @@ public class FinancePlan {
 		return basePlan;
 	}
 
+	// TODO test
 	public void update(Map<String, String> planInfo) throws InvalidParameterException {
 		Map<ResourceItem, Double> newPlan = validatePlanInfo(planInfo);
 		this.plan = newPlan;
 	}
 
+	// TODO test
 	public Double getItemFinancialValue(ResourceItem resourceItem) {
 		return plan.get(resourceItem);
 	}
