@@ -11,15 +11,15 @@ import cloud.fogbow.fs.core.plugins.payment.VolumeItem;
 
 public class FinancePlan {
 
-	private static final String ITEM_FIELDS_SEPARATOR = ",";
-	private static final int RESOURCE_TYPE_FIELD_INDEX = 0;
-	private static final String COMPUTE_RESOURCE_TYPE = "compute";
-	private static final int COMPUTE_VCPU_FIELD_INDEX = 1;
-	private static final int COMPUTE_RAM_FIELD_INDEX = 2;
-	private static final int COMPUTE_VALUE_FIELD_INDEX = 3;
-	private static final String VOLUME_RESOURCE_TYPE = "volume";
-	private static final int VOLUME_SIZE_FIELD_INDEX = 1;
-	private static final int VOLUME_VALUE_FIELD_INDEX = 2;
+	public static final String ITEM_FIELDS_SEPARATOR = ",";
+	public static final int RESOURCE_TYPE_FIELD_INDEX = 0;
+	public static final String COMPUTE_RESOURCE_TYPE = "compute";
+	public static final int COMPUTE_VCPU_FIELD_INDEX = 1;
+	public static final int COMPUTE_RAM_FIELD_INDEX = 2;
+	public static final int COMPUTE_VALUE_FIELD_INDEX = 3;
+	public static final String VOLUME_RESOURCE_TYPE = "volume";
+	public static final int VOLUME_SIZE_FIELD_INDEX = 1;
+	public static final int VOLUME_VALUE_FIELD_INDEX = 2;
 	
 	private String name;
 	private Map<ResourceItem, Double> plan;
@@ -36,51 +36,98 @@ public class FinancePlan {
 		return name;
 	}
 
-	// TODO test
 	private Map<ResourceItem, Double> validatePlanInfo(Map<String, String> planInfo) throws InvalidParameterException {
 		Map<ResourceItem, Double> plan = new HashMap<ResourceItem, Double>();
-		
-		for (String itemString : planInfo.keySet()) {
-			String[] fields = itemString.split(ITEM_FIELDS_SEPARATOR);
-			String resourceType = fields[RESOURCE_TYPE_FIELD_INDEX];
-			
-			ResourceItem newItem;
-			double value;
-			
-			if (resourceType.equals(COMPUTE_RESOURCE_TYPE)) {
-				int vCPU = Integer.parseInt(fields[COMPUTE_VCPU_FIELD_INDEX]);
-				int ram = Integer.parseInt(fields[COMPUTE_RAM_FIELD_INDEX]);
-				value = Double.parseDouble(fields[COMPUTE_VALUE_FIELD_INDEX]);
-				
-				newItem = new ComputeItem(vCPU, ram);
-			} else if (resourceType.equals(VOLUME_RESOURCE_TYPE)) {
-				int size = Integer.parseInt(fields[VOLUME_SIZE_FIELD_INDEX]);
-				value = Double.parseDouble(fields[VOLUME_VALUE_FIELD_INDEX]);
-				
-				newItem = new VolumeItem(size);
-			} else {
-				throw new InvalidParameterException(
-						String.format(Messages.Exception.UNKNOWN_RESOURCE_ITEM_TYPE, resourceType));
+
+			for (String itemKey : planInfo.keySet()) {
+				String[] fields = planInfo.get(itemKey).split(ITEM_FIELDS_SEPARATOR);
+				String resourceType = fields[RESOURCE_TYPE_FIELD_INDEX];
+
+				switch(resourceType) {
+					case COMPUTE_RESOURCE_TYPE: extractComputeItem(plan, fields); break;
+					case VOLUME_RESOURCE_TYPE: extractVolumeItem(plan, fields); break;
+					default: throw new InvalidParameterException(
+							String.format(Messages.Exception.UNKNOWN_RESOURCE_ITEM_TYPE, resourceType));
+				}
 			}
+
+		return plan;
+	}
+
+	private void extractComputeItem(Map<ResourceItem, Double> plan, String[] fields) 
+			throws InvalidParameterException {
+		try {
+			validateComputeFieldsLength(fields);
+			
+			int vCPU = Integer.parseInt(fields[COMPUTE_VCPU_FIELD_INDEX]);
+			int ram = Integer.parseInt(fields[COMPUTE_RAM_FIELD_INDEX]);
+			double value = Double.parseDouble(fields[COMPUTE_VALUE_FIELD_INDEX]);
+			ResourceItem newItem = new ComputeItem(vCPU, ram);
+			
+			validateItemValue(value);
 			
 			plan.put(newItem, value);
+		} catch (NumberFormatException e) {
+			// TODO add message
+			throw new InvalidParameterException();
 		}
-		
-		return plan;
+	}
+
+	private void validateItemValue(double value) throws InvalidParameterException {
+		if (value < 0) {
+			// TODO add message
+			throw new InvalidParameterException();
+		}
+	}
+
+	private void validateComputeFieldsLength(String[] fields) throws InvalidParameterException {
+		if (fields.length != 4) {
+			// TODO add message
+			throw new InvalidParameterException();
+		}
+	}
+	
+	private void extractVolumeItem(Map<ResourceItem, Double> plan, String[] fields) 
+			throws InvalidParameterException {
+		try {
+			validateVolumeFieldsLength(fields);
+			
+			int size = Integer.parseInt(fields[VOLUME_SIZE_FIELD_INDEX]);
+			double value = Double.parseDouble(fields[VOLUME_VALUE_FIELD_INDEX]);
+			ResourceItem newItem = new VolumeItem(size);
+			
+			validateItemValue(value);
+			
+			plan.put(newItem, value);
+		} catch (NumberFormatException e) {
+			// TODO add message
+			throw new InvalidParameterException();
+		}
+	}
+
+	private void validateVolumeFieldsLength(String[] fields) throws InvalidParameterException {
+		if (fields.length != 3) {
+			// TODO add message
+			throw new InvalidParameterException();
+		}
 	}
 	
 	public Map<String, String> getRulesAsMap() {
 		return basePlan;
 	}
 
-	// TODO test
+	// TODO discuss how this operation should be performed
 	public void update(Map<String, String> planInfo) throws InvalidParameterException {
 		Map<ResourceItem, Double> newPlan = validatePlanInfo(planInfo);
 		this.plan = newPlan;
 	}
 
-	// TODO test
-	public Double getItemFinancialValue(ResourceItem resourceItem) {
-		return plan.get(resourceItem);
+	public Double getItemFinancialValue(ResourceItem resourceItem) throws InvalidParameterException {
+		if (plan.containsKey(resourceItem)) { 
+			return plan.get(resourceItem);	
+		}
+			
+		// TODO add message
+		throw new InvalidParameterException();
 	}
 }

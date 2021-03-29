@@ -1,12 +1,19 @@
 package cloud.fogbow.fs.core.plugins.payment;
 
+import cloud.fogbow.common.exceptions.InvalidParameterException;
+
 public class ComputeItem extends ResourceItem {
 	public static final String ITEM_TYPE_NAME = "compute";
 	
 	private int vCPU;
 	private int ram;
 	
-	public ComputeItem(int vCPU, int ram) {
+	public ComputeItem(int vCPU, int ram) throws InvalidParameterException {
+		if (vCPU < 0 || ram < 0) {
+			// TODO add message
+			throw new InvalidParameterException();
+		}
+		
 		this.vCPU = vCPU;
 		this.ram = ram;
 	}
@@ -15,7 +22,11 @@ public class ComputeItem extends ResourceItem {
 		return vCPU;
 	}
 	
-	public void setvCPU(int vCPU) {
+	public void setvCPU(int vCPU) throws InvalidParameterException {
+		if (vCPU < 0) {
+			// TODO add message
+			throw new InvalidParameterException();
+		}
 		this.vCPU = vCPU;
 	}
 	
@@ -23,7 +34,11 @@ public class ComputeItem extends ResourceItem {
 		return ram;
 	}
 	
-	public void setRam(int ram) {
+	public void setRam(int ram) throws InvalidParameterException {
+		if (ram < 0) {
+			// TODO add message
+			throw new InvalidParameterException();
+		}
 		this.ram = ram;
 	}
 

@@ -58,14 +58,15 @@ public class DefaultInvoiceManager implements PaymentManager {
 		
 		for (Record record : records) {
 			ResourceItem resourceItem;
+			Double valueToPayPerTimeUnit;
 			
 			try {
 				resourceItem = resourceItemFactory.getItemFromRecord(record);
+				valueToPayPerTimeUnit = plan.getItemFinancialValue(resourceItem);
 			} catch (InvalidParameterException e) {
 				throw new InternalServerErrorException(e.getMessage());
 			}
 			
-			Double valueToPayPerTimeUnit = plan.getItemFinancialValue(resourceItem);
 			Double timeUsed = resourceItemFactory.getTimeFromRecord(record);
 			
 			invoiceBuilder.addItem(resourceItem, valueToPayPerTimeUnit, timeUsed);

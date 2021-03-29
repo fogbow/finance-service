@@ -1,11 +1,17 @@
 package cloud.fogbow.fs.core.plugins.payment;
 
+import cloud.fogbow.common.exceptions.InvalidParameterException;
+
 public class VolumeItem extends ResourceItem {
 	public static final String ITEM_TYPE_NAME = "volume";
 	
 	private int size;
 
-	public VolumeItem(int size) {
+	public VolumeItem(int size) throws InvalidParameterException {
+		if (size < 0) {
+			// TODO add message
+			throw new InvalidParameterException();
+		}
 		this.size = size;
 	}
 	
@@ -13,7 +19,11 @@ public class VolumeItem extends ResourceItem {
 		return size;
 	}
 	
-	public void setSize(int size) {
+	public void setSize(int size) throws InvalidParameterException {
+		if (size < 0) {
+			// TODO add message
+			throw new InvalidParameterException();
+		}
 		this.size = size;
 	}
 	
