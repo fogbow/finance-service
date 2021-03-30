@@ -134,25 +134,32 @@ public class PostPaidFinancePlugin implements FinancePlugin {
 	@Override
 	public void addUser(String userId, String provider, Map<String, String> financeOptions) {
 		// TODO validation
+		// TODO This operation should have some level of thread protection
+		// TODO test
 		this.databaseManager.registerUser(userId, provider, PLUGIN_NAME, financeOptions);
 	}
 
 	@Override
 	public void removeUser(String userId, String provider) {
 		// TODO validation
+		// TODO This operation should have some level of thread protection
+		// TODO This operation should also remove the user invoices
+		// TODO test
 		this.databaseManager.removeUser(userId, provider);
 	}
 
 	@Override
 	public void changeOptions(String userId, String provider, Map<String, String> financeOptions) {
 		// TODO validation
+		// TODO This operation should have some level of thread protection
+		// TODO test
 		this.databaseManager.changeOptions(userId, provider, financeOptions);
 	}
 
 	@Override
 	public void updateFinanceState(String userId, String provider, Map<String, String> financeState) throws InvalidParameterException {
-		// TODO validation
 		// TODO test
+		// TODO This operation should have some level of thread protection
 
 		for (String invoiceId : financeState.keySet()) {
 			Invoice invoice = this.databaseManager.getInvoice(invoiceId);

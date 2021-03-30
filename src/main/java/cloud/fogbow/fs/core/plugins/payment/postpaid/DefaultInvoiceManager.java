@@ -20,21 +20,26 @@ public class DefaultInvoiceManager implements PaymentManager {
 	public static final String PROPERTY_VALUES_SEPARATOR = ",";
 	public static final String ALL_USER_INVOICES_PROPERTY_NAME = "ALL_USER_INVOICES";
 	
-	public static final String PAYMENT_STATUS_OK = "payment_ok";
-	public static final String PAYMENT_STATUS_WAITING = "payment_waiting";
-	public static final String PAYMENT_STATUS_DEFAULTING = "payment_defaulting";
-	
 	private String planName;
 	private DatabaseManager databaseManager;
 	private ResourceItemFactory resourceItemFactory;
+	private InvoiceBuilder invoiceBuilder;
 	
 	public DefaultInvoiceManager(DatabaseManager databaseManager, String planName) {
 		this.planName = planName;
 		this.databaseManager = databaseManager;
 		this.resourceItemFactory = new ResourceItemFactory();
+		this.invoiceBuilder = new InvoiceBuilder();
 	}
 
-	// TODO test
+	public DefaultInvoiceManager(DatabaseManager databaseManager, String planName,
+		ResourceItemFactory resourceItemFactory, InvoiceBuilder invoiceBuilder) {
+		this.planName = planName;
+		this.databaseManager = databaseManager;
+		this.resourceItemFactory = resourceItemFactory;
+		this.invoiceBuilder = invoiceBuilder;
+	}
+	
 	@Override
 	public boolean hasPaid(String userId, String provider) {
 		List<Invoice> userInvoices = databaseManager.getInvoiceByUserId(userId, provider);
@@ -48,35 +53,37 @@ public class DefaultInvoiceManager implements PaymentManager {
 		return true;
 	}
 
-	// TODO test
 	@Override
 	public void startPaymentProcess(String userId, String provider) throws InternalServerErrorException {
 		FinanceUser user = databaseManager.getUserById(userId, provider);
 		FinancePlan plan = databaseManager.getFinancePlan(planName);
 		List<Record> records = user.getPeriodRecords();
-		InvoiceBuilder invoiceBuilder = new InvoiceBuilder(userId, provider);
+		this.invoiceBuilder.setUserId(userId);
+		this.invoiceBuilder.setProviderId(provider);
 		
+		// TODO What is the expected behavior for the empty records list case? 
 		for (Record record : records) {
-			ResourceItem resourceItem;
-			Double valueToPayPerTimeUnit;
-			
-			try {
-				resourceItem = resourceItemFactory.getItemFromRecord(record);
-				valueToPayPerTimeUnit = plan.getItemFinancialValue(resourceItem);
-			} catch (InvalidParameterException e) {
-				throw new InternalServerErrorException(e.getMessage());
-			}
-			
-			Double timeUsed = resourceItemFactory.getTimeFromRecord(record);
-			
-			invoiceBuilder.addItem(resourceItem, valueToPayPerTimeUnit, timeUsed);
+			addRecordToInvoice(record, plan);
 		}
 		
 		Invoice invoice = invoiceBuilder.buildInvoice();
+		invoiceBuilder.reset();
+		
 		databaseManager.saveInvoice(invoice);
 	}
+	
+	private void addRecordToInvoice(Record record, FinancePlan plan) throws InternalServerErrorException {
+		try {
+			ResourceItem resourceItem = resourceItemFactory.getItemFromRecord(record);
+			Double valueToPayPerTimeUnit = plan.getItemFinancialValue(resourceItem);
+			Double timeUsed = resourceItemFactory.getTimeFromRecord(record);
+			
+			invoiceBuilder.addItem(resourceItem, valueToPayPerTimeUnit, timeUsed);
+		} catch (InvalidParameterException e) {
+			throw new InternalServerErrorException(e.getMessage());
+		}
+	}
 
-	// TODO test 
 	@Override
 	public String getUserFinanceState(String userId, String provider, String property) throws InvalidParameterException {
 		String propertyValue = "";
@@ -99,7 +106,6 @@ public class DefaultInvoiceManager implements PaymentManager {
 		return propertyValue;
 	}
 
-	// TODO test
 	@Override
 	public void setFinancePlan(String planName) {
 		this.planName = planName;
