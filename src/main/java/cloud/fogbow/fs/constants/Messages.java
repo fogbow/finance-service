@@ -3,11 +3,17 @@ package cloud.fogbow.fs.constants;
 public class Messages {
 	public static class Exception {
 		public static final String GENERIC_EXCEPTION_S = "Operation returned error: %s.";
+		public static final String INVALID_COMPUTE_ITEM_FIELD = "Invalid compute item field.";
+		public static final String INVALID_NUMBER_OF_COMPUTE_ITEM_FIELDS = "Invalid number of compute item fields.";
+		public static final String INVALID_NUMBER_OF_VOLUME_ITEM_FIELDS = "Invalid number of volume item fields.";
+		public static final String INVALID_VOLUME_ITEM_FIELD = "Invalid volume item field.";
+		public static final String NEGATIVE_RESOURCE_ITEM_VALUE = "Negative resource item financial value.";
 		public static final String NO_ADMIN_SPECIFIED = "No admin specified in the configuration file.";
 		public static final String NO_FINANCE_PLUGIN_SPECIFIED = "No finance plugin specified in the configuration file.";
 		public static final String UNABLE_TO_FIND_CLASS_S = "Unable to find class %s.";
 		public static final String UNKNOWN_FINANCE_PROPERTY = "Unknown finance property: %s.";
 		public static final String UNKNOWN_INVOICE_STATE = "Unknown invoice state: %s.";
+		public static final String UNKNOWN_RESOURCE_ITEM = "Unknown resource item: %s.";
 		public static final String UNKNOWN_RESOURCE_ITEM_TYPE = "Unknown resource item type: %s.";
 		public static final String UNMANAGED_USER = "The user %s is not managed by any finance plugin.";
 		public static final String USER_IS_NOT_ADMIN = "Not-admin user trying to perform admin-only operation.";

@@ -48,4 +48,9 @@ public class VolumeItem extends ResourceItem {
 			return false;
 		return true;
 	}
+
+	@Override
+	public String toString() {
+		return "VolumeItem [size=" + size + "]";
+	}
 }

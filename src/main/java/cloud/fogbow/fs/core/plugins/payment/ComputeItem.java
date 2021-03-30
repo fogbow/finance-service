@@ -66,4 +66,9 @@ public class ComputeItem extends ResourceItem {
 			return false;
 		return true;
 	}
+
+	@Override
+	public String toString() {
+		return "ComputeItem [vCPU=" + vCPU + ", ram=" + ram + "]";
+	}
 }

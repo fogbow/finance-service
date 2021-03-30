@@ -68,22 +68,19 @@ public class FinancePlan {
 			
 			plan.put(newItem, value);
 		} catch (NumberFormatException e) {
-			// TODO add message
-			throw new InvalidParameterException();
+			throw new InvalidParameterException(Messages.Exception.INVALID_COMPUTE_ITEM_FIELD);
 		}
 	}
 
 	private void validateItemValue(double value) throws InvalidParameterException {
 		if (value < 0) {
-			// TODO add message
-			throw new InvalidParameterException();
+			throw new InvalidParameterException(Messages.Exception.NEGATIVE_RESOURCE_ITEM_VALUE);
 		}
 	}
 
 	private void validateComputeFieldsLength(String[] fields) throws InvalidParameterException {
 		if (fields.length != 4) {
-			// TODO add message
-			throw new InvalidParameterException();
+			throw new InvalidParameterException(Messages.Exception.INVALID_NUMBER_OF_COMPUTE_ITEM_FIELDS);
 		}
 	}
 	
@@ -100,15 +97,13 @@ public class FinancePlan {
 			
 			plan.put(newItem, value);
 		} catch (NumberFormatException e) {
-			// TODO add message
-			throw new InvalidParameterException();
+			throw new InvalidParameterException(Messages.Exception.INVALID_VOLUME_ITEM_FIELD);
 		}
 	}
 
 	private void validateVolumeFieldsLength(String[] fields) throws InvalidParameterException {
 		if (fields.length != 3) {
-			// TODO add message
-			throw new InvalidParameterException();
+			throw new InvalidParameterException(Messages.Exception.INVALID_NUMBER_OF_VOLUME_ITEM_FIELDS);
 		}
 	}
 	
@@ -126,8 +121,8 @@ public class FinancePlan {
 		if (plan.containsKey(resourceItem)) { 
 			return plan.get(resourceItem);	
 		}
-			
-		// TODO add message
-		throw new InvalidParameterException();
+		
+		throw new InvalidParameterException(String.format(Messages.Exception.UNKNOWN_RESOURCE_ITEM, 
+				resourceItem.toString()));
 	}
 }
