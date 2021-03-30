@@ -7,7 +7,10 @@ public class Messages {
 		public static final String INVALID_NUMBER_OF_COMPUTE_ITEM_FIELDS = "Invalid number of compute item fields.";
 		public static final String INVALID_NUMBER_OF_VOLUME_ITEM_FIELDS = "Invalid number of volume item fields.";
 		public static final String INVALID_VOLUME_ITEM_FIELD = "Invalid volume item field.";
+		public static final String NEGATIVE_COMPUTE_RAM = "Negative compute ram value.";
+		public static final String NEGATIVE_COMPUTE_VCPU = "Negative compute vCPU value.";
 		public static final String NEGATIVE_RESOURCE_ITEM_VALUE = "Negative resource item financial value.";
+		public static final String NEGATIVE_VOLUME_SIZE = "Negative volume size value.";
 		public static final String NO_ADMIN_SPECIFIED = "No admin specified in the configuration file.";
 		public static final String NO_FINANCE_PLUGIN_SPECIFIED = "No finance plugin specified in the configuration file.";
 		public static final String UNABLE_TO_FIND_CLASS_S = "Unable to find class %s.";
