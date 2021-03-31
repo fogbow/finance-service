@@ -7,6 +7,8 @@ public class ConfigurationPropertyKeys {
 	public static final String AS_PORT_KEY = "as_port";
 	public static final String AS_URL_KEY = "as_url";
 	public static final String AUTHORIZATION_PLUGIN_CLASS_KEY = "authorization_plugin_class";
+	public static final String DEFAULT_FINANCE_PLAN_FILE_PATH = "default_finance_plan_file_path";
+	public static final String DEFAULT_FINANCE_PLAN_NAME = "default_finance_plan_name";
 	public static final String FINANCE_PLUGINS_CLASS_NAMES = "finance_plugin_class_names";
 	public static final String MANAGER_USERNAME_KEY = "manager_username";
 	public static final String MANAGER_PASSWORD_KEY = "manager_password";

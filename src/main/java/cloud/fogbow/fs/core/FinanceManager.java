@@ -26,10 +26,31 @@ public class FinanceManager {
 	private List<FinancePlugin> financePlugins;
 	private DatabaseManager databaseManager;
 	
-	public FinanceManager(DatabaseManager databaseManager) throws ConfigurationErrorException {
+	public FinanceManager(DatabaseManager databaseManager) 
+			throws ConfigurationErrorException, InvalidParameterException {
+		this.databaseManager = databaseManager;
+
+		createDefaultPlanIfItDoesNotExist();
+		createFinancePlugins(databaseManager);
+	}
+
+	private void createDefaultPlanIfItDoesNotExist() throws InvalidParameterException {
+		String defaultFinancePlanName = PropertiesHolder.getInstance()
+				.getProperty(ConfigurationPropertyKeys.DEFAULT_FINANCE_PLAN_NAME);
+		String defaultFinancePlanFilePath = PropertiesHolder.getInstance()
+				.getProperty(ConfigurationPropertyKeys.DEFAULT_FINANCE_PLAN_FILE_PATH);
+		
+		if (this.databaseManager.getFinancePlan(defaultFinancePlanName) == null) {
+			FinancePlan financePlan = new FinancePlan(defaultFinancePlanName, defaultFinancePlanFilePath); 
+			this.databaseManager.saveFinancePlan(financePlan);
+		}
+	}
+	
+	private void createFinancePlugins(DatabaseManager databaseManager) throws ConfigurationErrorException {
+		ArrayList<FinancePlugin> financePlugins = new ArrayList<FinancePlugin>();
+
 		String financePluginsString = PropertiesHolder.getInstance()
 				.getProperty(ConfigurationPropertyKeys.FINANCE_PLUGINS_CLASS_NAMES);
-		ArrayList<FinancePlugin> financePlugins = new ArrayList<FinancePlugin>();
 
 		if (financePluginsString.isEmpty()) {
 			throw new ConfigurationErrorException(Messages.Exception.NO_FINANCE_PLUGIN_SPECIFIED);
@@ -40,9 +61,8 @@ public class FinanceManager {
 		}
 		
 		this.financePlugins = financePlugins;
-		this.databaseManager = databaseManager;
 	}
-	
+
 	public FinanceManager(List<FinancePlugin> financePlugins, DatabaseManager databaseManager) throws ConfigurationErrorException {
 		if (financePlugins.isEmpty()) {
 			throw new ConfigurationErrorException(Messages.Exception.NO_FINANCE_PLUGIN_SPECIFIED);

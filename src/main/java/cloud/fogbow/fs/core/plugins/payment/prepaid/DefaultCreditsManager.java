@@ -19,6 +19,11 @@ public class DefaultCreditsManager implements PaymentManager {
 	private ResourceItemFactory resourceItemFactory;
 	private String planName;
 
+	public DefaultCreditsManager(DatabaseManager databaseManager, String planName) {
+		this.databaseManager = databaseManager;
+		this.planName = planName;
+	}
+	
 	@Override
 	public boolean hasPaid(String userId, String provider) {
 		// TODO Auto-generated method stub

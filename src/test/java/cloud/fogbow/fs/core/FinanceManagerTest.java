@@ -27,6 +27,7 @@ import cloud.fogbow.fs.api.parameters.AuthorizableUser;
 import cloud.fogbow.fs.api.parameters.User;
 import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
+import cloud.fogbow.fs.core.models.FinancePlan;
 import cloud.fogbow.fs.core.plugins.FinancePlugin;
 import cloud.fogbow.ras.core.models.RasOperation;
 
@@ -60,6 +61,8 @@ public class FinanceManagerTest {
 	private static final String PLUGIN_1_NAME = "plugin1";
 	private static final String PLUGIN_2_NAME = "plugin2";
 	private static final String UNKNOWN_PLUGIN_NAME = "unknownplugin";
+	private static final String DEFAULT_FINANCE_PLAN_NAME = "planName";
+	private static final String DEFAULT_FINANCE_PLAN_FILE_PATH = "planPath";
 	private List<FinancePlugin> financePlugins;
 	private DatabaseManager databaseManager;
 	private FinancePlugin plugin1;
@@ -73,6 +76,7 @@ public class FinanceManagerTest {
 	private RasOperation operation1;
 	private RasOperation operation2;
 	private RasOperation operation3;
+	private FinancePlan financePlan;
 
 	// test case: When calling the constructor, it must get
 	// the names of the finance plugins from a PropertiesHolder
@@ -92,12 +96,20 @@ public class FinanceManagerTest {
 		PropertiesHolder propertiesHolder = Mockito.mock(PropertiesHolder.class);
 		Mockito.when(propertiesHolder.getProperty(
 				ConfigurationPropertyKeys.FINANCE_PLUGINS_CLASS_NAMES)).thenReturn(pluginString);
+		Mockito.when(propertiesHolder.getProperty(
+				ConfigurationPropertyKeys.DEFAULT_FINANCE_PLAN_NAME)).thenReturn(DEFAULT_FINANCE_PLAN_NAME);
+		Mockito.when(propertiesHolder.getProperty(
+				ConfigurationPropertyKeys.DEFAULT_FINANCE_PLAN_FILE_PATH)).thenReturn(DEFAULT_FINANCE_PLAN_FILE_PATH);
 		BDDMockito.given(PropertiesHolder.getInstance()).willReturn(propertiesHolder);
 
 		PowerMockito.mockStatic(FinancePluginInstantiator.class);
 		BDDMockito.given(FinancePluginInstantiator.getFinancePlugin(pluginName1, databaseManager)).willReturn(plugin1);
 		BDDMockito.given(FinancePluginInstantiator.getFinancePlugin(pluginName2, databaseManager)).willReturn(plugin2);
 
+		databaseManager = Mockito.mock(DatabaseManager.class);
+		financePlan = Mockito.mock(FinancePlan.class);
+		Mockito.when(databaseManager.getFinancePlan(DEFAULT_FINANCE_PLAN_NAME)).thenReturn(financePlan);
+		
 		
 		new FinanceManager(databaseManager);
 		
@@ -113,14 +125,23 @@ public class FinanceManagerTest {
 	// test case: When calling the constructor and the list
 	// of finance plugins is empty, it must throw a ConfigurationErrorException.
 	@Test(expected = ConfigurationErrorException.class)
-	public void testConstructorThrowsExceptionIfNoFinancePluginIsGiven() throws ConfigurationErrorException {
+	public void testConstructorThrowsExceptionIfNoFinancePluginIsGiven() throws ConfigurationErrorException, 
+	InvalidParameterException {
 		String pluginString = "";
 
 		PowerMockito.mockStatic(PropertiesHolder.class);
 		PropertiesHolder propertiesHolder = Mockito.mock(PropertiesHolder.class);
 		Mockito.when(propertiesHolder.getProperty(
 				ConfigurationPropertyKeys.FINANCE_PLUGINS_CLASS_NAMES)).thenReturn(pluginString);
+		Mockito.when(propertiesHolder.getProperty(
+				ConfigurationPropertyKeys.DEFAULT_FINANCE_PLAN_NAME)).thenReturn(DEFAULT_FINANCE_PLAN_NAME);
+		Mockito.when(propertiesHolder.getProperty(
+				ConfigurationPropertyKeys.DEFAULT_FINANCE_PLAN_FILE_PATH)).thenReturn(DEFAULT_FINANCE_PLAN_FILE_PATH);
 		BDDMockito.given(PropertiesHolder.getInstance()).willReturn(propertiesHolder);
+		
+		databaseManager = Mockito.mock(DatabaseManager.class);
+		financePlan = Mockito.mock(FinancePlan.class);
+		Mockito.when(databaseManager.getFinancePlan(DEFAULT_FINANCE_PLAN_NAME)).thenReturn(financePlan);
 		
 		new FinanceManager(databaseManager);
 	}

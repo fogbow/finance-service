@@ -1,8 +1,12 @@
 package cloud.fogbow.fs.core.models;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Scanner;
 
+import cloud.fogbow.common.exceptions.FatalErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.plugins.payment.ComputeItem;
@@ -11,6 +15,7 @@ import cloud.fogbow.fs.core.plugins.payment.VolumeItem;
 
 public class FinancePlan {
 
+	public static final String PLAN_FIELDS_SEPARATOR = "-";
 	public static final String ITEM_FIELDS_SEPARATOR = ",";
 	public static final int RESOURCE_TYPE_FIELD_INDEX = 0;
 	public static final String COMPUTE_RESOURCE_TYPE = "compute";
@@ -25,12 +30,46 @@ public class FinancePlan {
 	private Map<ResourceItem, Double> plan;
 	private Map<String, String> basePlan;
 	
+    public FinancePlan(String planName, String planPath) throws InvalidParameterException {
+    	Map<String, String> planInfo = getPlanFromFile(planPath);
+    	Map<ResourceItem, Double> plan = validatePlanInfo(planInfo);
+		this.name = planName;
+		this.basePlan = planInfo;
+		this.plan = plan;
+    }
+	
 	public FinancePlan(String planName, Map<String, String> planInfo) throws InvalidParameterException {
 		Map<ResourceItem, Double> plan = validatePlanInfo(planInfo);
 		this.name = planName;
 		this.basePlan = planInfo;
 		this.plan = plan;
 	}
+	
+    private Map<String, String> getPlanFromFile(String planPath) {
+        try {
+        	Map<String, String> planInfo = new HashMap<String, String>();
+        	File file = new File(planPath);
+        	Scanner input = new Scanner(file);
+            
+            while (input.hasNextLine()) {
+                String nextLine = input.nextLine().trim();
+                if (!nextLine.isEmpty()) {
+                	String[] planFields = nextLine.split(PLAN_FIELDS_SEPARATOR);
+                	String itemName = planFields[0];
+                	String itemInfo = planFields[1]; 
+                	
+                    planInfo.put(itemName, itemInfo);
+                }
+            }
+            
+            input.close();
+            
+            return planInfo;
+        } catch (FileNotFoundException e) {
+            throw new FatalErrorException(String.format(
+                    Messages.Exception.UNABLE_TO_READ_CONFIGURATION_FILE_S, planPath));
+        }
+    }
 
 	public String getName() {
 		return name;

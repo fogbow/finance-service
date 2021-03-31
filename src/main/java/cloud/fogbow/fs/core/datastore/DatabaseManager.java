@@ -21,6 +21,7 @@ public class DatabaseManager {
 	public DatabaseManager() {
 		financeUsers = new ArrayList<FinanceUser>();
 		invoices = new ArrayList<Invoice>();
+		financePlans = new ArrayList<FinancePlan>();
 	}
 
 	public void registerUser(String userId, String provider, String pluginName, Map<String, String> financeOptions) {
