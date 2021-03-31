@@ -14,6 +14,7 @@ import cloud.fogbow.fs.core.plugins.FinancePlugin;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
 import cloud.fogbow.fs.core.util.AccountingServiceClient;
 import cloud.fogbow.fs.core.util.RasClient;
+import cloud.fogbow.ras.core.models.Operation;
 import cloud.fogbow.ras.core.models.RasOperation;
 
 public class PrePaidFinancePlugin implements FinancePlugin {
@@ -106,9 +107,11 @@ public class PrePaidFinancePlugin implements FinancePlugin {
 
 	@Override
 	public boolean isAuthorized(SystemUser user, RasOperation operation) {
-		// TODO isAuthorized should check if the RasOperation type
-		// is related to resource allocation
-		return this.paymentManager.hasPaid(user.getId(), user.getIdentityProviderId());
+		if (operation.getOperationType().equals(Operation.CREATE)) {
+			return this.paymentManager.hasPaid(user.getId(), user.getIdentityProviderId());
+		}
+		
+		return true;
 	}
 
 	@Override
