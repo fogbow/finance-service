@@ -3,7 +3,6 @@ package cloud.fogbow.fs.core.plugins.payment.postpaid;
 import java.util.ArrayList;
 import java.util.List;
 
-import cloud.fogbow.accs.api.http.response.Record;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.constants.Messages;
@@ -15,6 +14,7 @@ import cloud.fogbow.fs.core.models.InvoiceState;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
 import cloud.fogbow.fs.core.plugins.payment.ResourceItem;
 import cloud.fogbow.fs.core.plugins.payment.ResourceItemFactory;
+import cloud.fogbow.fs.core.util.accounting.Record;
 
 public class DefaultInvoiceManager implements PaymentManager {
 	public static final String PROPERTY_VALUES_SEPARATOR = ",";
@@ -93,11 +93,11 @@ public class DefaultInvoiceManager implements PaymentManager {
 			List<String> invoiceJsonReps = new ArrayList<String>();
 			
 			for (Invoice invoice : userInvoices) {
-				String invoiceJson = invoice.jsonRepr();
+				String invoiceJson = invoice.toString();
 				invoiceJsonReps.add(invoiceJson);
 			}
 			
-			propertyValue = String.join(PROPERTY_VALUES_SEPARATOR, invoiceJsonReps);
+			propertyValue = "[" + String.join(PROPERTY_VALUES_SEPARATOR, invoiceJsonReps) + "]";
 		} else {
 			throw new InvalidParameterException(
 					String.format(Messages.Exception.UNKNOWN_FINANCE_PROPERTY, property));

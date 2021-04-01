@@ -5,7 +5,7 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
-import cloud.fogbow.accs.api.http.response.Record;
+import cloud.fogbow.fs.core.util.accounting.Record;
 
 public class FinanceUser {
 	private static final Logger LOGGER = Logger.getLogger(FinanceUser.class);

@@ -10,7 +10,6 @@ import java.util.List;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import cloud.fogbow.accs.api.http.response.Record;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
@@ -21,6 +20,7 @@ import cloud.fogbow.fs.core.models.InvoiceState;
 import cloud.fogbow.fs.core.plugins.payment.ComputeItem;
 import cloud.fogbow.fs.core.plugins.payment.ResourceItemFactory;
 import cloud.fogbow.fs.core.plugins.payment.VolumeItem;
+import cloud.fogbow.fs.core.util.accounting.Record;
 
 public class DefaultInvoiceManagerTest {
 
@@ -125,8 +125,8 @@ public class DefaultInvoiceManagerTest {
 	
 	// test case: When calling the getUserFinanceState method using the 
 	// property ALL_USER_INVOICES, it must get all the user's invoices and,
-	// for each invoice, generate a representing json. Then, return a 
-	// concatenation of the jsons.
+	// for each invoice, generate a representing string. Then, return a 
+	// concatenation of the strings.
 	@Test
 	public void testGetUserFinanceStateAllInvoices() throws InvalidParameterException {
 		setUpInvoiceData();
@@ -141,11 +141,11 @@ public class DefaultInvoiceManagerTest {
 		String user3State = invoiceManager.getUserFinanceState(USER_ID_3, PROVIDER_ID_3, 
 				DefaultInvoiceManager.ALL_USER_INVOICES_PROPERTY_NAME);
 		
-		assertEquals(String.join(DefaultInvoiceManager.PROPERTY_VALUES_SEPARATOR, 
-				INVOICE_1_JSON_REPR, INVOICE_2_JSON_REPR), user1State);
-		assertEquals(String.join(DefaultInvoiceManager.PROPERTY_VALUES_SEPARATOR, 
-				INVOICE_3_JSON_REPR, INVOICE_4_JSON_REPR), user2State);
-		assertEquals("", user3State);
+		assertEquals("[" + String.join(DefaultInvoiceManager.PROPERTY_VALUES_SEPARATOR, 
+				INVOICE_1_JSON_REPR, INVOICE_2_JSON_REPR) + "]", user1State);
+		assertEquals("[" + String.join(DefaultInvoiceManager.PROPERTY_VALUES_SEPARATOR, 
+				INVOICE_3_JSON_REPR, INVOICE_4_JSON_REPR)+ "]", user2State);
+		assertEquals("[]", user3State);
 	}
 	
 	// test case: When calling the getUserFinanceState method using an
@@ -206,10 +206,10 @@ public class DefaultInvoiceManagerTest {
 		List<Invoice> invoiceListUser1 = new ArrayList<Invoice>();
 		Invoice invoice1 = Mockito.mock(Invoice.class);
 		Mockito.when(invoice1.getState()).thenReturn(InvoiceState.WAITING);
-		Mockito.when(invoice1.jsonRepr()).thenReturn(INVOICE_1_JSON_REPR);
+		Mockito.when(invoice1.toString()).thenReturn(INVOICE_1_JSON_REPR);
 		Invoice invoice2 = Mockito.mock(Invoice.class);
 		Mockito.when(invoice2.getState()).thenReturn(InvoiceState.PAID);
-		Mockito.when(invoice2.jsonRepr()).thenReturn(INVOICE_2_JSON_REPR);
+		Mockito.when(invoice2.toString()).thenReturn(INVOICE_2_JSON_REPR);
 		
 		invoiceListUser1.add(invoice1);
 		invoiceListUser1.add(invoice2);
@@ -217,10 +217,10 @@ public class DefaultInvoiceManagerTest {
 		List<Invoice> invoiceListUser2 = new ArrayList<Invoice>();
 		Invoice invoice3 = Mockito.mock(Invoice.class);
 		Mockito.when(invoice3.getState()).thenReturn(InvoiceState.PAID);
-		Mockito.when(invoice3.jsonRepr()).thenReturn(INVOICE_3_JSON_REPR);
+		Mockito.when(invoice3.toString()).thenReturn(INVOICE_3_JSON_REPR);
 		Invoice invoice4 = Mockito.mock(Invoice.class);
 		Mockito.when(invoice4.getState()).thenReturn(InvoiceState.DEFAULTING);
-		Mockito.when(invoice4.jsonRepr()).thenReturn(INVOICE_4_JSON_REPR);
+		Mockito.when(invoice4.toString()).thenReturn(INVOICE_4_JSON_REPR);
 		
 		invoiceListUser2.add(invoice3);
 		invoiceListUser2.add(invoice4);

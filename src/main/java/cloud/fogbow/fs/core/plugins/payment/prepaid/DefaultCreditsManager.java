@@ -2,7 +2,6 @@ package cloud.fogbow.fs.core.plugins.payment.prepaid;
 
 import java.util.List;
 
-import cloud.fogbow.accs.api.http.response.Record;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
@@ -12,6 +11,7 @@ import cloud.fogbow.fs.core.models.UserCredits;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
 import cloud.fogbow.fs.core.plugins.payment.ResourceItem;
 import cloud.fogbow.fs.core.plugins.payment.ResourceItemFactory;
+import cloud.fogbow.fs.core.util.accounting.Record;
 
 public class DefaultCreditsManager implements PaymentManager {
 

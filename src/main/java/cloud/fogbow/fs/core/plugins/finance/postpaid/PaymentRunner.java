@@ -6,7 +6,6 @@ import org.apache.log4j.Logger;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import cloud.fogbow.accs.api.http.response.Record;
 import cloud.fogbow.common.exceptions.FogbowException;
 import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
@@ -15,6 +14,7 @@ import cloud.fogbow.fs.core.plugins.PaymentManager;
 import cloud.fogbow.fs.core.plugins.finance.StoppableRunner;
 import cloud.fogbow.fs.core.util.AccountingServiceClient;
 import cloud.fogbow.fs.core.util.TimeUtils;
+import cloud.fogbow.fs.core.util.accounting.Record;
 
 public class PaymentRunner extends StoppableRunner {
 	private static Logger LOGGER = Logger.getLogger(PaymentRunner.class);

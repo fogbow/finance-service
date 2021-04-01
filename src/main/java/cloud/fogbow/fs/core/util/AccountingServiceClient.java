@@ -16,7 +16,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import cloud.fogbow.accs.api.http.response.Record;
 import cloud.fogbow.as.core.util.TokenProtector;
 import cloud.fogbow.common.constants.FogbowConstants;
 import cloud.fogbow.common.constants.HttpMethod;
@@ -32,14 +31,13 @@ import cloud.fogbow.fs.api.http.CommonKeys;
 import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
 import cloud.fogbow.fs.core.FsPublicKeysHolder;
 import cloud.fogbow.fs.core.PropertiesHolder;
+import cloud.fogbow.fs.core.util.accounting.Record;
+import cloud.fogbow.fs.core.util.accounting.RecordUtils;
 
 public class AccountingServiceClient {
 	private static final String COMPUTE_RESOURCE = "compute";
-	// FIXME the client should not get network records
-	private static final String NETWORK_RESOURCE = "network";
 	private static final String VOLUME_RESOURCE = "volume";
-	private static final List<String> RESOURCE_TYPES = Arrays.asList(COMPUTE_RESOURCE, 
-			NETWORK_RESOURCE, VOLUME_RESOURCE);
+	private static final List<String> RESOURCE_TYPES = Arrays.asList(COMPUTE_RESOURCE, VOLUME_RESOURCE);
 	@VisibleForTesting
 	static final String RECORDS_REQUEST_CONTENT_TYPE = "application/json";
 
@@ -49,8 +47,8 @@ public class AccountingServiceClient {
 	private String accountingServiceAddress;
 	private String accountingServicePort;
 	private String localProvider;
-	private JsonUtils jsonUtils;
 	private String publicKeyString;
+	private RecordUtils recordUtil;
 	
 	public AccountingServiceClient() throws ConfigurationErrorException {
 		this(new AuthenticationServiceClient(),
@@ -59,19 +57,20 @@ public class AccountingServiceClient {
 				PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.MANAGER_PASSWORD_KEY),
 				PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.ACCS_URL_KEY),
 				PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.ACCS_PORT_KEY),
-				new JsonUtils());
+				new RecordUtils());
 	}
 	
-	public AccountingServiceClient(AuthenticationServiceClient authenticationServiceClient, String localProvider, String managerUserName, 
-			String managerPassword, String accountingServiceAddress, String accountingServicePort, 
-			JsonUtils jsonUtils) throws ConfigurationErrorException {
+	public AccountingServiceClient(AuthenticationServiceClient authenticationServiceClient, 
+			String localProvider, String managerUserName, String managerPassword, 
+			String accountingServiceAddress, String accountingServicePort, RecordUtils recordUtil) 
+					throws ConfigurationErrorException {
 		this.authenticationServiceClient = authenticationServiceClient;
 		this.localProvider = localProvider;
 		this.managerUserName = managerUserName;
 		this.managerPassword = managerPassword;
 		this.accountingServiceAddress = accountingServiceAddress;
 		this.accountingServicePort = accountingServicePort;
-		this.jsonUtils = jsonUtils;
+		this.recordUtil = recordUtil;
 		
 		try {
 			this.publicKeyString = CryptoUtil.toBase64(ServiceAsymmetricKeysHolder.getInstance().getPublicKey());
@@ -144,7 +143,6 @@ public class AccountingServiceClient {
     }
     
     private List<Record> getRecordsFromResponse(HttpResponse response) {
-        ArrayList<Record> records = this.jsonUtils.fromJson(response.getContent(), ArrayList.class);
-        return records;
+    	return recordUtil.getRecordsFromString(response.getContent());
     }
 }

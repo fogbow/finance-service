@@ -6,7 +6,6 @@ import static org.junit.Assert.assertTrue;
 import java.security.GeneralSecurityException;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,13 +19,6 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import cloud.fogbow.accs.api.http.response.Record;
-import cloud.fogbow.accs.core.models.orders.OrderState;
-import cloud.fogbow.accs.core.models.specs.ComputeSpec;
-import cloud.fogbow.accs.core.models.specs.NetworkAllocationMode;
-import cloud.fogbow.accs.core.models.specs.NetworkSpec;
-import cloud.fogbow.accs.core.models.specs.OrderSpec;
-import cloud.fogbow.accs.core.models.specs.VolumeSpec;
 import cloud.fogbow.as.core.util.TokenProtector;
 import cloud.fogbow.common.constants.FogbowConstants;
 import cloud.fogbow.common.constants.HttpMethod;
@@ -40,6 +32,8 @@ import cloud.fogbow.common.util.connectivity.HttpRequestClient;
 import cloud.fogbow.common.util.connectivity.HttpResponse;
 import cloud.fogbow.fs.api.http.CommonKeys;
 import cloud.fogbow.fs.core.FsPublicKeysHolder;
+import cloud.fogbow.fs.core.util.accounting.Record;
+import cloud.fogbow.fs.core.util.accounting.RecordUtils;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ HttpRequestClient.class, ServiceAsymmetricKeysHolder.class, 
@@ -62,47 +56,23 @@ public class AccountingServiceClientTest {
 	private String requester = "requester";
 	private String requestStartDate = "01-01-1970";
 	private String requestEndDate = "01-01-2000";
-	private String orderIdCompute1 = "orderIdCompute1";
-	private String orderIdCompute2 = "orderIdCompute2";
-	private String orderIdNetwork = "orderIdNetwork";
-	private String orderIdVolume = "orderIdVolume";
 	private String resourceTypeCompute = "compute";
-	private String resourceTypeNetwork = "network";
 	private String resourceTypeVolume = "volume";
-	private OrderSpec orderSpecCompute = new ComputeSpec(1, 100);
-	private OrderSpec orderSpecNetwork = new NetworkSpec("10.0.0.1/30", 
-			NetworkAllocationMode.DYNAMIC);
-	private OrderSpec orderSpecVolume = new VolumeSpec(1000);
-	private Timestamp recordStartTime = new Timestamp(0);
-	private Timestamp recordStartDate = new Timestamp(0);
-	private Timestamp recordEndTime = new Timestamp(100);
-	private Timestamp recordEndDate = new Timestamp(100);
-	private long duration = 10L;
-	private OrderState orderState = OrderState.FULFILLED;
-	private Long idRecordCompute1 = 1L;
-	private Long idRecordCompute2 = 2L;
-	private Long idRecordNetwork = 3L;
-	private Long idRecordVolume = 4L;
 	
 	// request / response fields
 	private HttpResponse responseCompute;
-	private HttpResponse responseNetwork;
 	private HttpResponse responseVolume;
 	private Map<String, String> headers;
 	private Map<String, String> body;
 	private String urlCompute;
-	private String urlNetwork;
 	private String urlVolume;
-	private JsonUtils jsonUtils;
+	private RecordUtils recordUtils;
 	private Record recordCompute1;
 	private Record recordCompute2;
-	private Record recordNetwork;
 	private Record recordVolume;
 	private ArrayList<Record> responseComputeRecords;
-	private ArrayList<Record> responseNetworkRecords;
 	private ArrayList<Record> responseVolumeRecords;
 	private String responseComputeContent = "responseComputeContent";
-	private String responseNetworkContent = "responseNetworkContent";
 	private String responseVolumeContent = "responseVolumeContent";
 	private int successCode = 200;
 	private int errorCode = 500;
@@ -115,19 +85,18 @@ public class AccountingServiceClientTest {
 		setUpKeys();
 		setUpAuthentication();
 		setUpRecords();
-		setUpResponse(successCode, successCode, successCode);
+		setUpResponse(successCode, successCode);
 		setUpRequest();
 		
 		AccountingServiceClient accsClient = new AccountingServiceClient(authenticationServiceClient, 
 				localProvider, managerUserName, managerPassword, 
-				accountingServiceAddress, accountingServicePort, jsonUtils);
+				accountingServiceAddress, accountingServicePort, recordUtils);
 
 		List<Record> userRecords = accsClient.getUserRecords(userId, requester, requestStartDate, requestEndDate);
 		
-		assertEquals(4, userRecords.size());
+		assertEquals(3, userRecords.size());
 		assertTrue(userRecords.contains(recordCompute1));
 		assertTrue(userRecords.contains(recordCompute2));
-		assertTrue(userRecords.contains(recordNetwork));
 		assertTrue(userRecords.contains(recordVolume));
 	}
 
@@ -138,29 +107,12 @@ public class AccountingServiceClientTest {
 		setUpKeys();
 		setUpAuthentication();
 		setUpRecords();
-		setUpResponse(errorCode, successCode, successCode);
+		setUpResponse(errorCode, successCode);
 		setUpRequest();
 		
 		AccountingServiceClient accsClient = new AccountingServiceClient(authenticationServiceClient, 
 				localProvider, managerUserName, managerPassword, 
-				accountingServiceAddress, accountingServicePort, jsonUtils);
-
-		accsClient.getUserRecords(userId, requester, requestStartDate, requestEndDate);
-	}
-	
-	// test case: When calling the method getUserRecords and the return code
-	// for the network request is not 200, it must throw an UnavailableProviderException.
-	@Test(expected = UnavailableProviderException.class)
-	public void testGetUserRecordsErrorReturnCodeNetworkRequest() throws FogbowException, GeneralSecurityException {
-		setUpKeys();
-		setUpAuthentication();
-		setUpRecords();
-		setUpResponse(successCode, errorCode, successCode);
-		setUpRequest();
-		
-		AccountingServiceClient accsClient = new AccountingServiceClient(authenticationServiceClient, 
-				localProvider, managerUserName, managerPassword, 
-				accountingServiceAddress, accountingServicePort, jsonUtils);
+				accountingServiceAddress, accountingServicePort, recordUtils);
 
 		accsClient.getUserRecords(userId, requester, requestStartDate, requestEndDate);
 	}
@@ -172,12 +124,12 @@ public class AccountingServiceClientTest {
 		setUpKeys();
 		setUpAuthentication();
 		setUpRecords();
-		setUpResponse(successCode, successCode, errorCode);
+		setUpResponse(successCode, errorCode);
 		setUpRequest();
 		
 		AccountingServiceClient accsClient = new AccountingServiceClient(authenticationServiceClient, 
 				localProvider, managerUserName, managerPassword, 
-				accountingServiceAddress, accountingServicePort, jsonUtils);
+				accountingServiceAddress, accountingServicePort, recordUtils);
 
 		accsClient.getUserRecords(userId, requester, requestStartDate, requestEndDate);
 	}
@@ -195,6 +147,7 @@ public class AccountingServiceClientTest {
 
 		
 		RSAPublicKey accsPublicKey = Mockito.mock(RSAPublicKey.class);
+		
 		
 		PowerMockito.mockStatic(FsPublicKeysHolder.class);
 		FsPublicKeysHolder fsPublicKeysHolder = Mockito.mock(FsPublicKeysHolder.class);
@@ -217,44 +170,27 @@ public class AccountingServiceClientTest {
 	}
 	
 	private void setUpRecords() {
-		this.recordCompute1 = new Record(idRecordCompute1, orderIdCompute1, resourceTypeCompute, 
-				orderSpecCompute, requester, recordStartTime, recordStartDate, 
-				recordEndTime, recordEndDate, duration, orderState);
-		this.recordCompute2 = new Record(idRecordCompute2, orderIdCompute2, resourceTypeCompute, 
-				orderSpecCompute, requester, recordStartTime, recordStartDate, 
-				recordEndTime, recordEndDate, duration, orderState);
-		this.recordNetwork = new Record(idRecordNetwork, orderIdNetwork, resourceTypeNetwork, 
-				orderSpecNetwork, requester, recordStartTime, recordStartDate, 
-				recordEndTime, recordEndDate, duration, orderState);
-		this.recordVolume = new Record(idRecordVolume, orderIdVolume, resourceTypeVolume, 
-				orderSpecVolume, requester, recordStartTime, recordStartDate, 
-				recordEndTime, recordEndDate, duration, orderState);
-		
+		this.recordCompute1 = Mockito.mock(Record.class);
+		this.recordCompute2 = Mockito.mock(Record.class);
+		this.recordVolume = Mockito.mock(Record.class);
+
 		this.responseComputeRecords = new ArrayList<Record>();
 		this.responseComputeRecords.add(recordCompute1);
 		this.responseComputeRecords.add(recordCompute2);
-		
-		this.responseNetworkRecords = new ArrayList<Record>();
-		this.responseNetworkRecords.add(recordNetwork);
 		
 		this.responseVolumeRecords = new ArrayList<Record>();
 		this.responseVolumeRecords.add(recordVolume);
 	}
 	
-	private void setUpResponse(int returnCodeComputeRequest, int returnCodeNetworkRequest, int returnCodeVolumeRequest) {
-		this.jsonUtils = Mockito.mock(JsonUtils.class);
+	private void setUpResponse(int returnCodeComputeRequest, int returnCodeVolumeRequest) {
+		this.recordUtils = Mockito.mock(RecordUtils.class);
 		
-		Mockito.when(this.jsonUtils.fromJson(responseComputeContent, ArrayList.class)).thenReturn(responseComputeRecords);
-		Mockito.when(this.jsonUtils.fromJson(responseNetworkContent, ArrayList.class)).thenReturn(responseNetworkRecords);
-		Mockito.when(this.jsonUtils.fromJson(responseVolumeContent, ArrayList.class)).thenReturn(responseVolumeRecords);
-		
+		Mockito.when(this.recordUtils.getRecordsFromString(responseComputeContent)).thenReturn(responseComputeRecords);
+		Mockito.when(this.recordUtils.getRecordsFromString(responseVolumeContent)).thenReturn(responseVolumeRecords);
+
 		responseCompute = Mockito.mock(HttpResponse.class);
 		Mockito.when(responseCompute.getHttpCode()).thenReturn(returnCodeComputeRequest);
 		Mockito.when(responseCompute.getContent()).thenReturn(responseComputeContent);
-		
-		responseNetwork = Mockito.mock(HttpResponse.class);
-		Mockito.when(responseNetwork.getHttpCode()).thenReturn(returnCodeNetworkRequest);
-		Mockito.when(responseNetwork.getContent()).thenReturn(responseNetworkContent);
 		
 		responseVolume = Mockito.mock(HttpResponse.class);
 		Mockito.when(responseVolume.getHttpCode()).thenReturn(returnCodeVolumeRequest);
@@ -266,9 +202,6 @@ public class AccountingServiceClientTest {
 		urlCompute = String.format("%s:%s/%s/%s/%s/%s/%s/%s/%s", accountingServiceAddress, accountingServicePort,
 				cloud.fogbow.accs.api.http.request.ResourceUsage.USAGE_ENDPOINT, userId, requester, localProvider,
 				resourceTypeCompute, requestStartDate, requestEndDate);
-		urlNetwork = String.format("%s:%s/%s/%s/%s/%s/%s/%s/%s", accountingServiceAddress, accountingServicePort,
-				cloud.fogbow.accs.api.http.request.ResourceUsage.USAGE_ENDPOINT, userId, requester, localProvider,
-				resourceTypeNetwork, requestStartDate, requestEndDate);
 		urlVolume = String.format("%s:%s/%s/%s/%s/%s/%s/%s/%s", accountingServiceAddress, accountingServicePort,
 				cloud.fogbow.accs.api.http.request.ResourceUsage.USAGE_ENDPOINT, userId, requester, localProvider,
 				resourceTypeVolume, requestStartDate, requestEndDate);
@@ -280,7 +213,6 @@ public class AccountingServiceClientTest {
 		
 		PowerMockito.mockStatic(HttpRequestClient.class);
 		BDDMockito.given(HttpRequestClient.doGenericRequest(HttpMethod.GET, urlCompute, headers, body)).willReturn(responseCompute);
-		BDDMockito.given(HttpRequestClient.doGenericRequest(HttpMethod.GET, urlNetwork, headers, body)).willReturn(responseNetwork);
 		BDDMockito.given(HttpRequestClient.doGenericRequest(HttpMethod.GET, urlVolume, headers, body)).willReturn(responseVolume);
 	}
 }

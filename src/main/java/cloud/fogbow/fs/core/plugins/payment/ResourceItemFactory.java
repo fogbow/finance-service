@@ -1,10 +1,10 @@
 package cloud.fogbow.fs.core.plugins.payment;
 
-import cloud.fogbow.accs.api.http.response.Record;
-import cloud.fogbow.accs.core.models.specs.ComputeSpec;
-import cloud.fogbow.accs.core.models.specs.VolumeSpec;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.constants.Messages;
+import cloud.fogbow.fs.core.util.accounting.ComputeSpec;
+import cloud.fogbow.fs.core.util.accounting.Record;
+import cloud.fogbow.fs.core.util.accounting.VolumeSpec;
 
 public class ResourceItemFactory {
 	

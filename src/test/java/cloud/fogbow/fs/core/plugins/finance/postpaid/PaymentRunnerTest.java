@@ -11,13 +11,13 @@ import java.util.List;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import cloud.fogbow.accs.api.http.response.Record;
 import cloud.fogbow.common.exceptions.FogbowException;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
 import cloud.fogbow.fs.core.util.AccountingServiceClient;
 import cloud.fogbow.fs.core.util.TimeUtils;
+import cloud.fogbow.fs.core.util.accounting.Record;
 
 public class PaymentRunnerTest {
 	
@@ -228,8 +228,11 @@ public class PaymentRunnerTest {
 
 	private void setUpAccounting() throws FogbowException {
 		this.userRecords = new ArrayList<Record>();
-		this.record1 = new Record(RECORD_ID_1, null, null, null, null, null, null, null, null, 0, null);
-		this.record2 = new Record(RECORD_ID_2, null, null, null, null, null, null, null, null, 0, null);
+		this.record1 = Mockito.mock(Record.class);
+		Mockito.when(this.record1.getId()).thenReturn(RECORD_ID_1);
+		this.record2 = Mockito.mock(Record.class);
+		Mockito.when(this.record2.getId()).thenReturn(RECORD_ID_2);
+		
 		userRecords.add(record1);
 		userRecords.add(record2);
 		
@@ -240,8 +243,11 @@ public class PaymentRunnerTest {
 	
 	private void setUpErrorAccounting() throws FogbowException {
 		this.userRecords = new ArrayList<Record>();
-		this.record1 = new Record(RECORD_ID_1, null, null, null, null, null, null, null, null, 0, null);
-		this.record2 = new Record(RECORD_ID_2, null, null, null, null, null, null, null, null, 0, null);
+		this.record1 = Mockito.mock(Record.class);
+		Mockito.when(this.record1.getId()).thenReturn(RECORD_ID_1);
+		this.record2 = Mockito.mock(Record.class);
+		Mockito.when(this.record2.getId()).thenReturn(RECORD_ID_2);
+		
 		userRecords.add(record1);
 		userRecords.add(record2);
 		

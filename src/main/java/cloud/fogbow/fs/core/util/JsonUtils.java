@@ -12,4 +12,8 @@ public class JsonUtils {
 	public <T> T fromJson(String json, Class<T> classOfT) {
 		return gson.fromJson(json, classOfT);
 	}
+	
+	public String toJson(Object obj) {
+		return gson.toJson(obj);
+	}
 }

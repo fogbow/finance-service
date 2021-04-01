@@ -1,5 +1,7 @@
 package cloud.fogbow.fs.core.models;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import com.google.gson.Gson;
@@ -76,5 +78,24 @@ public class Invoice {
 	
 	public String jsonRepr() {
 		return new Gson().toJson(this);
+	}
+	
+	@Override
+	public String toString() {
+		String invoiceItemsString = "{";
+		List<String> invoiceItemsStringList = new ArrayList<String>();
+		
+		for (ResourceItem item : invoiceItems.keySet()) {
+			String itemString = item.toString();
+			String valueString = String.valueOf(invoiceItems.get(item));
+			String itemValuePairString = itemString + ":" + valueString;
+			invoiceItemsStringList.add(itemValuePairString);
+		}
+		
+		invoiceItemsString += String.join(",", invoiceItemsStringList);
+		invoiceItemsString += "}";
+		
+		return "{\"id\":" + invoiceId + ", \"userId\":" + userId + ", \"providerId\":" + providerId + ", \"state\":"
+				+ state + ", \"invoiceItems\":" + invoiceItemsString + ", \"invoiceTotal\":" + invoiceTotal + "}";
 	}
 }
