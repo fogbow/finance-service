@@ -27,7 +27,8 @@ public class StubPrePaidPaymentManager implements PaymentManager {
 	}
 
 	@Override
-	public void startPaymentProcess(String userId, String provider) {
+	public void startPaymentProcess(String userId, String provider, 
+	        Long paymentStartTime, Long paymentEndTime) {
 		FinanceUser user = databaseManager.getUserById(userId, provider);
 		String creditsString = user.getProperty(USER_CREDITS);
 		

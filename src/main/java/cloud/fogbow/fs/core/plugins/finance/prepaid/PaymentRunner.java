@@ -75,7 +75,8 @@ public class PaymentRunner extends StoppableRunner {
 						user.getProvider(), invoiceStartDate, invoiceEndDate);
 				
 				user.setPeriodRecords(userRecords);
-				this.paymentManager.startPaymentProcess(user.getId(), user.getProvider());
+				this.paymentManager.startPaymentProcess(user.getId(), 
+				        user.getProvider(), lastBillingTime, billingTime);
 				
 				user.setProperty(USER_LAST_BILLING_TIME, String.valueOf(billingTime));
 			} catch (FogbowException e) {

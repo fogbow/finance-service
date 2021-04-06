@@ -31,7 +31,8 @@ public class DefaultCreditsManager implements PaymentManager {
 	}
 
 	@Override
-	public void startPaymentProcess(String userId, String provider) throws InternalServerErrorException {
+	public void startPaymentProcess(String userId, String provider, 
+	        Long paymentStartTime, Long paymentEndTime) throws InternalServerErrorException {
 		FinanceUser user = databaseManager.getUserById(userId, provider);
 		UserCredits credits = databaseManager.getUserCreditsByUserId(userId);
 		FinancePlan plan = databaseManager.getFinancePlan(planName);
@@ -48,7 +49,8 @@ public class DefaultCreditsManager implements PaymentManager {
 				throw new InternalServerErrorException(e.getMessage());
 			}
 			
-			Double timeUsed = resourceItemFactory.getTimeFromRecord(record);
+			Double timeUsed = resourceItemFactory.getTimeFromRecord(record, 
+			        paymentStartTime, paymentEndTime);
 			
 			credits.deduct(resourceItem, valueToPayPerTimeUnit, timeUsed);
 		}

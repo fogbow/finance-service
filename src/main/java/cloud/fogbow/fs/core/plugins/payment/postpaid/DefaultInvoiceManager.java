@@ -54,7 +54,8 @@ public class DefaultInvoiceManager implements PaymentManager {
 	}
 
 	@Override
-	public void startPaymentProcess(String userId, String provider) throws InternalServerErrorException {
+	public void startPaymentProcess(String userId, String provider, 
+	        Long paymentStartTime, Long paymentEndTime) throws InternalServerErrorException {
 		FinanceUser user = databaseManager.getUserById(userId, provider);
 		FinancePlan plan = databaseManager.getFinancePlan(planName);
 		List<Record> records = user.getPeriodRecords();
@@ -63,7 +64,7 @@ public class DefaultInvoiceManager implements PaymentManager {
 		
 		// TODO What is the expected behavior for the empty records list case? 
 		for (Record record : records) {
-			addRecordToInvoice(record, plan);
+			addRecordToInvoice(record, plan, paymentStartTime, paymentEndTime);
 		}
 		
 		Invoice invoice = invoiceBuilder.buildInvoice();
@@ -72,11 +73,12 @@ public class DefaultInvoiceManager implements PaymentManager {
 		databaseManager.saveInvoice(invoice);
 	}
 	
-	private void addRecordToInvoice(Record record, FinancePlan plan) throws InternalServerErrorException {
+	private void addRecordToInvoice(Record record, FinancePlan plan, 
+            Long paymentStartTime, Long paymentEndTime) throws InternalServerErrorException {
 		try {
 			ResourceItem resourceItem = resourceItemFactory.getItemFromRecord(record);
 			Double valueToPayPerTimeUnit = plan.getItemFinancialValue(resourceItem);
-			Double timeUsed = resourceItemFactory.getTimeFromRecord(record);
+			Double timeUsed = resourceItemFactory.getTimeFromRecord(record, paymentStartTime, paymentEndTime);
 			
 			invoiceBuilder.addItem(resourceItem, valueToPayPerTimeUnit, timeUsed);
 		} catch (InvalidParameterException e) {

@@ -42,6 +42,8 @@ public class DefaultInvoiceManagerTest {
 	private static final String INVOICE_2_JSON_REPR = "invoice2json";
 	private static final String INVOICE_3_JSON_REPR = "invoice3json";
 	private static final String INVOICE_4_JSON_REPR = "invoice4json";
+	private Long invoiceStartTime = 0L;
+	private Long invoiceEndTime = 100L;
 	private DatabaseManager databaseManager;
 	private ResourceItemFactory resourceItemFactory;
 	private InvoiceBuilder invoiceBuilder;
@@ -64,7 +66,7 @@ public class DefaultInvoiceManagerTest {
 		DefaultInvoiceManager invoiceManager = new DefaultInvoiceManager(databaseManager, 
 				PLAN_NAME_1, resourceItemFactory, invoiceBuilder);
 		
-		invoiceManager.startPaymentProcess(USER_ID_1, PROVIDER_ID_1);
+		invoiceManager.startPaymentProcess(USER_ID_1, PROVIDER_ID_1, invoiceStartTime, invoiceEndTime);
 		
 		Mockito.verify(this.invoiceBuilder).setUserId(USER_ID_1);
 		Mockito.verify(this.invoiceBuilder).setProviderId(PROVIDER_ID_1);
@@ -86,7 +88,7 @@ public class DefaultInvoiceManagerTest {
 		DefaultInvoiceManager invoiceManager = new DefaultInvoiceManager(databaseManager, 
 				PLAN_NAME_1, resourceItemFactory, invoiceBuilder);
 		
-		invoiceManager.startPaymentProcess(USER_ID_1, PROVIDER_ID_1);
+		invoiceManager.startPaymentProcess(USER_ID_1, PROVIDER_ID_1, invoiceStartTime, invoiceEndTime);
 	}
 	
 	// test case: When calling the startPaymentProcess method, 
@@ -102,7 +104,7 @@ public class DefaultInvoiceManagerTest {
 		DefaultInvoiceManager invoiceManager = new DefaultInvoiceManager(databaseManager, 
 				PLAN_NAME_1, resourceItemFactory, invoiceBuilder);
 		
-		invoiceManager.startPaymentProcess(USER_ID_1, PROVIDER_ID_1);
+		invoiceManager.startPaymentProcess(USER_ID_1, PROVIDER_ID_1, invoiceStartTime, invoiceEndTime);
 	}
 
 	// test case: When calling the hasPaid method, it must check 
@@ -177,9 +179,9 @@ public class DefaultInvoiceManagerTest {
 
 		this.resourceItemFactory = Mockito.mock(ResourceItemFactory.class);
 		Mockito.when(this.resourceItemFactory.getItemFromRecord(record1)).thenThrow(new InvalidParameterException());
-		Mockito.when(this.resourceItemFactory.getTimeFromRecord(record1)).thenReturn(ITEM_1_TIME);
+		Mockito.when(this.resourceItemFactory.getTimeFromRecord(record1, invoiceStartTime, invoiceEndTime)).thenReturn(ITEM_1_TIME);
 		Mockito.when(this.resourceItemFactory.getItemFromRecord(record2)).thenReturn(item2);
-		Mockito.when(this.resourceItemFactory.getTimeFromRecord(record2)).thenReturn(ITEM_2_TIME);
+		Mockito.when(this.resourceItemFactory.getTimeFromRecord(record2, invoiceStartTime, invoiceEndTime)).thenReturn(ITEM_2_TIME);
 		
 		setUpDatabaseManager();
 		setUpInvoiceBuilder();
@@ -235,9 +237,9 @@ public class DefaultInvoiceManagerTest {
 	private void setUpResourceItemFactory() throws InvalidParameterException {
 		this.resourceItemFactory = Mockito.mock(ResourceItemFactory.class);
 		Mockito.when(this.resourceItemFactory.getItemFromRecord(record1)).thenReturn(item1);
-		Mockito.when(this.resourceItemFactory.getTimeFromRecord(record1)).thenReturn(ITEM_1_TIME);
+		Mockito.when(this.resourceItemFactory.getTimeFromRecord(record1, invoiceStartTime, invoiceEndTime)).thenReturn(ITEM_1_TIME);
 		Mockito.when(this.resourceItemFactory.getItemFromRecord(record2)).thenReturn(item2);
-		Mockito.when(this.resourceItemFactory.getTimeFromRecord(record2)).thenReturn(ITEM_2_TIME);
+		Mockito.when(this.resourceItemFactory.getTimeFromRecord(record2, invoiceStartTime, invoiceEndTime)).thenReturn(ITEM_2_TIME);
 	}
 
 	private void setUpFinancePlan() throws InvalidParameterException {

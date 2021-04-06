@@ -3,6 +3,7 @@ package cloud.fogbow.fs.core.plugins;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 
+// TODO update documentation
 /**
  * A payment management abstraction, capable of starting
  * payment for users based in their financial state. This 
@@ -25,6 +26,7 @@ public interface PaymentManager {
 	 */
 	boolean hasPaid(String userId, String provider);
 	
+	
 	/**
 	 * Starts payment for the resources consumed by the 
 	 * given user. The meaning of this operati@Override
@@ -37,7 +39,7 @@ public interface PaymentManager {
 	 * @param userId the id of the user to start payment.
 	 * @throws InternalServerErrorException 
 	 */
-	void startPaymentProcess(String userId, String provider) throws InternalServerErrorException;
+	void startPaymentProcess(String userId, String provider, Long paymentStartTime, Long paymentEndTime) throws InternalServerErrorException;
 	
 	/**
 	 * Generates and returns a representation of the given property of

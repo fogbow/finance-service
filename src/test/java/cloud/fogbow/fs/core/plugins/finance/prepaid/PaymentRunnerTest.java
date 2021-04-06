@@ -85,8 +85,10 @@ public class PaymentRunnerTest {
 		//
 		
 		// PaymentRunner triggered payment correctly
-		Mockito.verify(paymentManager, Mockito.times(1)).startPaymentProcess(ID_USER_1, PROVIDER_USER_1);
-		Mockito.verify(paymentManager, Mockito.times(1)).startPaymentProcess(ID_USER_2, PROVIDER_USER_2);
+		Mockito.verify(paymentManager, Mockito.times(1)).startPaymentProcess(ID_USER_1, PROVIDER_USER_1, 
+		        INITIAL_USER_1_LAST_BILLING_TIME, timeValues.get(0));
+		Mockito.verify(paymentManager, Mockito.times(1)).startPaymentProcess(ID_USER_2, PROVIDER_USER_2, 
+		        INITIAL_USER_2_LAST_BILLING_TIME, timeValues.get(1));
 		
 		// PaymentRunner set the last period records
 		List<Record> records = user1.getPeriodRecords();
@@ -138,8 +140,10 @@ public class PaymentRunnerTest {
 		//
 		
 		// PaymentRunner triggered payment correctly
-		Mockito.verify(paymentManager, Mockito.never()).startPaymentProcess(ID_USER_1, PROVIDER_USER_1);
-		Mockito.verify(paymentManager, Mockito.times(1)).startPaymentProcess(ID_USER_2, PROVIDER_USER_2);
+		Mockito.verify(paymentManager, Mockito.never()).startPaymentProcess(ID_USER_1, PROVIDER_USER_1, 
+                INITIAL_USER_1_LAST_BILLING_TIME, timeValues.get(0));
+        Mockito.verify(paymentManager, Mockito.times(1)).startPaymentProcess(ID_USER_2, PROVIDER_USER_2, 
+                INITIAL_USER_2_LAST_BILLING_TIME, timeValues.get(1));
 
 		// PaymentRunner set the last period records
 		

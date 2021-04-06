@@ -34,7 +34,8 @@ public class StubPostPaidPaymentManager implements PaymentManager {
 	}
 
 	@Override
-	public void startPaymentProcess(String userId, String provider) {
+	public void startPaymentProcess(String userId, String provider, 
+	        Long paymentStartTime, Long paymentEndTime) {
 		FinanceUser user = databaseManager.getUserById(userId, provider);
 		user.setProperty(FinanceUser.PAYMENT_STATUS_KEY, PAYMENT_STATUS_WAITING);
 	}

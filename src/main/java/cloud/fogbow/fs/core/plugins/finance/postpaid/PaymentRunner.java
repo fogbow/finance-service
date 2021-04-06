@@ -53,7 +53,7 @@ public class PaymentRunner extends StoppableRunner {
 		String lastBillingTimeProperty = user.getProperty(USER_LAST_BILLING_TIME);
 		
 		if (lastBillingTimeProperty == null) {
-			long billingTime = this.timeUtils.getCurrentTimeMillis();
+			long billingTime = 0L;
 			user.setProperty(USER_LAST_BILLING_TIME, String.valueOf(billingTime));
 			return billingTime;
 		}
@@ -90,7 +90,8 @@ public class PaymentRunner extends StoppableRunner {
 					user.setPeriodRecords(userRecords);
 					
 					// generate invoice
-					this.paymentManager.startPaymentProcess(user.getId(), user.getProvider());
+					this.paymentManager.startPaymentProcess(user.getId(), user.getProvider(),
+					        lastBillingTime, billingTime);
 					
 					user.setProperty(USER_LAST_BILLING_TIME, String.valueOf(billingTime));
 				} catch (FogbowException e) {

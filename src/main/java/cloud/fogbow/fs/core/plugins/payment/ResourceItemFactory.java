@@ -1,5 +1,7 @@
 package cloud.fogbow.fs.core.plugins.payment;
 
+import java.sql.Timestamp;
+
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.util.accounting.ComputeSpec;
@@ -8,12 +10,16 @@ import cloud.fogbow.fs.core.util.accounting.VolumeSpec;
 
 public class ResourceItemFactory {
 	
-	public Double getTimeFromRecord(Record record) {
-		Long recordStartTime = record.getEndTime().getTime();
-		Long recordEndTime = record.getStartTime().getTime();
-		
-		return recordStartTime.doubleValue() - 
-				recordEndTime.doubleValue();
+	public Double getTimeFromRecord(Record record, Long paymentStartTime, Long paymentEndTime) {
+	    Timestamp endTime = record.getEndTime();
+	    Long recordStartTime = record.getStartTime().getTime();
+	    
+	    if (endTime == null) {
+	        return new Long(paymentEndTime - Math.max(paymentStartTime, recordStartTime)).doubleValue();
+	    } else {
+	        Long recordEndTime = record.getEndTime().getTime();
+	        return new Long(recordEndTime - Math.max(paymentStartTime, recordStartTime)).doubleValue();
+	    }
 	}
 
 	public ResourceItem getItemFromRecord(Record record) throws InvalidParameterException {

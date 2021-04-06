@@ -85,13 +85,9 @@ public class DatabaseManager {
 	}
 
 	public void saveInvoice(Invoice invoice) {
-		for (Invoice savedInvoice : invoices) {
-			if (savedInvoice.getInvoiceId().equals(invoice.getInvoiceId())) {
-				invoices.remove(savedInvoice);
-			}
-		}
-		
-		invoices.add(invoice);
+	    if (!invoices.contains(invoice)) {
+	        invoices.add(invoice);
+	    }
 	}
 
 	public Invoice getInvoice(String invoiceId) {
@@ -129,6 +125,7 @@ public class DatabaseManager {
 	}
 
 	public void saveFinancePlan(FinancePlan financePlan) {
+	    // FIXME should not change the collection while iterating over it
 		for (FinancePlan savedFinancePlan : financePlans) {
 			if (savedFinancePlan.getName().equals(financePlan.getName())) {
 				financePlans.remove(savedFinancePlan);
@@ -150,6 +147,7 @@ public class DatabaseManager {
 	}
 
 	public void removeFinancePlan(String planName) {
+	    // FIXME should not change the collection while iterating over it
 		for (FinancePlan financePlan : financePlans) {
 			if (financePlan.getName().equals(planName)) {
 				financePlans.remove(financePlan);
