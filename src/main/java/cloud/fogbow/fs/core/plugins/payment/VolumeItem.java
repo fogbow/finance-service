@@ -16,6 +16,7 @@ public class VolumeItem extends ResourceItem {
 		return size;
 	}
 	
+	// TODO test
 	public void setSize(int size) throws InvalidParameterException {
 		if (size < 0) {
 			throw new InvalidParameterException(Messages.Exception.NEGATIVE_VOLUME_SIZE);
@@ -46,6 +47,7 @@ public class VolumeItem extends ResourceItem {
 		return true;
 	}
 
+	// TODO test
 	@Override
 	public String toString() {
 		return "{\"type\":\"volume\", \"size\":" + size + "}";

@@ -80,6 +80,7 @@ public class Invoice {
 		return new Gson().toJson(this);
 	}
 	
+	// TODO test
 	@Override
 	public String toString() {
 		String invoiceItemsString = "{";

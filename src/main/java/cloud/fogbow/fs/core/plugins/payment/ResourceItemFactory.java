@@ -8,6 +8,7 @@ import cloud.fogbow.fs.core.util.accounting.ComputeSpec;
 import cloud.fogbow.fs.core.util.accounting.Record;
 import cloud.fogbow.fs.core.util.accounting.VolumeSpec;
 
+// TODO test
 public class ResourceItemFactory {
 	
 	public Double getTimeFromRecord(Record record, Long paymentStartTime, Long paymentEndTime) {

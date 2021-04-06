@@ -52,6 +52,7 @@ public class PaymentRunner extends StoppableRunner {
 	private long getUserLastBillingTime(FinanceUser user) {
 		String lastBillingTimeProperty = user.getProperty(USER_LAST_BILLING_TIME);
 		
+		// TODO test
 		if (lastBillingTimeProperty == null) {
 			long billingTime = 0L;
 			user.setProperty(USER_LAST_BILLING_TIME, String.valueOf(billingTime));

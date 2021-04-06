@@ -46,6 +46,7 @@ public class StopServiceRunner extends StoppableRunner {
 				try {
 					this.rasClient.pauseResourcesByUser(user.getId());
 				} catch (FogbowException e) {
+				    // TODO test
 					LOGGER.error(String.format(Messages.Log.FAILED_TO_PAUSE_USER_RESOURCES, user.getId(), 
 							e.getMessage()));
 				}
@@ -59,6 +60,7 @@ public class StopServiceRunner extends StoppableRunner {
 				try {
 					this.rasClient.resumeResourcesByUser(user.getId());
 				} catch (FogbowException e) {
+				    // TODO test
 					LOGGER.error(String.format(Messages.Log.FAILED_TO_RESUME_USER_RESOURCES, user.getId(), 
 							e.getMessage()));
 				}
