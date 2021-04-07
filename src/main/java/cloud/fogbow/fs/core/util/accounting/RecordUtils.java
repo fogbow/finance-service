@@ -96,15 +96,32 @@ public class RecordUtils {
 	}
 	
    public Double getTimeFromRecord(Record record, Long paymentStartTime, Long paymentEndTime) {
-        Timestamp endTime = record.getEndTime();
+        Timestamp endTimeTimestamp = record.getEndTime();
         Long recordStartTime = record.getStartTime().getTime();
+        Long startTime = Math.max(paymentStartTime, recordStartTime);
+        Long endTime = null;
+        Long totalTime = null;
         
-        if (endTime == null) {
-            return new Long(paymentEndTime - Math.max(paymentStartTime, recordStartTime)).doubleValue();
+        // if endTimeTimestamp is null, then the record has not ended yet. Therefore, we use
+        // paymentEndTime as end time
+        if (endTimeTimestamp == null) {
+            endTime = paymentEndTime;
         } else {
-            Long recordEndTime = record.getEndTime().getTime();
-            return new Long(recordEndTime - Math.max(paymentStartTime, recordStartTime)).doubleValue();
+            Long recordEndTime = endTimeTimestamp.getTime();
+            // if the record end time is before the payment end time, then the record has 
+            // already ended when the getRecords request was performed. 
+            // Therefore, we use the record end time as the end time.
+            if (recordEndTime < paymentEndTime) {
+                endTime = recordEndTime;
+            // if the record end time is after the payment end time, then the record has ended
+            // after the getRecords request. In this case, we use the paymentEndTime as end time.
+            } else {
+                endTime = paymentEndTime;
+            }
         }
+        
+        totalTime = endTime - startTime;
+        return totalTime.doubleValue();
     }
 
     public ResourceItem getItemFromRecord(Record record) throws InvalidParameterException {
