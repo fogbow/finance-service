@@ -80,7 +80,6 @@ public class Invoice {
 		return new Gson().toJson(this);
 	}
 	
-	// TODO test
 	@Override
 	public String toString() {
 		String invoiceItemsString = "{";
@@ -88,7 +87,7 @@ public class Invoice {
 		
 		for (ResourceItem item : invoiceItems.keySet()) {
 			String itemString = item.toString();
-			String valueString = String.valueOf(invoiceItems.get(item));
+			String valueString = String.format("%.3f", invoiceItems.get(item));
 			String itemValuePairString = itemString + ":" + valueString;
 			invoiceItemsStringList.add(itemValuePairString);
 		}
@@ -96,7 +95,9 @@ public class Invoice {
 		invoiceItemsString += String.join(",", invoiceItemsStringList);
 		invoiceItemsString += "}";
 		
-		return "{\"id\":" + invoiceId + ", \"userId\":" + userId + ", \"providerId\":" + providerId + ", \"state\":"
-				+ state + ", \"invoiceItems\":" + invoiceItemsString + ", \"invoiceTotal\":" + invoiceTotal + "}";
+		String invoiceTotalString = String.format("%.3f", invoiceTotal);
+		
+		return "{\"id\":\"" + invoiceId + "\", \"userId\":\"" + userId + "\", \"providerId\":\"" + providerId + "\", \"state\":\""
+				+ state + "\", \"invoiceItems\":" + invoiceItemsString + ", \"invoiceTotal\":" + invoiceTotalString + "}";
 	}
 }
