@@ -18,9 +18,9 @@ import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.models.Invoice;
 import cloud.fogbow.fs.core.models.InvoiceState;
 import cloud.fogbow.fs.core.plugins.payment.ComputeItem;
-import cloud.fogbow.fs.core.plugins.payment.ResourceItemFactory;
 import cloud.fogbow.fs.core.plugins.payment.VolumeItem;
 import cloud.fogbow.fs.core.util.accounting.Record;
+import cloud.fogbow.fs.core.util.accounting.RecordUtils;
 
 public class DefaultInvoiceManagerTest {
 
@@ -45,7 +45,7 @@ public class DefaultInvoiceManagerTest {
 	private Long invoiceStartTime = 0L;
 	private Long invoiceEndTime = 100L;
 	private DatabaseManager databaseManager;
-	private ResourceItemFactory resourceItemFactory;
+	private RecordUtils resourceItemFactory;
 	private InvoiceBuilder invoiceBuilder;
 	private FinanceUser user1;
 	private Record record1;
@@ -177,7 +177,7 @@ public class DefaultInvoiceManagerTest {
 	private void setUpErrorResourceItemFactory() throws InvalidParameterException {
 		setUpFinancePlan();
 
-		this.resourceItemFactory = Mockito.mock(ResourceItemFactory.class);
+		this.resourceItemFactory = Mockito.mock(RecordUtils.class);
 		Mockito.when(this.resourceItemFactory.getItemFromRecord(record1)).thenThrow(new InvalidParameterException());
 		Mockito.when(this.resourceItemFactory.getTimeFromRecord(record1, invoiceStartTime, invoiceEndTime)).thenReturn(ITEM_1_TIME);
 		Mockito.when(this.resourceItemFactory.getItemFromRecord(record2)).thenReturn(item2);
@@ -235,7 +235,7 @@ public class DefaultInvoiceManagerTest {
 	}
 
 	private void setUpResourceItemFactory() throws InvalidParameterException {
-		this.resourceItemFactory = Mockito.mock(ResourceItemFactory.class);
+		this.resourceItemFactory = Mockito.mock(RecordUtils.class);
 		Mockito.when(this.resourceItemFactory.getItemFromRecord(record1)).thenReturn(item1);
 		Mockito.when(this.resourceItemFactory.getTimeFromRecord(record1, invoiceStartTime, invoiceEndTime)).thenReturn(ITEM_1_TIME);
 		Mockito.when(this.resourceItemFactory.getItemFromRecord(record2)).thenReturn(item2);

@@ -13,8 +13,8 @@ import cloud.fogbow.fs.core.models.Invoice;
 import cloud.fogbow.fs.core.models.InvoiceState;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
 import cloud.fogbow.fs.core.plugins.payment.ResourceItem;
-import cloud.fogbow.fs.core.plugins.payment.ResourceItemFactory;
 import cloud.fogbow.fs.core.util.accounting.Record;
+import cloud.fogbow.fs.core.util.accounting.RecordUtils;
 
 public class DefaultInvoiceManager implements PaymentManager {
 	public static final String PROPERTY_VALUES_SEPARATOR = ",";
@@ -22,18 +22,18 @@ public class DefaultInvoiceManager implements PaymentManager {
 	
 	private String planName;
 	private DatabaseManager databaseManager;
-	private ResourceItemFactory resourceItemFactory;
+	private RecordUtils resourceItemFactory;
 	private InvoiceBuilder invoiceBuilder;
 	
 	public DefaultInvoiceManager(DatabaseManager databaseManager, String planName) {
 		this.planName = planName;
 		this.databaseManager = databaseManager;
-		this.resourceItemFactory = new ResourceItemFactory();
+		this.resourceItemFactory = new RecordUtils();
 		this.invoiceBuilder = new InvoiceBuilder();
 	}
 
 	public DefaultInvoiceManager(DatabaseManager databaseManager, String planName,
-		ResourceItemFactory resourceItemFactory, InvoiceBuilder invoiceBuilder) {
+		RecordUtils resourceItemFactory, InvoiceBuilder invoiceBuilder) {
 		this.planName = planName;
 		this.databaseManager = databaseManager;
 		this.resourceItemFactory = resourceItemFactory;

@@ -10,13 +10,13 @@ import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.models.UserCredits;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
 import cloud.fogbow.fs.core.plugins.payment.ResourceItem;
-import cloud.fogbow.fs.core.plugins.payment.ResourceItemFactory;
 import cloud.fogbow.fs.core.util.accounting.Record;
+import cloud.fogbow.fs.core.util.accounting.RecordUtils;
 
 public class DefaultCreditsManager implements PaymentManager {
 
 	private DatabaseManager databaseManager;
-	private ResourceItemFactory resourceItemFactory;
+	private RecordUtils resourceItemFactory;
 	private String planName;
 
 	public DefaultCreditsManager(DatabaseManager databaseManager, String planName) {
