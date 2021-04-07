@@ -125,15 +125,9 @@ public class DatabaseManager {
 	}
 
 	public void saveFinancePlan(FinancePlan financePlan) {
-	    // FIXME should not change the collection while iterating over it
-		for (FinancePlan savedFinancePlan : financePlans) {
-			if (savedFinancePlan.getName().equals(financePlan.getName())) {
-				financePlans.remove(savedFinancePlan);
-			}
+		if (!financePlans.contains(financePlan)) {
+		    financePlans.add(financePlan);
 		}
-		
-		// FIXME treat this
-		financePlans.add(financePlan);
 	}
 
 	public FinancePlan getFinancePlan(String planName) {
@@ -147,11 +141,14 @@ public class DatabaseManager {
 	}
 
 	public void removeFinancePlan(String planName) {
-	    // FIXME should not change the collection while iterating over it
+	    FinancePlan planToRemove = null;
+	    
 		for (FinancePlan financePlan : financePlans) {
 			if (financePlan.getName().equals(planName)) {
-				financePlans.remove(financePlan);
+			    planToRemove = financePlan;
 			}
 		}
+		
+		financePlans.remove(planToRemove);
 	}
 }
