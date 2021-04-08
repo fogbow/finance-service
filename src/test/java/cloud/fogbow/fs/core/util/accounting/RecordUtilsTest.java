@@ -1,11 +1,15 @@
 package cloud.fogbow.fs.core.util.accounting;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.sql.Timestamp;
 
 import org.junit.Test;
 import org.mockito.Mockito;
+
+import cloud.fogbow.common.exceptions.InvalidParameterException;
+import cloud.fogbow.fs.core.plugins.payment.ComputeItem;
+import cloud.fogbow.fs.core.plugins.payment.VolumeItem;
 
 public class RecordUtilsTest {
 
@@ -14,6 +18,9 @@ public class RecordUtilsTest {
     private Long paymentEndTime;
     private static final long RECORD_START_TIME = 100;
     private static final long RECORD_END_TIME = 200;
+    private static final int COMPUTE_VCPU = 1;
+    private static final int COMPUTE_RAM = 2;
+    private static final int VOLUME_SIZE = 50;
     private Timestamp startTimeTimestamp;
     private Timestamp endTimeTimestamp;
     private RecordUtils recordUtils;
@@ -230,6 +237,57 @@ public class RecordUtilsTest {
         assertEquals(new Double(50.0), 
                 recordUtils.getTimeFromRecord(record, paymentStartTime, paymentEndTime));
     }
+    
+    // test case: When calling the getItemFromRecord method passing a ComputeRecord, it must
+    // extract the compute spec and build a ComputeItem correctly.
+    @Test
+    public void testGetComputeItemFromRecord() throws InvalidParameterException {
+        this.record = Mockito.mock(Record.class);
+        this.recordUtils = new RecordUtils();
+        
+        ComputeSpec computeSpec = new ComputeSpec(COMPUTE_VCPU, COMPUTE_RAM);
+        
+        Mockito.when(this.record.getResourceType()).thenReturn(ComputeItem.ITEM_TYPE_NAME);
+        Mockito.when(this.record.getSpec()).thenReturn(computeSpec);
+
+        
+        ComputeItem item = (ComputeItem) this.recordUtils.getItemFromRecord(this.record);
+        
+        
+        assertEquals(COMPUTE_VCPU, item.getvCPU());
+        assertEquals(COMPUTE_RAM, item.getRam());
+    }
+    
+    // test case: When calling the getItemFromRecord method passing a VolumeRecord, it must
+    // extract the volume spec and build a VolumeItem correctly.
+    @Test
+    public void testGetVolumeItemFromRecord() throws InvalidParameterException {
+        this.record = Mockito.mock(Record.class);
+        this.recordUtils = new RecordUtils();
+        
+        VolumeSpec volumeSpec = new VolumeSpec(VOLUME_SIZE);
+        
+        Mockito.when(this.record.getResourceType()).thenReturn(VolumeItem.ITEM_TYPE_NAME);
+        Mockito.when(this.record.getSpec()).thenReturn(volumeSpec);
+
+        
+        VolumeItem item = (VolumeItem) this.recordUtils.getItemFromRecord(this.record);
+        
+        
+        assertEquals(VOLUME_SIZE, item.getSize());
+    }
+    
+    // test case: When calling the getItemFromRecord method passing a Record of unknown
+    // type, it must throw an InvalidParameterException.
+    @Test(expected = InvalidParameterException.class)
+    public void testGetItemFromRecordUnknownType() throws InvalidParameterException {
+        this.record = Mockito.mock(Record.class);
+        this.recordUtils = new RecordUtils();
+        
+        Mockito.when(this.record.getResourceType()).thenReturn("unknowntype");
+
+        this.recordUtils.getItemFromRecord(this.record);
+    }    
     
     private void setUpNormalRecordTimes() {
         this.startTimeTimestamp = new Timestamp(RECORD_START_TIME);

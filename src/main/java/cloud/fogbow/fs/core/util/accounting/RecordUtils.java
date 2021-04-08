@@ -13,7 +13,7 @@ import cloud.fogbow.fs.core.plugins.payment.ResourceItem;
 import cloud.fogbow.fs.core.plugins.payment.VolumeItem;
 import cloud.fogbow.fs.core.util.JsonUtils;
 
-// TODO test
+
 public class RecordUtils {
 
 	private static final String RESOURCE_TYPE_KEY = "resourceType";
@@ -26,6 +26,7 @@ public class RecordUtils {
 		this.jsonUtils = new JsonUtils();
 	}
 	
+	// TODO test
 	public List<Record> getRecordsFromString(String recordsString) {
     	ArrayList<Record> recordList = new ArrayList<Record>();
         ArrayList<LinkedTreeMap<String, Object>> rawRecordsList = 
