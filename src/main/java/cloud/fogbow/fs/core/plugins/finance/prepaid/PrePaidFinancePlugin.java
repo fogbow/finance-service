@@ -106,7 +106,7 @@ public class PrePaidFinancePlugin implements FinancePlugin {
 	}
 
 	@Override
-	public boolean isAuthorized(SystemUser user, RasOperation operation) {
+	public boolean isAuthorized(SystemUser user, RasOperation operation) throws InvalidParameterException {
 		if (operation.getOperationType().equals(Operation.CREATE)) {
 			return this.paymentManager.hasPaid(user.getId(), user.getIdentityProviderId());
 		}
@@ -139,19 +139,19 @@ public class PrePaidFinancePlugin implements FinancePlugin {
 	}
 
 	@Override
-	public void removeUser(String userId, String provider) {
+	public void removeUser(String userId, String provider) throws InvalidParameterException {
 		// TODO validation
 		this.databaseManager.removeUser(userId, provider);
 	}
 
 	@Override
-	public void changeOptions(String userId, String provider, Map<String, String> financeOptions) {
+	public void changeOptions(String userId, String provider, Map<String, String> financeOptions) throws InvalidParameterException {
 		// TODO validation
 		this.databaseManager.changeOptions(userId, provider, financeOptions);
 	}
 
 	@Override
-	public void updateFinanceState(String userId, String provider, Map<String, String> financeState) {
+	public void updateFinanceState(String userId, String provider, Map<String, String> financeState) throws InvalidParameterException {
 		// TODO validation
 		this.databaseManager.updateFinanceState(userId, provider, financeState);
 	}

@@ -6,6 +6,8 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
+import cloud.fogbow.common.exceptions.InvalidParameterException;
+import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.models.FinancePlan;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.models.Invoice;
@@ -34,7 +36,7 @@ public class DatabaseManager {
 		financeUsers.add(user);
 	}
 	
-	public void removeUser(String userId, String provider) {
+	public void removeUser(String userId, String provider) throws InvalidParameterException {
 		financeUsers.remove(getUserById(userId, provider));
 	}
 
@@ -42,7 +44,7 @@ public class DatabaseManager {
 		return financeUsers;
 	}
 	
-	public FinanceUser getUserById(String id, String provider) {
+	public FinanceUser getUserById(String id, String provider) throws InvalidParameterException {
 		for (FinanceUser user : financeUsers) {
 			if (user.getId().equals(id) && 
 					user.getProvider().equals(provider)) {
@@ -50,8 +52,7 @@ public class DatabaseManager {
 			}
 		}
 		
-		// TODO treat this
-		return null;
+        throw new InvalidParameterException(String.format(Messages.Exception.UNABLE_TO_FIND_USER, id, provider));
 	}
 	
 	public List<FinanceUser> getRegisteredUsersByPaymentType(String pluginName) {
@@ -66,7 +67,7 @@ public class DatabaseManager {
 		return selectedUsers;
 	}
 
-	public void changeOptions(String userId, String provider, Map<String, String> financeOptions) {
+	public void changeOptions(String userId, String provider, Map<String, String> financeOptions) throws InvalidParameterException {
 		// TODO validation
 		FinanceUser user = getUserById(userId, provider);
 		
@@ -75,7 +76,7 @@ public class DatabaseManager {
 		}
 	}
 
-	public void updateFinanceState(String userId, String provider, Map<String, String> financeState) {
+	public void updateFinanceState(String userId, String provider, Map<String, String> financeState) throws InvalidParameterException {
 		// TODO validation
 		FinanceUser user = getUserById(userId, provider);
 
@@ -90,15 +91,14 @@ public class DatabaseManager {
 	    }
 	}
 
-	public Invoice getInvoice(String invoiceId) {
+	public Invoice getInvoice(String invoiceId) throws InvalidParameterException {
 		for (Invoice invoice : invoices) {
 			if (invoice.getInvoiceId().equals(invoiceId)) {
 				return invoice;
 			}
 		}
 		
-		// FIXME treat this
-		return null;
+        throw new InvalidParameterException(String.format(Messages.Exception.UNABLE_TO_FIND_INVOICE, invoiceId));
 	}
 
 	public List<Invoice> getInvoiceByUserId(String userId, String provider) {
@@ -130,14 +130,14 @@ public class DatabaseManager {
 		}
 	}
 
-	public FinancePlan getFinancePlan(String planName) {
+	public FinancePlan getFinancePlan(String planName) throws InvalidParameterException {
 		for (FinancePlan financePlan : financePlans) {
 			if (financePlan.getName().equals(planName)) {
 				return financePlan;
 			}
 		}
 		
-		return null;
+		throw new InvalidParameterException(String.format(Messages.Exception.UNABLE_TO_FIND_PLAN, planName));
 	}
 
 	public void removeFinancePlan(String planName) {

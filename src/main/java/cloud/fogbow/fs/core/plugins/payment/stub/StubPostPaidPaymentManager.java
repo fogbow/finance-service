@@ -1,5 +1,6 @@
 package cloud.fogbow.fs.core.plugins.payment.stub;
 
+import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
@@ -17,7 +18,7 @@ public class StubPostPaidPaymentManager implements PaymentManager {
 	}
 	
 	@Override
-	public boolean hasPaid(String userId, String provider) {
+	public boolean hasPaid(String userId, String provider) throws InvalidParameterException {
 		FinanceUser user = databaseManager.getUserById(userId, provider);
 		String paymentStatusString = user.getProperty(FinanceUser.PAYMENT_STATUS_KEY);
 
@@ -35,7 +36,7 @@ public class StubPostPaidPaymentManager implements PaymentManager {
 
 	@Override
 	public void startPaymentProcess(String userId, String provider, 
-	        Long paymentStartTime, Long paymentEndTime) {
+	        Long paymentStartTime, Long paymentEndTime) throws InvalidParameterException {
 		FinanceUser user = databaseManager.getUserById(userId, provider);
 		user.setProperty(FinanceUser.PAYMENT_STATUS_KEY, PAYMENT_STATUS_WAITING);
 	}

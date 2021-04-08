@@ -108,7 +108,7 @@ public class PostPaidFinancePlugin implements FinancePlugin {
 	}
 
 	@Override
-	public boolean isAuthorized(SystemUser user, RasOperation operation) {
+	public boolean isAuthorized(SystemUser user, RasOperation operation) throws InvalidParameterException {
 		if (operation.getOperationType().equals(Operation.CREATE)) {
 			return this.paymentManager.hasPaid(user.getId(), user.getIdentityProviderId());
 		}
@@ -143,7 +143,7 @@ public class PostPaidFinancePlugin implements FinancePlugin {
 	}
 
 	@Override
-	public void removeUser(String userId, String provider) {
+	public void removeUser(String userId, String provider) throws InvalidParameterException {
 		// TODO validation
 		// TODO This operation should have some level of thread protection
 		// TODO This operation should also remove the user invoices
@@ -152,7 +152,7 @@ public class PostPaidFinancePlugin implements FinancePlugin {
 	}
 
 	@Override
-	public void changeOptions(String userId, String provider, Map<String, String> financeOptions) {
+	public void changeOptions(String userId, String provider, Map<String, String> financeOptions) throws InvalidParameterException {
 		// TODO validation
 		// TODO This operation should have some level of thread protection
 		// TODO test

@@ -156,7 +156,7 @@ public class FinanceManager {
 	}
 
 	// TODO test
-	public Map<String, String> getFinancePlan(String planName) {
+	public Map<String, String> getFinancePlan(String planName) throws InvalidParameterException {
 		FinancePlan financePlan = this.databaseManager.getFinancePlan(planName);
 		return financePlan.getRulesAsMap();
 	}

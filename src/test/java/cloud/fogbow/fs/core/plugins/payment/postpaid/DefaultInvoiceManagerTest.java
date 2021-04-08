@@ -202,7 +202,7 @@ public class DefaultInvoiceManagerTest {
 		Mockito.when(this.invoiceBuilder.buildInvoice()).thenReturn(invoiceToAdd);
 	}
 
-	private void setUpDatabaseManager() {
+	private void setUpDatabaseManager() throws InvalidParameterException {
 		this.databaseManager = Mockito.mock(DatabaseManager.class);
 		
 		List<Invoice> invoiceListUser1 = new ArrayList<Invoice>();

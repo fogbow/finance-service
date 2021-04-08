@@ -33,8 +33,9 @@ public interface FinancePlugin {
 	 * @param userId the id of the user to be authorized.
 	 * @param operationParameters a map containing the operation parameters.
 	 * @return a boolean stating whether the user is authorized or not.
+	 * @throws InvalidParameterException 
 	 */
-	boolean isAuthorized(SystemUser user, RasOperation operation);
+	boolean isAuthorized(SystemUser user, RasOperation operation) throws InvalidParameterException;
 	
 	/**
 	 * Verifies if this plugin manages the financial state
@@ -63,10 +64,10 @@ public interface FinancePlugin {
 	void addUser(String userId, String provider, Map<String, String> financeOptions);
 	
 	// TODO documentation
-	void removeUser(String userId, String provider);
+	void removeUser(String userId, String provider) throws InvalidParameterException;
 
 	// TODO documentation
-	void changeOptions(String userId, String provider, Map<String, String> financeOptions);
+	void changeOptions(String userId, String provider, Map<String, String> financeOptions) throws InvalidParameterException;
 	
 	// TODO documentation
 	void updateFinanceState(String userId, String provider, Map<String, String> financeState) throws InvalidParameterException;

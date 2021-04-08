@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.common.models.SystemUser;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.models.FinanceUser;
@@ -63,7 +64,7 @@ public class PrePaidFinancePluginTest {
 	// creation operation and the user is financially OK, 
 	// the method must return true.
 	@Test
-	public void testIsAuthorizedCreateOperationUserIsOKFinancially() {
+	public void testIsAuthorizedCreateOperationUserIsOKFinancially() throws InvalidParameterException {
 		this.paymentManager = Mockito.mock(PaymentManager.class);
 		Mockito.when(this.paymentManager.hasPaid(USER_ID_1, PROVIDER_USER_1)).thenReturn(true);
 		
@@ -80,7 +81,7 @@ public class PrePaidFinancePluginTest {
 	// operation other than creation and the user is not financially OK, 
 	// the method must return true.
 	@Test
-	public void testIsAuthorizedNonCreationOperationUserIsNotOKFinancially() {
+	public void testIsAuthorizedNonCreationOperationUserIsNotOKFinancially() throws InvalidParameterException {
 		this.paymentManager = Mockito.mock(PaymentManager.class);
 		Mockito.when(this.paymentManager.hasPaid(USER_ID_1, PROVIDER_USER_1)).thenReturn(false);
 		
@@ -97,7 +98,7 @@ public class PrePaidFinancePluginTest {
 	// creation operation and the user is not financially OK, 
 	// the method must return false.
 	@Test
-	public void testIsAuthorizedCreationOperationUserIsNotOKFinancially() {
+	public void testIsAuthorizedCreationOperationUserIsNotOKFinancially() throws InvalidParameterException {
 		this.paymentManager = Mockito.mock(PaymentManager.class);
 		Mockito.when(this.paymentManager.hasPaid(USER_ID_1, PROVIDER_USER_1)).thenReturn(false);
 		

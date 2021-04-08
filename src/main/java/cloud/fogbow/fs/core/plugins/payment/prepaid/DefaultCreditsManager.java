@@ -32,7 +32,7 @@ public class DefaultCreditsManager implements PaymentManager {
 
 	@Override
 	public void startPaymentProcess(String userId, String provider, 
-	        Long paymentStartTime, Long paymentEndTime) throws InternalServerErrorException {
+	        Long paymentStartTime, Long paymentEndTime) throws InternalServerErrorException, InvalidParameterException {
 		FinanceUser user = databaseManager.getUserById(userId, provider);
 		UserCredits credits = databaseManager.getUserCreditsByUserId(userId);
 		FinancePlan plan = databaseManager.getFinancePlan(planName);

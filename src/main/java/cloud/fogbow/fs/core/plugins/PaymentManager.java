@@ -23,8 +23,9 @@ public interface PaymentManager {
 	 * 
 	 * @param userId the id of the user whose state must be evaluated.
 	 * @return a boolean stating whether the user state is adequate or not.
+	 * @throws InvalidParameterException 
 	 */
-	boolean hasPaid(String userId, String provider);
+	boolean hasPaid(String userId, String provider) throws InvalidParameterException;
 	
 	
 	/**
@@ -38,8 +39,9 @@ public interface PaymentManager {
 	 * 
 	 * @param userId the id of the user to start payment.
 	 * @throws InternalServerErrorException 
+	 * @throws InvalidParameterException 
 	 */
-	void startPaymentProcess(String userId, String provider, Long paymentStartTime, Long paymentEndTime) throws InternalServerErrorException;
+	void startPaymentProcess(String userId, String provider, Long paymentStartTime, Long paymentEndTime) throws InternalServerErrorException, InvalidParameterException;
 	
 	/**
 	 * Generates and returns a representation of the given property of

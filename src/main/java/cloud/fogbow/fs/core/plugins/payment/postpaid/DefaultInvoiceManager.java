@@ -55,7 +55,7 @@ public class DefaultInvoiceManager implements PaymentManager {
 
 	@Override
 	public void startPaymentProcess(String userId, String provider, 
-	        Long paymentStartTime, Long paymentEndTime) throws InternalServerErrorException {
+	        Long paymentStartTime, Long paymentEndTime) throws InternalServerErrorException, InvalidParameterException {
 		FinanceUser user = databaseManager.getUserById(userId, provider);
 		FinancePlan plan = databaseManager.getFinancePlan(planName);
 		List<Record> records = user.getPeriodRecords();
