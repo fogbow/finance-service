@@ -43,10 +43,12 @@ public class FinanceManager {
 		String defaultFinancePlanFilePath = PropertiesHolder.getInstance()
 				.getProperty(ConfigurationPropertyKeys.DEFAULT_FINANCE_PLAN_FILE_PATH);
 		
-		if (this.databaseManager.getFinancePlan(defaultFinancePlanName) == null) {
-			FinancePlan financePlan = new FinancePlan(defaultFinancePlanName, defaultFinancePlanFilePath); 
-			this.databaseManager.saveFinancePlan(financePlan);
-		}
+		try {
+		    this.databaseManager.getFinancePlan(defaultFinancePlanName);
+        } catch (InvalidParameterException e) {
+            FinancePlan financePlan = new FinancePlan(defaultFinancePlanName, defaultFinancePlanFilePath); 
+            this.databaseManager.saveFinancePlan(financePlan);
+        }
 	}
 	
 	private void createFinancePlugins(DatabaseManager databaseManager) throws ConfigurationErrorException {
