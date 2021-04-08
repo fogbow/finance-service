@@ -11,6 +11,7 @@ public class FinanceUser {
 	private static final Logger LOGGER = Logger.getLogger(FinanceUser.class);
 	public static final String PAYMENT_TYPE_KEY = "paymentType";
 	public static final String PAYMENT_STATUS_KEY = "paymentStatus";
+	public static final String USER_LAST_BILLING_TIME = "last_billing_time";
 	
 	private String id;
 	private String provider;
@@ -20,12 +21,14 @@ public class FinanceUser {
 	private Map<String, String> properties;
 
 	public FinanceUser() {
-		
+
 	}
 	
 	public FinanceUser(Map<String, String> properties) {
 		this.stoppedResources = false;
 		this.properties = properties;
+        long billingTime = 0L;
+        this.setProperty(USER_LAST_BILLING_TIME, String.valueOf(billingTime));
 	}
 	
 	public List<Record> getPeriodRecords() {

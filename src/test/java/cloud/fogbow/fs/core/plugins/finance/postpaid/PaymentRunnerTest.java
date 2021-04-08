@@ -103,8 +103,8 @@ public class PaymentRunnerTest {
 		assertEquals(RECORD_ID_2, records2.get(1).getId());
 		
 		// PaymentRunner changed users last billing time
-		assertEquals(String.valueOf(timeValues.get(0)), user1.getProperty(PaymentRunner.USER_LAST_BILLING_TIME));
-		assertEquals(String.valueOf(timeValues.get(1)), user2.getProperty(PaymentRunner.USER_LAST_BILLING_TIME));
+		assertEquals(String.valueOf(timeValues.get(0)), user1.getProperty(FinanceUser.USER_LAST_BILLING_TIME));
+		assertEquals(String.valueOf(timeValues.get(1)), user2.getProperty(FinanceUser.USER_LAST_BILLING_TIME));
 	}
 	
 	// test case: When calling the doRun method, it must get the
@@ -150,8 +150,8 @@ public class PaymentRunnerTest {
 		assertNull(user2.getPeriodRecords());
 		
 		// last billing time is not altered
-		assertEquals(String.valueOf(0), user1.getProperty(PaymentRunner.USER_LAST_BILLING_TIME));
-		assertEquals(String.valueOf(1), user2.getProperty(PaymentRunner.USER_LAST_BILLING_TIME));
+		assertEquals(String.valueOf(0), user1.getProperty(FinanceUser.USER_LAST_BILLING_TIME));
+		assertEquals(String.valueOf(1), user2.getProperty(FinanceUser.USER_LAST_BILLING_TIME));
 	}
 
 	// test case: When calling the doRun method and an exception
@@ -206,8 +206,8 @@ public class PaymentRunnerTest {
 		assertEquals(RECORD_ID_2, records2.get(1).getId());
 
 		// PaymentRunner changed users last billing time for user2 only
-		assertEquals(String.valueOf(INITIAL_USER_1_LAST_BILLING_TIME), user1.getProperty(PaymentRunner.USER_LAST_BILLING_TIME));
-		assertEquals(String.valueOf(timeValues.get(1)), user2.getProperty(PaymentRunner.USER_LAST_BILLING_TIME));
+		assertEquals(String.valueOf(INITIAL_USER_1_LAST_BILLING_TIME), user1.getProperty(FinanceUser.USER_LAST_BILLING_TIME));
+		assertEquals(String.valueOf(timeValues.get(1)), user2.getProperty(FinanceUser.USER_LAST_BILLING_TIME));
 	}
 	
 	private void setUpDatabase() {
@@ -219,13 +219,13 @@ public class PaymentRunnerTest {
 		user1.setId(ID_USER_1);
 		user1.setProvider(PROVIDER_USER_1);
 		user1.setProperty(PaymentRunner.USER_BILLING_INTERVAL, String.valueOf(BILLING_INTERVAL));
-		user1.setProperty(PaymentRunner.USER_LAST_BILLING_TIME, String.valueOf(INITIAL_USER_1_LAST_BILLING_TIME));
+		user1.setProperty(FinanceUser.USER_LAST_BILLING_TIME, String.valueOf(INITIAL_USER_1_LAST_BILLING_TIME));
 		
 		this.user2 = new FinanceUser(new HashMap<String, String>());
 		user2.setId(ID_USER_2);
 		user2.setProvider(PROVIDER_USER_2);
 		user2.setProperty(PaymentRunner.USER_BILLING_INTERVAL, String.valueOf(BILLING_INTERVAL));
-		user2.setProperty(PaymentRunner.USER_LAST_BILLING_TIME, String.valueOf(INITIAL_USER_2_LAST_BILLING_TIME));
+		user2.setProperty(FinanceUser.USER_LAST_BILLING_TIME, String.valueOf(INITIAL_USER_2_LAST_BILLING_TIME));
 		
 		userList.add(user1);
 		userList.add(user2);

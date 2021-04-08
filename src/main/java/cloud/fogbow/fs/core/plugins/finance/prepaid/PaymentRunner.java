@@ -23,7 +23,6 @@ public class PaymentRunner extends StoppableRunner {
 	// I think should be made public to possible
 	// clients of ACCS' API.
 	static final String SIMPLE_DATE_FORMAT = "yyyy-MM-dd";
-	public static final String USER_LAST_BILLING_TIME = "last_billing_time";
 	public static final String USER_BILLING_INTERVAL = "billing_interval";
 	private DatabaseManager databaseManager;
 	private PaymentManager paymentManager;
@@ -47,14 +46,7 @@ public class PaymentRunner extends StoppableRunner {
 	}
 	
 	private long getUserLastBillingTime(FinanceUser user) {
-		String lastBillingTimeProperty = user.getProperty(USER_LAST_BILLING_TIME);
-		// TODO test this case
-		if (lastBillingTimeProperty == null) {
-			long billingTime = this.timeUtils.getCurrentTimeMillis();
-			user.setProperty(USER_LAST_BILLING_TIME, String.valueOf(billingTime));
-			return billingTime;
-		}
-		
+		String lastBillingTimeProperty = user.getProperty(FinanceUser.USER_LAST_BILLING_TIME);
 		return Long.valueOf(lastBillingTimeProperty);
 	}
 	
@@ -78,7 +70,7 @@ public class PaymentRunner extends StoppableRunner {
 				this.paymentManager.startPaymentProcess(user.getId(), 
 				        user.getProvider(), lastBillingTime, billingTime);
 				
-				user.setProperty(USER_LAST_BILLING_TIME, String.valueOf(billingTime));
+				user.setProperty(FinanceUser.USER_LAST_BILLING_TIME, String.valueOf(billingTime));
 			} catch (FogbowException e) {
 				LOGGER.error(String.format(Messages.Log.FAILED_TO_DEDUCT_CREDITS, user.getId(), e.getMessage()));
 			}
