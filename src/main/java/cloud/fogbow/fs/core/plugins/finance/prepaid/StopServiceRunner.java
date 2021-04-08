@@ -45,13 +45,12 @@ public class StopServiceRunner extends StoppableRunner {
 				// stop resources
 				try {
 					this.rasClient.pauseResourcesByUser(user.getId());
+					// write status in the db
+					user.setStoppedResources(true);
 				} catch (FogbowException e) {
-					// TODO test this case
 					LOGGER.error(String.format(Messages.Log.FAILED_TO_PAUSE_USER_RESOURCES, user.getId(), 
 							e.getMessage()));
 				}
-				// write status in the db
-				user.setStoppedResources(true);
 			}
 
 			// if user has stopped resources but paid
@@ -59,13 +58,12 @@ public class StopServiceRunner extends StoppableRunner {
 				// start resources
 				try {
 					this.rasClient.resumeResourcesByUser(user.getId());
+					// write status in db
+					user.setStoppedResources(false);
 				} catch (FogbowException e) {
-					// TODO test this case
 					LOGGER.error(String.format(Messages.Log.FAILED_TO_RESUME_USER_RESOURCES, user.getId(), 
 							e.getMessage()));
 				}
-				// write status in db
-				user.setStoppedResources(false);
 			}
 		}
 		

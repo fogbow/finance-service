@@ -18,7 +18,6 @@ public class ComputeItem extends ResourceItem {
 		return vCPU;
 	}
 	
-	// TODO test
 	public void setvCPU(int vCPU) throws InvalidParameterException {
 		if (vCPU < 0) {
 			throw new InvalidParameterException(Messages.Exception.NEGATIVE_COMPUTE_VCPU);
@@ -31,7 +30,6 @@ public class ComputeItem extends ResourceItem {
 		return ram;
 	}
 	
-	// TODO test
 	public void setRam(int ram) throws InvalidParameterException {
 		if (ram < 0) {
 			throw new InvalidParameterException(Messages.Exception.NEGATIVE_COMPUTE_RAM);

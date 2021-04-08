@@ -67,6 +67,44 @@ public class StopServiceRunnerTest {
 	}
 	
 	// test case: When calling the method doRun, it must get the
+    // list of users from the DatabaseManager. For each user, 
+    // if the user has not paid and its resources have not been stopped yet,
+    // then the method must call the RasClient to stop the resources
+    // and update the user state. If an exception is thrown by the RasClient,
+	// then the method must skip the current user and continue checking the other
+	// users' states.
+    @Test
+    public void testStoppingUserServicesRasClientThrowsException() throws FogbowException {
+        // 
+        // Set up
+        //
+        setUpDatabase();
+        
+        paymentManager = Mockito.mock(PaymentManager.class);
+        
+        Mockito.doReturn(false).when(paymentManager).hasPaid(ID_USER_1, PROVIDER_USER_1);
+        Mockito.doReturn(false).when(paymentManager).hasPaid(ID_USER_2, PROVIDER_USER_2);
+        
+        rasClient = Mockito.mock(RasClient.class);
+        Mockito.doThrow(new FogbowException("message")).when(rasClient).pauseResourcesByUser(ID_USER_1);
+        
+        stopServiceRunner = new StopServiceRunner(stopServiceWaitTime ,databaseManager, paymentManager, rasClient);
+        
+        
+        
+        stopServiceRunner.doRun();
+        
+        
+        // Since an exception was thrown when pausing user resources, 
+        // the user state must not change.
+        assertFalse(this.user1.stoppedResources());
+        assertTrue(this.user2.stoppedResources());
+        
+        Mockito.verify(rasClient, Mockito.times(1)).pauseResourcesByUser(ID_USER_1);
+        Mockito.verify(rasClient, Mockito.times(1)).pauseResourcesByUser(ID_USER_2);
+    }
+	
+	// test case: When calling the method doRun, it must get the
 	// list of users from the DatabaseManager. For each user,
 	// if the user has paid and its resources have not been resumed yet,
 	// then the method must call the RasClient to resume the resources
@@ -99,6 +137,44 @@ public class StopServiceRunnerTest {
 		Mockito.verify(rasClient, Mockito.never()).resumeResourcesByUser(ID_USER_1);
 		Mockito.verify(rasClient, Mockito.times(1)).resumeResourcesByUser(ID_USER_2);
 	}
+	
+	// test case: When calling the method doRun, it must get the
+    // list of users from the DatabaseManager. For each user,
+    // if the user has paid and its resources have not been resumed yet,
+    // then the method must call the RasClient to resume the resources
+    // and update the user state. If an exception is thrown by the RasClient,
+    // then the method must skip the current user and continue checking the other
+    // users' states.
+    @Test
+    public void testResumingUserServicesRasClientThrowsException() throws FogbowException {
+        //
+        // Set up
+        //
+        setUpDatabaseResumeResources();
+        
+        paymentManager = Mockito.mock(PaymentManager.class);
+        
+        Mockito.doReturn(true).when(paymentManager).hasPaid(ID_USER_1, PROVIDER_USER_1);
+        Mockito.doReturn(true).when(paymentManager).hasPaid(ID_USER_2, PROVIDER_USER_2);
+        
+        rasClient = Mockito.mock(RasClient.class);
+        Mockito.doThrow(new FogbowException("message")).when(rasClient).resumeResourcesByUser(ID_USER_1);
+        
+        stopServiceRunner = new StopServiceRunner(stopServiceWaitTime ,databaseManager, paymentManager, rasClient);
+
+        
+        
+        stopServiceRunner.doRun();
+        
+        
+        // Since an exception was thrown when resuming user resources, 
+        // the user state must not change.
+        assertTrue(this.user1.stoppedResources());
+        assertFalse(this.user2.stoppedResources());
+        
+        Mockito.verify(rasClient, Mockito.times(1)).resumeResourcesByUser(ID_USER_1);
+        Mockito.verify(rasClient, Mockito.times(1)).resumeResourcesByUser(ID_USER_2);
+    }
 	
 	private void setUpDatabase() {
 		this.databaseManager = Mockito.mock(DatabaseManager.class);

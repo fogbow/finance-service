@@ -32,7 +32,8 @@ public class FinancePlanTest {
 	private static final int UNKNOWN_ITEM_RAM = 1;
 	private HashMap<String, String> planInfo;
 	
-	// TODO documentation
+	// test case: When creating a FinancePlan object, the constructor must validate the 
+	// plan data passed as argument and set up the FinancePlan object correctly.
 	@Test
 	public void testConstructorValidPlanInfo() throws InvalidParameterException {
 		setUpPlanInfo();
@@ -50,7 +51,8 @@ public class FinancePlanTest {
 		assertEquals(VOLUME_2_VALUE, plan.getItemFinancialValue(volumeItem2));
 	}
 	
-	// TODO documentation
+	// test case: When creating a FinancePlan object and one of the plan items
+	// is of an unknown type, the constructor must throw an InvalidParameterException.
 	@Test(expected = InvalidParameterException.class)
 	public void testConstructorInvalidPlanInvalidResourceType() throws InvalidParameterException {
 		String[] computeItemValues1 = new String[4];
@@ -66,7 +68,9 @@ public class FinancePlanTest {
 		new FinancePlan(PLAN_NAME, planInfo);
 	}
 	
-	// TODO documentation
+	// test case: When creating a FinancePlan object and one of the compute items 
+	// definitions passed as argument contains an empty compute value, the constructor
+	// must throw an InvalidParameterException.
 	@Test(expected = InvalidParameterException.class)
 	public void testConstructorInvalidPlanInfoEmptyComputeValue() throws InvalidParameterException {
 		String[] computeItemValues1 = new String[4];
@@ -81,7 +85,9 @@ public class FinancePlanTest {
 		new FinancePlan(PLAN_NAME, planInfo);
 	}
 	
-	// TODO documentation
+	// test case: When creating a FinancePlan object and one of the compute items 
+    // definitions passed as argument contains no compute value, the constructor
+    // must throw an InvalidParameterException.
 	@Test(expected = InvalidParameterException.class)
 	public void testConstructorInvalidPlanInfoMissingComputeValue() throws InvalidParameterException {
 		String[] computeItemValues1 = new String[3];
@@ -96,7 +102,9 @@ public class FinancePlanTest {
 		new FinancePlan(PLAN_NAME, planInfo);
 	}
 	
-	// TODO documentation
+    // test case: When creating a FinancePlan object and one of the compute items 
+    // definitions passed as argument contains an unparsable compute value, the constructor
+    // must throw an InvalidParameterException.
 	@Test(expected = InvalidParameterException.class)
 	public void testConstructorInvalidPlanInfoUnparsableComputeValue() throws InvalidParameterException {
 		String[] computeItemValues1 = new String[4];
@@ -112,7 +120,9 @@ public class FinancePlanTest {
 		new FinancePlan(PLAN_NAME, planInfo);
 	}
 	
-	// TODO documentation
+    // test case: When creating a FinancePlan object and one of the compute items 
+    // definitions passed as argument contains a negative compute value, the constructor
+    // must throw an InvalidParameterException.
 	@Test(expected = InvalidParameterException.class)
 	public void testConstructorInvalidPlanInfoNegativeComputeValue() throws InvalidParameterException {
 		String[] computeItemValues1 = new String[4];
@@ -128,7 +138,9 @@ public class FinancePlanTest {
 		new FinancePlan(PLAN_NAME, planInfo);
 	}
 	
-	// TODO documentation
+	// test case: When creating a FinancePlan object and one of the compute items 
+    // definitions passed as argument contains an empty compute vCPU, the constructor
+    // must throw an InvalidParameterException.
 	@Test(expected = InvalidParameterException.class)
 	public void testConstructorInvalidPlanInfoEmptyComputeVcpu() throws InvalidParameterException {
 		String[] computeItemValues1 = new String[4];
@@ -143,7 +155,9 @@ public class FinancePlanTest {
 		new FinancePlan(PLAN_NAME, planInfo);
 	}
 	
-	// TODO documentation
+    // test case: When creating a FinancePlan object and one of the compute items 
+    // definitions passed as argument contains an unparsable compute vCPU, the constructor
+    // must throw an InvalidParameterException.
 	@Test(expected = InvalidParameterException.class)
 	public void testConstructorInvalidPlanInfoUnparsableComputeVcpu() throws InvalidParameterException {
 		String[] computeItemValues1 = new String[4];
@@ -159,7 +173,9 @@ public class FinancePlanTest {
 		new FinancePlan(PLAN_NAME, planInfo);
 	}
 	
-	// TODO documentation
+	// test case: When creating a FinancePlan object and one of the compute items 
+    // definitions passed as argument contains an empty compute ram, the constructor
+    // must throw an InvalidParameterException.
 	@Test(expected = InvalidParameterException.class)
 	public void testConstructorInvalidPlanInfoEmptyComputeRam() throws InvalidParameterException {
 		String[] computeItemValues1 = new String[4];
@@ -174,7 +190,9 @@ public class FinancePlanTest {
 		new FinancePlan(PLAN_NAME, planInfo);
 	}
 	
-	// TODO documentation
+    // test case: When creating a FinancePlan object and one of the compute items 
+    // definitions passed as argument contains an unparsable compute ram, the constructor
+    // must throw an InvalidParameterException.
 	@Test(expected = InvalidParameterException.class)
 	public void testConstructorInvalidPlanInfoUnparsableComputeRam() throws InvalidParameterException {
 		String[] computeItemValues1 = new String[4];
@@ -190,7 +208,9 @@ public class FinancePlanTest {
 		new FinancePlan(PLAN_NAME, planInfo);
 	}
 	
-	// TODO documentation
+	// test case: When creating a FinancePlan object and one of the volume items 
+    // definitions passed as argument contains an empty volume size, the constructor
+    // must throw an InvalidParameterException.
 	@Test(expected = InvalidParameterException.class)
 	public void testConstructorInvalidPlanInfoEmptyVolumeSize() throws InvalidParameterException {
 		String[] volumeItemValues = new String[3];
@@ -205,7 +225,9 @@ public class FinancePlanTest {
 		new FinancePlan(PLAN_NAME, planInfo);
 	}
 	
-	// TODO documentation
+    // test case: When creating a FinancePlan object and one of the volume items 
+    // definitions passed as argument contains an unparsable volume size, the constructor
+    // must throw an InvalidParameterException.
 	@Test(expected = InvalidParameterException.class)
 	public void testConstructorInvalidPlanInfoUnparsableVolumeSize() throws InvalidParameterException {
 		String[] volumeItemValues = new String[3];
@@ -221,7 +243,9 @@ public class FinancePlanTest {
 		new FinancePlan(PLAN_NAME, planInfo);
 	}
 	
-	// TODO documentation
+	// test case: When creating a FinancePlan object and one of the volume items 
+    // definitions passed as argument contains no volume size, the constructor
+    // must throw an InvalidParameterException.
 	@Test(expected = InvalidParameterException.class)
 	public void testConstructorInvalidPlanInfoMissingVolumeSize() throws InvalidParameterException {
 		String[] volumeItemValues = new String[2];
@@ -236,7 +260,9 @@ public class FinancePlanTest {
 		new FinancePlan(PLAN_NAME, planInfo);
 	}
 	
-	// TODO documentation
+	// test case: When creating a FinancePlan object and one of the volume items 
+    // definitions passed as argument contains an empty volume value, the constructor
+    // must throw an InvalidParameterException.
 	@Test(expected = InvalidParameterException.class)
 	public void testConstructorInvalidPlanInfoEmptyVolumeValue() throws InvalidParameterException {
 		String[] volumeItemValues = new String[3];
@@ -251,7 +277,9 @@ public class FinancePlanTest {
 		new FinancePlan(PLAN_NAME, planInfo);
 	}
 	
-	// TODO documentation
+	// test case: When creating a FinancePlan object and one of the volume items 
+    // definitions passed as argument contains an unparsable volume value, the constructor
+    // must throw an InvalidParameterException.
 	@Test(expected = InvalidParameterException.class)
 	public void testConstructorInvalidPlanInfoUnparsableVolumeValue() throws InvalidParameterException {
 		String[] volumeItemValues = new String[3];
@@ -267,7 +295,9 @@ public class FinancePlanTest {
 		new FinancePlan(PLAN_NAME, planInfo);
 	}
 	
-	// TODO documentation
+	// test case: When creating a FinancePlan object and one of the volume items 
+    // definitions passed as argument contains a negative volume value, the constructor
+    // must throw an InvalidParameterException.
 	@Test(expected = InvalidParameterException.class)
 	public void testConstructorInvalidPlanInfoNegativeVolumeValue() throws InvalidParameterException {
 		String[] volumeItemValues = new String[3];
@@ -283,7 +313,8 @@ public class FinancePlanTest {
 		new FinancePlan(PLAN_NAME, planInfo);
 	}
 	
-	// TODO documentation
+	// test case: When calling the getItemFinanceValue method and the item is not 
+	// known by the financial plan, it must throw an InvalidParameterException.
 	@Test(expected = InvalidParameterException.class)
 	public void testGetItemFinancialValueItemDoesNotExist() throws InvalidParameterException {
 		setUpPlanInfo();
