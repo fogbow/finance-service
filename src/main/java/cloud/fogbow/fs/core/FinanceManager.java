@@ -19,16 +19,19 @@ import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.models.FinancePlan;
 import cloud.fogbow.fs.core.plugins.FinancePlugin;
+import cloud.fogbow.fs.core.util.FinancePlanFactory;
 
 public class FinanceManager {
 	@VisibleForTesting
 	static final String FINANCE_PLUGINS_CLASS_NAMES_SEPARATOR = ",";
 	private List<FinancePlugin> financePlugins;
 	private DatabaseManager databaseManager;
+	private FinancePlanFactory financePlanFactory;
 	
 	public FinanceManager(DatabaseManager databaseManager) 
 			throws ConfigurationErrorException, InvalidParameterException {
 		this.databaseManager = databaseManager;
+		this.financePlanFactory = new FinancePlanFactory();
 
 		createDefaultPlanIfItDoesNotExist();
 		createFinancePlugins(databaseManager);
@@ -63,12 +66,14 @@ public class FinanceManager {
 		this.financePlugins = financePlugins;
 	}
 
-	public FinanceManager(List<FinancePlugin> financePlugins, DatabaseManager databaseManager) throws ConfigurationErrorException {
+	public FinanceManager(List<FinancePlugin> financePlugins, DatabaseManager databaseManager, 
+	        FinancePlanFactory financePlanFactory) throws ConfigurationErrorException {
 		if (financePlugins.isEmpty()) {
 			throw new ConfigurationErrorException(Messages.Exception.NO_FINANCE_PLUGIN_SPECIFIED);
 		}
 		this.financePlugins = financePlugins;
 		this.databaseManager = databaseManager;
+		this.financePlanFactory = financePlanFactory;
 	}
 
 	public boolean isAuthorized(AuthorizableUser user) throws FogbowException {
@@ -149,9 +154,8 @@ public class FinanceManager {
 	 * Plan management
 	 */
 	
-	// TODO test
 	public void createFinancePlan(String planName, Map<String, String> planInfo) throws InvalidParameterException {
-		FinancePlan financePlan = new FinancePlan(planName, planInfo); 
+		FinancePlan financePlan = this.financePlanFactory.createFinancePlan(planName, planInfo);
 		this.databaseManager.saveFinancePlan(financePlan);
 	}
 
@@ -161,7 +165,6 @@ public class FinanceManager {
 		return financePlan.getRulesAsMap();
 	}
 
-	// TODO test
 	public void updateFinancePlan(String planName, Map<String, String> planInfo) throws InvalidParameterException {
 		FinancePlan financePlan = this.databaseManager.getFinancePlan(planName);
 		financePlan.update(planInfo);
