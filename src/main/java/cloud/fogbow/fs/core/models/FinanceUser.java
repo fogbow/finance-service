@@ -27,7 +27,7 @@ public class FinanceUser {
 	public FinanceUser(Map<String, String> properties) {
 		this.stoppedResources = false;
 		this.properties = properties;
-        long billingTime = 0L;
+        long billingTime = System.currentTimeMillis();
         this.setProperty(USER_LAST_BILLING_TIME, String.valueOf(billingTime));
 	}
 	

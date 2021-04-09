@@ -4,6 +4,7 @@ import java.util.List;
 
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
+import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.models.FinancePlan;
 import cloud.fogbow.fs.core.models.FinanceUser;
@@ -14,27 +15,29 @@ import cloud.fogbow.fs.core.util.accounting.Record;
 import cloud.fogbow.fs.core.util.accounting.RecordUtils;
 
 public class DefaultCreditsManager implements PaymentManager {
-
-	private DatabaseManager databaseManager;
+	private static final String USER_CREDITS = "USER_CREDITS";
+	
+    private DatabaseManager databaseManager;
 	private RecordUtils resourceItemFactory;
 	private String planName;
 
 	public DefaultCreditsManager(DatabaseManager databaseManager, String planName) {
 		this.databaseManager = databaseManager;
 		this.planName = planName;
+		this.resourceItemFactory = new RecordUtils();
 	}
 	
 	@Override
-	public boolean hasPaid(String userId, String provider) {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean hasPaid(String userId, String provider) throws InvalidParameterException {
+	    UserCredits credits = databaseManager.getUserCreditsByUserId(userId, provider);
+	    return credits.getCreditsValue() >= 0.0;
 	}
 
 	@Override
 	public void startPaymentProcess(String userId, String provider, 
 	        Long paymentStartTime, Long paymentEndTime) throws InternalServerErrorException, InvalidParameterException {
 		FinanceUser user = databaseManager.getUserById(userId, provider);
-		UserCredits credits = databaseManager.getUserCreditsByUserId(userId);
+		UserCredits credits = databaseManager.getUserCreditsByUserId(userId, provider);
 		FinancePlan plan = databaseManager.getFinancePlan(planName);
 		List<Record> records = user.getPeriodRecords();
 		
@@ -59,15 +62,22 @@ public class DefaultCreditsManager implements PaymentManager {
 	}
 
 	@Override
-	public String getUserFinanceState(String userId, String provider, String property) {
-		// TODO Auto-generated method stub
-		return null;
+	public String getUserFinanceState(String userId, String provider, String property) throws InvalidParameterException {
+       String propertyValue = "";
+        
+        if (property.equals(USER_CREDITS)) {
+            UserCredits userCredits = databaseManager.getUserCreditsByUserId(userId, provider);
+            propertyValue = String.valueOf(userCredits.getCreditsValue());
+        } else {
+            throw new InvalidParameterException(
+                    String.format(Messages.Exception.UNKNOWN_FINANCE_PROPERTY, property));
+        }
+        
+        return propertyValue;
 	}
 
-	@Override
-	public void setFinancePlan(String planName) {
-		// TODO Auto-generated method stub
-		
-	}
-
+    @Override
+    public void setFinancePlan(String planName) {
+        this.planName = planName;
+    }
 }

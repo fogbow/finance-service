@@ -10,6 +10,7 @@ import cloud.fogbow.fs.core.PaymentManagerInstantiator;
 import cloud.fogbow.fs.core.PropertiesHolder;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.models.FinanceUser;
+import cloud.fogbow.fs.core.models.UserCredits;
 import cloud.fogbow.fs.core.plugins.FinancePlugin;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
 import cloud.fogbow.fs.core.util.AccountingServiceClient;
@@ -38,6 +39,7 @@ public class PrePaidFinancePlugin implements FinancePlugin {
 	 * indicates the delay between credits deduction attempts.
 	 */
 	public static final String CREDITS_DEDUCTION_WAIT_TIME = "credits_deduction_wait_time";
+    private static final Object CREDITS_TO_ADD = "CREDITS_TO_ADD";
 	
 	private Thread paymentThread;
 	private Thread stopServiceThread;
@@ -134,25 +136,36 @@ public class PrePaidFinancePlugin implements FinancePlugin {
 
 	@Override
 	public void addUser(String userId, String provider, Map<String, String> financeOptions) {
-		// TODO validation
+	    // TODO validation
+        // TODO This operation should have some level of thread protection
+        // TODO test
 		this.databaseManager.registerUser(userId, provider, PLUGIN_NAME, financeOptions);
+		UserCredits userCredits = new UserCredits(userId, provider);
+		this.databaseManager.saveUserCredits(userCredits);
 	}
 
 	@Override
 	public void removeUser(String userId, String provider) throws InvalidParameterException {
-		// TODO validation
+	    // TODO validation
+        // TODO This operation should have some level of thread protection
+        // TODO This operation should also remove the user credits
+        // TODO test
 		this.databaseManager.removeUser(userId, provider);
 	}
 
 	@Override
 	public void changeOptions(String userId, String provider, Map<String, String> financeOptions) throws InvalidParameterException {
-		// TODO validation
+	    // TODO validation
+        // TODO This operation should have some level of thread protection
+        // TODO test
 		this.databaseManager.changeOptions(userId, provider, financeOptions);
 	}
 
 	@Override
 	public void updateFinanceState(String userId, String provider, Map<String, String> financeState) throws InvalidParameterException {
-		// TODO validation
-		this.databaseManager.updateFinanceState(userId, provider, financeState);
+	    // TODO test
+        // TODO This operation should have some level of thread protection
+		UserCredits userCredits = this.databaseManager.getUserCreditsByUserId(userId, provider);
+		userCredits.addCredits(Double.valueOf(financeState.get(CREDITS_TO_ADD)));
 	}
 }

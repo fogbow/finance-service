@@ -17,6 +17,7 @@ public class Messages {
 		public static final String UNABLE_TO_FIND_INVOICE = "Unable to find invoice %s.";
 		public static final String UNABLE_TO_FIND_PLAN = "Unable to find plan %s.";
 		public static final String UNABLE_TO_FIND_USER = "Unable to find user %s, provider %s.";
+		public static final String UNABLE_TO_FIND_USER_CREDITS = "Unable to find credits for user %s, provider %s.";
 		public static final String UNABLE_TO_READ_CONFIGURATION_FILE_S = "Unable to read configuration file: %s.";
 		public static final String UNKNOWN_FINANCE_PROPERTY = "Unknown finance property: %s.";
 		public static final String UNKNOWN_INVOICE_STATE = "Unknown invoice state: %s.";

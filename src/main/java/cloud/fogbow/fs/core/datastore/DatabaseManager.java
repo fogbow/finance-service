@@ -19,11 +19,13 @@ public class DatabaseManager {
 	private List<FinanceUser> financeUsers;
 	private List<Invoice> invoices;
 	private List<FinancePlan> financePlans;
-
+	private List<UserCredits> creditsList;
+	
 	public DatabaseManager() {
 		financeUsers = new ArrayList<FinanceUser>();
 		invoices = new ArrayList<Invoice>();
 		financePlans = new ArrayList<FinancePlan>();
+		creditsList = new ArrayList<UserCredits>();
 	}
 
 	public void registerUser(String userId, String provider, String pluginName, Map<String, String> financeOptions) {
@@ -114,14 +116,21 @@ public class DatabaseManager {
 		return userInvoices;
 	}
 	
-	public UserCredits getUserCreditsByUserId(String userId) {
-		// TODO Auto-generated method stub
-		return null;
+	public UserCredits getUserCreditsByUserId(String userId, String provider) throws InvalidParameterException {
+	    for (UserCredits userCredits : creditsList) {
+	        if (userCredits.getUserId().equals(userId) &&
+	                userCredits.getProvider().equals(provider)) {
+	            return userCredits;
+	        }
+	    }
+	    
+	    throw new InvalidParameterException(String.format(Messages.Exception.UNABLE_TO_FIND_USER_CREDITS, userId, provider));
 	}
 
 	public void saveUserCredits(UserCredits credits) {
-		// TODO Auto-generated method stub
-		
+        if (!creditsList.contains(credits)) {
+            creditsList.add(credits);
+        }
 	}
 
 	public void saveFinancePlan(FinancePlan financePlan) {
