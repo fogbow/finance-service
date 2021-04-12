@@ -27,6 +27,7 @@ public class FsPublicKeysHolder {
 		instance = null;
 	}
 
+	// TODO test
 	public RSAPublicKey getAsPublicKey() throws FogbowException {
 		if (this.asPublicKey == null) {
 			String asAddress = PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.AS_URL_KEY);
@@ -37,6 +38,7 @@ public class FsPublicKeysHolder {
 		return this.asPublicKey;
 	}
 	
+	// TODO test
 	public RSAPublicKey getAccsPublicKey() throws FogbowException {
 		if (this.accsPublicKey == null) {
 			String accsAddress = PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.ACCS_URL_KEY);
@@ -47,6 +49,7 @@ public class FsPublicKeysHolder {
 		return this.accsPublicKey;
 	}
 	
+	// TODO test
 	public RSAPublicKey getRasPublicKey() throws FogbowException {
 		if (this.rasPublicKey == null) {
 			String rasAddress = PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.RAS_URL_KEY);

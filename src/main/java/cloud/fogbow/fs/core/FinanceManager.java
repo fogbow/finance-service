@@ -46,6 +46,7 @@ public class FinanceManager {
 		try {
 		    this.databaseManager.getFinancePlan(defaultFinancePlanName);
         } catch (InvalidParameterException e) {
+            // TODO test
             FinancePlan financePlan = new FinancePlan(defaultFinancePlanName, defaultFinancePlanFilePath); 
             this.databaseManager.saveFinancePlan(financePlan);
         }

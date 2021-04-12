@@ -14,6 +14,7 @@ import cloud.fogbow.fs.core.plugins.payment.ResourceItem;
 import cloud.fogbow.fs.core.util.accounting.Record;
 import cloud.fogbow.fs.core.util.accounting.RecordUtils;
 
+// TODO test
 public class DefaultCreditsManager implements PaymentManager {
 	private static final String USER_CREDITS = "USER_CREDITS";
 	

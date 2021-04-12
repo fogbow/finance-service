@@ -61,6 +61,7 @@ public class ApplicationFacade {
 		this.synchronizationManager = synchronizationManager;
 	}
 	
+	// TODO test
 	public String getPublicKey() throws InternalServerErrorException {
 		synchronizationManager.startOperation();
         // There is no need to authenticate the user or authorize this operation
@@ -73,6 +74,7 @@ public class ApplicationFacade {
 		}
 	}
 	
+	// TODO test
 	public boolean isAuthorized(AuthorizableUser user) throws FogbowException {
 		synchronizationManager.startOperation();
 		
@@ -135,6 +137,7 @@ public class ApplicationFacade {
 		}
 	}
 	
+	// TODO test
 	public String getFinanceStateProperty(String userToken, String userId, String provider, String property) throws FogbowException {
 		LOGGER.info(String.format(Messages.Log.GETTING_FINANCE_STATE, userId, property));
 		
@@ -148,6 +151,7 @@ public class ApplicationFacade {
 		}
 	}
 	
+	// TODO test
 	public void createFinancePlan(String userToken, String planName, Map<String, String> planInfo) throws FogbowException {
 		LOGGER.info(String.format(Messages.Log.CREATING_FINANCE_PLAN, planName));
 		
@@ -161,6 +165,7 @@ public class ApplicationFacade {
 		}
 	}
 
+	// TODO test
 	public Map<String, String> getFinancePlan(String userToken, String planName) throws FogbowException {
 		LOGGER.info(String.format(Messages.Log.GETTING_FINANCE_PLAN, planName));
 		
@@ -174,6 +179,7 @@ public class ApplicationFacade {
 		}
 	}
 
+	// TODO test
 	public void updateFinancePlan(String userToken, String planName,
 			Map<String, String> planInfo) throws FogbowException {
 		LOGGER.info(String.format(Messages.Log.UPDATING_FINANCE_PLAN, planName));
@@ -188,6 +194,7 @@ public class ApplicationFacade {
 		}
 	}
 
+	// TODO test
 	public void removeFinancePlan(String userToken, String planName) throws FogbowException {
 		LOGGER.info(String.format(Messages.Log.REMOVING_FINANCE_PLAN, planName));
 		
