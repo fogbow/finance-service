@@ -1,5 +1,8 @@
 package cloud.fogbow.fs.core;
 
+import static org.junit.Assert.assertEquals;
+
+import java.security.GeneralSecurityException;
 import java.security.interfaces.RSAPublicKey;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,16 +18,22 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import cloud.fogbow.as.core.util.AuthenticationUtil;
 import cloud.fogbow.common.exceptions.FogbowException;
+import cloud.fogbow.common.exceptions.InternalServerErrorException;
+import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.common.exceptions.UnauthenticatedUserException;
 import cloud.fogbow.common.exceptions.UnauthorizedRequestException;
 import cloud.fogbow.common.models.SystemUser;
 import cloud.fogbow.common.plugins.authorization.AuthorizationPlugin;
+import cloud.fogbow.common.util.CryptoUtil;
+import cloud.fogbow.common.util.ServiceAsymmetricKeysHolder;
+import cloud.fogbow.fs.api.parameters.AuthorizableUser;
 import cloud.fogbow.fs.api.parameters.User;
 import cloud.fogbow.fs.core.plugins.authorization.FsOperation;
 import cloud.fogbow.fs.core.util.SynchronizationManager;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({FsPublicKeysHolder.class, AuthenticationUtil.class})
+@PrepareForTest({FsPublicKeysHolder.class, AuthenticationUtil.class, 
+    ServiceAsymmetricKeysHolder.class, CryptoUtil.class})
 public class ApplicationFacadeTest {
 
 	private String adminId = "adminId";
@@ -44,6 +53,16 @@ public class ApplicationFacadeTest {
 	private String userProviderToChange = "userProviderToChange";
 	private HashMap<String, String> newOptions = new HashMap<String, String>();
 	private HashMap<String, String> newState = new HashMap<String, String>();
+	private String property = "property";
+	private String propertyValue = "propertyValue";
+	
+	private String newPlanName = "newPlanName";
+	private Map<String, String> newPlanInfo = new HashMap<String, String>();
+	
+	private String planToUpdate = "planToUpdate";
+	private Map<String, String> updatedPlanInfo = new HashMap<String, String>();
+	
+	private String planToRemove = "planToRemove";
 	
 	private FsPublicKeysHolder keysHolder;
 	private RSAPublicKey asPublicKey;
@@ -254,6 +273,364 @@ public class ApplicationFacadeTest {
 		Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
 	}
 	
+    // test case: When calling the getFinanceStateProperty method, it must authorize the
+    // operation and call the FinanceManager. Also, it must start and finish
+    // operations correctly using the SynchronizationManager.
+	@Test
+    public void testGetFinanceStateProperty() throws FogbowException {
+        setUpPublicKeysHolder();
+        setUpAuthentication();
+        setUpAuthorization();
+        setUpApplicationFacade();
+        
+        Mockito.when(financeManager.getFinanceStateProperty(userIdToChange, 
+                userProviderToChange, property)).thenReturn(propertyValue);
+        
+        String returnedProperty = ApplicationFacade.getInstance().getFinanceStateProperty(adminToken, 
+                userIdToChange, userProviderToChange, property);
+        
+        assertEquals(propertyValue, returnedProperty);
+        Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
+        Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
+        Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
+    }
+	
+    // test case: When calling the getFinanceStateProperty method, if the call to
+    // FinanceManager.getFinanceStateProperty throws an exception, the method
+    // must rethrow the exception and finish the operation correctly.
+    @Test
+    public void testGetFinanceStatePropertyFinishesOperationIfOperationFails() throws FogbowException {
+        setUpPublicKeysHolder();
+        setUpAuthentication();
+        setUpAuthorization();
+        setUpApplicationFacade();
+        
+        Mockito.when(financeManager.getFinanceStateProperty(userIdToChange, 
+                userProviderToChange, property)).thenThrow(new FogbowException("message"));
+        
+        try {
+            ApplicationFacade.getInstance().getFinanceStateProperty(adminToken, 
+                    userIdToChange, userProviderToChange, property);
+            Assert.fail("getFinanceStateProperty is expected to throw exception.");
+        } catch (FogbowException e) {
+        }
+        
+        Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
+        Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
+        Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
+    }
+	
+	// test case: When calling the isAuthorized method, it must call the isAuthorized
+	// method of the FinanceManager and start and finish operations correctly using
+	// the SynchronizationManager.
+	@Test
+	public void testIsAuthorized() throws FogbowException {
+	    setUpPublicKeysHolder();
+        setUpAuthentication();
+        setUpAuthorization();
+        setUpApplicationFacade();
+        
+        Boolean authorized = true;
+        AuthorizableUser authorizableUser = Mockito.mock(AuthorizableUser.class);
+        Mockito.when(financeManager.isAuthorized(authorizableUser)).thenReturn(authorized);
+
+        Boolean returnedAuthorized = ApplicationFacade.getInstance().isAuthorized(authorizableUser);
+        assertEquals(authorized, returnedAuthorized);
+        
+        Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
+        Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
+        Mockito.verify(this.financeManager).isAuthorized(authorizableUser);
+	}
+	
+	// test case: When calling the isAuthorized method, if the call to
+    // FinanceManager.isAuthorized throws an exception, the method
+    // must rethrow the exception and finish the operation correctly.
+    @Test
+    public void testIsAuthorizedFinishesOperationIfOperationFails() throws FogbowException {
+        setUpPublicKeysHolder();
+        setUpAuthentication();
+        setUpAuthorization();
+        setUpApplicationFacade();
+
+        AuthorizableUser authorizableUser = Mockito.mock(AuthorizableUser.class);
+
+        Mockito.doThrow(FogbowException.class).when(this.financeManager).isAuthorized(authorizableUser);            
+
+        try {
+            ApplicationFacade.getInstance().isAuthorized(authorizableUser);
+            Assert.fail("isAuthorized is expected to throw exception.");
+        } catch (FogbowException e) {
+        }
+        
+        Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
+        Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
+        Mockito.verify(this.financeManager).isAuthorized(authorizableUser);
+    }
+    
+    // test case: When calling the getPublicKey method, it must call the 
+    // ServiceAsymmetricKeysHolder to get the public key and start and finish 
+    // operations correctly using the SynchronizationManager.
+    @Test
+    public void testGetPublicKey() throws FogbowException, GeneralSecurityException {
+        setUpPublicKeysHolder();
+        setUpAuthentication();
+        setUpAuthorization();
+        setUpApplicationFacade();
+        
+        RSAPublicKey rsaPublicKey = Mockito.mock(RSAPublicKey.class);
+        String publicKeyString = "publicKey";
+        
+        ServiceAsymmetricKeysHolder asymmetricKeysHolder = Mockito.mock(ServiceAsymmetricKeysHolder.class);
+        Mockito.when(asymmetricKeysHolder.getPublicKey()).thenReturn(rsaPublicKey);
+        
+
+        PowerMockito.mockStatic(ServiceAsymmetricKeysHolder.class);
+        BDDMockito.given(ServiceAsymmetricKeysHolder.getInstance()).willReturn(asymmetricKeysHolder);
+        
+        PowerMockito.mockStatic(CryptoUtil.class);
+        BDDMockito.given(CryptoUtil.toBase64(rsaPublicKey)).willReturn(publicKeyString);
+        
+        
+        String returnedPublicKey = ApplicationFacade.getInstance().getPublicKey();            
+        
+        
+        assertEquals(publicKeyString, returnedPublicKey);
+        Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
+        Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
+    }
+    
+    // test case: When calling the isAuthorized method, if the call to
+    // ServiceAsymmetricKeysHolder.getPublicKey throws an exception, the method
+    // must rethrow the exception and finish the operation correctly.
+    @Test
+    public void testGetPublicKeyFinishesOperationIfOperationFailsOnKeysHolder() throws FogbowException, GeneralSecurityException {
+        setUpPublicKeysHolder();
+        setUpAuthentication();
+        setUpAuthorization();
+        setUpApplicationFacade();
+
+        ServiceAsymmetricKeysHolder asymmetricKeysHolder = Mockito.mock(ServiceAsymmetricKeysHolder.class);
+        Mockito.doThrow(InternalServerErrorException.class).when(asymmetricKeysHolder).getPublicKey(); 
+
+        PowerMockito.mockStatic(ServiceAsymmetricKeysHolder.class);
+        BDDMockito.given(ServiceAsymmetricKeysHolder.getInstance()).willReturn(asymmetricKeysHolder);
+
+        try {
+            ApplicationFacade.getInstance().getPublicKey();
+            Assert.fail("getPublicKey is expected to throw exception.");
+        } catch (InternalServerErrorException e) {
+        }
+        
+        Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
+        Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
+    }
+    
+    // test case: When calling the isAuthorized method, if the call to
+    // CryptoUtil.toBase64 throws an exception, the method must catch the 
+    // exception, throw an InternalServerErrorException and finish the operation correctly.
+    @Test
+    public void testGetPublicKeyFinishesOperationIfOperationFailsOnCryptoUtil() throws FogbowException, GeneralSecurityException {
+        setUpPublicKeysHolder();
+        setUpAuthentication();
+        setUpAuthorization();
+        setUpApplicationFacade();
+        
+        RSAPublicKey rsaPublicKey = Mockito.mock(RSAPublicKey.class);
+        
+        ServiceAsymmetricKeysHolder asymmetricKeysHolder = Mockito.mock(ServiceAsymmetricKeysHolder.class);
+        Mockito.when(asymmetricKeysHolder.getPublicKey()).thenReturn(rsaPublicKey);
+        
+        PowerMockito.mockStatic(ServiceAsymmetricKeysHolder.class);
+        BDDMockito.given(ServiceAsymmetricKeysHolder.getInstance()).willReturn(asymmetricKeysHolder);
+        
+        PowerMockito.mockStatic(CryptoUtil.class);
+        BDDMockito.given(CryptoUtil.toBase64(rsaPublicKey)).willThrow(new GeneralSecurityException());
+        
+        try {
+            ApplicationFacade.getInstance().getPublicKey();
+            Assert.fail("getPublicKey is expected to throw exception.");
+        } catch (InternalServerErrorException e) {
+        }
+        
+        Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
+        Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
+    }
+    
+    // test case: When calling the createFinancePlan method, it must authorize the
+    // operation and call the FinanceManager. Also, it must start and finish
+    // operations correctly using the SynchronizationManager.
+    @Test
+    public void testCreateFinancePlan() throws FogbowException {
+        setUpPublicKeysHolder();
+        setUpAuthentication();
+        setUpAuthorization();
+        setUpApplicationFacade();
+        
+        
+        ApplicationFacade.getInstance().createFinancePlan(adminToken, newPlanName, newPlanInfo);
+        
+        
+        Mockito.verify(financeManager, Mockito.times(1)).createFinancePlan(newPlanName, newPlanInfo);
+        Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
+        Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
+        Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
+    }
+    
+    // test case: When calling the createFinancePlan method, if the call to
+    // FinanceManager.createFinancePlan throws an exception, the method
+    // must rethrow the exception and finish the operation correctly.
+    @Test
+    public void testCreateFinancePlanFinishesOperationIfOperationFails() throws FogbowException {
+        setUpPublicKeysHolder();
+        setUpAuthentication();
+        setUpAuthorization();
+        setUpApplicationFacade();
+        
+        Mockito.doThrow(InvalidParameterException.class).when(financeManager).createFinancePlan(newPlanName, newPlanInfo);
+        
+        try {
+            ApplicationFacade.getInstance().createFinancePlan(adminToken, newPlanName, newPlanInfo);
+            Assert.fail("createFinancePlan is expected to throw exception.");
+        } catch (InvalidParameterException e) {
+        }
+        
+        Mockito.verify(financeManager, Mockito.times(1)).createFinancePlan(newPlanName, newPlanInfo);
+        Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
+        Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
+        Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
+    }
+    
+    // test case: When calling the getFinancePlan method, it must authorize the
+    // operation and call the FinanceManager. Also, it must start and finish
+    // operations correctly using the SynchronizationManager.
+    @Test
+    public void testGetFinancePlan() throws FogbowException {
+        setUpPublicKeysHolder();
+        setUpAuthentication();
+        setUpAuthorization();
+        setUpApplicationFacade();
+        
+        Mockito.when(financeManager.getFinancePlan(newPlanName)).thenReturn(newPlanInfo);
+
+        Map<String, String> returnedPlan = ApplicationFacade.getInstance().getFinancePlan(adminToken, newPlanName);
+        
+        assertEquals(newPlanInfo, returnedPlan);
+        Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
+        Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
+        Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
+    }
+    
+    // test case: When calling the getFinancePlan method, if the call to
+    // FinanceManager.getFinancePlan throws an exception, the method
+    // must rethrow the exception and finish the operation correctly.
+    @Test
+    public void testGetFinancePlanFinishesOperationIfOperationFails() throws FogbowException {
+        setUpPublicKeysHolder();
+        setUpAuthentication();
+        setUpAuthorization();
+        setUpApplicationFacade();
+        
+        Mockito.when(financeManager.getFinancePlan(newPlanName)).thenThrow(new InvalidParameterException());
+
+        try {
+            ApplicationFacade.getInstance().getFinancePlan(adminToken, newPlanName);
+            Assert.fail("getFinancePlan is expected to throw exception.");
+        } catch (InvalidParameterException e) {
+        }
+        
+        Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
+        Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
+        Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
+    }
+    
+    // test case: When calling the updateFinancePlan method, it must authorize the
+    // operation and call the FinanceManager. Also, it must start and finish
+    // operations correctly using the SynchronizationManager.
+    @Test
+    public void testUpdateFinancePlan() throws FogbowException {
+        setUpPublicKeysHolder();
+        setUpAuthentication();
+        setUpAuthorization();
+        setUpApplicationFacade();
+
+        
+        ApplicationFacade.getInstance().updateFinancePlan(adminToken, planToUpdate, updatedPlanInfo);
+        
+        
+        Mockito.verify(financeManager, Mockito.times(1)).updateFinancePlan(planToUpdate, updatedPlanInfo);
+        Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
+        Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
+        Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
+    }
+    
+    // test case: When calling the updateFinancePlan method, if the call to
+    // FinanceManager.updateFinancePlan throws an exception, the method
+    // must rethrow the exception and finish the operation correctly.
+    @Test
+    public void testUpdateFinancePlanFinishesOperationIfOperationFails() throws FogbowException {
+        setUpPublicKeysHolder();
+        setUpAuthentication();
+        setUpAuthorization();
+        setUpApplicationFacade();
+
+        Mockito.doThrow(InvalidParameterException.class).when(financeManager).updateFinancePlan(planToUpdate, updatedPlanInfo);
+        
+        try {
+            ApplicationFacade.getInstance().updateFinancePlan(adminToken, planToUpdate, updatedPlanInfo);
+            Assert.fail("updateFinancePlan is expected to throw exception.");
+        } catch(InvalidParameterException e) {
+        }
+        
+        Mockito.verify(financeManager, Mockito.times(1)).updateFinancePlan(planToUpdate, updatedPlanInfo);
+        Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
+        Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
+        Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
+    }
+    
+    // test case: When calling the removeFinancePlan method, it must authorize the
+    // operation and call the FinanceManager. Also, it must start and finish
+    // operations correctly using the SynchronizationManager.
+    @Test
+    public void testRemoveFinancePlan() throws FogbowException {
+        setUpPublicKeysHolder();
+        setUpAuthentication();
+        setUpAuthorization();
+        setUpApplicationFacade();
+
+        
+        ApplicationFacade.getInstance().removeFinancePlan(adminToken, planToRemove);
+        
+        
+        Mockito.verify(financeManager, Mockito.times(1)).removeFinancePlan(planToRemove);
+        Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
+        Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
+        Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
+    }
+    
+    // test case: When calling the removeFinancePlan method, if the call to
+    // FinanceManager.removeFinancePlan throws an exception, the method
+    // must rethrow the exception and finish the operation correctly.
+    @Test
+    public void testRemoveFinancePlanFinishesOperationIfOperationFails() throws FogbowException {
+        setUpPublicKeysHolder();
+        setUpAuthentication();
+        setUpAuthorization();
+        setUpApplicationFacade();
+
+        Mockito.doThrow(InvalidParameterException.class).when(financeManager).removeFinancePlan(planToRemove);
+        
+        try {
+            ApplicationFacade.getInstance().removeFinancePlan(adminToken, planToRemove);
+            Assert.fail("removeFinancePlan is expected to throw exception.");
+        } catch(InvalidParameterException e) {
+        }
+        
+        Mockito.verify(financeManager, Mockito.times(1)).removeFinancePlan(planToRemove);
+        Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
+        Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
+        Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
+    }
+    
 	// TODO add reload test
 	
 	private void setUpApplicationFacade() {
