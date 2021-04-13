@@ -11,4 +11,9 @@ public class FinancePlanFactory {
             throws InvalidParameterException {
         return new FinancePlan(planName, planInfo); 
     }
+    
+    public FinancePlan createFinancePlan(String planName, String planInfoFilePath) 
+            throws InvalidParameterException {
+        return new FinancePlan(planName, planInfoFilePath); 
+    }
 }

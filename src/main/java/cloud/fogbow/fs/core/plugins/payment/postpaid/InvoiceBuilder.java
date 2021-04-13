@@ -38,7 +38,6 @@ public class InvoiceBuilder {
 		return new Invoice(UUID.randomUUID().toString(), userId, providerId, InvoiceState.WAITING, items, invoiceTotal);
 	}
 
-	// TODO test
 	public void reset() {
 		this.userId = null;
 		this.providerId = null;

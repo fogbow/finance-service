@@ -28,10 +28,10 @@ public class FinanceManager {
 	private DatabaseManager databaseManager;
 	private FinancePlanFactory financePlanFactory;
 	
-	public FinanceManager(DatabaseManager databaseManager) 
+	public FinanceManager(DatabaseManager databaseManager, FinancePlanFactory financePlanFactory) 
 			throws ConfigurationErrorException, InvalidParameterException {
 		this.databaseManager = databaseManager;
-		this.financePlanFactory = new FinancePlanFactory();
+		this.financePlanFactory = financePlanFactory;
 
 		createDefaultPlanIfItDoesNotExist();
 		createFinancePlugins(databaseManager);
@@ -46,8 +46,8 @@ public class FinanceManager {
 		try {
 		    this.databaseManager.getFinancePlan(defaultFinancePlanName);
         } catch (InvalidParameterException e) {
-            // TODO test
-            FinancePlan financePlan = new FinancePlan(defaultFinancePlanName, defaultFinancePlanFilePath); 
+            FinancePlan financePlan = this.financePlanFactory.createFinancePlan(defaultFinancePlanName, 
+                    defaultFinancePlanFilePath);
             this.databaseManager.saveFinancePlan(financePlan);
         }
 	}

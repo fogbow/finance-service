@@ -115,7 +115,7 @@ public class FinanceManagerTest {
 		Mockito.when(databaseManager.getFinancePlan(DEFAULT_FINANCE_PLAN_NAME)).thenReturn(financePlan);
 		
 		
-		new FinanceManager(databaseManager);
+		new FinanceManager(databaseManager, new FinancePlanFactory());
 		
 		
 		Mockito.verify(propertiesHolder, Mockito.times(1)).getProperty(ConfigurationPropertyKeys.FINANCE_PLUGINS_CLASS_NAMES);
@@ -147,7 +147,54 @@ public class FinanceManagerTest {
 		financePlan = Mockito.mock(FinancePlan.class);
 		Mockito.when(databaseManager.getFinancePlan(DEFAULT_FINANCE_PLAN_NAME)).thenReturn(financePlan);
 		
-		new FinanceManager(databaseManager);
+		new FinanceManager(databaseManager, new FinancePlanFactory());
+	}
+	
+	// test case: When calling the constructor and the default finance plan does 
+	// not exist in the database, it must call the FinancePlanFactory to create 
+	// the default plan and call the DatabaseManager to save the plan.
+	@Test
+	public void testContructorDefaultFinancePlanDoesNotExist() throws FogbowException {
+        setUpFinancePlugin();
+
+        String pluginName1 = "plugin1";
+        String pluginName2 = "plugin2";
+        
+        String pluginString = String.join(FinanceManager.FINANCE_PLUGINS_CLASS_NAMES_SEPARATOR, 
+                pluginName1, pluginName2);
+        
+        PowerMockito.mockStatic(PropertiesHolder.class);
+        PropertiesHolder propertiesHolder = Mockito.mock(PropertiesHolder.class);
+        Mockito.when(propertiesHolder.getProperty(
+                ConfigurationPropertyKeys.FINANCE_PLUGINS_CLASS_NAMES)).thenReturn(pluginString);
+        Mockito.when(propertiesHolder.getProperty(
+                ConfigurationPropertyKeys.DEFAULT_FINANCE_PLAN_NAME)).thenReturn(DEFAULT_FINANCE_PLAN_NAME);
+        Mockito.when(propertiesHolder.getProperty(
+                ConfigurationPropertyKeys.DEFAULT_FINANCE_PLAN_FILE_PATH)).thenReturn(DEFAULT_FINANCE_PLAN_FILE_PATH);
+        BDDMockito.given(PropertiesHolder.getInstance()).willReturn(propertiesHolder);
+
+        PowerMockito.mockStatic(FinancePluginInstantiator.class);
+        BDDMockito.given(FinancePluginInstantiator.getFinancePlugin(pluginName1, databaseManager)).willReturn(plugin1);
+        BDDMockito.given(FinancePluginInstantiator.getFinancePlugin(pluginName2, databaseManager)).willReturn(plugin2);
+
+        databaseManager = Mockito.mock(DatabaseManager.class);
+        financePlan = Mockito.mock(FinancePlan.class);
+        Mockito.when(databaseManager.getFinancePlan(DEFAULT_FINANCE_PLAN_NAME)).thenThrow(new InvalidParameterException());
+        
+        FinancePlanFactory financePlanFactory = Mockito.mock(FinancePlanFactory.class);
+        Mockito.when(financePlanFactory.createFinancePlan(DEFAULT_FINANCE_PLAN_NAME, DEFAULT_FINANCE_PLAN_FILE_PATH)).thenReturn(financePlan);
+        
+        
+        new FinanceManager(databaseManager, financePlanFactory);
+        
+        
+        Mockito.verify(propertiesHolder).getProperty(ConfigurationPropertyKeys.FINANCE_PLUGINS_CLASS_NAMES);
+        Mockito.verify(financePlanFactory).createFinancePlan(DEFAULT_FINANCE_PLAN_NAME, DEFAULT_FINANCE_PLAN_FILE_PATH);
+        Mockito.verify(databaseManager).saveFinancePlan(financePlan);
+        PowerMockito.verifyStatic(FinancePluginInstantiator.class);
+        FinancePluginInstantiator.getFinancePlugin(pluginName1, databaseManager);
+        PowerMockito.verifyStatic(FinancePluginInstantiator.class);
+        FinancePluginInstantiator.getFinancePlugin(pluginName2, databaseManager);
 	}
 	
 	// test case: When calling the constructor passing an empty list

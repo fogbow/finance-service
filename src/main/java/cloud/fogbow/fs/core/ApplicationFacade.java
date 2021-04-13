@@ -22,6 +22,7 @@ import cloud.fogbow.fs.api.parameters.User;
 import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.plugins.authorization.FsOperation;
+import cloud.fogbow.fs.core.util.FinancePlanFactory;
 import cloud.fogbow.fs.core.util.SynchronizationManager;
 
 public class ApplicationFacade {
@@ -225,7 +226,7 @@ public class ApplicationFacade {
 			this.authorizationPlugin = AuthorizationPluginInstantiator.getAuthorizationPlugin();
 
 			LOGGER.info(Messages.Log.RELOADING_FINANCE_PLUGINS);
-			this.financeManager = new FinanceManager(databaseManager);
+			this.financeManager = new FinanceManager(databaseManager, new FinancePlanFactory());
 			financeManager.startPlugins();
 		} finally {
 			synchronizationManager.finishReloading();

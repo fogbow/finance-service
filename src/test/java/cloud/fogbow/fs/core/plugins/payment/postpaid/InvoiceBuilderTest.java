@@ -15,6 +15,8 @@ public class InvoiceBuilderTest {
 
 	private static final String USER_ID_1 = "userId1";
 	private static final String PROVIDER_ID_1 = "provider1";
+	private static final String USER_ID_2 = "userId2";
+	private static final String PROVIDER_ID_2 = "provider2";
 	private static final int VCPU_ITEM_1 = 2;
 	private static final int RAM_ITEM_1 = 4;
 	private static final Double VALUE_ITEM_1 = 3.0;
@@ -75,5 +77,45 @@ public class InvoiceBuilderTest {
 		assertEquals(InvoiceState.WAITING, invoice.getState());
 		assertEquals(0, invoice.getInvoiceItems().keySet().size());
 		assertEquals(new Double(0.0), invoice.getInvoiceTotal());
+	}
+	
+	// test case: When calling the reset method, it must reset all
+	// information stored by the builder.
+	@Test
+	public void testInvoiceBuilderReuse() throws InvalidParameterException {
+	    // Build first invoice
+        ResourceItem resourceItem1 = new ComputeItem(VCPU_ITEM_1, RAM_ITEM_1);
+        
+        InvoiceBuilder invoiceBuilder = new InvoiceBuilder();
+        
+        invoiceBuilder.setUserId(USER_ID_1);
+        invoiceBuilder.setProviderId(PROVIDER_ID_1);
+        invoiceBuilder.addItem(resourceItem1, VALUE_ITEM_1, TIME_USED_ITEM_1);
+        Invoice invoice1 = invoiceBuilder.buildInvoice();
+        
+        assertEquals(USER_ID_1, invoice1.getUserId());
+        assertEquals(PROVIDER_ID_1, invoice1.getProviderId());
+        assertEquals(InvoiceState.WAITING, invoice1.getState());
+        assertEquals(1, invoice1.getInvoiceItems().keySet().size());
+        assertEquals(new Double(VALUE_ITEM_1*TIME_USED_ITEM_1), 
+                invoice1.getInvoiceItems().get(resourceItem1));
+        assertEquals(new Double(VALUE_ITEM_1*TIME_USED_ITEM_1), invoice1.getInvoiceTotal());
+        
+        
+        // Reset the builder
+        invoiceBuilder.reset();
+        
+        
+        // Build second invoice
+        invoiceBuilder.setUserId(USER_ID_2);
+        invoiceBuilder.setProviderId(PROVIDER_ID_2);
+        
+        Invoice invoice2 = invoiceBuilder.buildInvoice();
+        
+        assertEquals(USER_ID_2, invoice2.getUserId());
+        assertEquals(PROVIDER_ID_2, invoice2.getProviderId());
+        assertEquals(InvoiceState.WAITING, invoice2.getState());
+        assertEquals(0, invoice2.getInvoiceItems().keySet().size());
+        assertEquals(new Double(0.0), invoice2.getInvoiceTotal());
 	}
 }

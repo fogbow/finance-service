@@ -13,6 +13,7 @@ import cloud.fogbow.fs.core.FinanceManager;
 import cloud.fogbow.fs.core.PropertiesHolder;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.plugins.authorization.FsOperation;
+import cloud.fogbow.fs.core.util.FinancePlanFactory;
 import cloud.fogbow.fs.core.util.SynchronizationManager;
 
 @Component
@@ -31,7 +32,7 @@ public class Main implements ApplicationRunner {
 		DatabaseManager databaseManager = new DatabaseManager();
 		ApplicationFacade.getInstance().setDatabaseManager(databaseManager);
 
-		FinanceManager financeManager = new FinanceManager(databaseManager);
+		FinanceManager financeManager = new FinanceManager(databaseManager, new FinancePlanFactory());
 		ApplicationFacade.getInstance().setFinanceManager(financeManager);
 		
 		SynchronizationManager synchronizationManager = new SynchronizationManager();
