@@ -14,19 +14,24 @@ import cloud.fogbow.fs.core.plugins.payment.ResourceItem;
 import cloud.fogbow.fs.core.util.accounting.Record;
 import cloud.fogbow.fs.core.util.accounting.RecordUtils;
 
-// TODO test
 public class DefaultCreditsManager implements PaymentManager {
-	private static final String USER_CREDITS = "USER_CREDITS";
+	public static final String USER_CREDITS = "USER_CREDITS";
 	
     private DatabaseManager databaseManager;
-	private RecordUtils resourceItemFactory;
+	private RecordUtils recordUtils;
 	private String planName;
 
 	public DefaultCreditsManager(DatabaseManager databaseManager, String planName) {
 		this.databaseManager = databaseManager;
 		this.planName = planName;
-		this.resourceItemFactory = new RecordUtils();
+		this.recordUtils = new RecordUtils();
 	}
+	
+	public DefaultCreditsManager(DatabaseManager databaseManager, String planName, RecordUtils recordUtils) {
+        this.databaseManager = databaseManager;
+        this.planName = planName;
+        this.recordUtils = recordUtils;
+    }
 	
 	@Override
 	public boolean hasPaid(String userId, String provider) throws InvalidParameterException {
@@ -47,13 +52,13 @@ public class DefaultCreditsManager implements PaymentManager {
 			Double valueToPayPerTimeUnit;
 			
 			try {
-				resourceItem = resourceItemFactory.getItemFromRecord(record);
+				resourceItem = recordUtils.getItemFromRecord(record);
 				valueToPayPerTimeUnit = plan.getItemFinancialValue(resourceItem);
 			} catch (InvalidParameterException e) {
 				throw new InternalServerErrorException(e.getMessage());
 			}
 			
-			Double timeUsed = resourceItemFactory.getTimeFromRecord(record, 
+			Double timeUsed = recordUtils.getTimeFromRecord(record, 
 			        paymentStartTime, paymentEndTime);
 			
 			credits.deduct(resourceItem, valueToPayPerTimeUnit, timeUsed);
