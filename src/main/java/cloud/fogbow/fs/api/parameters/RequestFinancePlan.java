@@ -1,4 +1,4 @@
-package cloud.fogbow.fs.api.http.request;
+package cloud.fogbow.fs.api.parameters;
 
 import java.util.Map;
 

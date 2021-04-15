@@ -23,4 +23,8 @@ public enum InvoiceState {
 		
 		throw new InvalidParameterException(String.format(Messages.Exception.UNKNOWN_INVOICE_STATE, value));
 	}
+	
+	public String getValue() {
+	    return value;
+	}
 }

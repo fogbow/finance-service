@@ -74,8 +74,10 @@ public interface FinancePlugin {
 	 * @param userId the id of the user to be managed.
 	 * @param provider the id of the provider of the user to be managed.
 	 * @param financeOptions the financial options to follow while managing the user financial state.
+	 * @throws InvalidParameterException if an error occurs while trying to add the user
+     * or the options are invalid.
 	 */
-	void addUser(String userId, String provider, Map<String, String> financeOptions);
+	void addUser(String userId, String provider, Map<String, String> financeOptions) throws InvalidParameterException;
 	
 	/**
 	 * Removes the given user from the list of the users managed by the FinancePlugin.

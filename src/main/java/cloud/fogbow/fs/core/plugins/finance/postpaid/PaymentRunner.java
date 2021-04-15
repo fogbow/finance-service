@@ -26,7 +26,11 @@ public class PaymentRunner extends StoppableRunner {
 	// clients of ACCS' API.
 	@VisibleForTesting
 	static final String SIMPLE_DATE_FORMAT = "yyyy-MM-dd";
-	public static final String USER_BILLING_INTERVAL = "billing_interval";
+    /**
+     * The key to use to indicate the amount of time to 
+     * wait between consecutive billing processes.
+     */
+    public static final String USER_BILLING_INTERVAL = "billing_interval";
 	private DatabaseManager databaseManager;
 	private AccountingServiceClient accountingServiceClient;
 	private PaymentManager paymentManager;

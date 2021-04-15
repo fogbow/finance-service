@@ -6,6 +6,7 @@ import java.util.Map;
 import cloud.fogbow.common.exceptions.ConfigurationErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.common.models.SystemUser;
+import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.PaymentManagerInstantiator;
 import cloud.fogbow.fs.core.PropertiesHolder;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
@@ -139,40 +140,51 @@ public class PostPaidFinancePlugin implements FinancePlugin {
 		return this.paymentManager.getUserFinanceState(userId, provider, property);
 	}
 
+	// TODO This operation should have some level of thread protection
 	@Override
-	public void addUser(String userId, String provider, Map<String, String> financeOptions) {
-		// TODO validation
-		// TODO This operation should have some level of thread protection
-		// TODO test
+	public void addUser(String userId, String provider, Map<String, String> financeOptions) throws InvalidParameterException {
+	    validateFinanceOptions(financeOptions);
 		this.databaseManager.registerUser(userId, provider, PLUGIN_NAME, financeOptions);
 	}
-
+	
+	// TODO This operation should have some level of thread protection
+	// TODO This operation should also remove the user invoices
+	// TODO test
 	@Override
 	public void removeUser(String userId, String provider) throws InvalidParameterException {
-		// TODO validation
-		// TODO This operation should have some level of thread protection
-		// TODO This operation should also remove the user invoices
-		// TODO test
 		this.databaseManager.removeUser(userId, provider);
 	}
 
+	// TODO This operation should have some level of thread protection
 	@Override
 	public void changeOptions(String userId, String provider, Map<String, String> financeOptions) throws InvalidParameterException {
-		// TODO validation
-		// TODO This operation should have some level of thread protection
-		// TODO test
+	    validateFinanceOptions(financeOptions);
 		this.databaseManager.changeOptions(userId, provider, financeOptions);
 	}
 
+	// TODO This operation should have some level of thread protection
 	@Override
 	public void updateFinanceState(String userId, String provider, Map<String, String> financeState) throws InvalidParameterException {
-		// TODO test
-		// TODO This operation should have some level of thread protection
-
 		for (String invoiceId : financeState.keySet()) {
 			Invoice invoice = this.databaseManager.getInvoice(invoiceId);
 			invoice.setState(InvoiceState.fromValue(financeState.get(invoiceId)));
 			this.databaseManager.saveInvoice(invoice);
 		}
 	}
+	
+    private void validateFinanceOptions(Map<String, String> financeOptions) throws InvalidParameterException {
+        if (!financeOptions.keySet().contains(PaymentRunner.USER_BILLING_INTERVAL)) {
+            throw new InvalidParameterException(
+                    String.format(Messages.Exception.MISSING_FINANCE_OPTION, PaymentRunner.USER_BILLING_INTERVAL));
+        }
+
+        String userBillingInterval = financeOptions.get(PaymentRunner.USER_BILLING_INTERVAL);
+
+        try {
+            Long.valueOf(userBillingInterval);
+        } catch (NumberFormatException e) {
+            throw new InvalidParameterException(
+                    String.format(Messages.Exception.INVALID_FINANCE_OPTION, userBillingInterval, PaymentRunner.USER_BILLING_INTERVAL));
+        }
+    }
 }
