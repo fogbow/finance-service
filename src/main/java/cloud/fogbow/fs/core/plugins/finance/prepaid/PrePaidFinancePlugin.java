@@ -32,14 +32,23 @@ public class PrePaidFinancePlugin implements FinancePlugin {
 	 * Required in the configuration file. 
 	 */
 	public static final String PRE_PAID_PAYMENT_MANAGER = "pre_paid_payment_manager";
-	// TODO documentation
-	private static final String PRE_PAID_DEFAULT_FINANCE_PLAN = "pre_paid_default_finance_plan";
+	/**
+     * The key to use in the configuration property which
+     * indicates the {@link cloud.fogbow.fs.core.models.FinancePlan}
+     * to use.
+     * Required in the configuration file.
+     */
+	public static final String PRE_PAID_DEFAULT_FINANCE_PLAN = "pre_paid_default_finance_plan";
 	/**
 	 * The key to use in the configuration property which
 	 * indicates the delay between credits deduction attempts.
 	 */
 	public static final String CREDITS_DEDUCTION_WAIT_TIME = "credits_deduction_wait_time";
-    private static final Object CREDITS_TO_ADD = "CREDITS_TO_ADD";
+	/**
+	 * The key to use in the map passed as argument to updateFinanceState 
+	 * to indicate the value of credits to add to the user state.
+	 */
+    public static final String CREDITS_TO_ADD = "CREDITS_TO_ADD";
 	
 	private Thread paymentThread;
 	private Thread stopServiceThread;

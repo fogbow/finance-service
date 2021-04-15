@@ -3,7 +3,6 @@ package cloud.fogbow.fs.core.plugins;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 
-// TODO update documentation
 /**
  * A payment management abstraction, capable of starting
  * payment for users based in their financial state. This 
@@ -22,24 +21,26 @@ public interface PaymentManager {
 	 * still has credits to use.
 	 * 
 	 * @param userId the id of the user whose state must be evaluated.
+	 * @param provider the id of the provider of the user whose state must be evaluated.
 	 * @return a boolean stating whether the user state is adequate or not.
-	 * @throws InvalidParameterException 
+	 * @throws InvalidParameterException if the user is not found or the parameters 
+	 * are invalid.
 	 */
 	boolean hasPaid(String userId, String provider) throws InvalidParameterException;
 	
-	
 	/**
 	 * Starts payment for the resources consumed by the 
-	 * given user. The meaning of this operati@Override
-	on depends on the
+	 * given user. The meaning of this operation depends on the
 	 * payment type. For example, in a postpaid scenario, 
 	 * this operation is an invoice generation process, 
 	 * whereas in a prepaid scenario, this operation is a user 
 	 * credits update process.
 	 * 
 	 * @param userId the id of the user to start payment.
-	 * @throws InternalServerErrorException 
-	 * @throws InvalidParameterException 
+	 * @param provider the id of the provider of the user to start payment.
+	 * @throws InternalServerErrorException if some error occurs in the payment process.
+	 * @throws InvalidParameterException if the user is not found or the parameters 
+     * are invalid.
 	 */
 	void startPaymentProcess(String userId, String provider, Long paymentStartTime, Long paymentEndTime) throws InternalServerErrorException, InvalidParameterException;
 	
@@ -48,12 +49,19 @@ public interface PaymentManager {
 	 * a user finance state.
 	 * 
 	 * @param userId the id of the user whose state is used in the operation.
+	 * @param provider the id of the provider of the user whose state is used in the operation.
 	 * @param property a description of the property to generate.
 	 * @return a representation of the property.
-	 * @throws InvalidParameterException 
+	 * @throws InvalidParameterException if the user is not found or the property is not known.
 	 */
 	String getUserFinanceState(String userId, String provider, String property) throws InvalidParameterException;
 	
-	// TODO documentation
-	void setFinancePlan(String planName);
+	/**
+	 * Sets the name of the {@link cloud.fogbow.fs.core.models.FinancePlan} this payment manager 
+	 * is going to use in the payment process.
+	 * 
+	 * @param planName the name of the finance plan to use.
+	 * @throws InvalidParameterException if the finance plan is not known.
+	 */
+	void setFinancePlan(String planName) throws InvalidParameterException;
 }

@@ -33,7 +33,12 @@ public class PostPaidFinancePlugin implements FinancePlugin {
 	 * Required in the configuration file. 
 	 */
 	public static final String POST_PAID_PAYMENT_MANAGER = "post_paid_payment_manager";
-	// TODO documentation
+	/**
+	 * The key to use in the configuration property which
+	 * indicates the {@link cloud.fogbow.fs.core.models.FinancePlan}
+	 * to use.
+	 * Required in the configuration file.
+	 */
 	public static final String POST_PAID_DEFAULT_FINANCE_PLAN = "post_paid_default_finance_plan";
 	/**
 	 * The key to use in the configuration property which

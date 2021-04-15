@@ -83,7 +83,9 @@ public class DefaultCreditsManager implements PaymentManager {
 	}
 
     @Override
-    public void setFinancePlan(String planName) {
+    public void setFinancePlan(String planName) throws InvalidParameterException {
+        databaseManager.getFinancePlan(planName);
+        
         this.planName = planName;
     }
 }

@@ -33,7 +33,8 @@ public interface FinancePlugin {
 	 * @param userId the id of the user to be authorized.
 	 * @param operationParameters a map containing the operation parameters.
 	 * @return a boolean stating whether the user is authorized or not.
-	 * @throws InvalidParameterException 
+	 * @throws InvalidParameterException if an error occurs while trying to find the user 
+	 * to check state.
 	 */
 	boolean isAuthorized(SystemUser user, RasOperation operation) throws InvalidParameterException;
 	
@@ -42,6 +43,7 @@ public interface FinancePlugin {
 	 * of the user represented by {@code userId}.
 	 * 
 	 * @param userId the id of the user to verify.
+	 * @param provider the id of the provider of the user to verify.
 	 * @return a boolean stating whether the user is managed by this plugin or not.
 	 */
 	boolean managesUser(String userId, String provider);
@@ -51,24 +53,58 @@ public interface FinancePlugin {
 	 * a user finance state.
 	 * 
 	 * @param userId the id of the user whose state is used in the operation.
+	 * @param provider the id of the provider of the user whose state is used in the operation.
 	 * @param property a description of the property to generate.
 	 * @return a representation of the property.
-	 * @throws InvalidParameterException 
+	 * @throws InvalidParameterException if an error occurs while trying to find the user or
+	 * the property is invalid.
 	 */
 	String getUserFinanceState(String userId, String provider, String property) throws InvalidParameterException;
 
-	// TODO documentation
+	/**
+	 * Returns a String representing the FinancePlugin name.
+	 * 
+	 * @return the name String.
+	 */
 	String getName();
 	
-	// TODO documentation
+	/**
+	 * Adds the given user to the list of the users managed by the FinancePlugin.
+	 * 
+	 * @param userId the id of the user to be managed.
+	 * @param provider the id of the provider of the user to be managed.
+	 * @param financeOptions the financial options to follow while managing the user financial state.
+	 */
 	void addUser(String userId, String provider, Map<String, String> financeOptions);
 	
-	// TODO documentation
+	/**
+	 * Removes the given user from the list of the users managed by the FinancePlugin.
+	 * 
+	 * @param userId the id of the user to remove.
+	 * @param provider the id of the provider of the user to remove.
+	 * @throws InvalidParameterException if an error occurs while trying to find the user.
+	 */
 	void removeUser(String userId, String provider) throws InvalidParameterException;
 
-	// TODO documentation
+	/**
+	 * Changes the financial options used to manage the user.
+	 * 
+	 * @param userId the id of the user to update.
+	 * @param provider the id of the provider of the user to update.
+	 * @param financeOptions the new financial options to follow.
+	 * @throws InvalidParameterException if an error occurs while trying to find the user
+	 * or the options are invalid.
+	 */
 	void changeOptions(String userId, String provider, Map<String, String> financeOptions) throws InvalidParameterException;
 	
-	// TODO documentation
+	/**
+	 * Updates the user financial state using the given map.
+	 * 
+	 * @param userId the id of the user whose state must be updated.
+	 * @param provider the id of the provider of the user whose state must be updated.
+	 * @param financeState a map containing properties used to update the user state.
+	 * @throws InvalidParameterException if an error occurs while trying to find the user
+	 * or the financial properties are invalid. 
+	 */
 	void updateFinanceState(String userId, String provider, Map<String, String> financeState) throws InvalidParameterException;
 }
