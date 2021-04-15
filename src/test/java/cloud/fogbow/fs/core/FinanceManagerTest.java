@@ -420,6 +420,27 @@ public class FinanceManagerTest {
         Mockito.verify(databaseManager).saveFinancePlan(plan);
 	}
 	
+	// test case: When calling the getFinancePlan method, it must call the
+	// DatabaseManager to get the correct FinancePlan object and then
+	// return the same map obtained by calling the FinancePlan.getRulesAsMap method.
+	@Test
+	public void testGetFinancePlan() throws FogbowException {
+        setUpFinancePlugin();
+        
+        this.financePlanFactory = Mockito.mock(FinancePlanFactory.class);
+
+        Map<String, String> planInfo = new HashMap<String, String>();
+        FinancePlan plan = Mockito.mock(FinancePlan.class);
+        Mockito.when(plan.getRulesAsMap()).thenReturn(planInfo);
+        
+        this.databaseManager = Mockito.mock(DatabaseManager.class);
+        Mockito.when(this.databaseManager.getFinancePlan(NEW_FINANCE_PLAN_NAME)).thenReturn(plan);
+        
+        FinanceManager financeManager = new FinanceManager(financePlugins, databaseManager, financePlanFactory);
+        
+        assertEquals(planInfo, financeManager.getFinancePlan(NEW_FINANCE_PLAN_NAME));
+	}
+	
 	// test case: When calling the updateFinancePlan method, it must call the
 	// DatabaseManager to get the correct FinancePlan, update the plan using the new
 	// plan info and call the DatabaseManager to save the updated plan.
