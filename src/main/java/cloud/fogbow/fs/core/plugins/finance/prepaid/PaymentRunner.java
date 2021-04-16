@@ -23,7 +23,6 @@ public class PaymentRunner extends StoppableRunner {
 	// I think should be made public to possible
 	// clients of ACCS' API.
 	static final String SIMPLE_DATE_FORMAT = "yyyy-MM-dd";
-	public static final String USER_BILLING_INTERVAL = "billing_interval";
 	private DatabaseManager databaseManager;
 	private PaymentManager paymentManager;
 	private AccountingServiceClient accountingServiceClient;

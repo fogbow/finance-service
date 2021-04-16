@@ -76,7 +76,7 @@ public class PostPaidFinancePluginTest {
 	// creation operation and the user financial state is good, 
 	// the method must return true.
 	@Test
-	public void testIsAuthorizedCreateOperationUserIsOKFinancially() throws InvalidParameterException {
+	public void testIsAuthorizedCreateOperationUserStateIsGoodFinancially() throws InvalidParameterException {
 		this.paymentManager = Mockito.mock(PaymentManager.class);
 		Mockito.when(this.paymentManager.hasPaid(USER_ID_1, PROVIDER_USER_1)).thenReturn(true);
 		
@@ -93,7 +93,7 @@ public class PostPaidFinancePluginTest {
 	// operation other than creation and the user financial state is not good, 
 	// the method must return true.
 	@Test
-	public void testIsAuthorizedNonCreationOperationUserIsNotOKFinancially() throws InvalidParameterException {
+	public void testIsAuthorizedNonCreationOperationUserStateIsNotGoodFinancially() throws InvalidParameterException {
 		this.paymentManager = Mockito.mock(PaymentManager.class);
 		Mockito.when(this.paymentManager.hasPaid(USER_ID_1, PROVIDER_USER_1)).thenReturn(false);
 		
@@ -110,7 +110,7 @@ public class PostPaidFinancePluginTest {
 	// creation operation and the user financial state is not good, 
 	// the method must return false.
 	@Test
-	public void testIsAuthorizedCreationOperationUserIsNotOKFinancially() throws InvalidParameterException {
+	public void testIsAuthorizedCreationOperationUserStateIsNotGoodFinancially() throws InvalidParameterException {
 		this.paymentManager = Mockito.mock(PaymentManager.class);
 		Mockito.when(this.paymentManager.hasPaid(USER_ID_1, PROVIDER_USER_1)).thenReturn(false);
 		
