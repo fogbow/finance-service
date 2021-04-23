@@ -28,6 +28,7 @@ import cloud.fogbow.common.util.CryptoUtil;
 import cloud.fogbow.common.util.ServiceAsymmetricKeysHolder;
 import cloud.fogbow.fs.api.parameters.AuthorizableUser;
 import cloud.fogbow.fs.api.parameters.User;
+import cloud.fogbow.fs.core.models.OperationType;
 import cloud.fogbow.fs.core.plugins.authorization.FsOperation;
 import cloud.fogbow.fs.core.util.SynchronizationManager;
 
@@ -658,7 +659,7 @@ public class ApplicationFacadeTest {
 	
 	private void setUpAuthorization() throws UnauthorizedRequestException {
 		this.authorizationPlugin = Mockito.mock(AuthorizationPlugin.class);
-        this.operation = new FsOperation();
+        this.operation = new FsOperation(OperationType.ADD_USER);
         Mockito.when(authorizationPlugin.isAuthorized(systemUser, operation)).thenReturn(true);
 	}
 }

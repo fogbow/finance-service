@@ -15,6 +15,7 @@ import cloud.fogbow.common.exceptions.UnauthorizedRequestException;
 import cloud.fogbow.common.models.SystemUser;
 import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
 import cloud.fogbow.fs.core.PropertiesHolder;
+import cloud.fogbow.fs.core.models.OperationType;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({PropertiesHolder.class})
@@ -45,8 +46,8 @@ public class AdminAuthorizationPluginTest {
 		user1 = new SystemUser(USER_ID_1, USER_NAME_1, PROVIDER_1);
 		user2 = new SystemUser(USER_ID_2, USER_NAME_2, PROVIDER_2);
 
-		assertTrue(authorizationPlugin.isAuthorized(user1, new FsOperation()));
-		assertTrue(authorizationPlugin.isAuthorized(user2, new FsOperation()));
+		assertTrue(authorizationPlugin.isAuthorized(user1, new FsOperation(OperationType.ADD_USER)));
+		assertTrue(authorizationPlugin.isAuthorized(user2, new FsOperation(OperationType.ADD_USER)));
 	}
 	
 	// test case: When calling the isAuthorized plugin, it must check if the
@@ -60,7 +61,7 @@ public class AdminAuthorizationPluginTest {
 
 		userNotAdmin = new SystemUser(USER_ID_NOT_ADMIN, USER_NAME_NOT_ADMIN, PROVIDER_NOT_ADMIN);
 		
-		authorizationPlugin.isAuthorized(userNotAdmin, new FsOperation());
+		authorizationPlugin.isAuthorized(userNotAdmin, new FsOperation(OperationType.ADD_USER));
 	}
 	
 	// test case: When calling the constructor and the list of administrators

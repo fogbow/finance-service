@@ -20,6 +20,7 @@ import cloud.fogbow.common.util.ServiceAsymmetricKeysHolder;
 import cloud.fogbow.fs.api.parameters.AuthorizableUser;
 import cloud.fogbow.fs.api.parameters.User;
 import cloud.fogbow.fs.constants.Messages;
+import cloud.fogbow.fs.core.models.OperationType;
 import cloud.fogbow.fs.core.plugins.authorization.FsOperation;
 import cloud.fogbow.fs.core.util.FinancePlanFactory;
 import cloud.fogbow.fs.core.util.SynchronizationManager;
@@ -235,7 +236,7 @@ public class ApplicationFacade {
 			throws FogbowException, UnauthenticatedUserException, UnauthorizedRequestException {
 		RSAPublicKey asPublicKey = FsPublicKeysHolder.getInstance().getAsPublicKey();
         SystemUser systemUser = AuthenticationUtil.authenticate(asPublicKey, userToken);
-        FsOperation operation = new FsOperation();
+        FsOperation operation = new FsOperation(OperationType.ADD_USER);
         this.authorizationPlugin.isAuthorized(systemUser, operation);
 	}	
 }
