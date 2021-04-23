@@ -20,7 +20,6 @@ import cloud.fogbow.common.util.ServiceAsymmetricKeysHolder;
 import cloud.fogbow.fs.api.parameters.AuthorizableUser;
 import cloud.fogbow.fs.api.parameters.User;
 import cloud.fogbow.fs.constants.Messages;
-import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.plugins.authorization.FsOperation;
 import cloud.fogbow.fs.core.util.FinancePlanFactory;
 import cloud.fogbow.fs.core.util.SynchronizationManager;
@@ -30,7 +29,7 @@ public class ApplicationFacade {
 	private static Logger LOGGER = Logger.getLogger(ApplicationFacade.class);
 	private static ApplicationFacade instance;
 	private FinanceManager financeManager;
-	private DatabaseManager databaseManager;
+	private InMemoryFinanceObjectsHolder objectHolder;
 	private AuthorizationPlugin<FsOperation> authorizationPlugin;
 	private SynchronizationManager synchronizationManager;
 	
@@ -53,9 +52,8 @@ public class ApplicationFacade {
 		this.financeManager = financeManager;
 	}
 	
-	public void setDatabaseManager(DatabaseManager databaseManager) {
-		this.databaseManager = databaseManager;
-		
+	public void setDatabaseObjectHolder(InMemoryFinanceObjectsHolder objectHolder) {
+	    this.objectHolder = objectHolder;
 	}
 	
 	public void setSynchronizationManager(SynchronizationManager synchronizationManager) {
@@ -226,7 +224,7 @@ public class ApplicationFacade {
 			this.authorizationPlugin = AuthorizationPluginInstantiator.getAuthorizationPlugin();
 
 			LOGGER.info(Messages.Log.RELOADING_FINANCE_PLUGINS);
-			this.financeManager = new FinanceManager(databaseManager, new FinancePlanFactory());
+			this.financeManager = new FinanceManager(objectHolder, new FinancePlanFactory());
 			financeManager.startPlugins();
 		} finally {
 			synchronizationManager.finishReloading();

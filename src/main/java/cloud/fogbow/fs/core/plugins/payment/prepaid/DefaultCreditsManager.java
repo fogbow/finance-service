@@ -5,7 +5,7 @@ import java.util.List;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.constants.Messages;
-import cloud.fogbow.fs.core.datastore.DatabaseManager;
+import cloud.fogbow.fs.core.InMemoryFinanceObjectsHolder;
 import cloud.fogbow.fs.core.models.FinancePlan;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.models.UserCredits;
@@ -17,54 +17,59 @@ import cloud.fogbow.fs.core.util.accounting.RecordUtils;
 public class DefaultCreditsManager implements PaymentManager {
 	public static final String USER_CREDITS = "USER_CREDITS";
 	
-    private DatabaseManager databaseManager;
 	private RecordUtils recordUtils;
 	private String planName;
+	private InMemoryFinanceObjectsHolder objectHolder;
 
-	public DefaultCreditsManager(DatabaseManager databaseManager, String planName) {
-		this.databaseManager = databaseManager;
-		this.planName = planName;
-		this.recordUtils = new RecordUtils();
-	}
+	public DefaultCreditsManager(InMemoryFinanceObjectsHolder objectHolder, String planName) {
+	    this.objectHolder = objectHolder;
+        this.planName = planName;
+        this.recordUtils = new RecordUtils();
+    }
 	
-	public DefaultCreditsManager(DatabaseManager databaseManager, String planName, RecordUtils recordUtils) {
-        this.databaseManager = databaseManager;
+    public DefaultCreditsManager(InMemoryFinanceObjectsHolder objectHolder, String planName, RecordUtils recordUtils) {
+        this.objectHolder = objectHolder;
         this.planName = planName;
         this.recordUtils = recordUtils;
     }
 	
 	@Override
 	public boolean hasPaid(String userId, String provider) throws InvalidParameterException {
-	    UserCredits credits = databaseManager.getUserCreditsByUserId(userId, provider);
-	    return credits.getCreditsValue() >= 0.0;
+	    UserCredits credits = this.objectHolder.getUserCreditsByUserId(userId, provider);
+	    synchronized(credits) {
+	        return credits.getCreditsValue() >= 0.0;
+	    }
 	}
 
 	@Override
 	public void startPaymentProcess(String userId, String provider, 
 	        Long paymentStartTime, Long paymentEndTime) throws InternalServerErrorException, InvalidParameterException {
-		FinanceUser user = databaseManager.getUserById(userId, provider);
-		UserCredits credits = databaseManager.getUserCreditsByUserId(userId, provider);
-		FinancePlan plan = databaseManager.getFinancePlan(planName);
-		List<Record> records = user.getPeriodRecords();
-		
-		for (Record record : records) {
-			ResourceItem resourceItem;
-			Double valueToPayPerTimeUnit;
-			
-			try {
-				resourceItem = recordUtils.getItemFromRecord(record);
-				valueToPayPerTimeUnit = plan.getItemFinancialValue(resourceItem);
-			} catch (InvalidParameterException e) {
-				throw new InternalServerErrorException(e.getMessage());
-			}
-			
-			Double timeUsed = recordUtils.getTimeFromRecord(record, 
-			        paymentStartTime, paymentEndTime);
-			
-			credits.deduct(resourceItem, valueToPayPerTimeUnit, timeUsed);
-		}
-		
-		databaseManager.saveUserCredits(credits);
+	    FinanceUser user = this.objectHolder.getUserById(userId, provider);
+	    List<Record> records = user.getPeriodRecords();
+	    UserCredits credits = this.objectHolder.getUserCreditsByUserId(userId, provider);
+	    
+	    synchronized(credits) {
+	        FinancePlan plan = this.objectHolder.getFinancePlan(planName);
+	        
+	        for (Record record : records) {
+	            ResourceItem resourceItem;
+	            Double valueToPayPerTimeUnit;
+	            
+	            try {
+	                resourceItem = recordUtils.getItemFromRecord(record);
+	                valueToPayPerTimeUnit = plan.getItemFinancialValue(resourceItem);
+	            } catch (InvalidParameterException e) {
+	                throw new InternalServerErrorException(e.getMessage());
+	            }
+	            
+	            Double timeUsed = recordUtils.getTimeFromRecord(record, 
+	                    paymentStartTime, paymentEndTime);
+	            
+	            credits.deduct(resourceItem, valueToPayPerTimeUnit, timeUsed);
+	        }
+	        
+	        this.objectHolder.saveUserCredits(credits);
+	    }
 	}
 
 	@Override
@@ -72,8 +77,10 @@ public class DefaultCreditsManager implements PaymentManager {
        String propertyValue = "";
         
         if (property.equals(USER_CREDITS)) {
-            UserCredits userCredits = databaseManager.getUserCreditsByUserId(userId, provider);
-            propertyValue = String.valueOf(userCredits.getCreditsValue());
+            UserCredits userCredits = this.objectHolder.getUserCreditsByUserId(userId, provider);
+            synchronized(userCredits) {
+                propertyValue = String.valueOf(userCredits.getCreditsValue());
+            }
         } else {
             throw new InvalidParameterException(
                     String.format(Messages.Exception.UNKNOWN_FINANCE_PROPERTY, property));
@@ -84,7 +91,7 @@ public class DefaultCreditsManager implements PaymentManager {
 
     @Override
     public void setFinancePlan(String planName) throws InvalidParameterException {
-        databaseManager.getFinancePlan(planName);
+        this.objectHolder.getFinancePlan(planName);
         
         this.planName = planName;
     }

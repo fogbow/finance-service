@@ -7,12 +7,14 @@ import org.apache.log4j.Logger;
 import com.google.common.annotations.VisibleForTesting;
 
 import cloud.fogbow.common.exceptions.FogbowException;
+import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.constants.Messages;
-import cloud.fogbow.fs.core.datastore.DatabaseManager;
+import cloud.fogbow.fs.core.InMemoryFinanceObjectsHolder;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
 import cloud.fogbow.fs.core.plugins.finance.StoppableRunner;
 import cloud.fogbow.fs.core.util.AccountingServiceClient;
+import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedList;
 import cloud.fogbow.fs.core.util.TimeUtils;
 import cloud.fogbow.fs.core.util.accounting.Record;
 
@@ -31,26 +33,29 @@ public class PaymentRunner extends StoppableRunner {
      * wait between consecutive billing processes.
      */
     public static final String USER_BILLING_INTERVAL = "billing_interval";
-	private DatabaseManager databaseManager;
+    private InMemoryFinanceObjectsHolder objectHolder;
 	private AccountingServiceClient accountingServiceClient;
 	private PaymentManager paymentManager;
 	private TimeUtils timeUtils;
 	
-	public PaymentRunner(long invoiceWaitTime, DatabaseManager databaseManager,
-			AccountingServiceClient accountingServiceClient, PaymentManager paymentManager) {
-		this(invoiceWaitTime, databaseManager, accountingServiceClient, 
-				paymentManager, new TimeUtils());
+	public PaymentRunner(long invoiceWaitTime, InMemoryFinanceObjectsHolder objectHolder,
+            AccountingServiceClient accountingServiceClient, PaymentManager paymentManager) {
+        this.timeUtils = new TimeUtils();
+        this.sleepTime = invoiceWaitTime;
+        this.accountingServiceClient = accountingServiceClient;
+        this.paymentManager = paymentManager;
+        this.objectHolder = objectHolder;
 	}
-	
-	public PaymentRunner(long invoiceWaitTime, DatabaseManager databaseManager,
-			AccountingServiceClient accountingServiceClient, PaymentManager paymentManager, 
-			TimeUtils timeUtils) {
-		this.timeUtils = timeUtils;
-		this.sleepTime = invoiceWaitTime;
-		this.databaseManager = databaseManager;
-		this.accountingServiceClient = accountingServiceClient;
-		this.paymentManager = paymentManager;
-	}
+
+    public PaymentRunner(long invoiceWaitTime, InMemoryFinanceObjectsHolder objectHolder,
+            AccountingServiceClient accountingServiceClient, PaymentManager paymentManager, 
+            TimeUtils timeUtils) {
+        this.timeUtils = timeUtils;
+        this.sleepTime = invoiceWaitTime;
+        this.accountingServiceClient = accountingServiceClient;
+        this.paymentManager = paymentManager;
+        this.objectHolder = objectHolder;
+    }
 
 	private long getUserLastBillingTime(FinanceUser user) {
 		String lastBillingTimeProperty = user.getProperty(FinanceUser.USER_LAST_BILLING_TIME);
@@ -63,39 +68,51 @@ public class PaymentRunner extends StoppableRunner {
 
 	@Override
 	public void doRun() {
-		// get registered users
-		List<FinanceUser> registeredUsers = this.databaseManager
-				.getRegisteredUsersByPaymentType(PostPaidFinancePlugin.PLUGIN_NAME);
+	    MultiConsumerSynchronizedList<FinanceUser> registeredUsers = objectHolder.
+		        getRegisteredUsersByPaymentType(PostPaidFinancePlugin.PLUGIN_NAME);
+	    Integer consumerId = registeredUsers.startIterating();
+	    
+	    try {
+	        FinanceUser user = registeredUsers.getNext(consumerId);
+	        
+	        while (user != null) {
+	            synchronized(user) {
+	                // if it is billing time
+	                long billingTime = this.timeUtils.getCurrentTimeMillis();
+	                long lastBillingTime = getUserLastBillingTime(user);
+	                long billingInterval = getUserBillingInterval(user);
+	                
+	                if (isBillingTime(billingTime, lastBillingTime, billingInterval)) {
+	                    // get records
+	                    try {
+	                        // Maybe move this conversion to ACCSClient
+	                        String invoiceStartDate = this.timeUtils.toDate(SIMPLE_DATE_FORMAT, lastBillingTime);
+	                        String invoiceEndDate = this.timeUtils.toDate(SIMPLE_DATE_FORMAT, billingTime); 
+	                        List<Record> userRecords = this.accountingServiceClient.getUserRecords(user.getId(), 
+	                                user.getProvider(), invoiceStartDate, invoiceEndDate);
+	                        // write records on db
+	                        user.setPeriodRecords(userRecords);
+	                        
+	                        // generate invoice
+	                        this.paymentManager.startPaymentProcess(user.getId(), user.getProvider(),
+	                                lastBillingTime, billingTime);
+	                        
+	                        user.setProperty(FinanceUser.USER_LAST_BILLING_TIME, String.valueOf(billingTime));
+	                        this.objectHolder.saveUser(user);
+	                    } catch (FogbowException e) {
+	                        LOGGER.error(String.format(Messages.Log.FAILED_TO_GENERATE_INVOICE_FOR_USER, user.getId(), e.getMessage()));
+	                    }
+	                }
+	            }
+	            
+	            user = registeredUsers.getNext(consumerId);
+	        }
+	    } catch (InvalidParameterException e) {
+	        LOGGER.error(String.format(Messages.Log.FAILED_TO_GENERATE_INVOICE, e.getMessage()));
+        } finally {
+	        registeredUsers.stopIterating(consumerId);
+	    }
 
-		// for each user
-		for (FinanceUser user : registeredUsers) {
-			// if it is billing time
-			long billingTime = this.timeUtils.getCurrentTimeMillis();
-			long lastBillingTime = getUserLastBillingTime(user);
-			long billingInterval = getUserBillingInterval(user);
-			
-			if (isBillingTime(billingTime, lastBillingTime, billingInterval)) {
-				// get records
-				try {
-					// Maybe move this conversion to ACCSClient
-					String invoiceStartDate = this.timeUtils.toDate(SIMPLE_DATE_FORMAT, lastBillingTime);
-					String invoiceEndDate = this.timeUtils.toDate(SIMPLE_DATE_FORMAT, billingTime); 
-					List<Record> userRecords = this.accountingServiceClient.getUserRecords(user.getId(), 
-							user.getProvider(), invoiceStartDate, invoiceEndDate);
-					// write records on db
-					user.setPeriodRecords(userRecords);
-					
-					// generate invoice
-					this.paymentManager.startPaymentProcess(user.getId(), user.getProvider(),
-					        lastBillingTime, billingTime);
-					
-					user.setProperty(FinanceUser.USER_LAST_BILLING_TIME, String.valueOf(billingTime));
-				} catch (FogbowException e) {
-					LOGGER.error(String.format(Messages.Log.FAILED_TO_GENERATE_INVOICE, user.getId(), e.getMessage()));
-				}
-			}
-		}
-		
 		checkIfMustStop();
 	}
 

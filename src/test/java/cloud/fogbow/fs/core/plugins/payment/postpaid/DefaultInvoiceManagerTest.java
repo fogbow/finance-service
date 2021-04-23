@@ -12,13 +12,14 @@ import org.mockito.Mockito;
 
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
-import cloud.fogbow.fs.core.datastore.DatabaseManager;
+import cloud.fogbow.fs.core.InMemoryFinanceObjectsHolder;
 import cloud.fogbow.fs.core.models.FinancePlan;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.models.Invoice;
 import cloud.fogbow.fs.core.models.InvoiceState;
 import cloud.fogbow.fs.core.plugins.payment.ComputeItem;
 import cloud.fogbow.fs.core.plugins.payment.VolumeItem;
+import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedList;
 import cloud.fogbow.fs.core.util.accounting.Record;
 import cloud.fogbow.fs.core.util.accounting.RecordUtils;
 
@@ -42,9 +43,10 @@ public class DefaultInvoiceManagerTest {
 	private static final String INVOICE_2_JSON_REPR = "invoice2json";
 	private static final String INVOICE_3_JSON_REPR = "invoice3json";
 	private static final String INVOICE_4_JSON_REPR = "invoice4json";
+    private static final Integer CONSUMER_ID = 0;
 	private Long invoiceStartTime = 0L;
 	private Long invoiceEndTime = 100L;
-	private DatabaseManager databaseManager;
+	private InMemoryFinanceObjectsHolder objectHolder;
 	private RecordUtils resourceItemFactory;
 	private InvoiceBuilder invoiceBuilder;
 	private FinanceUser user1;
@@ -63,7 +65,7 @@ public class DefaultInvoiceManagerTest {
 	public void testStartPaymentProcess() throws InternalServerErrorException, InvalidParameterException {
 		setUpInvoiceData();
 		
-		DefaultInvoiceManager invoiceManager = new DefaultInvoiceManager(databaseManager, 
+		DefaultInvoiceManager invoiceManager = new DefaultInvoiceManager(objectHolder, 
 				PLAN_NAME_1, resourceItemFactory, invoiceBuilder);
 		
 		invoiceManager.startPaymentProcess(USER_ID_1, PROVIDER_ID_1, invoiceStartTime, invoiceEndTime);
@@ -72,7 +74,7 @@ public class DefaultInvoiceManagerTest {
 		Mockito.verify(this.invoiceBuilder).setProviderId(PROVIDER_ID_1);
 		Mockito.verify(this.invoiceBuilder).addItem(item1, ITEM_1_VALUE, ITEM_1_TIME);
 		Mockito.verify(this.invoiceBuilder).addItem(item2, ITEM_2_VALUE, ITEM_2_TIME);
-		Mockito.verify(this.databaseManager).saveInvoice(invoiceToAdd);
+		Mockito.verify(this.objectHolder).registerInvoice(invoiceToAdd);
 	}
 	
 	// test case: When calling the startPaymentProcess method, 
@@ -85,7 +87,7 @@ public class DefaultInvoiceManagerTest {
 		setUpDataStructures();
 		setUpErrorResourceItemFactory();
 		
-		DefaultInvoiceManager invoiceManager = new DefaultInvoiceManager(databaseManager, 
+		DefaultInvoiceManager invoiceManager = new DefaultInvoiceManager(objectHolder, 
 				PLAN_NAME_1, resourceItemFactory, invoiceBuilder);
 		
 		invoiceManager.startPaymentProcess(USER_ID_1, PROVIDER_ID_1, invoiceStartTime, invoiceEndTime);
@@ -101,7 +103,7 @@ public class DefaultInvoiceManagerTest {
 		setUpDataStructures();
 		setUpErrorFinancePlan();
 		
-		DefaultInvoiceManager invoiceManager = new DefaultInvoiceManager(databaseManager, 
+		DefaultInvoiceManager invoiceManager = new DefaultInvoiceManager(objectHolder, 
 				PLAN_NAME_1, resourceItemFactory, invoiceBuilder);
 		
 		invoiceManager.startPaymentProcess(USER_ID_1, PROVIDER_ID_1, invoiceStartTime, invoiceEndTime);
@@ -114,7 +116,7 @@ public class DefaultInvoiceManagerTest {
 	public void testHasPaid() throws InvalidParameterException, InternalServerErrorException {
 		setUpInvoiceData();
 		
-		DefaultInvoiceManager invoiceManager = new DefaultInvoiceManager(databaseManager, 
+		DefaultInvoiceManager invoiceManager = new DefaultInvoiceManager(objectHolder, 
 				PLAN_NAME_1, resourceItemFactory, invoiceBuilder);
 		
 		// user1's invoices are: invoice1 (WAITING) and invoice2 (PAID)
@@ -130,10 +132,10 @@ public class DefaultInvoiceManagerTest {
 	// for each invoice, generate a representing string. Then, return a 
 	// concatenation of the strings.
 	@Test
-	public void testGetUserFinanceStateAllInvoices() throws InvalidParameterException {
+	public void testGetUserFinanceStateAllInvoices() throws InvalidParameterException, InternalServerErrorException {
 		setUpInvoiceData();
 		
-		DefaultInvoiceManager invoiceManager = new DefaultInvoiceManager(databaseManager, 
+		DefaultInvoiceManager invoiceManager = new DefaultInvoiceManager(objectHolder, 
 				PLAN_NAME_1, resourceItemFactory, invoiceBuilder);
 		
 		String user1State = invoiceManager.getUserFinanceState(USER_ID_1, PROVIDER_ID_1, 
@@ -153,28 +155,28 @@ public class DefaultInvoiceManagerTest {
 	// test case: When calling the getUserFinanceState method using an
 	// unknown property, it must throw an InvalidParameterException.
 	@Test(expected = InvalidParameterException.class)
-	public void testGetUserFinanceStateUnknownProperty() throws InvalidParameterException {
+	public void testGetUserFinanceStateUnknownProperty() throws InvalidParameterException, InternalServerErrorException {
 		setUpInvoiceData();
 		
-		DefaultInvoiceManager invoiceManager = new DefaultInvoiceManager(databaseManager, 
+		DefaultInvoiceManager invoiceManager = new DefaultInvoiceManager(objectHolder, 
 				PLAN_NAME_1, resourceItemFactory, invoiceBuilder);
 		
 		invoiceManager.getUserFinanceState(USER_ID_1, PROVIDER_ID_1, "unknownProperty");
 	}
 	
-	private void setUpInvoiceData() throws InvalidParameterException {
+	private void setUpInvoiceData() throws InvalidParameterException, InternalServerErrorException {
 		setUpDataStructures();
 		setUpUtilClasses();
 	}
 
-	private void setUpUtilClasses() throws InvalidParameterException {
+	private void setUpUtilClasses() throws InvalidParameterException, InternalServerErrorException {
 		setUpFinancePlan();
 		setUpResourceItemFactory();
 		setUpDatabaseManager();
 		setUpInvoiceBuilder();
 	}
 	
-	private void setUpErrorResourceItemFactory() throws InvalidParameterException {
+	private void setUpErrorResourceItemFactory() throws InvalidParameterException, InternalServerErrorException {
 		setUpFinancePlan();
 
 		this.resourceItemFactory = Mockito.mock(RecordUtils.class);
@@ -187,7 +189,7 @@ public class DefaultInvoiceManagerTest {
 		setUpInvoiceBuilder();
 	}
 	
-	private void setUpErrorFinancePlan() throws InvalidParameterException {
+	private void setUpErrorFinancePlan() throws InvalidParameterException, InternalServerErrorException {
 		this.financePlan = Mockito.mock(FinancePlan.class);
 		Mockito.when(this.financePlan.getItemFinancialValue(item1)).thenThrow(new InvalidParameterException());
 		Mockito.when(this.financePlan.getItemFinancialValue(item2)).thenReturn(ITEM_2_VALUE);
@@ -202,21 +204,14 @@ public class DefaultInvoiceManagerTest {
 		Mockito.when(this.invoiceBuilder.buildInvoice()).thenReturn(invoiceToAdd);
 	}
 
-	private void setUpDatabaseManager() throws InvalidParameterException {
-		this.databaseManager = Mockito.mock(DatabaseManager.class);
-		
-		List<Invoice> invoiceListUser1 = new ArrayList<Invoice>();
+	private void setUpDatabaseManager() throws InvalidParameterException, InternalServerErrorException {
 		Invoice invoice1 = Mockito.mock(Invoice.class);
 		Mockito.when(invoice1.getState()).thenReturn(InvoiceState.WAITING);
 		Mockito.when(invoice1.toString()).thenReturn(INVOICE_1_JSON_REPR);
 		Invoice invoice2 = Mockito.mock(Invoice.class);
 		Mockito.when(invoice2.getState()).thenReturn(InvoiceState.PAID);
 		Mockito.when(invoice2.toString()).thenReturn(INVOICE_2_JSON_REPR);
-		
-		invoiceListUser1.add(invoice1);
-		invoiceListUser1.add(invoice2);
-		
-		List<Invoice> invoiceListUser2 = new ArrayList<Invoice>();
+
 		Invoice invoice3 = Mockito.mock(Invoice.class);
 		Mockito.when(invoice3.getState()).thenReturn(InvoiceState.PAID);
 		Mockito.when(invoice3.toString()).thenReturn(INVOICE_3_JSON_REPR);
@@ -224,14 +219,24 @@ public class DefaultInvoiceManagerTest {
 		Mockito.when(invoice4.getState()).thenReturn(InvoiceState.DEFAULTING);
 		Mockito.when(invoice4.toString()).thenReturn(INVOICE_4_JSON_REPR);
 		
-		invoiceListUser2.add(invoice3);
-		invoiceListUser2.add(invoice4);
+		this.objectHolder = Mockito.mock(InMemoryFinanceObjectsHolder.class);
+		
+        MultiConsumerSynchronizedList<Invoice> invoiceListUser1 = Mockito.mock(MultiConsumerSynchronizedList.class);
+        MultiConsumerSynchronizedList<Invoice> invoiceListUser2 = Mockito.mock(MultiConsumerSynchronizedList.class);
+        MultiConsumerSynchronizedList<Invoice> invoiceListUser3 = Mockito.mock(MultiConsumerSynchronizedList.class);
 
-		Mockito.when(this.databaseManager.getUserById(USER_ID_1, PROVIDER_ID_1)).thenReturn(user1);
-		Mockito.when(this.databaseManager.getInvoiceByUserId(USER_ID_1, PROVIDER_ID_1)).thenReturn(invoiceListUser1);
-		Mockito.when(this.databaseManager.getInvoiceByUserId(USER_ID_2, PROVIDER_ID_2)).thenReturn(invoiceListUser2);
-		Mockito.when(this.databaseManager.getInvoiceByUserId(USER_ID_3, PROVIDER_ID_3)).thenReturn(new ArrayList<Invoice>());
-		Mockito.when(this.databaseManager.getFinancePlan(PLAN_NAME_1)).thenReturn(financePlan);
+        Mockito.when(invoiceListUser1.startIterating()).thenReturn(CONSUMER_ID);
+        Mockito.when(invoiceListUser1.getNext(CONSUMER_ID)).thenReturn(invoice1, invoice2, null);
+        Mockito.when(invoiceListUser2.startIterating()).thenReturn(CONSUMER_ID);
+        Mockito.when(invoiceListUser2.getNext(CONSUMER_ID)).thenReturn(invoice3, invoice4, null);
+        Mockito.when(invoiceListUser3.startIterating()).thenReturn(CONSUMER_ID);
+        Mockito.when(invoiceListUser3.getNext(CONSUMER_ID)).thenReturn(null);
+        
+		Mockito.when(this.objectHolder.getUserById(USER_ID_1, PROVIDER_ID_1)).thenReturn(user1);
+		Mockito.when(this.objectHolder.getInvoiceByUserId(USER_ID_1, PROVIDER_ID_1)).thenReturn(invoiceListUser1);
+		Mockito.when(this.objectHolder.getInvoiceByUserId(USER_ID_2, PROVIDER_ID_2)).thenReturn(invoiceListUser2);
+		Mockito.when(this.objectHolder.getInvoiceByUserId(USER_ID_3, PROVIDER_ID_3)).thenReturn(invoiceListUser3);
+		Mockito.when(this.objectHolder.getFinancePlan(PLAN_NAME_1)).thenReturn(financePlan);
 	}
 
 	private void setUpResourceItemFactory() throws InvalidParameterException {

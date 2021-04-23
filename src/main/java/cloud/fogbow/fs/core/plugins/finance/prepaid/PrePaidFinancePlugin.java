@@ -1,21 +1,21 @@
 package cloud.fogbow.fs.core.plugins.finance.prepaid;
 
-import java.util.List;
 import java.util.Map;
 
 import cloud.fogbow.common.exceptions.ConfigurationErrorException;
+import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.common.models.SystemUser;
 import cloud.fogbow.fs.constants.Messages;
+import cloud.fogbow.fs.core.InMemoryFinanceObjectsHolder;
 import cloud.fogbow.fs.core.PaymentManagerInstantiator;
 import cloud.fogbow.fs.core.PropertiesHolder;
-import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.models.UserCredits;
 import cloud.fogbow.fs.core.plugins.FinancePlugin;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
-import cloud.fogbow.fs.core.plugins.payment.prepaid.UserCreditsFactory;
 import cloud.fogbow.fs.core.util.AccountingServiceClient;
+import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedList;
 import cloud.fogbow.fs.core.util.RasClient;
 import cloud.fogbow.ras.core.models.Operation;
 import cloud.fogbow.ras.core.models.RasOperation;
@@ -59,34 +59,29 @@ public class PrePaidFinancePlugin implements FinancePlugin {
 	private RasClient rasClient;
 	private PaymentRunner paymentRunner;
 	private StopServiceRunner stopServiceRunner;
-	private DatabaseManager databaseManager;
 	private long creditsDeductionWaitTime;
 	private boolean threadsAreRunning;
-	private UserCreditsFactory userCreditsFactory;
+	private InMemoryFinanceObjectsHolder objectHolder;
 	
-	public PrePaidFinancePlugin(DatabaseManager databaseManager) throws ConfigurationErrorException {
-		this(databaseManager, new AccountingServiceClient(), new RasClient(),
-				PaymentManagerInstantiator.getPaymentManager(
-						PropertiesHolder.getInstance().getProperty(PRE_PAID_PAYMENT_MANAGER),
-						databaseManager,
-						PropertiesHolder.getInstance().getProperty(PRE_PAID_DEFAULT_FINANCE_PLAN)),
-				Long.valueOf(PropertiesHolder.getInstance().getProperty(CREDITS_DEDUCTION_WAIT_TIME)), 
-				new UserCreditsFactory());
-	}
+    public PrePaidFinancePlugin(InMemoryFinanceObjectsHolder objectHolder) throws ConfigurationErrorException {
+        this(objectHolder, new AccountingServiceClient(), new RasClient(),
+                PaymentManagerInstantiator.getPaymentManager(
+                        PropertiesHolder.getInstance().getProperty(PRE_PAID_PAYMENT_MANAGER), objectHolder, 
+                        PropertiesHolder.getInstance().getProperty(PRE_PAID_DEFAULT_FINANCE_PLAN)),
+                Long.valueOf(PropertiesHolder.getInstance().getProperty(CREDITS_DEDUCTION_WAIT_TIME)));
+    }
 	
-	public PrePaidFinancePlugin(DatabaseManager databaseManager, AccountingServiceClient accountingServiceClient, 
-			RasClient rasClient, PaymentManager paymentManager, long creditsDeductionWaitTime,
-			UserCreditsFactory userCreditsFactory) {
-		this.accountingServiceClient = accountingServiceClient;
-		this.rasClient = rasClient;
-		this.databaseManager = databaseManager;
-		this.paymentManager = paymentManager;
-		this.creditsDeductionWaitTime = creditsDeductionWaitTime;
-		this.threadsAreRunning = false;
-		this.userCreditsFactory = userCreditsFactory;
-	}
-	
-	@Override
+	public PrePaidFinancePlugin(InMemoryFinanceObjectsHolder objectHolder, AccountingServiceClient accountingServiceClient,
+            RasClient rasClient, PaymentManager paymentManager, long creditsDeductionWaitTime) {
+        this.accountingServiceClient = accountingServiceClient;
+        this.rasClient = rasClient;
+        this.paymentManager = paymentManager;
+        this.creditsDeductionWaitTime = creditsDeductionWaitTime;
+        this.threadsAreRunning = false;
+        this.objectHolder = objectHolder;
+    }
+
+    @Override
 	public String getName() {
 		return PLUGIN_NAME;
 	}
@@ -94,11 +89,11 @@ public class PrePaidFinancePlugin implements FinancePlugin {
 	@Override
 	public void startThreads() {
 		if (!this.threadsAreRunning) {
-			this.paymentRunner = new PaymentRunner(creditsDeductionWaitTime, databaseManager, 
+			this.paymentRunner = new PaymentRunner(creditsDeductionWaitTime, objectHolder, 
 					accountingServiceClient, paymentManager);
 			this.paymentThread = new Thread(paymentRunner);
 			
-			this.stopServiceRunner = new StopServiceRunner(creditsDeductionWaitTime, databaseManager, 
+			this.stopServiceRunner = new StopServiceRunner(creditsDeductionWaitTime, objectHolder, 
 					paymentManager, rasClient);
 			this.stopServiceThread = new Thread(stopServiceRunner);
 			
@@ -132,16 +127,27 @@ public class PrePaidFinancePlugin implements FinancePlugin {
 	}
 
 	@Override
-	public boolean managesUser(String userId, String provider) {
-		List<FinanceUser> financeUsers = this.databaseManager.getRegisteredUsersByPaymentType(PLUGIN_NAME);
-
-		for (FinanceUser financeUser : financeUsers) {
-			if (financeUser.getId().equals(userId)) {
-				return true;
-			}
-		}
-
-		return false;
+	public boolean managesUser(String userId, String provider) throws InvalidParameterException {
+	    MultiConsumerSynchronizedList<FinanceUser> financeUsers = 
+                this.objectHolder.getRegisteredUsersByPaymentType(PLUGIN_NAME);
+        Integer consumerId = financeUsers.startIterating();
+	    
+        try {
+            FinanceUser item = financeUsers.getNext(consumerId);
+            
+            while (item != null) {
+                if (item.getId().equals(userId) && 
+                        item.getProvider().equals(provider)) {
+                    return true;
+                }
+                
+                item = financeUsers.getNext(consumerId);
+            }
+            
+            return false;
+        } finally {
+            financeUsers.stopIterating(consumerId);
+        }
 	}
 
 	@Override
@@ -149,32 +155,28 @@ public class PrePaidFinancePlugin implements FinancePlugin {
 		return this.paymentManager.getUserFinanceState(userId, provider, property);
 	}
 
-	// TODO This operation should have some level of thread protection
 	@Override
-	public void addUser(String userId, String provider, Map<String, String> financeOptions) {
+	public void addUser(String userId, String provider, Map<String, String> financeOptions) throws InternalServerErrorException {
 	    // FIXME this operation should be atomic
-		this.databaseManager.registerUser(userId, provider, PLUGIN_NAME, financeOptions);
-		UserCredits userCredits = this.userCreditsFactory.getUserCredits(userId, provider);
-		this.databaseManager.saveUserCredits(userCredits);
+        this.objectHolder.registerUser(userId, provider, PLUGIN_NAME, financeOptions);
+        this.objectHolder.registerUserCredits(userId, provider);
 	}
 
-	// TODO This operation should have some level of thread protection
 	// TODO This operation should also remove the user credits
 	// TODO test
 	@Override
-	public void removeUser(String userId, String provider) throws InvalidParameterException {
-		this.databaseManager.removeUser(userId, provider);
+	public void removeUser(String userId, String provider) throws InvalidParameterException, InternalServerErrorException {
+        this.objectHolder.removeUser(userId, provider);
 	}
 
-	// TODO This operation should have some level of thread protection
 	@Override
 	public void changeOptions(String userId, String provider, Map<String, String> financeOptions) throws InvalidParameterException {
-		this.databaseManager.changeOptions(userId, provider, financeOptions);
+		this.objectHolder.changeOptions(userId, provider, financeOptions);
 	}
 
-	// TODO This operation should have some level of thread protection
 	@Override
-	public void updateFinanceState(String userId, String provider, Map<String, String> financeState) throws InvalidParameterException {
+	public void updateFinanceState(String userId, String provider, Map<String, String> financeState) throws InvalidParameterException, 
+	InternalServerErrorException {
 	    if (!financeState.containsKey(CREDITS_TO_ADD)) {
 	        throw new InvalidParameterException(String.format(Messages.Exception.MISSING_FINANCE_STATE_PROPERTY, CREDITS_TO_ADD));
 	    }
@@ -189,8 +191,11 @@ public class PrePaidFinancePlugin implements FinancePlugin {
 	        throw new InvalidParameterException(String.format(Messages.Exception.INVALID_FINANCE_STATE_PROPERTY, propertyValue, CREDITS_TO_ADD));
 	    }
 	    
-		UserCredits userCredits = this.databaseManager.getUserCreditsByUserId(userId, provider);
-		userCredits.addCredits(valueToAdd);
-		this.databaseManager.saveUserCredits(userCredits);
+		UserCredits userCredits = this.objectHolder.getUserCreditsByUserId(userId, provider);
+		
+        synchronized (userCredits) {
+            userCredits.addCredits(valueToAdd);
+            this.objectHolder.saveUserCredits(userCredits);
+        }
 	}
 }

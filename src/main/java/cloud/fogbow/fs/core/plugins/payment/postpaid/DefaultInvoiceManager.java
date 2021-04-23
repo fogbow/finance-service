@@ -6,13 +6,14 @@ import java.util.List;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.constants.Messages;
-import cloud.fogbow.fs.core.datastore.DatabaseManager;
+import cloud.fogbow.fs.core.InMemoryFinanceObjectsHolder;
 import cloud.fogbow.fs.core.models.FinancePlan;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.models.Invoice;
 import cloud.fogbow.fs.core.models.InvoiceState;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
 import cloud.fogbow.fs.core.plugins.payment.ResourceItem;
+import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedList;
 import cloud.fogbow.fs.core.util.accounting.Record;
 import cloud.fogbow.fs.core.util.accounting.RecordUtils;
 
@@ -21,56 +22,75 @@ public class DefaultInvoiceManager implements PaymentManager {
 	public static final String ALL_USER_INVOICES_PROPERTY_NAME = "ALL_USER_INVOICES";
 	
 	private String planName;
-	private DatabaseManager databaseManager;
+	private InMemoryFinanceObjectsHolder objectHolder;
 	private RecordUtils resourceItemFactory;
 	private InvoiceBuilder invoiceBuilder;
 	
-	public DefaultInvoiceManager(DatabaseManager databaseManager, String planName) {
-		this.planName = planName;
-		this.databaseManager = databaseManager;
-		this.resourceItemFactory = new RecordUtils();
-		this.invoiceBuilder = new InvoiceBuilder();
-	}
+    public DefaultInvoiceManager(InMemoryFinanceObjectsHolder objectHolder, String planName) {
+        this.objectHolder = objectHolder;
+        this.planName = planName;
+        this.resourceItemFactory = new RecordUtils();
+        this.invoiceBuilder = new InvoiceBuilder();
+    }
 
-	public DefaultInvoiceManager(DatabaseManager databaseManager, String planName,
-		RecordUtils resourceItemFactory, InvoiceBuilder invoiceBuilder) {
-		this.planName = planName;
-		this.databaseManager = databaseManager;
-		this.resourceItemFactory = resourceItemFactory;
-		this.invoiceBuilder = invoiceBuilder;
-	}
+    public DefaultInvoiceManager(InMemoryFinanceObjectsHolder objectHolder, String planName, RecordUtils resourceItemFactory,
+            InvoiceBuilder invoiceBuilder) {
+        this.objectHolder = objectHolder;
+        this.planName = planName;
+        this.resourceItemFactory = resourceItemFactory;
+        this.invoiceBuilder = invoiceBuilder;
+    }
 	
 	@Override
 	public boolean hasPaid(String userId, String provider) {
-		List<Invoice> userInvoices = databaseManager.getInvoiceByUserId(userId, provider);
-		
-		for (Invoice invoice : userInvoices) {
-			if (invoice.getState().equals(InvoiceState.DEFAULTING)) {
-				return false;
-			}
-		}
-
-		return true;
+	    try {
+	        MultiConsumerSynchronizedList<Invoice> userInvoices = this.objectHolder.getInvoiceByUserId(userId, provider);
+            Integer consumerId = userInvoices.startIterating();
+	        
+	        try {
+                Invoice invoice = userInvoices.getNext(consumerId);
+                
+                while (invoice != null) {
+                    if (invoice.getState().equals(InvoiceState.DEFAULTING)) {
+                        return false;
+                    } 
+                    
+                    invoice = userInvoices.getNext(consumerId);
+                }
+	        } finally {
+	            userInvoices.stopIterating(consumerId);
+	        }
+            // TODO treat these exceptions
+        } catch (InvalidParameterException e) {
+            e.printStackTrace();
+        } catch (InternalServerErrorException e) {
+            e.printStackTrace();
+        }
+	    
+	    return true;
 	}
 
 	@Override
 	public void startPaymentProcess(String userId, String provider, 
 	        Long paymentStartTime, Long paymentEndTime) throws InternalServerErrorException, InvalidParameterException {
-		FinanceUser user = databaseManager.getUserById(userId, provider);
-		FinancePlan plan = databaseManager.getFinancePlan(planName);
-		List<Record> records = user.getPeriodRecords();
-		this.invoiceBuilder.setUserId(userId);
-		this.invoiceBuilder.setProviderId(provider);
-		
-		// TODO What is the expected behavior for the empty records list case? 
-		for (Record record : records) {
-			addRecordToInvoice(record, plan, paymentStartTime, paymentEndTime);
-		}
-		
-		Invoice invoice = invoiceBuilder.buildInvoice();
-		invoiceBuilder.reset();
-		
-		databaseManager.saveInvoice(invoice);
+	    FinanceUser user = this.objectHolder.getUserById(userId, provider);
+	    
+	    synchronized(user) {
+	        FinancePlan plan = this.objectHolder.getFinancePlan(planName);
+	        List<Record> records = user.getPeriodRecords();
+	        this.invoiceBuilder.setUserId(userId);
+	        this.invoiceBuilder.setProviderId(provider);
+	        
+	        // TODO What is the expected behavior for the empty records list case? 
+	        for (Record record : records) {
+	            addRecordToInvoice(record, plan, paymentStartTime, paymentEndTime);
+	        }
+	        
+	        Invoice invoice = invoiceBuilder.buildInvoice();
+	        invoiceBuilder.reset();
+	        
+	        this.objectHolder.registerInvoice(invoice);
+	    }
 	}
 	
 	private void addRecordToInvoice(Record record, FinancePlan plan, 
@@ -91,15 +111,37 @@ public class DefaultInvoiceManager implements PaymentManager {
 		String propertyValue = "";
 		
 		if (property.equals(ALL_USER_INVOICES_PROPERTY_NAME)) {
-			List<Invoice> userInvoices = databaseManager.getInvoiceByUserId(userId, provider);
-			List<String> invoiceJsonReps = new ArrayList<String>();
-			
-			for (Invoice invoice : userInvoices) {
-				String invoiceJson = invoice.toString();
-				invoiceJsonReps.add(invoiceJson);
-			}
-			
-			propertyValue = "[" + String.join(PROPERTY_VALUES_SEPARATOR, invoiceJsonReps) + "]";
+		    MultiConsumerSynchronizedList<Invoice> userInvoices;
+		    
+            try {
+                userInvoices = this.objectHolder.getInvoiceByUserId(userId, provider);
+                List<String> invoiceJsonReps = new ArrayList<String>();
+                
+                Integer consumerId = userInvoices.startIterating();
+                
+                
+                try {
+                    Invoice invoice = userInvoices.getNext(consumerId);
+                    
+                    while (invoice != null) {
+                        synchronized(invoice) {
+                            String invoiceJson = invoice.toString();
+                            invoiceJsonReps.add(invoiceJson);    
+                        }
+                        
+                        invoice = userInvoices.getNext(consumerId);
+                    }
+                } finally {
+                    userInvoices.stopIterating(consumerId);
+                }
+                
+                propertyValue = "[" + String.join(PROPERTY_VALUES_SEPARATOR, invoiceJsonReps) + "]";
+                // TODO treat these exceptions
+            } catch (InvalidParameterException e) {
+                e.printStackTrace();
+            } catch (InternalServerErrorException e) {
+                e.printStackTrace();
+            }
 		} else {
 			throw new InvalidParameterException(
 					String.format(Messages.Exception.UNKNOWN_FINANCE_PROPERTY, property));
@@ -110,7 +152,7 @@ public class DefaultInvoiceManager implements PaymentManager {
 
 	@Override
 	public void setFinancePlan(String planName) throws InvalidParameterException {
-	    databaseManager.getFinancePlan(planName);
+	    this.objectHolder.getFinancePlan(planName);
 	    
 		this.planName = planName;
 	}

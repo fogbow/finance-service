@@ -1,21 +1,22 @@
 package cloud.fogbow.fs.core.plugins.finance.postpaid;
 
-import java.util.List;
 import java.util.Map;
 
 import cloud.fogbow.common.exceptions.ConfigurationErrorException;
+import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.common.models.SystemUser;
 import cloud.fogbow.fs.constants.Messages;
+import cloud.fogbow.fs.core.InMemoryFinanceObjectsHolder;
 import cloud.fogbow.fs.core.PaymentManagerInstantiator;
 import cloud.fogbow.fs.core.PropertiesHolder;
-import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.models.Invoice;
 import cloud.fogbow.fs.core.models.InvoiceState;
 import cloud.fogbow.fs.core.plugins.FinancePlugin;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
 import cloud.fogbow.fs.core.util.AccountingServiceClient;
+import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedList;
 import cloud.fogbow.fs.core.util.RasClient;
 import cloud.fogbow.ras.core.models.Operation;
 import cloud.fogbow.ras.core.models.RasOperation;
@@ -56,30 +57,29 @@ public class PostPaidFinancePlugin implements FinancePlugin {
 	private RasClient rasClient;
 	private PaymentRunner paymentRunner;
 	private StopServiceRunner stopServiceRunner;
-	private DatabaseManager databaseManager;
 	private long invoiceWaitTime;
 	private boolean threadsAreRunning;
+	private InMemoryFinanceObjectsHolder objectHolder;
 
-	public PostPaidFinancePlugin(DatabaseManager databaseManager) throws ConfigurationErrorException {
-		this(databaseManager, new AccountingServiceClient(), new RasClient(),
-				PaymentManagerInstantiator.getPaymentManager(
-						PropertiesHolder.getInstance().getProperty(POST_PAID_PAYMENT_MANAGER),
-						databaseManager,
-						PropertiesHolder.getInstance().getProperty(POST_PAID_DEFAULT_FINANCE_PLAN)),
-				Long.valueOf(PropertiesHolder.getInstance().getProperty(INVOICE_WAIT_TIME)));
-	}
+    public PostPaidFinancePlugin(InMemoryFinanceObjectsHolder objectHolder) throws ConfigurationErrorException {
+        this(objectHolder, new AccountingServiceClient(), new RasClient(),
+                PaymentManagerInstantiator.getPaymentManager(
+                        PropertiesHolder.getInstance().getProperty(POST_PAID_PAYMENT_MANAGER), objectHolder,
+                        PropertiesHolder.getInstance().getProperty(POST_PAID_DEFAULT_FINANCE_PLAN)),
+                Long.valueOf(PropertiesHolder.getInstance().getProperty(INVOICE_WAIT_TIME)));
+    }
 	
-	public PostPaidFinancePlugin(DatabaseManager databaseManager, AccountingServiceClient accountingServiceClient, 
-			RasClient rasClient, PaymentManager paymentManager, long invoiceWaitTime) {
-		this.accountingServiceClient = accountingServiceClient;
-		this.rasClient = rasClient;
-		this.databaseManager = databaseManager;
-		this.paymentManager = paymentManager;
-		this.invoiceWaitTime = invoiceWaitTime;
-		this.threadsAreRunning = false;
-	}
-	
-	@Override
+	public PostPaidFinancePlugin(InMemoryFinanceObjectsHolder objectHolder, AccountingServiceClient accountingServiceClient,
+            RasClient rasClient, PaymentManager paymentManager, long invoiceWaitTime) {
+	    this.objectHolder = objectHolder;
+        this.accountingServiceClient = accountingServiceClient;
+        this.rasClient = rasClient;
+        this.paymentManager = paymentManager;
+        this.invoiceWaitTime = invoiceWaitTime;
+        this.threadsAreRunning = false;
+    }
+
+    @Override
 	public String getName() {
 		return PLUGIN_NAME;
 	}
@@ -87,10 +87,10 @@ public class PostPaidFinancePlugin implements FinancePlugin {
 	@Override
 	public void startThreads() {
 		if (!this.threadsAreRunning) {
-			this.paymentRunner = new PaymentRunner(invoiceWaitTime, databaseManager, accountingServiceClient, paymentManager);
+			this.paymentRunner = new PaymentRunner(invoiceWaitTime, objectHolder, accountingServiceClient, paymentManager);
 			this.paymentThread = new Thread(paymentRunner);
 			
-			this.stopServiceRunner = new StopServiceRunner(invoiceWaitTime, databaseManager, paymentManager, rasClient);
+			this.stopServiceRunner = new StopServiceRunner(invoiceWaitTime, objectHolder, paymentManager, rasClient);
 			this.stopServiceThread = new Thread(stopServiceRunner);
 			
 			this.paymentThread.start();
@@ -123,16 +123,27 @@ public class PostPaidFinancePlugin implements FinancePlugin {
 	}
 
 	@Override
-	public boolean managesUser(String userId, String provider) {
-		List<FinanceUser> financeUsers = this.databaseManager.getRegisteredUsersByPaymentType(PLUGIN_NAME); 
-		
-		for (FinanceUser financeUser : financeUsers) {
-			if (financeUser.getId().equals(userId)) {
-				return true;
-			}
-		}
-		
-		return false;
+	public boolean managesUser(String userId, String provider) throws InvalidParameterException {
+        MultiConsumerSynchronizedList<FinanceUser> financeUsers = this.objectHolder
+                .getRegisteredUsersByPaymentType(PLUGIN_NAME);
+        Integer consumerId = financeUsers.startIterating();
+
+        try {
+            FinanceUser item = financeUsers.getNext(consumerId);
+
+            while (item != null) {
+                if (item.getId().equals(userId) && 
+                        item.getProvider().equals(provider)) {
+                    return true;
+                }
+
+                item = financeUsers.getNext(consumerId);
+            }
+            
+            return false;
+        } finally {
+            financeUsers.stopIterating(consumerId);
+        }
 	}
 
 	@Override
@@ -140,35 +151,33 @@ public class PostPaidFinancePlugin implements FinancePlugin {
 		return this.paymentManager.getUserFinanceState(userId, provider, property);
 	}
 
-	// TODO This operation should have some level of thread protection
 	@Override
-	public void addUser(String userId, String provider, Map<String, String> financeOptions) throws InvalidParameterException {
+	public void addUser(String userId, String provider, Map<String, String> financeOptions) throws InvalidParameterException, InternalServerErrorException {
 	    validateFinanceOptions(financeOptions);
-		this.databaseManager.registerUser(userId, provider, PLUGIN_NAME, financeOptions);
+        this.objectHolder.registerUser(userId, provider, PLUGIN_NAME, financeOptions);
 	}
 	
-	// TODO This operation should have some level of thread protection
 	// TODO This operation should also remove the user invoices
 	// TODO test
 	@Override
-	public void removeUser(String userId, String provider) throws InvalidParameterException {
-		this.databaseManager.removeUser(userId, provider);
+	public void removeUser(String userId, String provider) throws InvalidParameterException, InternalServerErrorException {
+	    this.objectHolder.removeUser(userId, provider);
 	}
 
-	// TODO This operation should have some level of thread protection
 	@Override
 	public void changeOptions(String userId, String provider, Map<String, String> financeOptions) throws InvalidParameterException {
 	    validateFinanceOptions(financeOptions);
-		this.databaseManager.changeOptions(userId, provider, financeOptions);
+		this.objectHolder.changeOptions(userId, provider, financeOptions);
 	}
 
-	// TODO This operation should have some level of thread protection
 	@Override
 	public void updateFinanceState(String userId, String provider, Map<String, String> financeState) throws InvalidParameterException {
 		for (String invoiceId : financeState.keySet()) {
-			Invoice invoice = this.databaseManager.getInvoice(invoiceId);
-			invoice.setState(InvoiceState.fromValue(financeState.get(invoiceId)));
-			this.databaseManager.saveInvoice(invoice);
+			Invoice invoice = this.objectHolder.getInvoice(invoiceId);
+			synchronized(invoice) {
+			    invoice.setState(InvoiceState.fromValue(financeState.get(invoiceId)));
+			    this.objectHolder.saveInvoice(invoice);
+			}
 		}
 	}
 	

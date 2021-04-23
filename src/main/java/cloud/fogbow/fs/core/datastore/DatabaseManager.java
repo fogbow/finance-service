@@ -38,6 +38,10 @@ public class DatabaseManager {
 		financeUsers.add(user);
 	}
 	
+    public void saveUser(FinanceUser user) {
+        financeUsers.add(user);
+    }
+	
 	public void removeUser(String userId, String provider) throws InvalidParameterException {
 		financeUsers.remove(getUserById(userId, provider));
 	}
@@ -76,7 +80,13 @@ public class DatabaseManager {
 		for (String option : financeOptions.keySet()) {
 			user.setProperty(option, financeOptions.get(option));
 		}
+		
+		this.saveUser(user);
 	}
+	
+    public void changeOptions(FinanceUser user, Map<String, String> financeOptions) {
+        this.saveUser(user);
+    }
 
 	public void updateFinanceState(String userId, String provider, Map<String, String> financeState) throws InvalidParameterException {
 		// TODO validation
@@ -92,6 +102,10 @@ public class DatabaseManager {
 	        invoices.add(invoice);
 	    }
 	}
+	
+    public List<Invoice> getRegisteredInvoices() {
+        return invoices;
+    }
 
 	public Invoice getInvoice(String invoiceId) throws InvalidParameterException {
 		for (Invoice invoice : invoices) {
@@ -115,6 +129,10 @@ public class DatabaseManager {
 		
 		return userInvoices;
 	}
+	
+    public List<UserCredits> getRegisteredUserCredits() {
+        return creditsList;
+    }
 	
 	public UserCredits getUserCreditsByUserId(String userId, String provider) throws InvalidParameterException {
 	    for (UserCredits userCredits : creditsList) {
@@ -148,7 +166,11 @@ public class DatabaseManager {
 		
 		throw new InvalidParameterException(String.format(Messages.Exception.UNABLE_TO_FIND_PLAN, planName));
 	}
-
+	
+	public List<FinancePlan> getRegisteredFinancePlans() {
+	    return financePlans;
+	}
+	
 	public void removeFinancePlan(String planName) {
 	    FinancePlan planToRemove = null;
 	    

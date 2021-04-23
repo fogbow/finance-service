@@ -10,13 +10,13 @@ import com.google.common.annotations.VisibleForTesting;
 import cloud.fogbow.as.core.util.AuthenticationUtil;
 import cloud.fogbow.common.exceptions.ConfigurationErrorException;
 import cloud.fogbow.common.exceptions.FogbowException;
+import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.common.models.SystemUser;
 import cloud.fogbow.fs.api.parameters.AuthorizableUser;
 import cloud.fogbow.fs.api.parameters.User;
 import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
 import cloud.fogbow.fs.constants.Messages;
-import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.models.FinancePlan;
 import cloud.fogbow.fs.core.plugins.FinancePlugin;
 import cloud.fogbow.fs.core.util.FinancePlanFactory;
@@ -25,17 +25,18 @@ public class FinanceManager {
 	@VisibleForTesting
 	static final String FINANCE_PLUGINS_CLASS_NAMES_SEPARATOR = ",";
 	private List<FinancePlugin> financePlugins;
-	private DatabaseManager databaseManager;
+	private InMemoryFinanceObjectsHolder objectHolder;
 	private FinancePlanFactory financePlanFactory;
 	
-	public FinanceManager(DatabaseManager databaseManager, FinancePlanFactory financePlanFactory) 
-			throws ConfigurationErrorException, InvalidParameterException {
-		this.databaseManager = databaseManager;
-		this.financePlanFactory = financePlanFactory;
+    public FinanceManager(InMemoryFinanceObjectsHolder objectHolder, 
+            FinancePlanFactory financePlanFactory)
+            throws ConfigurationErrorException, InvalidParameterException {
+        this.objectHolder = objectHolder;
+        this.financePlanFactory = financePlanFactory;
 
-		createDefaultPlanIfItDoesNotExist();
-		createFinancePlugins(databaseManager);
-	}
+        createDefaultPlanIfItDoesNotExist();
+        createFinancePlugins(objectHolder);
+    }
 
 	private void createDefaultPlanIfItDoesNotExist() throws InvalidParameterException {
 		String defaultFinancePlanName = PropertiesHolder.getInstance()
@@ -44,40 +45,40 @@ public class FinanceManager {
 				.getProperty(ConfigurationPropertyKeys.DEFAULT_FINANCE_PLAN_FILE_PATH);
 		
 		try {
-		    this.databaseManager.getFinancePlan(defaultFinancePlanName);
+		    this.objectHolder.getFinancePlan(defaultFinancePlanName);
         } catch (InvalidParameterException e) {
             FinancePlan financePlan = this.financePlanFactory.createFinancePlan(defaultFinancePlanName, 
                     defaultFinancePlanFilePath);
-            this.databaseManager.saveFinancePlan(financePlan);
+            this.objectHolder.registerFinancePlan(financePlan);
         }
 	}
-	
-	private void createFinancePlugins(DatabaseManager databaseManager) throws ConfigurationErrorException {
-		ArrayList<FinancePlugin> financePlugins = new ArrayList<FinancePlugin>();
 
-		String financePluginsString = PropertiesHolder.getInstance()
-				.getProperty(ConfigurationPropertyKeys.FINANCE_PLUGINS_CLASS_NAMES);
+    private void createFinancePlugins(InMemoryFinanceObjectsHolder objectHolder) throws ConfigurationErrorException {
+        ArrayList<FinancePlugin> financePlugins = new ArrayList<FinancePlugin>();
 
-		if (financePluginsString.isEmpty()) {
-			throw new ConfigurationErrorException(Messages.Exception.NO_FINANCE_PLUGIN_SPECIFIED);
-		}
-		
-		for (String financePluginClassName : financePluginsString.split(FINANCE_PLUGINS_CLASS_NAMES_SEPARATOR)) {
-			financePlugins.add(FinancePluginInstantiator.getFinancePlugin(financePluginClassName, databaseManager));
-		}
-		
-		this.financePlugins = financePlugins;
-	}
+        String financePluginsString = PropertiesHolder.getInstance()
+                .getProperty(ConfigurationPropertyKeys.FINANCE_PLUGINS_CLASS_NAMES);
 
-	public FinanceManager(List<FinancePlugin> financePlugins, DatabaseManager databaseManager, 
-	        FinancePlanFactory financePlanFactory) throws ConfigurationErrorException {
-		if (financePlugins.isEmpty()) {
-			throw new ConfigurationErrorException(Messages.Exception.NO_FINANCE_PLUGIN_SPECIFIED);
-		}
-		this.financePlugins = financePlugins;
-		this.databaseManager = databaseManager;
-		this.financePlanFactory = financePlanFactory;
-	}
+        if (financePluginsString.isEmpty()) {
+            throw new ConfigurationErrorException(Messages.Exception.NO_FINANCE_PLUGIN_SPECIFIED);
+        }
+
+        for (String financePluginClassName : financePluginsString.split(FINANCE_PLUGINS_CLASS_NAMES_SEPARATOR)) {
+            financePlugins.add(FinancePluginInstantiator.getFinancePlugin(financePluginClassName, objectHolder));
+        }
+
+        this.financePlugins = financePlugins;
+    }
+
+    public FinanceManager(List<FinancePlugin> financePlugins, InMemoryFinanceObjectsHolder objectHolder,
+            FinancePlanFactory financePlanFactory) throws ConfigurationErrorException {
+        if (financePlugins.isEmpty()) {
+            throw new ConfigurationErrorException(Messages.Exception.NO_FINANCE_PLUGIN_SPECIFIED);
+        }
+        this.financePlugins = financePlugins;
+        this.objectHolder = objectHolder;
+        this.financePlanFactory = financePlanFactory;
+    }
 
 	public boolean isAuthorized(AuthorizableUser user) throws FogbowException {
 		String userToken = user.getUserToken();
@@ -112,7 +113,7 @@ public class FinanceManager {
 	 * User Management
 	 */
 	
-	public void addUser(User user) throws InvalidParameterException {
+	public void addUser(User user) throws InvalidParameterException, InternalServerErrorException {
 		for (FinancePlugin plugin : financePlugins) {
 			if (plugin.getName().equals(user.getFinancePluginName())) {
 				plugin.addUser(user.getUserId(), user.getProvider(), user.getFinanceOptions());
@@ -123,7 +124,7 @@ public class FinanceManager {
 		throw new InvalidParameterException(String.format(Messages.Exception.UNMANAGED_USER, user.getUserId()));
 	}
 	
-	public void removeUser(String userId, String provider) throws InvalidParameterException {
+	public void removeUser(String userId, String provider) throws InvalidParameterException, InternalServerErrorException {
 		FinancePlugin plugin = getUserPlugin(userId, provider);
 		plugin.removeUser(userId, provider);
 	}
@@ -133,7 +134,8 @@ public class FinanceManager {
 		plugin.changeOptions(userId, provider, financeOptions);
 	}
 
-	public void updateFinanceState(String userId, String provider, Map<String, String> financeState) throws InvalidParameterException {
+	public void updateFinanceState(String userId, String provider, Map<String, String> financeState) throws InvalidParameterException, 
+	InternalServerErrorException {
 		FinancePlugin plugin = getUserPlugin(userId, provider);
 		plugin.updateFinanceState(userId, provider, financeState);
 	}
@@ -159,23 +161,23 @@ public class FinanceManager {
 	
 	public void createFinancePlan(String planName, Map<String, String> planInfo) throws InvalidParameterException {
 		FinancePlan financePlan = this.financePlanFactory.createFinancePlan(planName, planInfo);
-		this.databaseManager.saveFinancePlan(financePlan);
+		this.objectHolder.registerFinancePlan(financePlan);
 	}
 
 	public Map<String, String> getFinancePlan(String planName) throws InvalidParameterException {
-		FinancePlan financePlan = this.databaseManager.getFinancePlan(planName);
+		FinancePlan financePlan = this.objectHolder.getFinancePlan(planName);
 		return financePlan.getRulesAsMap();
 	}
 
 	public void updateFinancePlan(String planName, Map<String, String> planInfo) throws InvalidParameterException {
-		FinancePlan financePlan = this.databaseManager.getFinancePlan(planName);
+	    FinancePlan financePlan = this.objectHolder.getFinancePlan(planName);
 		financePlan.update(planInfo);
-		this.databaseManager.saveFinancePlan(financePlan);
+		this.objectHolder.saveFinancePlan(financePlan);
 	}
 
 	// TODO test
-	public void removeFinancePlan(String planName) {
+	public void removeFinancePlan(String planName) throws InvalidParameterException {
 		// TODO I think this operation needs further validation
-		this.databaseManager.removeFinancePlan(planName);
+	    this.objectHolder.removeFinancePlan(planName);
 	}
 }

@@ -21,12 +21,12 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import cloud.fogbow.as.core.util.AuthenticationUtil;
 import cloud.fogbow.common.exceptions.ConfigurationErrorException;
 import cloud.fogbow.common.exceptions.FogbowException;
+import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.common.models.SystemUser;
 import cloud.fogbow.fs.api.parameters.AuthorizableUser;
 import cloud.fogbow.fs.api.parameters.User;
 import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
-import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.models.FinancePlan;
 import cloud.fogbow.fs.core.plugins.FinancePlugin;
 import cloud.fogbow.fs.core.util.FinancePlanFactory;
@@ -67,7 +67,7 @@ public class FinanceManagerTest {
     private static final String NEW_FINANCE_PLAN_NAME = "newPlan";
     private static final String PLAN_NAME = "plan";
 	private List<FinancePlugin> financePlugins;
-	private DatabaseManager databaseManager;
+	private InMemoryFinanceObjectsHolder objectHolder;
 	private FinancePlugin plugin1;
 	private FinancePlugin plugin2;
 	private AuthorizableUser user1;
@@ -107,23 +107,23 @@ public class FinanceManagerTest {
 		BDDMockito.given(PropertiesHolder.getInstance()).willReturn(propertiesHolder);
 
 		PowerMockito.mockStatic(FinancePluginInstantiator.class);
-		BDDMockito.given(FinancePluginInstantiator.getFinancePlugin(pluginName1, databaseManager)).willReturn(plugin1);
-		BDDMockito.given(FinancePluginInstantiator.getFinancePlugin(pluginName2, databaseManager)).willReturn(plugin2);
+		BDDMockito.given(FinancePluginInstantiator.getFinancePlugin(pluginName1, objectHolder)).willReturn(plugin1);
+		BDDMockito.given(FinancePluginInstantiator.getFinancePlugin(pluginName2, objectHolder)).willReturn(plugin2);
 
-		databaseManager = Mockito.mock(DatabaseManager.class);
+		objectHolder = Mockito.mock(InMemoryFinanceObjectsHolder.class);
 		financePlan = Mockito.mock(FinancePlan.class);
-		Mockito.when(databaseManager.getFinancePlan(DEFAULT_FINANCE_PLAN_NAME)).thenReturn(financePlan);
+		Mockito.when(objectHolder.getFinancePlan(DEFAULT_FINANCE_PLAN_NAME)).thenReturn(financePlan);
 		
 		
-		new FinanceManager(databaseManager, new FinancePlanFactory());
+		new FinanceManager(objectHolder, new FinancePlanFactory());
 		
 		
 		Mockito.verify(propertiesHolder, Mockito.times(1)).getProperty(ConfigurationPropertyKeys.FINANCE_PLUGINS_CLASS_NAMES);
 		
 		PowerMockito.verifyStatic(FinancePluginInstantiator.class);
-		FinancePluginInstantiator.getFinancePlugin(pluginName1, databaseManager);
+		FinancePluginInstantiator.getFinancePlugin(pluginName1, objectHolder);
 		PowerMockito.verifyStatic(FinancePluginInstantiator.class);
-		FinancePluginInstantiator.getFinancePlugin(pluginName2, databaseManager);
+		FinancePluginInstantiator.getFinancePlugin(pluginName2, objectHolder);
 	}
 	
 	// test case: When calling the constructor and the list
@@ -143,11 +143,11 @@ public class FinanceManagerTest {
 				ConfigurationPropertyKeys.DEFAULT_FINANCE_PLAN_FILE_PATH)).thenReturn(DEFAULT_FINANCE_PLAN_FILE_PATH);
 		BDDMockito.given(PropertiesHolder.getInstance()).willReturn(propertiesHolder);
 		
-		databaseManager = Mockito.mock(DatabaseManager.class);
-		financePlan = Mockito.mock(FinancePlan.class);
-		Mockito.when(databaseManager.getFinancePlan(DEFAULT_FINANCE_PLAN_NAME)).thenReturn(financePlan);
+        objectHolder = Mockito.mock(InMemoryFinanceObjectsHolder.class);
+        financePlan = Mockito.mock(FinancePlan.class);
+        Mockito.when(objectHolder.getFinancePlan(DEFAULT_FINANCE_PLAN_NAME)).thenReturn(financePlan);
 		
-		new FinanceManager(databaseManager, new FinancePlanFactory());
+		new FinanceManager(objectHolder, new FinancePlanFactory());
 	}
 	
 	// test case: When calling the constructor and the default finance plan does 
@@ -172,29 +172,29 @@ public class FinanceManagerTest {
         Mockito.when(propertiesHolder.getProperty(
                 ConfigurationPropertyKeys.DEFAULT_FINANCE_PLAN_FILE_PATH)).thenReturn(DEFAULT_FINANCE_PLAN_FILE_PATH);
         BDDMockito.given(PropertiesHolder.getInstance()).willReturn(propertiesHolder);
+        
+        objectHolder = Mockito.mock(InMemoryFinanceObjectsHolder.class);
+        financePlan = Mockito.mock(FinancePlan.class);
+        Mockito.when(objectHolder.getFinancePlan(DEFAULT_FINANCE_PLAN_NAME)).thenThrow(new InvalidParameterException());
 
         PowerMockito.mockStatic(FinancePluginInstantiator.class);
-        BDDMockito.given(FinancePluginInstantiator.getFinancePlugin(pluginName1, databaseManager)).willReturn(plugin1);
-        BDDMockito.given(FinancePluginInstantiator.getFinancePlugin(pluginName2, databaseManager)).willReturn(plugin2);
-
-        databaseManager = Mockito.mock(DatabaseManager.class);
-        financePlan = Mockito.mock(FinancePlan.class);
-        Mockito.when(databaseManager.getFinancePlan(DEFAULT_FINANCE_PLAN_NAME)).thenThrow(new InvalidParameterException());
+        BDDMockito.given(FinancePluginInstantiator.getFinancePlugin(pluginName1, objectHolder)).willReturn(plugin1);
+        BDDMockito.given(FinancePluginInstantiator.getFinancePlugin(pluginName2, objectHolder)).willReturn(plugin2);
         
         FinancePlanFactory financePlanFactory = Mockito.mock(FinancePlanFactory.class);
         Mockito.when(financePlanFactory.createFinancePlan(DEFAULT_FINANCE_PLAN_NAME, DEFAULT_FINANCE_PLAN_FILE_PATH)).thenReturn(financePlan);
         
         
-        new FinanceManager(databaseManager, financePlanFactory);
+        new FinanceManager(objectHolder, financePlanFactory);
         
         
         Mockito.verify(propertiesHolder).getProperty(ConfigurationPropertyKeys.FINANCE_PLUGINS_CLASS_NAMES);
         Mockito.verify(financePlanFactory).createFinancePlan(DEFAULT_FINANCE_PLAN_NAME, DEFAULT_FINANCE_PLAN_FILE_PATH);
-        Mockito.verify(databaseManager).saveFinancePlan(financePlan);
+        Mockito.verify(objectHolder).registerFinancePlan(financePlan);
         PowerMockito.verifyStatic(FinancePluginInstantiator.class);
-        FinancePluginInstantiator.getFinancePlugin(pluginName1, databaseManager);
+        FinancePluginInstantiator.getFinancePlugin(pluginName1, objectHolder);
         PowerMockito.verifyStatic(FinancePluginInstantiator.class);
-        FinancePluginInstantiator.getFinancePlugin(pluginName2, databaseManager);
+        FinancePluginInstantiator.getFinancePlugin(pluginName2, objectHolder);
 	}
 	
 	// test case: When calling the constructor passing an empty list
@@ -203,9 +203,9 @@ public class FinanceManagerTest {
 	public void testConstructorChecksPluginsListIsNotEmpty() throws ConfigurationErrorException {
 		financePlugins = new ArrayList<FinancePlugin>();
 		
-		databaseManager = Mockito.mock(DatabaseManager.class);
+		objectHolder = Mockito.mock(InMemoryFinanceObjectsHolder.class);
 		
-		new FinanceManager(financePlugins, databaseManager, financePlanFactory);
+		new FinanceManager(financePlugins, objectHolder, financePlanFactory);
 	}
 	
 	// test case: When calling the isAuthorized method passing an AuthorizableUser,
@@ -216,7 +216,7 @@ public class FinanceManagerTest {
 		setUpFinancePlugin();
 		setUpAuthentication();
 		
-		FinanceManager financeManager = new FinanceManager(financePlugins, databaseManager, financePlanFactory);
+		FinanceManager financeManager = new FinanceManager(financePlugins, objectHolder, financePlanFactory);
 		
 		assertTrue(financeManager.isAuthorized(user1));
 		assertTrue(financeManager.isAuthorized(user2));
@@ -230,7 +230,7 @@ public class FinanceManagerTest {
 		setUpFinancePluginUnmanagedUser();
 		setUpAuthentication();
 		
-		FinanceManager financeManager = new FinanceManager(financePlugins, databaseManager, financePlanFactory);
+		FinanceManager financeManager = new FinanceManager(financePlugins, objectHolder, financePlanFactory);
 		financeManager.isAuthorized(user1);
 	}
 	
@@ -241,7 +241,7 @@ public class FinanceManagerTest {
 	public void testGetFinanceStateProperty() throws FogbowException {
 		setUpFinancePlugin();
 		
-		FinanceManager financeManager = new FinanceManager(financePlugins, databaseManager, financePlanFactory);
+		FinanceManager financeManager = new FinanceManager(financePlugins, objectHolder, financePlanFactory);
 		
 		assertEquals(PROPERTY_VALUE_1, financeManager.getFinanceStateProperty(USER_ID_1, PROVIDER_USER_1, PROPERTY_NAME_1));
 		assertEquals(PROPERTY_VALUE_2, financeManager.getFinanceStateProperty(USER_ID_2, PROVIDER_USER_2, PROPERTY_NAME_2));
@@ -254,7 +254,7 @@ public class FinanceManagerTest {
 	public void testGetFinanceStatePropertyUserIsNotManaged() throws FogbowException {
 		setUpFinancePluginUnmanagedUser();
 
-		FinanceManager financeManager = new FinanceManager(financePlugins, databaseManager, financePlanFactory);
+		FinanceManager financeManager = new FinanceManager(financePlugins, objectHolder, financePlanFactory);
 		financeManager.getFinanceStateProperty(USER_ID_1, PROVIDER_USER_1, PROPERTY_NAME_1);
 	}
 	
@@ -264,7 +264,7 @@ public class FinanceManagerTest {
 	public void testAddUser() throws FogbowException {
 		setUpFinancePlugin();
 		
-		FinanceManager financeManager = new FinanceManager(financePlugins, databaseManager, financePlanFactory);
+		FinanceManager financeManager = new FinanceManager(financePlugins, objectHolder, financePlanFactory);
 		Map<String, String> financeOptions = new HashMap<String, String>();
 		User user1 = new User(USER_ID_TO_ADD_1, PROVIDER_USER_TO_ADD_1, PLUGIN_1_NAME, financeOptions);
 		User user2 = new User(USER_ID_TO_ADD_2, PROVIDER_USER_TO_ADD_2, PLUGIN_2_NAME, financeOptions);
@@ -282,7 +282,7 @@ public class FinanceManagerTest {
 	public void testAddUserUnknownPlugin() throws FogbowException {
 		setUpFinancePlugin();
 		
-		FinanceManager financeManager = new FinanceManager(financePlugins, databaseManager, financePlanFactory);
+		FinanceManager financeManager = new FinanceManager(financePlugins, objectHolder, financePlanFactory);
 		Map<String, String> financeOptions = new HashMap<String, String>();
 		User user1 = new User(USER_ID_TO_ADD_1, PROVIDER_USER_TO_ADD_1, UNKNOWN_PLUGIN_NAME, financeOptions);
 		
@@ -295,7 +295,7 @@ public class FinanceManagerTest {
 	public void testRemoveUser() throws FogbowException {
 		setUpFinancePlugin();
 		
-		FinanceManager financeManager = new FinanceManager(financePlugins, databaseManager, financePlanFactory);
+		FinanceManager financeManager = new FinanceManager(financePlugins, objectHolder, financePlanFactory);
 		
 		financeManager.removeUser(USER_ID_1, PROVIDER_USER_1);
 		financeManager.removeUser(USER_ID_2, PROVIDER_USER_2);
@@ -310,10 +310,10 @@ public class FinanceManagerTest {
 	// to be removed is not managed by any finance plugin, it must 
 	// throw an InvalidParameterException.
 	@Test(expected = InvalidParameterException.class)
-	public void testRemoveUserUnmanagedUser() throws ConfigurationErrorException, InvalidParameterException {
+	public void testRemoveUserUnmanagedUser() throws ConfigurationErrorException, InvalidParameterException, InternalServerErrorException {
 		setUpFinancePluginUnmanagedUser();
 		
-		FinanceManager financeManager = new FinanceManager(financePlugins, databaseManager, financePlanFactory);
+		FinanceManager financeManager = new FinanceManager(financePlugins, objectHolder, financePlanFactory);
 		
 		financeManager.removeUser(USER_ID_1, PROVIDER_USER_1);
 	}
@@ -325,7 +325,7 @@ public class FinanceManagerTest {
 		setUpFinancePlugin();
 		Map<String, String> newFinanceOptions = new HashMap<String, String>();
 		
-		FinanceManager financeManager = new FinanceManager(financePlugins, databaseManager, financePlanFactory);
+		FinanceManager financeManager = new FinanceManager(financePlugins, objectHolder, financePlanFactory);
 		financeManager.changeOptions(USER_ID_1, PROVIDER_USER_1, newFinanceOptions);
 		
 		Mockito.verify(plugin1, Mockito.times(1)).changeOptions(USER_ID_1, PROVIDER_USER_1, newFinanceOptions);
@@ -338,7 +338,7 @@ public class FinanceManagerTest {
 		setUpFinancePluginUnmanagedUser();
 		Map<String, String> newFinanceOptions = new HashMap<String, String>();
 		
-		FinanceManager financeManager = new FinanceManager(financePlugins, databaseManager, financePlanFactory);
+		FinanceManager financeManager = new FinanceManager(financePlugins, objectHolder, financePlanFactory);
 		
 		financeManager.changeOptions(USER_ID_1, PROVIDER_USER_1, newFinanceOptions);
 	}
@@ -350,7 +350,7 @@ public class FinanceManagerTest {
 		setUpFinancePlugin();
 		Map<String, String> newFinanceState = new HashMap<String, String>();
 		
-		FinanceManager financeManager = new FinanceManager(financePlugins, databaseManager, financePlanFactory);
+		FinanceManager financeManager = new FinanceManager(financePlugins, objectHolder, financePlanFactory);
 		financeManager.updateFinanceState(USER_ID_1, PROVIDER_USER_1, newFinanceState);
 		
 		Mockito.verify(plugin1, Mockito.times(1)).updateFinanceState(USER_ID_1, PROVIDER_USER_1, newFinanceState);
@@ -359,12 +359,13 @@ public class FinanceManagerTest {
 	// test case: When calling the updateFinanceState method and the user
 	// is not managed by any finance plugin, it must throw an InvalidParameterException.
 	@Test(expected = InvalidParameterException.class)
-	public void testUpdateFinanceStateUnmanagedUser() throws InvalidParameterException, ConfigurationErrorException {
+	public void testUpdateFinanceStateUnmanagedUser() throws InvalidParameterException, 
+	ConfigurationErrorException, InternalServerErrorException {
 		setUpFinancePluginUnmanagedUser();
 		
 		Map<String, String> newFinanceState = new HashMap<String, String>();
 		
-		FinanceManager financeManager = new FinanceManager(financePlugins, databaseManager, financePlanFactory);
+		FinanceManager financeManager = new FinanceManager(financePlugins, objectHolder, financePlanFactory);
 		financeManager.updateFinanceState(USER_ID_1, PROVIDER_USER_1, newFinanceState);
 	}
 	
@@ -374,7 +375,7 @@ public class FinanceManagerTest {
 	public void testStartThreads() throws FogbowException {
 		setUpFinancePlugin();
 		
-		FinanceManager financeManager = new FinanceManager(financePlugins, databaseManager, financePlanFactory);
+		FinanceManager financeManager = new FinanceManager(financePlugins, objectHolder, financePlanFactory);
 		
 		financeManager.startPlugins();
 		
@@ -388,7 +389,7 @@ public class FinanceManagerTest {
 	public void testStopThreads() throws FogbowException {
 		setUpFinancePlugin();
 
-		FinanceManager financeManager = new FinanceManager(financePlugins, databaseManager, financePlanFactory);
+		FinanceManager financeManager = new FinanceManager(financePlugins, objectHolder, financePlanFactory);
 
 		financeManager.stopPlugins();
 
@@ -409,15 +410,15 @@ public class FinanceManagerTest {
 	    this.financePlanFactory = Mockito.mock(FinancePlanFactory.class);
 	    Mockito.when(this.financePlanFactory.createFinancePlan(NEW_FINANCE_PLAN_NAME, planInfo)).thenReturn(plan);
 	    
-	    this.databaseManager = Mockito.mock(DatabaseManager.class);
-	    FinanceManager financeManager = new FinanceManager(financePlugins, databaseManager, financePlanFactory);
+	    objectHolder = Mockito.mock(InMemoryFinanceObjectsHolder.class);
+	    FinanceManager financeManager = new FinanceManager(financePlugins, objectHolder, financePlanFactory);
 	    
 	    
         financeManager.createFinancePlan(NEW_FINANCE_PLAN_NAME, planInfo);
         
         
         Mockito.verify(financePlanFactory).createFinancePlan(NEW_FINANCE_PLAN_NAME, planInfo);
-        Mockito.verify(databaseManager).saveFinancePlan(plan);
+        Mockito.verify(objectHolder).registerFinancePlan(plan);
 	}
 	
 	// test case: When calling the getFinancePlan method, it must call the
@@ -433,10 +434,10 @@ public class FinanceManagerTest {
         FinancePlan plan = Mockito.mock(FinancePlan.class);
         Mockito.when(plan.getRulesAsMap()).thenReturn(planInfo);
         
-        this.databaseManager = Mockito.mock(DatabaseManager.class);
-        Mockito.when(this.databaseManager.getFinancePlan(NEW_FINANCE_PLAN_NAME)).thenReturn(plan);
+        objectHolder = Mockito.mock(InMemoryFinanceObjectsHolder.class);
+        Mockito.when(this.objectHolder.getFinancePlan(NEW_FINANCE_PLAN_NAME)).thenReturn(plan);
         
-        FinanceManager financeManager = new FinanceManager(financePlugins, databaseManager, financePlanFactory);
+        FinanceManager financeManager = new FinanceManager(financePlugins, objectHolder, financePlanFactory);
         
         assertEquals(planInfo, financeManager.getFinancePlan(NEW_FINANCE_PLAN_NAME));
 	}
@@ -451,17 +452,17 @@ public class FinanceManagerTest {
         Map<String, String> newPlanInfo = new HashMap<String, String>();
         FinancePlan plan = Mockito.mock(FinancePlan.class);
         
-        this.databaseManager = Mockito.mock(DatabaseManager.class);
-        Mockito.when(this.databaseManager.getFinancePlan(PLAN_NAME)).thenReturn(plan);
+        objectHolder = Mockito.mock(InMemoryFinanceObjectsHolder.class);
+        Mockito.when(this.objectHolder.getFinancePlan(PLAN_NAME)).thenReturn(plan);
         
-        FinanceManager financeManager = new FinanceManager(financePlugins, databaseManager, financePlanFactory);
+        FinanceManager financeManager = new FinanceManager(financePlugins, objectHolder, financePlanFactory);
         
         
         financeManager.updateFinancePlan(PLAN_NAME, newPlanInfo);
         
         
         Mockito.verify(plan).update(newPlanInfo);
-        Mockito.verify(databaseManager).saveFinancePlan(plan);
+        Mockito.verify(objectHolder).saveFinancePlan(plan);
     }
 	
 	private void setUpFinancePlugin() throws FogbowException {
@@ -507,7 +508,7 @@ public class FinanceManagerTest {
 		Mockito.when(this.user3.getOperation()).thenReturn(operation3);
 	}
 	
-	private void setUpFinancePluginUnmanagedUser() {
+	private void setUpFinancePluginUnmanagedUser() throws InvalidParameterException {
 		systemUser1 = new SystemUser(USER_ID_1, USER_NAME_1, PROVIDER_USER_1);
 		operation1 = Mockito.mock(RasOperation.class);
 		

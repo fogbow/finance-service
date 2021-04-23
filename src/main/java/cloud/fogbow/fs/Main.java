@@ -9,6 +9,7 @@ import cloud.fogbow.common.plugins.authorization.AuthorizationPlugin;
 import cloud.fogbow.common.util.ServiceAsymmetricKeysHolder;
 import cloud.fogbow.fs.core.ApplicationFacade;
 import cloud.fogbow.fs.core.AuthorizationPluginInstantiator;
+import cloud.fogbow.fs.core.InMemoryFinanceObjectsHolder;
 import cloud.fogbow.fs.core.FinanceManager;
 import cloud.fogbow.fs.core.PropertiesHolder;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
@@ -30,9 +31,9 @@ public class Main implements ApplicationRunner {
         ApplicationFacade.getInstance().setAuthorizationPlugin(authorizationPlugin);
         
 		DatabaseManager databaseManager = new DatabaseManager();
-		ApplicationFacade.getInstance().setDatabaseManager(databaseManager);
-
-		FinanceManager financeManager = new FinanceManager(databaseManager, new FinancePlanFactory());
+		InMemoryFinanceObjectsHolder objectHolder = new InMemoryFinanceObjectsHolder(databaseManager);
+		
+		FinanceManager financeManager = new FinanceManager(objectHolder, new FinancePlanFactory());
 		ApplicationFacade.getInstance().setFinanceManager(financeManager);
 		
 		SynchronizationManager synchronizationManager = new SynchronizationManager();

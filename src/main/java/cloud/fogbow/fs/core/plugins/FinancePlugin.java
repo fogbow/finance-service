@@ -2,6 +2,7 @@ package cloud.fogbow.fs.core.plugins;
 
 import java.util.Map;
 
+import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.common.models.SystemUser;
 import cloud.fogbow.ras.core.models.RasOperation;
@@ -45,8 +46,10 @@ public interface FinancePlugin {
 	 * @param userId the id of the user to verify.
 	 * @param provider the id of the provider of the user to verify.
 	 * @return a boolean stating whether the user is managed by this plugin or not.
+	 * @throws InvalidParameterException if an error occurs while trying to find the user 
+     * to check state.
 	 */
-	boolean managesUser(String userId, String provider);
+	boolean managesUser(String userId, String provider) throws InvalidParameterException;
 	
 	/**
 	 * Generates and returns a representation of the given property of
@@ -74,10 +77,10 @@ public interface FinancePlugin {
 	 * @param userId the id of the user to be managed.
 	 * @param provider the id of the provider of the user to be managed.
 	 * @param financeOptions the financial options to follow while managing the user financial state.
-	 * @throws InvalidParameterException if an error occurs while trying to add the user
-     * or the options are invalid.
+	 * @throws InvalidParameterException if the options are invalid.
+	 * @throws InternalServerErrorException if an error occurs while trying to add the user.
 	 */
-	void addUser(String userId, String provider, Map<String, String> financeOptions) throws InvalidParameterException;
+	void addUser(String userId, String provider, Map<String, String> financeOptions) throws InvalidParameterException, InternalServerErrorException;
 	
 	/**
 	 * Removes the given user from the list of the users managed by the FinancePlugin.
@@ -85,8 +88,9 @@ public interface FinancePlugin {
 	 * @param userId the id of the user to remove.
 	 * @param provider the id of the provider of the user to remove.
 	 * @throws InvalidParameterException if an error occurs while trying to find the user.
+	 * @throws InternalServerErrorException if an error occurs while trying to remove the user.
 	 */
-	void removeUser(String userId, String provider) throws InvalidParameterException;
+	void removeUser(String userId, String provider) throws InvalidParameterException, InternalServerErrorException;
 
 	/**
 	 * Changes the financial options used to manage the user.
@@ -107,6 +111,7 @@ public interface FinancePlugin {
 	 * @param financeState a map containing properties used to update the user state.
 	 * @throws InvalidParameterException if an error occurs while trying to find the user
 	 * or the financial properties are invalid. 
+	 * @throws InternalServerErrorException if an error occurs while trying to update the user state.
 	 */
-	void updateFinanceState(String userId, String provider, Map<String, String> financeState) throws InvalidParameterException;
+	void updateFinanceState(String userId, String provider, Map<String, String> financeState) throws InvalidParameterException, InternalServerErrorException;
 }

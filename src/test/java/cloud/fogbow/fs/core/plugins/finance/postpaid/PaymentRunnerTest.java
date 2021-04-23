@@ -12,10 +12,12 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import cloud.fogbow.common.exceptions.FogbowException;
-import cloud.fogbow.fs.core.datastore.DatabaseManager;
+import cloud.fogbow.common.exceptions.InvalidParameterException;
+import cloud.fogbow.fs.core.InMemoryFinanceObjectsHolder;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
 import cloud.fogbow.fs.core.util.AccountingServiceClient;
+import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedList;
 import cloud.fogbow.fs.core.util.TimeUtils;
 import cloud.fogbow.fs.core.util.accounting.Record;
 
@@ -30,16 +32,16 @@ public class PaymentRunnerTest {
 	private static final Long RECORD_ID_2 = 1L;
 	private static final Long INITIAL_USER_1_LAST_BILLING_TIME = 0L;
 	private static final Long INITIAL_USER_2_LAST_BILLING_TIME = 1L;
+    private static final Integer CONSUMER_ID = 0;
 	private long invoiceWaitTime = 10; 
 	
 	private FinanceUser user1;
 	private FinanceUser user2;
 	
-	private DatabaseManager databaseManager;
+	private InMemoryFinanceObjectsHolder objectHolder;
 	
 	private TimeUtils timeUtils;
 	
-	private List<FinanceUser> userList;
 	private List<Record> userRecords;
 	
 	private Record record1;
@@ -75,7 +77,7 @@ public class PaymentRunnerTest {
 		this.paymentManager = Mockito.mock(PaymentManager.class);
 		
 		PaymentRunner paymentRunner = new PaymentRunner(invoiceWaitTime, 
-				databaseManager, accountingServiceClient, paymentManager, timeUtils);
+		        objectHolder, accountingServiceClient, paymentManager, timeUtils);
 		
 		
 		paymentRunner.doRun();
@@ -131,7 +133,7 @@ public class PaymentRunnerTest {
 		this.paymentManager = Mockito.mock(PaymentManager.class);
 		
 		PaymentRunner paymentRunner = new PaymentRunner(invoiceWaitTime, 
-				databaseManager, accountingServiceClient, paymentManager, timeUtils);
+		        objectHolder, accountingServiceClient, paymentManager, timeUtils);
 		
 		
 		paymentRunner.doRun();
@@ -178,7 +180,7 @@ public class PaymentRunnerTest {
 		this.paymentManager = Mockito.mock(PaymentManager.class);
 		
 		PaymentRunner paymentRunner = new PaymentRunner(invoiceWaitTime, 
-				databaseManager, accountingServiceClient, paymentManager, timeUtils);
+		        objectHolder, accountingServiceClient, paymentManager, timeUtils);
 		
 		
 		paymentRunner.doRun();
@@ -210,26 +212,27 @@ public class PaymentRunnerTest {
 		assertEquals(String.valueOf(timeValues.get(1)), user2.getProperty(FinanceUser.USER_LAST_BILLING_TIME));
 	}
 	
-	private void setUpDatabase() {
-		this.databaseManager = Mockito.mock(DatabaseManager.class);
-		this.userList = new ArrayList<FinanceUser>();
-		Mockito.doReturn(userList).when(databaseManager).getRegisteredUsersByPaymentType(PostPaidFinancePlugin.PLUGIN_NAME);
-		
-		this.user1 = new FinanceUser(new HashMap<String, String>());
-		user1.setId(ID_USER_1);
-		user1.setProvider(PROVIDER_USER_1);
-		user1.setProperty(PaymentRunner.USER_BILLING_INTERVAL, String.valueOf(BILLING_INTERVAL));
-		user1.setProperty(FinanceUser.USER_LAST_BILLING_TIME, String.valueOf(INITIAL_USER_1_LAST_BILLING_TIME));
-		
-		this.user2 = new FinanceUser(new HashMap<String, String>());
-		user2.setId(ID_USER_2);
-		user2.setProvider(PROVIDER_USER_2);
-		user2.setProperty(PaymentRunner.USER_BILLING_INTERVAL, String.valueOf(BILLING_INTERVAL));
-		user2.setProperty(FinanceUser.USER_LAST_BILLING_TIME, String.valueOf(INITIAL_USER_2_LAST_BILLING_TIME));
-		
-		userList.add(user1);
-		userList.add(user2);
-	}
+    private void setUpDatabase() throws InvalidParameterException {
+        this.user1 = new FinanceUser(new HashMap<String, String>());
+        user1.setId(ID_USER_1);
+        user1.setProvider(PROVIDER_USER_1);
+        user1.setProperty(PaymentRunner.USER_BILLING_INTERVAL, String.valueOf(BILLING_INTERVAL));
+        user1.setProperty(FinanceUser.USER_LAST_BILLING_TIME, String.valueOf(INITIAL_USER_1_LAST_BILLING_TIME));
+
+        this.user2 = new FinanceUser(new HashMap<String, String>());
+        user2.setId(ID_USER_2);
+        user2.setProvider(PROVIDER_USER_2);
+        user2.setProperty(PaymentRunner.USER_BILLING_INTERVAL, String.valueOf(BILLING_INTERVAL));
+        user2.setProperty(FinanceUser.USER_LAST_BILLING_TIME, String.valueOf(INITIAL_USER_2_LAST_BILLING_TIME));
+
+        MultiConsumerSynchronizedList<FinanceUser> users = Mockito.mock(MultiConsumerSynchronizedList.class);
+
+        Mockito.when(users.startIterating()).thenReturn(CONSUMER_ID);
+        Mockito.when(users.getNext(CONSUMER_ID)).thenReturn(this.user1, this.user2, null);
+
+        this.objectHolder = Mockito.mock(InMemoryFinanceObjectsHolder.class);
+        Mockito.when(objectHolder.getRegisteredUsersByPaymentType(PostPaidFinancePlugin.PLUGIN_NAME)).thenReturn(users);
+    }
 
 	private void setUpAccounting() throws FogbowException {
 		this.userRecords = new ArrayList<Record>();
