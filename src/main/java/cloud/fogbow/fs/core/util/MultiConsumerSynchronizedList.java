@@ -9,68 +9,65 @@ import cloud.fogbow.common.exceptions.InvalidParameterException;
 
 public class MultiConsumerSynchronizedList<T> {
     private List<T> internalList;
-    private boolean modifyingList;
-    private Integer consumersCount;
     private Map<Integer, Integer> pointers;
     private Integer currentConsumerIndex;
     
     public MultiConsumerSynchronizedList() {
         internalList = new ArrayList<T>();
-        modifyingList = false;
-        consumersCount = 0;
         currentConsumerIndex = 0;
         pointers = new HashMap<Integer, Integer>();
     }
     
-    public synchronized Integer startIterating() {
-        while (modifyingList); 
-        
-        pointers.put(currentConsumerIndex, 0);
-        consumersCount++;
-        return currentConsumerIndex++;
-    }
-    
-    public synchronized T getNext(Integer consumerIndex) throws InvalidParameterException {
-        if (!pointers.containsKey(consumerIndex)) {
-            // TODO add message
-            throw new InvalidParameterException();
+    public Integer startIterating() {
+        synchronized(internalList) { 
+            pointers.put(currentConsumerIndex, 0);
+            return currentConsumerIndex++;
         }
+    }
+    
+    public T getNext(Integer consumerIndex) throws InvalidParameterException {
+        synchronized(internalList) {
+            if (!pointers.containsKey(consumerIndex)) {
+                // TODO add message
+                throw new InvalidParameterException();
+            }
 
-        Integer pointer = pointers.get(consumerIndex);
-        
-        if (internalList.size() <= pointer) {
-            return null;
+            Integer pointer = pointers.get(consumerIndex);
+            
+            if (internalList.size() <= pointer ||
+                    pointer.equals(-1)) {
+                return null;
+            }
+            
+            T value = internalList.get(pointer);
+            pointers.put(consumerIndex, ++pointer);
+            return value;
         }
-        
-        T value = internalList.get(pointer);
-        pointers.put(consumerIndex, ++pointer);
-        return value;
     }
     
-    public synchronized void stopIterating(Integer consumerIndex) {
-        pointers.remove(consumerIndex);
-        consumersCount--;
+    public void stopIterating(Integer consumerIndex) {
+        synchronized(internalList) {
+            pointers.remove(consumerIndex);
+        }
     }
     
-    public synchronized void addItem(T item) {
-        modifyingList = true;
-        
-        // stop all iterations
-        while (consumersCount > 0);
-        
-        internalList.add(item);
-        
-        modifyingList = false;
+    public void addItem(T item) {
+        synchronized(internalList) {
+            resetPointers();
+            internalList.add(item);
+        }
     }
 
-    public synchronized void removeItem(T item) {
-        modifyingList = true;
-        
-        // stop all iterations
-        while (consumersCount > 0);
-        
-        internalList.remove(item);
-        
-        modifyingList = false;
+    public void removeItem(T item) {
+        synchronized(internalList) {
+            resetPointers();
+            internalList.remove(item);
+        }
+    }
+
+    private void resetPointers() {
+        for (Integer key : pointers.keySet()) {
+            pointers.put(key, -1);
+        }
     }
 }
