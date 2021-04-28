@@ -7,6 +7,7 @@ import java.util.Map;
 
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
+import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
 import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.models.FinancePlan;
@@ -200,9 +201,42 @@ public class InMemoryFinanceObjectsHolder {
         
         throw new InvalidParameterException(String.format(Messages.Exception.UNABLE_TO_FIND_PLAN, planName));
     }
+    
+    public FinancePlan getOrDefaultFinancePlan(String planName) throws InvalidParameterException {
+        try {
+            return this.getFinancePlan(planName);
+        } catch (InvalidParameterException e) {
+            String defaultFinancePlan = PropertiesHolder.getInstance()
+                    .getProperty(ConfigurationPropertyKeys.DEFAULT_FINANCE_PLAN_NAME);
+            return this.getFinancePlan(defaultFinancePlan);
+        }
+    }
 
     public void removeFinancePlan(String planName) throws InvalidParameterException {
-        this.financePlans.removeItem(getFinancePlan(planName));
-        this.databaseManager.removeFinancePlan(planName);
+        FinancePlan plan = getFinancePlan(planName);
+        
+        synchronized(plan) {
+            this.financePlans.removeItem(plan);
+            this.databaseManager.removeFinancePlan(planName);
+        }
+    }
+
+    // TODO test
+    public void updateFinancePlan(String planName, Map<String, String> planInfo) throws InvalidParameterException {
+        FinancePlan financePlan = getFinancePlan(planName);
+        
+        synchronized(financePlan) {
+            financePlan.update(planInfo);
+            saveFinancePlan(financePlan);
+        }
+    }
+
+    // TODO test
+    public Map<String, String> getFinancePlanMap(String planName) throws InvalidParameterException {
+        FinancePlan financePlan = getFinancePlan(planName);   
+        
+        synchronized(financePlan) {
+            return financePlan.getRulesAsMap();
+        }
     }
 }

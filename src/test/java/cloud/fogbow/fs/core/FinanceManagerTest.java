@@ -442,9 +442,8 @@ public class FinanceManagerTest {
         assertEquals(planInfo, financeManager.getFinancePlan(NEW_FINANCE_PLAN_NAME));
 	}
 	
-	// test case: When calling the updateFinancePlan method, it must call the
-	// DatabaseManager to get the correct FinancePlan, update the plan using the new
-	// plan info and call the DatabaseManager to save the updated plan.
+	// test case: When calling the updateFinancePlan method, it must call the 
+	// InMemoryFinanceObjectsHolder to update the finance plan.
     @Test
     public void testUpdateFinancePlan() throws FogbowException {
         setUpFinancePlugin();
@@ -460,9 +459,49 @@ public class FinanceManagerTest {
         
         financeManager.updateFinancePlan(PLAN_NAME, newPlanInfo);
         
+        Mockito.verify(objectHolder).updateFinancePlan(PLAN_NAME, newPlanInfo);
+    }
+    
+    // test case: When calling the removeFinancePlan method, it must call
+    // the InMemoryFinanceObjectsHolder to remove the finance plan.
+    @Test
+    public void testRemoveFinancePlan() throws FogbowException {
+        setUpFinancePlugin();
         
-        Mockito.verify(plan).update(newPlanInfo);
-        Mockito.verify(objectHolder).saveFinancePlan(plan);
+        PowerMockito.mockStatic(PropertiesHolder.class);
+        PropertiesHolder propertiesHolder = Mockito.mock(PropertiesHolder.class);
+        Mockito.when(propertiesHolder.getProperty(
+                ConfigurationPropertyKeys.DEFAULT_FINANCE_PLAN_NAME)).thenReturn(DEFAULT_FINANCE_PLAN_NAME);
+        BDDMockito.given(PropertiesHolder.getInstance()).willReturn(propertiesHolder);
+        
+        objectHolder = Mockito.mock(InMemoryFinanceObjectsHolder.class);
+        
+        
+        FinanceManager financeManager = new FinanceManager(financePlugins, objectHolder, financePlanFactory);
+        
+        
+        financeManager.removeFinancePlan(PLAN_NAME);
+        
+        Mockito.verify(objectHolder).removeFinancePlan(PLAN_NAME);
+    }
+    
+    // test case: When calling the removeFinancePlan method passing 
+    // the default plan name as argument, it must throw an InvalidParameterException.
+    @Test(expected = InvalidParameterException.class)
+    public void testCannotRemoveDefaultFinancePlan() throws FogbowException {
+        setUpFinancePlugin();
+        
+        PowerMockito.mockStatic(PropertiesHolder.class);
+        PropertiesHolder propertiesHolder = Mockito.mock(PropertiesHolder.class);
+        Mockito.when(propertiesHolder.getProperty(
+                ConfigurationPropertyKeys.DEFAULT_FINANCE_PLAN_NAME)).thenReturn(DEFAULT_FINANCE_PLAN_NAME);
+        BDDMockito.given(PropertiesHolder.getInstance()).willReturn(propertiesHolder);
+        
+        
+        FinanceManager financeManager = new FinanceManager(financePlugins, objectHolder, financePlanFactory);
+        
+        
+        financeManager.removeFinancePlan(DEFAULT_FINANCE_PLAN_NAME);
     }
 	
 	private void setUpFinancePlugin() throws FogbowException {

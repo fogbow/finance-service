@@ -3,6 +3,7 @@ package cloud.fogbow.fs.constants;
 public class Messages {
 	public static class Exception {
 	    public static final String CANNOT_ADD_NEGATIVE_CREDITS = "Cannot add negative credits value.";
+	    public static final String CANNOT_REMOVE_DEFAULT_FINANCE_PLAN = "Cannot remove default finance plan.";
 		public static final String GENERIC_EXCEPTION_S = "Operation returned error: %s.";
 		public static final String INVALID_COMPUTE_ITEM_FIELD = "Invalid compute item field.";
 		public static final String INVALID_FINANCE_OPTION = "Invalid value '%s' for finance option '%s'.";

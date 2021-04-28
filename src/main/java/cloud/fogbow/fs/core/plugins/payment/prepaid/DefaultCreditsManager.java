@@ -49,7 +49,7 @@ public class DefaultCreditsManager implements PaymentManager {
 	    FinanceUser user = this.objectHolder.getUserById(userId, provider);
 	    
         synchronized (user) {
-            FinancePlan plan = this.objectHolder.getFinancePlan(planName);
+            FinancePlan plan = this.objectHolder.getOrDefaultFinancePlan(planName);
 
             synchronized (plan) {
                 List<Record> records = user.getPeriodRecords();

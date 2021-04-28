@@ -263,6 +263,6 @@ public class DefaultCreditsManagerTest {
         Mockito.when(objectHolder.getUserById(USER_ID1, PROVIDER1)).thenReturn(financeUser1);
         Mockito.when(objectHolder.getUserById(USER_ID2, PROVIDER2)).thenReturn(financeUser2);
         Mockito.when(objectHolder.getUserById(USER_ID3, PROVIDER3)).thenReturn(financeUser3);
-        Mockito.when(objectHolder.getFinancePlan(plan)).thenReturn(financePlan);
+        Mockito.when(objectHolder.getOrDefaultFinancePlan(plan)).thenReturn(financePlan);
     }
 }

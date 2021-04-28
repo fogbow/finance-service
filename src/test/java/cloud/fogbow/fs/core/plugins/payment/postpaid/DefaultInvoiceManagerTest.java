@@ -232,7 +232,7 @@ public class DefaultInvoiceManagerTest {
 		Mockito.when(this.objectHolder.getUserById(USER_ID_1, PROVIDER_ID_1)).thenReturn(user1);
 		Mockito.when(this.objectHolder.getUserById(USER_ID_2, PROVIDER_ID_2)).thenReturn(user2);
 		Mockito.when(this.objectHolder.getUserById(USER_ID_3, PROVIDER_ID_3)).thenReturn(user3);
-		Mockito.when(this.objectHolder.getFinancePlan(PLAN_NAME_1)).thenReturn(financePlan);
+		Mockito.when(this.objectHolder.getOrDefaultFinancePlan(PLAN_NAME_1)).thenReturn(financePlan);
 	}
 
 	private void setUpResourceItemFactory() throws InvalidParameterException {
