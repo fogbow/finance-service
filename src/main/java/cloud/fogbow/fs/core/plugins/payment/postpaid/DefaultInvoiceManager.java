@@ -41,20 +41,15 @@ public class DefaultInvoiceManager implements PaymentManager {
     }
 	
 	@Override
-	public boolean hasPaid(String userId, String provider) {
-	    try {
-	        FinanceUser user = this.objectHolder.getUserById(userId, provider);
-	        
-	        synchronized(user) {
-	            for (Invoice invoice : user.getInvoices()) {
-	                if (invoice.getState().equals(InvoiceState.DEFAULTING)) {
-	                    return false;
-	                } 
-	            }
-	        }
-            // TODO treat these exceptions
-        } catch (InvalidParameterException e) {
-            e.printStackTrace();
+	public boolean hasPaid(String userId, String provider) throws InvalidParameterException {
+        FinanceUser user = this.objectHolder.getUserById(userId, provider);
+
+        synchronized(user) {
+            for (Invoice invoice : user.getInvoices()) {
+                if (invoice.getState().equals(InvoiceState.DEFAULTING)) {
+                    return false;
+                }
+            }
         }
 	    
 	    return true;

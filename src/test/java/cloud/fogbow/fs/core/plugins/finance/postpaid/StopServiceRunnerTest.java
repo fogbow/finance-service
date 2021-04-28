@@ -32,6 +32,7 @@ public class StopServiceRunnerTest {
 	private RasClient rasClient;
 	private FinanceUser user1;
 	private FinanceUser user2;
+	private MultiConsumerSynchronizedList<FinanceUser> users;
 	
 	// test case: When calling the method doRun, it must get the
 	// list of users from the DatabaseManager. For each user, 
@@ -178,25 +179,152 @@ public class StopServiceRunnerTest {
         Mockito.verify(rasClient, Mockito.times(1)).resumeResourcesByUser(ID_USER_1);
         Mockito.verify(rasClient, Mockito.times(1)).resumeResourcesByUser(ID_USER_2);
     }
+    
+    // test case: When calling the method doRun and the user payment
+    // state check fails, it must skip the process for the current user and 
+    // continue checking the other users' states.
+    @Test
+    public void testFailedToCheckIfUserPaid() throws ModifiedListException, FogbowException {
+        // 
+        // Set up
+        //
+        setUpDatabase();
+        
+        paymentManager = Mockito.mock(PaymentManager.class);
+        
+        Mockito.doThrow(InvalidParameterException.class).when(paymentManager).hasPaid(ID_USER_1, PROVIDER_USER_1);
+        Mockito.doReturn(false).when(paymentManager).hasPaid(ID_USER_2, PROVIDER_USER_2);
+        
+        rasClient = Mockito.mock(RasClient.class);
+        
+        stopServiceRunner = new StopServiceRunner(stopServiceWaitTime, objectHolder, paymentManager, rasClient);
+        
+        
+        
+        stopServiceRunner.doRun();
+        
+        
+        // Failed to determine whether user has paid or not.
+        assertFalse(this.user1.stoppedResources());
+        // User has not paid. Therefore, its state must change.
+        assertTrue(this.user2.stoppedResources());
+        
+        // Failed to determine whether user has paid or not.
+        Mockito.verify(rasClient, Mockito.never()).pauseResourcesByUser(ID_USER_1);
+        // User has not paid. Therefore, must call RasClient to pause resources.
+        Mockito.verify(rasClient, Mockito.times(1)).pauseResourcesByUser(ID_USER_2);
+    }
+    
+    // test case: When calling the method doRun and a ModifiedListException
+    // is thrown when acquiring a user, it must handle the 
+    // exception and stop the user iteration.
+    @Test
+    public void testUserListChanges() throws ModifiedListException, FogbowException {
+        // 
+        // Set up
+        //
+        setUpDatabaseUserListChanges();
+        
+        paymentManager = Mockito.mock(PaymentManager.class);
+        
+        Mockito.doReturn(false).when(paymentManager).hasPaid(ID_USER_1, PROVIDER_USER_1);
+        
+        rasClient = Mockito.mock(RasClient.class);
+        
+        stopServiceRunner = new StopServiceRunner(stopServiceWaitTime, objectHolder, paymentManager, rasClient);
+        
+        
+        stopServiceRunner.doRun();
+        
+
+        assertTrue(this.user1.stoppedResources());
+        // Failed to get user2. Therefore, its state must not change.
+        assertFalse(this.user2.stoppedResources());
+        
+        Mockito.verify(rasClient, Mockito.times(1)).pauseResourcesByUser(ID_USER_1);
+        // Failed to get user2. Therefore, its state must not change.
+        Mockito.verify(rasClient, Mockito.never()).pauseResourcesByUser(ID_USER_2);
+    }
+    
+    // test case: When calling the method doRun and a InternalServerErrorException
+    // is thrown when acquiring a user, it must handle the 
+    // exception and stop the user iteration.
+    @Test
+    public void testFailedToGetUser() throws ModifiedListException, FogbowException {
+        // 
+        // Set up
+        //
+        setUpDatabaseFailToGetUser();
+        
+        paymentManager = Mockito.mock(PaymentManager.class);
+        
+        Mockito.doReturn(false).when(paymentManager).hasPaid(ID_USER_1, PROVIDER_USER_1);
+        
+        rasClient = Mockito.mock(RasClient.class);
+        
+        stopServiceRunner = new StopServiceRunner(stopServiceWaitTime, objectHolder, paymentManager, rasClient);
+        
+        
+        stopServiceRunner.doRun();
+        
+
+        assertTrue(this.user1.stoppedResources());
+        // Failed to get user2. Therefore, its state must not change.
+        assertFalse(this.user2.stoppedResources());
+        
+        Mockito.verify(rasClient, Mockito.times(1)).pauseResourcesByUser(ID_USER_1);
+        // Failed to get user2. Therefore, its state must not change.
+        Mockito.verify(rasClient, Mockito.never()).pauseResourcesByUser(ID_USER_2);
+    }
 	
 	private void setUpDatabase() throws InvalidParameterException, ModifiedListException, InternalServerErrorException {
-		this.user1 = new FinanceUser(new HashMap<String, String>());
-		user1.setId(ID_USER_1);
-		user1.setProvider(PROVIDER_USER_1);
+		setUpUsers();
 
-		this.user2 = new FinanceUser(new HashMap<String, String>());
-		user2.setId(ID_USER_2);
-		user2.setProvider(PROVIDER_USER_2);
-
-        MultiConsumerSynchronizedList<FinanceUser> users = Mockito.mock(MultiConsumerSynchronizedList.class);
+        users = Mockito.mock(MultiConsumerSynchronizedList.class);
 
         Mockito.when(users.startIterating()).thenReturn(CONSUMER_ID);
         Mockito.when(users.getNext(CONSUMER_ID)).thenReturn(user1, user2, null);
 
-        this.objectHolder = Mockito.mock(InMemoryFinanceObjectsHolder.class);
-        Mockito.when(objectHolder.getRegisteredUsersByPaymentType(PostPaidFinancePlugin.PLUGIN_NAME)).thenReturn(users);
+        setUpObjectHolder();
 	}
 	
+	private void setUpDatabaseUserListChanges() throws InternalServerErrorException, ModifiedListException { 
+        setUpUsers();
+
+        users = Mockito.mock(MultiConsumerSynchronizedList.class);
+
+        Mockito.when(users.startIterating()).thenReturn(CONSUMER_ID);
+        Mockito.when(users.getNext(CONSUMER_ID)).thenReturn(user1).thenThrow(new ModifiedListException());
+
+        setUpObjectHolder();
+	}
+	
+    private void setUpDatabaseFailToGetUser() throws InternalServerErrorException, ModifiedListException {
+        setUpUsers();
+
+        users = Mockito.mock(MultiConsumerSynchronizedList.class);
+
+        Mockito.when(users.startIterating()).thenReturn(CONSUMER_ID);
+        Mockito.when(users.getNext(CONSUMER_ID)).thenReturn(user1).thenThrow(new InternalServerErrorException());
+
+        setUpObjectHolder();
+    }
+
+    private void setUpUsers() {
+        this.user1 = new FinanceUser(new HashMap<String, String>());
+        user1.setId(ID_USER_1);
+        user1.setProvider(PROVIDER_USER_1);
+
+        this.user2 = new FinanceUser(new HashMap<String, String>());
+        user2.setId(ID_USER_2);
+        user2.setProvider(PROVIDER_USER_2);
+    }
+	
+    private void setUpObjectHolder() {
+        this.objectHolder = Mockito.mock(InMemoryFinanceObjectsHolder.class);
+        Mockito.when(objectHolder.getRegisteredUsersByPaymentType(PostPaidFinancePlugin.PLUGIN_NAME)).thenReturn(users);
+    }
+    
 	private void setUpDatabaseResumeResources() throws InvalidParameterException, ModifiedListException, InternalServerErrorException {
 		setUpDatabase();
 		

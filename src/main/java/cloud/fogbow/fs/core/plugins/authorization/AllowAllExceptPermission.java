@@ -3,6 +3,7 @@ package cloud.fogbow.fs.core.plugins.authorization;
 import java.util.HashSet;
 import java.util.Set;
 
+import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.common.models.Permission;
 import cloud.fogbow.fs.constants.SystemConstants;
 import cloud.fogbow.fs.core.PropertiesHolder;
@@ -26,7 +27,7 @@ public class AllowAllExceptPermission implements Permission<FsOperation> {
         this.notAllowedOperationTypes = notAllowedOperationTypes;
     }
     
-    public AllowAllExceptPermission(String permissionName) {
+    public AllowAllExceptPermission(String permissionName) throws InvalidParameterException {
         this.notAllowedOperationTypes = new HashSet<OperationType>();
         this.name = permissionName;
         

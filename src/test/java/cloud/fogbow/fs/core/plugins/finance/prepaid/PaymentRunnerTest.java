@@ -53,6 +53,8 @@ public class PaymentRunnerTest {
 	
 	private List<Long> timeValues;
 	
+	private MultiConsumerSynchronizedList<FinanceUser> users;
+	
 	// test case: When calling the doRun method, it must get the
 	// list of users from the DatabaseManager. For each user 
 	// it must get the user records, set the records in the database and 
@@ -166,25 +168,176 @@ public class PaymentRunnerTest {
 		assertEquals(String.valueOf(timeValues.get(1)), user2.getProperty(FinanceUser.USER_LAST_BILLING_TIME));
 	}
 	
-	private void setUpDatabase() throws InvalidParameterException, ModifiedListException, InternalServerErrorException {
-		this.user1 = new FinanceUser(new HashMap<String, String>());
-		user1.setId(ID_USER_1);
-		user1.setProvider(PROVIDER_USER_1);
-		user1.setProperty(FinanceUser.USER_LAST_BILLING_TIME, String.valueOf(INITIAL_USER_1_LAST_BILLING_TIME));
-		
-		this.user2 = new FinanceUser(new HashMap<String, String>());
-		user2.setId(ID_USER_2);
-		user2.setProvider(PROVIDER_USER_2);
-		user2.setProperty(FinanceUser.USER_LAST_BILLING_TIME, String.valueOf(INITIAL_USER_2_LAST_BILLING_TIME));
-		
-        MultiConsumerSynchronizedList<FinanceUser> users = Mockito.mock(MultiConsumerSynchronizedList.class);
+	// test case: When calling the doRun method and a ModifiedListException
+    // is thrown when acquiring a user, it must handle the 
+    // exception and stop the user iteration.
+    @Test
+    public void testUserListChanges() throws ModifiedListException, FogbowException {
+        //
+        // Setting up mocks
+        //
+        this.timeUtils = Mockito.spy(TimeUtils.class);
+        // Set time values used by the PaymentRunner
+        // The first value is the billing time for the first user
+        // The second value is the billing time for the second user
+        timeValues = Arrays.asList(INITIAL_USER_1_LAST_BILLING_TIME + 1, 
+                INITIAL_USER_1_LAST_BILLING_TIME + 2, 
+                INITIAL_USER_1_LAST_BILLING_TIME + 3);
+        Mockito.when(timeUtils.getCurrentTimeMillis()).thenReturn(timeValues.get(0),
+                timeValues.get(1), timeValues.get(2));
+        
+        setUpDatabaseUserListChanges();
+        setUpAccounting();
+        
+        this.paymentManager = Mockito.mock(PaymentManager.class);
+        
+        PaymentRunner paymentRunner = new PaymentRunner(creditsDeductionWaitTime, 
+                objectHolder, accountingServiceClient, paymentManager, timeUtils);
+        
+        
+        paymentRunner.doRun();
+        
+        
+        // Tries to get both users
+        
+        Mockito.verify(users, Mockito.times(2)).getNext(Mockito.anyInt());
+        
+        //
+        // Checking payment state
+        //
+        
+        // PaymentRunner triggered payment correctly
+        Mockito.verify(paymentManager, Mockito.times(1)).startPaymentProcess(ID_USER_1, PROVIDER_USER_1, 
+                INITIAL_USER_1_LAST_BILLING_TIME, timeValues.get(0));
+        Mockito.verify(paymentManager, Mockito.never()).startPaymentProcess(ID_USER_2, PROVIDER_USER_2,
+                INITIAL_USER_2_LAST_BILLING_TIME, timeValues.get(1));
+
+        // PaymentRunner set the last period records
+        
+        // An exception is thrown when trying to get user2.
+        // Therefore, user2 state has no records.
+        List<Record> records = user1.getPeriodRecords();
+        assertEquals(2, records.size());
+        assertEquals(RECORD_ID_1, records.get(0).getId());
+        assertEquals(RECORD_ID_2, records.get(1).getId());
+
+        List<Record> records2 = user2.getPeriodRecords();
+        assertNull(records2);
+
+        // PaymentRunner changed users last billing time for user1 only
+        assertEquals(String.valueOf(timeValues.get(0)), user1.getProperty(FinanceUser.USER_LAST_BILLING_TIME));
+        assertEquals(String.valueOf(INITIAL_USER_2_LAST_BILLING_TIME), user2.getProperty(FinanceUser.USER_LAST_BILLING_TIME));
+    }
+    
+    // test case: When calling the doRun method and an InternalServerErrorException
+    // is thrown when acquiring a user, it must handle the 
+    // exception and stop the user iteration.
+    @Test
+    public void testErrorOnGettingItemFromList() throws ModifiedListException, FogbowException {
+        //
+        // Setting up mocks
+        //
+        this.timeUtils = Mockito.spy(TimeUtils.class);
+        // Set time values used by the PaymentRunner
+        // The first value is the billing time for the first user
+        // The second value is the billing time for the second user
+        timeValues = Arrays.asList(INITIAL_USER_1_LAST_BILLING_TIME + 1, 
+                INITIAL_USER_1_LAST_BILLING_TIME + 2, 
+                INITIAL_USER_1_LAST_BILLING_TIME + 3);
+        Mockito.when(timeUtils.getCurrentTimeMillis()).thenReturn(timeValues.get(0),
+                timeValues.get(1), timeValues.get(2));
+
+        setUpDatabaseErrorOnGettingItemFromList();
+        setUpAccounting();
+
+        this.paymentManager = Mockito.mock(PaymentManager.class);
+
+        PaymentRunner paymentRunner = new PaymentRunner(creditsDeductionWaitTime, 
+                objectHolder, accountingServiceClient, paymentManager, timeUtils);
+
+        paymentRunner.doRun();
+
+        // Tries to get both users
+
+        Mockito.verify(users, Mockito.times(2)).getNext(Mockito.anyInt());
+
+        //
+        // Checking payment state
+        //
+
+        // PaymentRunner triggered payment correctly
+        Mockito.verify(paymentManager, Mockito.times(1)).startPaymentProcess(ID_USER_1, PROVIDER_USER_1,
+                INITIAL_USER_1_LAST_BILLING_TIME, timeValues.get(0));
+        Mockito.verify(paymentManager, Mockito.never()).startPaymentProcess(ID_USER_2, PROVIDER_USER_2,
+                INITIAL_USER_2_LAST_BILLING_TIME, timeValues.get(1));
+
+        // PaymentRunner set the last period records
+
+        // An exception is thrown when trying to get user2.
+        // Therefore, user2 state has no records.
+        List<Record> records = user1.getPeriodRecords();
+        assertEquals(2, records.size());
+        assertEquals(RECORD_ID_1, records.get(0).getId());
+        assertEquals(RECORD_ID_2, records.get(1).getId());
+
+        List<Record> records2 = user2.getPeriodRecords();
+        assertNull(records2);
+
+        // PaymentRunner changed users last billing time for user1 only
+        assertEquals(String.valueOf(timeValues.get(0)), user1.getProperty(FinanceUser.USER_LAST_BILLING_TIME));
+        assertEquals(String.valueOf(INITIAL_USER_2_LAST_BILLING_TIME),
+                user2.getProperty(FinanceUser.USER_LAST_BILLING_TIME));
+    }
+	
+    private void setUpDatabase() throws InvalidParameterException, ModifiedListException, InternalServerErrorException {
+        setUpUsers();
+
+        users = Mockito.mock(MultiConsumerSynchronizedList.class);
 
         Mockito.when(users.startIterating()).thenReturn(CONSUMER_ID);
         Mockito.when(users.getNext(CONSUMER_ID)).thenReturn(this.user1, this.user2, null);
 
+        setUpObjectHolder();
+    }
+
+    private void setUpDatabaseUserListChanges() throws InternalServerErrorException, ModifiedListException {
+        setUpUsers();
+
+        users = Mockito.mock(MultiConsumerSynchronizedList.class);
+
+        Mockito.when(users.startIterating()).thenReturn(CONSUMER_ID);
+        Mockito.when(users.getNext(CONSUMER_ID)).thenReturn(this.user1).thenThrow(new ModifiedListException());
+
+        setUpObjectHolder();
+    }
+    
+    private void setUpDatabaseErrorOnGettingItemFromList() throws InternalServerErrorException, ModifiedListException {
+        setUpUsers();
+
+        users = Mockito.mock(MultiConsumerSynchronizedList.class);
+
+        Mockito.when(users.startIterating()).thenReturn(CONSUMER_ID);
+        Mockito.when(users.getNext(CONSUMER_ID)).thenReturn(this.user1).thenThrow(new InternalServerErrorException());
+
+        setUpObjectHolder();
+    }
+
+    private void setUpUsers() {
+        this.user1 = new FinanceUser(new HashMap<String, String>());
+        user1.setId(ID_USER_1);
+        user1.setProvider(PROVIDER_USER_1);
+        user1.setProperty(FinanceUser.USER_LAST_BILLING_TIME, String.valueOf(INITIAL_USER_1_LAST_BILLING_TIME));
+
+        this.user2 = new FinanceUser(new HashMap<String, String>());
+        user2.setId(ID_USER_2);
+        user2.setProvider(PROVIDER_USER_2);
+        user2.setProperty(FinanceUser.USER_LAST_BILLING_TIME, String.valueOf(INITIAL_USER_2_LAST_BILLING_TIME));
+    }
+    
+    private void setUpObjectHolder() {
         this.objectHolder = Mockito.mock(InMemoryFinanceObjectsHolder.class);
         Mockito.when(objectHolder.getRegisteredUsersByPaymentType(PrePaidFinancePlugin.PLUGIN_NAME)).thenReturn(users);
-	}
+    }
 
 	private void setUpAccounting() throws FogbowException {
 		this.userRecords = new ArrayList<Record>();

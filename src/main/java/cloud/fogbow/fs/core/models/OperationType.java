@@ -1,5 +1,8 @@
 package cloud.fogbow.fs.core.models;
 
+import cloud.fogbow.common.exceptions.InvalidParameterException;
+import cloud.fogbow.fs.constants.Messages;
+
 public enum OperationType {
     RELOAD("reload"),
     ADD_USER("addUser"),
@@ -22,14 +25,13 @@ public enum OperationType {
         return this.value;
     }
     
-    public static OperationType fromString(String value) {
+    public static OperationType fromString(String value) throws InvalidParameterException {
         for (OperationType operationValue : values()) {
             if (operationValue.getValue().equals(value)) { 
                 return operationValue;
             }
         }
         
-        // TODO test
-        throw new IllegalArgumentException();
+        throw new InvalidParameterException(String.format(Messages.Exception.UNKNOWN_OPERATION_TYPE, value));
     }
 }

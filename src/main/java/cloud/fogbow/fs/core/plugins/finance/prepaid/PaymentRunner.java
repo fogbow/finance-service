@@ -61,6 +61,8 @@ public class PaymentRunner extends StoppableRunner {
 	                getRegisteredUsersByPaymentType(PrePaidFinancePlugin.PLUGIN_NAME);
 	    Integer consumerId = registeredUsers.startIterating();
 	    
+	    // TODO refactor
+	    
 	    try {
 	        FinanceUser user = registeredUsers.getNext(consumerId);
 	        
@@ -91,10 +93,8 @@ public class PaymentRunner extends StoppableRunner {
 	            user = registeredUsers.getNext(consumerId);
 	        }
 	    } catch (ModifiedListException e) {
-            // TODO treat
-            e.printStackTrace();
+	        LOGGER.debug(Messages.Log.USER_LIST_CHANGED_SKIPPING_CREDITS_DEDUCTION);
         } catch (InternalServerErrorException e) {
-            // TODO test
             LOGGER.error(String.format(Messages.Log.FAILED_TO_DEDUCT_CREDITS, e.getMessage()));
         } finally {
 	        registeredUsers.stopIterating(consumerId);

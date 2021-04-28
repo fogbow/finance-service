@@ -14,6 +14,7 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.constants.SystemConstants;
 import cloud.fogbow.fs.core.PropertiesHolder;
 import cloud.fogbow.fs.core.models.OperationType;
@@ -28,7 +29,7 @@ public class AllowAllExceptPermissionTest {
     private List<OperationType> notAllowedOperations = Arrays.asList(OperationType.ADD_USER, OperationType.CREATE_FINANCE_PLAN);
     private List<OperationType> noOperation = new ArrayList<OperationType>();
 
-    private void setUpVariables(List<OperationType> operations) {
+    private void setUpVariables(List<OperationType> operations) throws InvalidParameterException {
         operationsNamesString = generateOperationNamesString(operations);
 
         // set up PropertiesHolder
@@ -53,7 +54,7 @@ public class AllowAllExceptPermissionTest {
     // the type of the operation passed as argument, the method isAuthorized must
     // return false. Otherwise, it must return true.
     @Test
-    public void testIsAuthorized() {
+    public void testIsAuthorized() throws InvalidParameterException {
         setUpVariables(notAllowedOperations);
 
         for (OperationType type : OperationType.values()) {
@@ -70,7 +71,7 @@ public class AllowAllExceptPermissionTest {
     // test case: if the list of the not allowed operations is empty,
     // the method isAuthorized must always return true.
     @Test
-    public void testIsAuthorizedAllOperationsAreAuthorized() {
+    public void testIsAuthorizedAllOperationsAreAuthorized() throws InvalidParameterException {
         setUpVariables(noOperation);
 
         for (OperationType type : OperationType.values()) {

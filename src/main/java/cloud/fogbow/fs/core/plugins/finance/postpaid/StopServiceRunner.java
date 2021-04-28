@@ -77,17 +77,14 @@ public class StopServiceRunner extends StoppableRunner {
 	                        }
 	                    }
 	                } catch (InvalidParameterException e) {
-	                    // TODO test
-	                    LOGGER.error(e.getMessage());
+	                    LOGGER.error(String.format(Messages.Log.UNABLE_TO_FIND_USER, user.getId(), user.getProvider()));
 	                }
 	            }
 	            
 	            user = registeredUsers.getNext(consumerId);
 	        }
 	    } catch (ModifiedListException e) {
-            // TODO treat this
-            e.printStackTrace();
-            // TODO test
+	        LOGGER.debug(Messages.Log.USER_LIST_CHANGED_SKIPPING_USER_PAYMENT_STATE_CHECK);
         } catch (InternalServerErrorException e) {
             LOGGER.error(String.format(Messages.Log.FAILED_TO_MANAGE_RESOURCES, e.getMessage()));
         } finally {

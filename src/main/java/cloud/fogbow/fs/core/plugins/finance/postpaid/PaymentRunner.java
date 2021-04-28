@@ -73,6 +73,8 @@ public class PaymentRunner extends StoppableRunner {
 		        getRegisteredUsersByPaymentType(PostPaidFinancePlugin.PLUGIN_NAME);
 	    Integer consumerId = registeredUsers.startIterating();
 	    
+	    // TODO refactor
+	    
 	    try {
 	        FinanceUser user = registeredUsers.getNext(consumerId);
 	        
@@ -109,10 +111,8 @@ public class PaymentRunner extends StoppableRunner {
 	            user = registeredUsers.getNext(consumerId);
 	        }
 	    } catch (ModifiedListException e) {
-            // TODO treat
-            e.printStackTrace();
+            LOGGER.debug(Messages.Log.USER_LIST_CHANGED_SKIPPING_INVOICE_GENERATION);
         } catch (InternalServerErrorException e) {
-            // TODO test
             LOGGER.error(String.format(Messages.Log.FAILED_TO_GENERATE_INVOICE, e.getMessage()));
         } finally {
 	        registeredUsers.stopIterating(consumerId);

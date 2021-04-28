@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
+import cloud.fogbow.fs.constants.Messages;
 
 public class MultiConsumerSynchronizedList<T> {
     private List<T> internalList;
@@ -28,14 +29,12 @@ public class MultiConsumerSynchronizedList<T> {
     public T getNext(Integer consumerIndex) throws ModifiedListException, InternalServerErrorException {
         synchronized(internalList) {
             if (!pointers.containsKey(consumerIndex)) {
-                // TODO add message
-                throw new InternalServerErrorException();
+                throw new InternalServerErrorException(Messages.Exception.INVALID_CONSUMER_INDEX);
             }
             
             Integer pointer = pointers.get(consumerIndex);
             
             if (pointer.equals(-1)) {
-                // TODO test
                 pointers.remove(consumerIndex);
                 throw new ModifiedListException();
             }

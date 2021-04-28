@@ -172,7 +172,6 @@ public class PrePaidFinancePlugin implements FinancePlugin {
         this.objectHolder.registerUser(userId, provider, PLUGIN_NAME, financeOptions);
 	}
 
-	// TODO test
 	@Override
 	public void removeUser(String userId, String provider) throws InvalidParameterException, InternalServerErrorException {
         this.objectHolder.removeUser(userId, provider);

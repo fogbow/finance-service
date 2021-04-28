@@ -6,6 +6,7 @@ public class Messages {
 	    public static final String CANNOT_REMOVE_DEFAULT_FINANCE_PLAN = "Cannot remove default finance plan.";
 		public static final String GENERIC_EXCEPTION_S = "Operation returned error: %s.";
 		public static final String INVALID_COMPUTE_ITEM_FIELD = "Invalid compute item field.";
+		public static final String INVALID_CONSUMER_INDEX = "Invalid consumer index.";
 		public static final String INVALID_FINANCE_OPTION = "Invalid value '%s' for finance option '%s'.";
 		public static final String INVALID_FINANCE_STATE_PROPERTY = "Invalid value '%s' for finance state property '%s'.";
 		public static final String INVALID_NUMBER_OF_COMPUTE_ITEM_FIELDS = "Invalid number of compute item fields.";
@@ -29,6 +30,7 @@ public class Messages {
 		public static final String UNABLE_TO_READ_CONFIGURATION_FILE_S = "Unable to read configuration file: %s.";
 		public static final String UNKNOWN_FINANCE_PROPERTY = "Unknown finance property: %s.";
 		public static final String UNKNOWN_INVOICE_STATE = "Unknown invoice state: %s.";
+		public static final String UNKNOWN_OPERATION_TYPE = "Unknown operation type: %s.";
 		public static final String UNKNOWN_RESOURCE_ITEM = "Unknown resource item: %s.";
 		public static final String UNKNOWN_RESOURCE_ITEM_TYPE = "Unknown resource item type: %s.";
 		public static final String UNMANAGED_USER = "The user %s is not managed by any finance plugin.";
@@ -57,7 +59,11 @@ public class Messages {
 		public static final String RELOADING_PUBLIC_KEYS_HOLDER = "Reloading public keys holder.";
 		public static final String REMOVING_FINANCE_PLAN = "Removing finance plan: %s.";
 		public static final String REMOVING_USER = "Removing user: %s.";
+		public static final String UNABLE_TO_FIND_USER = "Unable to find user %s, provider %s.";
 		public static final String UPDATING_FINANCE_STATE = "Updating finance state of user: %s.";
 		public static final String UPDATING_FINANCE_PLAN = "Updating finance plan: %s.";
+		public static final String USER_LIST_CHANGED_SKIPPING_CREDITS_DEDUCTION = "User list changed. Skipping credits deduction.";
+		public static final String USER_LIST_CHANGED_SKIPPING_INVOICE_GENERATION = "User list changed. Skipping invoice generation.";
+        public static final String USER_LIST_CHANGED_SKIPPING_USER_PAYMENT_STATE_CHECK = "User list changed. Skipping user payment state check.";
 	}
 }

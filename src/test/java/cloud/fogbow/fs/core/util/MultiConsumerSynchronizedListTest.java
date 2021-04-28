@@ -3,6 +3,7 @@ package cloud.fogbow.fs.core.util;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
@@ -12,6 +13,7 @@ public class MultiConsumerSynchronizedListTest {
     private static final String ITEM_1 = "item1";
     private static final String ITEM_2 = "item2";
     private static final String ITEM_3 = "item3";
+    private static final String ITEM_4 = "item4";
 
     // TODO documentation
     @Test
@@ -122,5 +124,71 @@ public class MultiConsumerSynchronizedListTest {
         
         Integer consumerId = list.startIterating();
         list.getNext(consumerId + 1);
+    }
+    
+    // TODO documentation
+    @Test
+    public void testAddResetsCurrentIterations() throws InternalServerErrorException, ModifiedListException {
+        MultiConsumerSynchronizedList<String> list = new MultiConsumerSynchronizedList<String>();
+        list.addItem(ITEM_1);
+        list.addItem(ITEM_2);
+        list.addItem(ITEM_3);
+        
+        Integer consumerId = list.startIterating();
+        
+        String firstItem = list.getNext(consumerId);
+        String secondItem = list.getNext(consumerId);
+        
+        list.addItem(ITEM_4);
+        
+        try {
+            list.getNext(consumerId);
+            Assert.fail("Expected to throw exception.");
+        } catch (ModifiedListException e) {
+            
+        }
+        
+        try {
+            list.getNext(consumerId);
+            Assert.fail("Expected to throw exception.");
+        } catch (InternalServerErrorException e) {
+            
+        }
+        
+        assertEquals(ITEM_1, firstItem);
+        assertEquals(ITEM_2, secondItem);
+    }
+    
+    // TODO documentation
+    @Test
+    public void testRemoveResetsCurrentIterations() throws InternalServerErrorException, ModifiedListException {
+        MultiConsumerSynchronizedList<String> list = new MultiConsumerSynchronizedList<String>();
+        list.addItem(ITEM_1);
+        list.addItem(ITEM_2);
+        list.addItem(ITEM_3);
+        
+        Integer consumerId = list.startIterating();
+        
+        String firstItem = list.getNext(consumerId);
+        String secondItem = list.getNext(consumerId);
+        
+        list.removeItem(ITEM_4);
+        
+        try {
+            list.getNext(consumerId);
+            Assert.fail("Expected to throw exception.");
+        } catch (ModifiedListException e) {
+            
+        }
+        
+        try {
+            list.getNext(consumerId);
+            Assert.fail("Expected to throw exception.");
+        } catch (InternalServerErrorException e) {
+            
+        }
+        
+        assertEquals(ITEM_1, firstItem);
+        assertEquals(ITEM_2, secondItem);
     }
 }
