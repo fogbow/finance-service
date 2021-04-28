@@ -15,6 +15,7 @@ import cloud.fogbow.fs.core.models.UserCredits;
 import cloud.fogbow.fs.core.plugins.FinancePlugin;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
 import cloud.fogbow.fs.core.util.AccountingServiceClient;
+import cloud.fogbow.fs.core.util.ModifiedListException;
 import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedList;
 import cloud.fogbow.fs.core.util.RasClient;
 import cloud.fogbow.ras.core.models.Operation;
@@ -131,23 +132,34 @@ public class PrePaidFinancePlugin implements FinancePlugin {
 	    MultiConsumerSynchronizedList<FinanceUser> financeUsers = 
                 this.objectHolder.getRegisteredUsersByPaymentType(PLUGIN_NAME);
         Integer consumerId = financeUsers.startIterating();
-	    
-        try {
-            FinanceUser item = financeUsers.getNext(consumerId);
-            
-            while (item != null) {
-                if (item.getId().equals(userId) && 
-                        item.getProvider().equals(provider)) {
-                    return true;
+        
+        while (true) {
+            try {
+                FinanceUser item = financeUsers.getNext(consumerId);
+
+                while (item != null) {
+                    if (item.getId().equals(userId) && item.getProvider().equals(provider)) {
+                        return true;
+                    }
+
+                    item = financeUsers.getNext(consumerId);
                 }
-                
-                item = financeUsers.getNext(consumerId);
+
+                financeUsers.stopIterating(consumerId);
+                break;
+                // TODO test
+            } catch (ModifiedListException e) {
+                financeUsers = 
+                        this.objectHolder.getRegisteredUsersByPaymentType(PLUGIN_NAME);
+                consumerId = financeUsers.startIterating();
+                // TODO test
+            } catch (Exception e) {
+                financeUsers.stopIterating(consumerId);
+                throw e;
             }
-            
-            return false;
-        } finally {
-            financeUsers.stopIterating(consumerId);
         }
+
+        return false;
 	}
 
 	@Override
@@ -157,12 +169,9 @@ public class PrePaidFinancePlugin implements FinancePlugin {
 
 	@Override
 	public void addUser(String userId, String provider, Map<String, String> financeOptions) throws InternalServerErrorException {
-	    // FIXME this operation should be atomic
         this.objectHolder.registerUser(userId, provider, PLUGIN_NAME, financeOptions);
-        this.objectHolder.registerUserCredits(userId, provider);
 	}
 
-	// TODO This operation should also remove the user credits
 	// TODO test
 	@Override
 	public void removeUser(String userId, String provider) throws InvalidParameterException, InternalServerErrorException {
@@ -191,11 +200,13 @@ public class PrePaidFinancePlugin implements FinancePlugin {
 	        throw new InvalidParameterException(String.format(Messages.Exception.INVALID_FINANCE_STATE_PROPERTY, propertyValue, CREDITS_TO_ADD));
 	    }
 	    
-		UserCredits userCredits = this.objectHolder.getUserCreditsByUserId(userId, provider);
-		
-        synchronized (userCredits) {
-            userCredits.addCredits(valueToAdd);
-            this.objectHolder.saveUserCredits(userCredits);
-        }
+	    FinanceUser user = this.objectHolder.getUserById(userId, provider);
+	    
+	    
+	    synchronized(user) {
+	        UserCredits userCredits = user.getCredits();
+	        userCredits.addCredits(valueToAdd);
+	        this.objectHolder.saveUser(user);
+	    }
 	}
 }

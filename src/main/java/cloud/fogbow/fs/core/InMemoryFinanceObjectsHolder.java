@@ -1,10 +1,9 @@
 package cloud.fogbow.fs.core;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.springframework.data.util.Pair;
 
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
@@ -13,8 +12,8 @@ import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.models.FinancePlan;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.models.Invoice;
-import cloud.fogbow.fs.core.models.UserCredits;
 import cloud.fogbow.fs.core.plugins.payment.prepaid.UserCreditsFactory;
+import cloud.fogbow.fs.core.util.ModifiedListException;
 import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedList;
 import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedListFactory;
 
@@ -23,8 +22,6 @@ public class InMemoryFinanceObjectsHolder {
     private UserCreditsFactory userCreditsFactory;
     private MultiConsumerSynchronizedListFactory listFactory;
     private Map<String, MultiConsumerSynchronizedList<FinanceUser>> usersByPlugin;
-    private Map<Pair<String, String>, MultiConsumerSynchronizedList<Invoice>> invoicesByUser;
-    private MultiConsumerSynchronizedList<UserCredits> userCredits;
     private MultiConsumerSynchronizedList<FinancePlan> financePlans;
     
     public InMemoryFinanceObjectsHolder(DatabaseManager databaseManager) throws InternalServerErrorException {
@@ -46,22 +43,6 @@ public class InMemoryFinanceObjectsHolder {
             addUserByPlugin(user);
         }
         
-        // read invoices data
-        List<Invoice> databaseInvoices = this.databaseManager.getRegisteredInvoices();
-        invoicesByUser = new HashMap<Pair<String, String>, MultiConsumerSynchronizedList<Invoice>>();
-        
-        for (Invoice invoice : databaseInvoices) {
-            addInvoiceByUser(invoice);
-        }
-        
-        // read credits data
-        List<UserCredits> databaseUserCredits = this.databaseManager.getRegisteredUserCredits();
-        userCredits = listFactory.getList();
-        
-        for (UserCredits credits : databaseUserCredits) {
-            userCredits.addItem(credits);
-        }
- 
         // read finance plans data
         List<FinancePlan> databaseFinancePlans = this.databaseManager.getRegisteredFinancePlans();
         financePlans = listFactory.getList();
@@ -83,6 +64,8 @@ public class InMemoryFinanceObjectsHolder {
         user.setId(userId);
         user.setProvider(provider);
         user.setFinancePluginName(pluginName);
+        user.setCredits(userCreditsFactory.getUserCredits(userId, provider));
+        user.setInvoices(new ArrayList<Invoice>());
         
         addUserByPlugin(user);
         
@@ -109,8 +92,12 @@ public class InMemoryFinanceObjectsHolder {
     }
     
     public void removeUser(String userId, String provider) throws InvalidParameterException, InternalServerErrorException {
-        removeUserByPlugin(getUserById(userId, provider));
-        this.databaseManager.removeUser(userId, provider);
+        FinanceUser userToRemove = getUserById(userId, provider);
+        
+        synchronized(userToRemove) {
+            removeUserByPlugin(userToRemove);
+            this.databaseManager.removeUser(userId, provider);
+        }
     }
     
     private void removeUserByPlugin(FinanceUser user) throws InternalServerErrorException {
@@ -122,18 +109,26 @@ public class InMemoryFinanceObjectsHolder {
         for (String pluginName : usersByPlugin.keySet()) {
             MultiConsumerSynchronizedList<FinanceUser> users = usersByPlugin.get(pluginName);
             Integer consumerId = users.startIterating();
-            try {
-                FinanceUser item = users.getNext(consumerId);
-                while (item != null) {
-                    if (item.getId().equals(id) && 
-                            item.getProvider().equals(provider)) {
-                        return item;
+
+            while (true) {
+                try {
+                    FinanceUser item = users.getNext(consumerId);
+                    while (item != null) {
+                        if (item.getId().equals(id) && item.getProvider().equals(provider)) {
+                            return item;
+                        }
+
+                        item = users.getNext(consumerId);
                     }
-                    
-                    item = users.getNext(consumerId);
+
+                    users.stopIterating(consumerId);
+                    break;
+                } catch (ModifiedListException e) {
+                    users = usersByPlugin.get(pluginName);
+                    consumerId = users.startIterating();
+                } catch (Exception e) {
+                    users.stopIterating(consumerId);
                 }
-            } finally {
-                users.stopIterating(consumerId);
             }
         }
         
@@ -162,102 +157,6 @@ public class InMemoryFinanceObjectsHolder {
 
     /*
      * 
-     * Invoice methods
-     * 
-     */
-    
-    public void registerInvoice(Invoice invoice) {
-        this.addInvoiceByUser(invoice);
-        this.databaseManager.saveInvoice(invoice);
-    }
-    
-    private void addInvoiceByUser(Invoice invoice) {
-        Pair<String, String> invoiceUserId = Pair.of(invoice.getUserId(), 
-                invoice.getProviderId());
-        
-        if (!invoicesByUser.containsKey(invoiceUserId)) {
-            invoicesByUser.put(invoiceUserId, listFactory.getList());
-        }
-        
-        invoicesByUser.get(invoiceUserId).addItem(invoice);
-    }
-    
-    public void saveInvoice(Invoice invoice) {
-        this.databaseManager.saveInvoice(invoice);
-    }
-
-    public Invoice getInvoice(String invoiceId) throws InvalidParameterException {
-        for (Pair<String, String> invoiceUserId : this.invoicesByUser.keySet()) {
-            MultiConsumerSynchronizedList<Invoice> invoicesList = this.invoicesByUser.get(invoiceUserId);
-            
-            Integer consumerId = invoicesList.startIterating();
-            
-            try {
-                Invoice item = invoicesList.getNext(consumerId);
-                
-                while (item != null) {
-                    if (item.getInvoiceId().equals(invoiceId)) {
-                        return item;
-                    }
-                    
-                    item = invoicesList.getNext(consumerId);
-                }
-            } finally {
-                invoicesList.stopIterating(consumerId);
-            }
-        }
-        
-        throw new InvalidParameterException(String.format(Messages.Exception.UNABLE_TO_FIND_INVOICE, invoiceId));
-    }
-
-    public MultiConsumerSynchronizedList<Invoice> getInvoiceByUserId(String userId, String provider) throws InvalidParameterException, InternalServerErrorException {
-        if (invoicesByUser.containsKey(Pair.of(userId, provider))) {
-            return invoicesByUser.get(Pair.of(userId, provider));
-        } else {
-            return this.listFactory.getList();
-        }
-    }
-    
-    /*
-     * 
-     * UserCredits methods
-     * 
-     */
-    
-    public void registerUserCredits(String userId, String provider) throws InternalServerErrorException {
-        UserCredits credits = this.userCreditsFactory.getUserCredits(userId, provider);
-        this.userCredits.addItem(credits);
-        this.databaseManager.saveUserCredits(credits);
-    }
-    
-    public void saveUserCredits(UserCredits credits) throws InternalServerErrorException {
-        this.databaseManager.saveUserCredits(credits);
-    }
-    
-    public UserCredits getUserCreditsByUserId(String userId, String provider) throws InvalidParameterException {
-        Integer consumerId = userCredits.startIterating();
-        
-        try {
-            UserCredits item = userCredits.getNext(consumerId);
-        
-            while (item != null) {
-                if (item.getUserId().equals(userId) && 
-                        item.getProvider().equals(provider)) {
-                    return item;
-                }
-                
-                item = userCredits.getNext(consumerId);
-            }
-            
-        } finally {
-            userCredits.stopIterating(consumerId);
-        }
-        
-        throw new InvalidParameterException(String.format(Messages.Exception.UNABLE_TO_FIND_USER_CREDITS, userId, provider));
-    }
-
-    /*
-     * 
      * FinancePlans methods
      * 
      */
@@ -274,18 +173,26 @@ public class InMemoryFinanceObjectsHolder {
     public FinancePlan getFinancePlan(String planName) throws InvalidParameterException {
         Integer consumerId = financePlans.startIterating();
         
-        try {
-            FinancePlan item = financePlans.getNext(consumerId);
-            
-            while (item != null) {
-                if (item.getName().equals(planName)) {
-                    return item;
+        while (true) {
+            try {
+                FinancePlan item = financePlans.getNext(consumerId);
+
+                while (item != null) {
+                    if (item.getName().equals(planName)) {
+                        return item;
+                    }
+
+                    item = financePlans.getNext(consumerId);
                 }
-                
-                item = financePlans.getNext(consumerId);
+
+                financePlans.stopIterating(consumerId);
+                break;
+            } catch (ModifiedListException e) {
+                consumerId = financePlans.startIterating();
+            } catch (Exception e) {
+                financePlans.stopIterating(consumerId);
+                throw e;
             }
-        } finally {
-            financePlans.stopIterating(consumerId);
         }
         
         throw new InvalidParameterException(String.format(Messages.Exception.UNABLE_TO_FIND_PLAN, planName));

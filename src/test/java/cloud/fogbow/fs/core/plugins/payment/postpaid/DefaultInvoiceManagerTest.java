@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
@@ -50,6 +51,8 @@ public class DefaultInvoiceManagerTest {
 	private RecordUtils resourceItemFactory;
 	private InvoiceBuilder invoiceBuilder;
 	private FinanceUser user1;
+	private FinanceUser user2;
+	private FinanceUser user3;
 	private Record record1;
 	private Record record2;
 	private List<Record> records;
@@ -74,7 +77,8 @@ public class DefaultInvoiceManagerTest {
 		Mockito.verify(this.invoiceBuilder).setProviderId(PROVIDER_ID_1);
 		Mockito.verify(this.invoiceBuilder).addItem(item1, ITEM_1_VALUE, ITEM_1_TIME);
 		Mockito.verify(this.invoiceBuilder).addItem(item2, ITEM_2_VALUE, ITEM_2_TIME);
-		Mockito.verify(this.objectHolder).registerInvoice(invoiceToAdd);
+		Mockito.verify(this.objectHolder).getUserById(USER_ID_1, PROVIDER_ID_1);
+		Mockito.verify(this.user1).addInvoice(invoiceToAdd);
 	}
 	
 	// test case: When calling the startPaymentProcess method, 
@@ -220,22 +224,14 @@ public class DefaultInvoiceManagerTest {
 		Mockito.when(invoice4.toString()).thenReturn(INVOICE_4_JSON_REPR);
 		
 		this.objectHolder = Mockito.mock(InMemoryFinanceObjectsHolder.class);
-		
-        MultiConsumerSynchronizedList<Invoice> invoiceListUser1 = Mockito.mock(MultiConsumerSynchronizedList.class);
-        MultiConsumerSynchronizedList<Invoice> invoiceListUser2 = Mockito.mock(MultiConsumerSynchronizedList.class);
-        MultiConsumerSynchronizedList<Invoice> invoiceListUser3 = Mockito.mock(MultiConsumerSynchronizedList.class);
-
-        Mockito.when(invoiceListUser1.startIterating()).thenReturn(CONSUMER_ID);
-        Mockito.when(invoiceListUser1.getNext(CONSUMER_ID)).thenReturn(invoice1, invoice2, null);
-        Mockito.when(invoiceListUser2.startIterating()).thenReturn(CONSUMER_ID);
-        Mockito.when(invoiceListUser2.getNext(CONSUMER_ID)).thenReturn(invoice3, invoice4, null);
-        Mockito.when(invoiceListUser3.startIterating()).thenReturn(CONSUMER_ID);
-        Mockito.when(invoiceListUser3.getNext(CONSUMER_ID)).thenReturn(null);
+        
+        Mockito.when(user1.getInvoices()).thenReturn(Arrays.asList(new Invoice[] {invoice1, invoice2}));
+        Mockito.when(user2.getInvoices()).thenReturn(Arrays.asList(new Invoice[] {invoice3, invoice4}));
+        Mockito.when(user3.getInvoices()).thenReturn(Arrays.asList(new Invoice[] {}));
         
 		Mockito.when(this.objectHolder.getUserById(USER_ID_1, PROVIDER_ID_1)).thenReturn(user1);
-		Mockito.when(this.objectHolder.getInvoiceByUserId(USER_ID_1, PROVIDER_ID_1)).thenReturn(invoiceListUser1);
-		Mockito.when(this.objectHolder.getInvoiceByUserId(USER_ID_2, PROVIDER_ID_2)).thenReturn(invoiceListUser2);
-		Mockito.when(this.objectHolder.getInvoiceByUserId(USER_ID_3, PROVIDER_ID_3)).thenReturn(invoiceListUser3);
+		Mockito.when(this.objectHolder.getUserById(USER_ID_2, PROVIDER_ID_2)).thenReturn(user2);
+		Mockito.when(this.objectHolder.getUserById(USER_ID_3, PROVIDER_ID_3)).thenReturn(user3);
 		Mockito.when(this.objectHolder.getFinancePlan(PLAN_NAME_1)).thenReturn(financePlan);
 	}
 
@@ -265,6 +261,8 @@ public class DefaultInvoiceManagerTest {
 		this.item2 = new ComputeItem(COMPUTE_ITEM_VCPU, COMPUTE_ITEM_MEM);
 		
 		this.user1 = Mockito.mock(FinanceUser.class);
+		this.user2 = Mockito.mock(FinanceUser.class);
+		this.user3 = Mockito.mock(FinanceUser.class);
 		Mockito.when(user1.getPeriodRecords()).thenReturn(this.records);
 		
 		this.invoiceToAdd = Mockito.mock(Invoice.class);

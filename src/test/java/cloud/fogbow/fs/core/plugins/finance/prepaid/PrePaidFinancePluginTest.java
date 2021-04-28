@@ -17,6 +17,7 @@ import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.models.UserCredits;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
 import cloud.fogbow.fs.core.util.AccountingServiceClient;
+import cloud.fogbow.fs.core.util.ModifiedListException;
 import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedList;
 import cloud.fogbow.fs.core.util.RasClient;
 import cloud.fogbow.ras.core.models.Operation;
@@ -44,7 +45,7 @@ public class PrePaidFinancePluginTest {
 	// get all managed users from a DatabaseManager instance and
 	// check if the given user belongs to the managed users list.
 	@Test
-	public void testManagesUser() throws InvalidParameterException {
+	public void testManagesUser() throws InvalidParameterException, ModifiedListException {
 		FinanceUser financeUser1 = new FinanceUser();
 		financeUser1.setId(USER_ID_1);
 		financeUser1.setProvider(PROVIDER_USER_1);
@@ -147,8 +148,10 @@ public class PrePaidFinancePluginTest {
 	public void testUpdateFinanceState() throws InvalidParameterException, InternalServerErrorException {
 	    this.userCredits = Mockito.mock(UserCredits.class);
         this.objectHolder = Mockito.mock(InMemoryFinanceObjectsHolder.class);
-        Mockito.when(this.objectHolder.getUserCreditsByUserId(USER_ID_1, PROVIDER_USER_1)).thenReturn(userCredits);
+        FinanceUser user = Mockito.mock(FinanceUser.class);
+        Mockito.when(user.getCredits()).thenReturn(userCredits);
         
+        Mockito.when(objectHolder.getUserById(USER_ID_1, PROVIDER_USER_1)).thenReturn(user);
         Map<String, String> financeState = new HashMap<String, String>();
         financeState.put(PrePaidFinancePlugin.CREDITS_TO_ADD, "10.5");
         
@@ -160,7 +163,6 @@ public class PrePaidFinancePluginTest {
 
         
         Mockito.verify(userCredits).addCredits(10.5);
-        Mockito.verify(objectHolder).saveUserCredits(userCredits);
 	}
 	
 	// test case: When calling the updateFinanceState method and 
@@ -170,7 +172,6 @@ public class PrePaidFinancePluginTest {
     public void testUpdateFinanceStateMissingFinanceStateProperty() throws InvalidParameterException, InternalServerErrorException {
         this.userCredits = Mockito.mock(UserCredits.class);
         this.objectHolder = Mockito.mock(InMemoryFinanceObjectsHolder.class);
-        Mockito.when(this.objectHolder.getUserCreditsByUserId(USER_ID_1, PROVIDER_USER_1)).thenReturn(userCredits);
         
         Map<String, String> financeState = new HashMap<String, String>();
         
@@ -188,7 +189,6 @@ public class PrePaidFinancePluginTest {
     public void testUpdateFinanceStateInvalidFinanceStateProperty() throws InvalidParameterException, InternalServerErrorException {
         this.userCredits = Mockito.mock(UserCredits.class);
         this.objectHolder = Mockito.mock(InMemoryFinanceObjectsHolder.class);
-        Mockito.when(this.objectHolder.getUserCreditsByUserId(USER_ID_1, PROVIDER_USER_1)).thenReturn(userCredits);
         
         Map<String, String> financeState = new HashMap<String, String>();
         financeState.put(PrePaidFinancePlugin.CREDITS_TO_ADD, "invalidproperty");

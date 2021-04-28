@@ -25,14 +25,19 @@ public class MultiConsumerSynchronizedList<T> {
         }
     }
     
-    public T getNext(Integer consumerIndex) throws InvalidParameterException {
+    public T getNext(Integer consumerIndex) throws InvalidParameterException, ModifiedListException {
         synchronized(internalList) {
             if (!pointers.containsKey(consumerIndex)) {
                 // TODO add message
                 throw new InvalidParameterException();
             }
-
+            
             Integer pointer = pointers.get(consumerIndex);
+            
+            if (pointer.equals(-1)) {
+                pointers.remove(consumerIndex);
+                throw new ModifiedListException();
+            }
             
             if (internalList.size() <= pointer ||
                     pointer.equals(-1)) {

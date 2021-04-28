@@ -18,6 +18,7 @@ import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.models.Invoice;
 import cloud.fogbow.fs.core.models.UserCredits;
 import cloud.fogbow.fs.core.plugins.payment.prepaid.UserCreditsFactory;
+import cloud.fogbow.fs.core.util.ModifiedListException;
 import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedList;
 import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedListFactory;
 
@@ -44,9 +45,6 @@ public class InMemoryFinanceObjectsHolderTest {
     private FinanceUser user2;
     private MultiConsumerSynchronizedList<Object> userSynchronizedList1;
     private MultiConsumerSynchronizedList<Object> userSynchronizedList2;
-    private MultiConsumerSynchronizedList<Object> invoiceSynchronizedListUser1;
-    private MultiConsumerSynchronizedList<Object> invoiceSynchronizedListUser2;
-    private MultiConsumerSynchronizedList<Object> creditsSynchronizedList;
     private MultiConsumerSynchronizedList<Object> planSynchronizedList;
     private List<FinanceUser> usersList;
     private List<Invoice> invoicesList;
@@ -63,7 +61,7 @@ public class InMemoryFinanceObjectsHolderTest {
     private UserCredits newUserCredits;
     
     @Before
-    public void setUp() throws InvalidParameterException {
+    public void setUp() throws InvalidParameterException, ModifiedListException {
         setUpUsers();
         setUpInvoices();
         setUpCredits();
@@ -77,21 +75,13 @@ public class InMemoryFinanceObjectsHolderTest {
     public void testConstructorSetsUpDataStructuresCorrectly() throws InternalServerErrorException, InvalidParameterException {
         new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
         
-        
         Mockito.verify(databaseManager).getRegisteredUsers();
-        Mockito.verify(databaseManager).getRegisteredInvoices();
         Mockito.verify(databaseManager).getRegisteredFinancePlans();
-        Mockito.verify(databaseManager).getRegisteredUserCredits();
         
-        Mockito.verify(listFactory, Mockito.times(6)).getList();
+        Mockito.verify(listFactory, Mockito.times(3)).getList();
         
         Mockito.verify(userSynchronizedList1).addItem(user1);
         Mockito.verify(userSynchronizedList2).addItem(user2);
-        Mockito.verify(invoiceSynchronizedListUser1).addItem(invoice1);
-        Mockito.verify(invoiceSynchronizedListUser1).addItem(invoice2);
-        Mockito.verify(invoiceSynchronizedListUser2).addItem(invoice3);
-        Mockito.verify(creditsSynchronizedList).addItem(userCredits1);
-        Mockito.verify(creditsSynchronizedList).addItem(userCredits2);
         Mockito.verify(planSynchronizedList).addItem(plan1);
         Mockito.verify(planSynchronizedList).addItem(plan2);
     }
@@ -184,102 +174,6 @@ public class InMemoryFinanceObjectsHolderTest {
     
     // TODO documentation
     @Test
-    public void testRegisterInvoice() throws InvalidParameterException, InternalServerErrorException {
-        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
-        
-        Invoice newInvoice = Mockito.mock(Invoice.class);
-        Mockito.when(newInvoice.getUserId()).thenReturn(USER_ID_1);
-        Mockito.when(newInvoice.getProviderId()).thenReturn(PROVIDER_ID_1);
-        
-        objectHolder.registerInvoice(newInvoice);
-        
-        Mockito.verify(invoiceSynchronizedListUser1).addItem(newInvoice);
-        Mockito.verify(databaseManager).saveInvoice(newInvoice);
-    }
-    
-    // TODO documentation
-    @Test
-    public void testSaveInvoice() throws InvalidParameterException, InternalServerErrorException {
-        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
-        
-        Invoice newInvoice = Mockito.mock(Invoice.class);
-        
-        objectHolder.saveInvoice(newInvoice);
-        
-        Mockito.verify(databaseManager).saveInvoice(newInvoice);
-    }
-    
-    // TODO documentation
-    @Test
-    public void testGetInvoice() throws InvalidParameterException, InternalServerErrorException {
-        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
-        
-        assertEquals(invoice1, objectHolder.getInvoice(INVOICE_ID_1));
-        assertEquals(invoice2, objectHolder.getInvoice(INVOICE_ID_2));
-        assertEquals(invoice3, objectHolder.getInvoice(INVOICE_ID_3));
-    }
-    
-    // TODO documentation
-    @Test(expected = InvalidParameterException.class)
-    public void testGetInvoiceUnknownInvoice() throws InvalidParameterException, InternalServerErrorException {
-        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
-        
-        objectHolder.getInvoice("unknowninvoice");
-    }
-    
-    // TODO documentation
-    @Test
-    public void testGetInvoiceByUserId() throws InvalidParameterException, InternalServerErrorException {
-        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
-        
-        assertEquals(invoiceSynchronizedListUser1, objectHolder.getInvoiceByUserId(USER_ID_1, PROVIDER_ID_1));
-        assertEquals(invoiceSynchronizedListUser2, objectHolder.getInvoiceByUserId(USER_ID_2, PROVIDER_ID_2));
-    }
-    
-    // TODO documentation
-    @Test
-    public void testRegisterUserCredits() throws InvalidParameterException, InternalServerErrorException {
-        Mockito.when(userCreditsFactory.getUserCredits(USER_ID_1, PROVIDER_ID_1)).thenReturn(newUserCredits);        
-        
-        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
-        
-        objectHolder.registerUserCredits(USER_ID_1, PROVIDER_ID_1);
-
-        Mockito.verify(creditsSynchronizedList).addItem(newUserCredits);
-        Mockito.verify(databaseManager).saveUserCredits(newUserCredits);
-    }
-    
-    // TODO documentation
-    @Test
-    public void testGetUserCreditsByUserId() throws InvalidParameterException, InternalServerErrorException {
-        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
-        
-        assertEquals(userCredits1, objectHolder.getUserCreditsByUserId(USER_ID_1, PROVIDER_ID_1));
-        assertEquals(userCredits2, objectHolder.getUserCreditsByUserId(USER_ID_2, PROVIDER_ID_2));
-    }
-    
-    // TODO documentation
-    @Test(expected = InvalidParameterException.class)
-    public void testGetUserCreditsByUserIdUnknownUser() throws InvalidParameterException, InternalServerErrorException {
-        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
-        
-        objectHolder.getUserCreditsByUserId("unknownuser", "unknownprovider");
-    }
-    
-    // TODO documentation
-    @Test
-    public void testSaveCredits() throws InvalidParameterException, InternalServerErrorException {
-        newUserCredits = Mockito.mock(UserCredits.class);
-        
-        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
-        
-        objectHolder.saveUserCredits(newUserCredits);
-        
-        Mockito.verify(databaseManager).saveUserCredits(newUserCredits);
-    }
-    
-    // TODO documentation
-    @Test
     public void testRegisterFinancePlan() throws InvalidParameterException, InternalServerErrorException {
         FinancePlan newFinancePlan = Mockito.mock(FinancePlan.class); 
         
@@ -331,24 +225,17 @@ public class InMemoryFinanceObjectsHolderTest {
         Mockito.verify(planSynchronizedList).removeItem(plan1);
     }
 
-    private void setUpLists() throws InvalidParameterException {
+    private void setUpLists() throws InvalidParameterException, ModifiedListException {
         userSynchronizedList1 = Mockito.mock(MultiConsumerSynchronizedList.class);
         userSynchronizedList2 = Mockito.mock(MultiConsumerSynchronizedList.class);
-        invoiceSynchronizedListUser1 = Mockito.mock(MultiConsumerSynchronizedList.class);
-        invoiceSynchronizedListUser2 = Mockito.mock(MultiConsumerSynchronizedList.class);
-        creditsSynchronizedList = Mockito.mock(MultiConsumerSynchronizedList.class);
         planSynchronizedList = Mockito.mock(MultiConsumerSynchronizedList.class);
         
         listFactory = Mockito.mock(MultiConsumerSynchronizedListFactory.class);
         Mockito.when(listFactory.getList()).thenReturn(userSynchronizedList1, userSynchronizedList2, 
-                invoiceSynchronizedListUser1, invoiceSynchronizedListUser2, creditsSynchronizedList, 
                 planSynchronizedList);
         
         Mockito.when(userSynchronizedList1.getNext(Mockito.anyInt())).thenReturn(user1, null);
         Mockito.when(userSynchronizedList2.getNext(Mockito.anyInt())).thenReturn(user2, null);
-        Mockito.when(invoiceSynchronizedListUser1.getNext(Mockito.anyInt())).thenReturn(invoice1, invoice2, invoice3, null);
-        Mockito.when(invoiceSynchronizedListUser2.getNext(Mockito.anyInt())).thenReturn(invoice3, null);
-        Mockito.when(creditsSynchronizedList.getNext(Mockito.anyInt())).thenReturn(userCredits1, userCredits2, null);
         Mockito.when(planSynchronizedList.getNext(Mockito.anyInt())).thenReturn(plan1, plan2, null);
     }
 

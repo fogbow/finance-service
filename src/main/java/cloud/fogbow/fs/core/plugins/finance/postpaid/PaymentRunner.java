@@ -14,6 +14,7 @@ import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
 import cloud.fogbow.fs.core.plugins.finance.StoppableRunner;
 import cloud.fogbow.fs.core.util.AccountingServiceClient;
+import cloud.fogbow.fs.core.util.ModifiedListException;
 import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedList;
 import cloud.fogbow.fs.core.util.TimeUtils;
 import cloud.fogbow.fs.core.util.accounting.Record;
@@ -109,6 +110,9 @@ public class PaymentRunner extends StoppableRunner {
 	        }
 	    } catch (InvalidParameterException e) {
 	        LOGGER.error(String.format(Messages.Log.FAILED_TO_GENERATE_INVOICE, e.getMessage()));
+        } catch (ModifiedListException e) {
+            // TODO treat
+            e.printStackTrace();
         } finally {
 	        registeredUsers.stopIterating(consumerId);
 	    }

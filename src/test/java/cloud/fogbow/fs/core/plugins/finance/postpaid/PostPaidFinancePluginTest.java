@@ -3,6 +3,7 @@ package cloud.fogbow.fs.core.plugins.finance.postpaid;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,6 +19,7 @@ import cloud.fogbow.fs.core.models.Invoice;
 import cloud.fogbow.fs.core.models.InvoiceState;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
 import cloud.fogbow.fs.core.util.AccountingServiceClient;
+import cloud.fogbow.fs.core.util.ModifiedListException;
 import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedList;
 import cloud.fogbow.fs.core.util.RasClient;
 import cloud.fogbow.ras.core.models.Operation;
@@ -49,7 +51,7 @@ public class PostPaidFinancePluginTest {
 	// get all managed users from a DatabaseManager instance and
 	// check if the given user belongs to the managed users list.
 	@Test
-	public void testManagesUser() throws InvalidParameterException {
+	public void testManagesUser() throws InvalidParameterException, ModifiedListException {
 		FinanceUser financeUser1 = new FinanceUser();
 		financeUser1.setId(USER_ID_1);
 		financeUser1.setProvider(PROVIDER_USER_1);
@@ -235,12 +237,20 @@ public class PostPaidFinancePluginTest {
     @Test
     public void testUpdateFinanceState() throws InvalidParameterException {
         Invoice invoice1 = Mockito.mock(Invoice.class);
-        Invoice invoice2 = Mockito.mock(Invoice.class);
-
-        this.objectHolder = Mockito.mock(InMemoryFinanceObjectsHolder.class);
-        Mockito.when(objectHolder.getInvoice(INVOICE_ID_1)).thenReturn(invoice1);
-        Mockito.when(objectHolder.getInvoice(INVOICE_ID_2)).thenReturn(invoice2);
+        Mockito.when(invoice1.getInvoiceId()).thenReturn(INVOICE_ID_1);
         
+        Invoice invoice2 = Mockito.mock(Invoice.class);
+        Mockito.when(invoice2.getInvoiceId()).thenReturn(INVOICE_ID_2);
+        
+        ArrayList<Invoice> invoices = new ArrayList<Invoice>();
+        invoices.add(invoice1);
+        invoices.add(invoice2);
+        
+        FinanceUser user = Mockito.mock(FinanceUser.class);
+        
+        this.objectHolder = Mockito.mock(InMemoryFinanceObjectsHolder.class);
+        Mockito.when(objectHolder.getUserById(USER_ID_1, PROVIDER_USER_1)).thenReturn(user);
+        Mockito.when(user.getInvoices()).thenReturn(invoices);
         
         financeState = new HashMap<String, String>();
         financeState.put(INVOICE_ID_1, InvoiceState.PAID.getValue());
@@ -255,7 +265,5 @@ public class PostPaidFinancePluginTest {
         
         Mockito.verify(invoice1).setState(InvoiceState.PAID);
         Mockito.verify(invoice2).setState(InvoiceState.DEFAULTING);
-        Mockito.verify(objectHolder).saveInvoice(invoice1);
-        Mockito.verify(objectHolder).saveInvoice(invoice2);
     }
 }

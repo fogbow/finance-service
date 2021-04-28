@@ -17,6 +17,7 @@ import cloud.fogbow.fs.core.InMemoryFinanceObjectsHolder;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
 import cloud.fogbow.fs.core.util.AccountingServiceClient;
+import cloud.fogbow.fs.core.util.ModifiedListException;
 import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedList;
 import cloud.fogbow.fs.core.util.TimeUtils;
 import cloud.fogbow.fs.core.util.accounting.Record;
@@ -56,7 +57,7 @@ public class PaymentRunnerTest {
 	// it must get the user records, set the records in the database and 
 	// start payment.
 	@Test
-	public void testDoRun() throws FogbowException {
+	public void testDoRun() throws FogbowException, ModifiedListException {
 		//
 		// Setting up mocks
 		//
@@ -112,7 +113,7 @@ public class PaymentRunnerTest {
 	// is thrown when acquiring user records, it must handle the
 	// exception and continue checking the remaining users.
 	@Test
-	public void testErrorOnAcquiringUserRecords() throws FogbowException {
+	public void testErrorOnAcquiringUserRecords() throws FogbowException, ModifiedListException {
 		//
 		// Setting up mocks
 		//
@@ -164,7 +165,7 @@ public class PaymentRunnerTest {
 		assertEquals(String.valueOf(timeValues.get(1)), user2.getProperty(FinanceUser.USER_LAST_BILLING_TIME));
 	}
 	
-	private void setUpDatabase() throws InvalidParameterException {
+	private void setUpDatabase() throws InvalidParameterException, ModifiedListException {
 		this.user1 = new FinanceUser(new HashMap<String, String>());
 		user1.setId(ID_USER_1);
 		user1.setProvider(PROVIDER_USER_1);

@@ -13,6 +13,7 @@ import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.core.InMemoryFinanceObjectsHolder;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
+import cloud.fogbow.fs.core.util.ModifiedListException;
 import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedList;
 import cloud.fogbow.fs.core.util.RasClient;
 
@@ -37,7 +38,7 @@ public class StopServiceRunnerTest {
 	// then the method must call the RasClient to stop the resources
 	// and update the user state.
 	@Test
-	public void testStoppingUserServices() throws FogbowException {
+	public void testStoppingUserServices() throws FogbowException, ModifiedListException {
 		// 
 		// Set up
 		//
@@ -75,7 +76,7 @@ public class StopServiceRunnerTest {
 	// then the method must skip the current user and continue checking the other
 	// users' states.
     @Test
-    public void testStoppingUserServicesRasClientThrowsException() throws FogbowException {
+    public void testStoppingUserServicesRasClientThrowsException() throws FogbowException, ModifiedListException {
         // 
         // Set up
         //
@@ -111,7 +112,7 @@ public class StopServiceRunnerTest {
 	// then the method must call the RasClient to resume the resources
 	// and update the user state.
 	@Test
-	public void testResumingUserServices() throws FogbowException {
+	public void testResumingUserServices() throws FogbowException, ModifiedListException {
 		//
 		// Set up
 		//
@@ -147,7 +148,7 @@ public class StopServiceRunnerTest {
     // then the method must skip the current user and continue checking the other
     // users' states.
     @Test
-    public void testResumingUserServicesRasClientThrowsException() throws FogbowException {
+    public void testResumingUserServicesRasClientThrowsException() throws FogbowException, ModifiedListException {
         //
         // Set up
         //
@@ -177,7 +178,7 @@ public class StopServiceRunnerTest {
         Mockito.verify(rasClient, Mockito.times(1)).resumeResourcesByUser(ID_USER_2);
     }
 	
-	private void setUpDatabase() throws InvalidParameterException {
+	private void setUpDatabase() throws InvalidParameterException, ModifiedListException {
 		this.user1 = new FinanceUser(new HashMap<String, String>());
 		user1.setId(ID_USER_1);
 		user1.setProvider(PROVIDER_USER_1);
@@ -195,7 +196,7 @@ public class StopServiceRunnerTest {
         Mockito.when(objectHolder.getRegisteredUsersByPaymentType(PostPaidFinancePlugin.PLUGIN_NAME)).thenReturn(users);
 	}
 	
-	private void setUpDatabaseResumeResources() throws InvalidParameterException {
+	private void setUpDatabaseResumeResources() throws InvalidParameterException, ModifiedListException {
 		setUpDatabase();
 		
 		user1.setStoppedResources(true);

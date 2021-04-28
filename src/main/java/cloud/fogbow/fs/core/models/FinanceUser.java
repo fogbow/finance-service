@@ -19,8 +19,10 @@ public class FinanceUser {
 	private List<Record> periodRecords;
 	private boolean stoppedResources;
 	private Map<String, String> properties;
+	private List<Invoice> invoices;
+	private UserCredits credits;
 
-	public FinanceUser() {
+    public FinanceUser() {
 
 	}
 	
@@ -78,4 +80,24 @@ public class FinanceUser {
 	public void setFinancePluginName(String financePluginName) {
 		this.financePluginName = financePluginName;
 	}
+	
+    public List<Invoice> getInvoices() {
+        return invoices;
+    }
+
+    public void addInvoice(Invoice invoice) {
+        this.invoices.add(invoice);
+    }
+    
+    public void setInvoices(List<Invoice> invoices) {
+        this.invoices = invoices;
+    }
+
+    public UserCredits getCredits() {
+        return credits;
+    }
+
+    public void setCredits(UserCredits credits) {
+        this.credits = credits;
+    }
 }

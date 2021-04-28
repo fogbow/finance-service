@@ -13,7 +13,6 @@ import cloud.fogbow.fs.core.models.Invoice;
 import cloud.fogbow.fs.core.models.InvoiceState;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
 import cloud.fogbow.fs.core.plugins.payment.ResourceItem;
-import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedList;
 import cloud.fogbow.fs.core.util.accounting.Record;
 import cloud.fogbow.fs.core.util.accounting.RecordUtils;
 
@@ -44,26 +43,17 @@ public class DefaultInvoiceManager implements PaymentManager {
 	@Override
 	public boolean hasPaid(String userId, String provider) {
 	    try {
-	        MultiConsumerSynchronizedList<Invoice> userInvoices = this.objectHolder.getInvoiceByUserId(userId, provider);
-            Integer consumerId = userInvoices.startIterating();
+	        FinanceUser user = this.objectHolder.getUserById(userId, provider);
 	        
-	        try {
-                Invoice invoice = userInvoices.getNext(consumerId);
-                
-                while (invoice != null) {
-                    if (invoice.getState().equals(InvoiceState.DEFAULTING)) {
-                        return false;
-                    } 
-                    
-                    invoice = userInvoices.getNext(consumerId);
-                }
-	        } finally {
-	            userInvoices.stopIterating(consumerId);
+	        synchronized(user) {
+	            for (Invoice invoice : user.getInvoices()) {
+	                if (invoice.getState().equals(InvoiceState.DEFAULTING)) {
+	                    return false;
+	                } 
+	            }
 	        }
             // TODO treat these exceptions
         } catch (InvalidParameterException e) {
-            e.printStackTrace();
-        } catch (InternalServerErrorException e) {
             e.printStackTrace();
         }
 	    
@@ -77,19 +67,23 @@ public class DefaultInvoiceManager implements PaymentManager {
 	    
 	    synchronized(user) {
 	        FinancePlan plan = this.objectHolder.getFinancePlan(planName);
-	        List<Record> records = user.getPeriodRecords();
-	        this.invoiceBuilder.setUserId(userId);
-	        this.invoiceBuilder.setProviderId(provider);
 	        
-	        // TODO What is the expected behavior for the empty records list case? 
-	        for (Record record : records) {
-	            addRecordToInvoice(record, plan, paymentStartTime, paymentEndTime);
+	        synchronized(plan) {
+	            List<Record> records = user.getPeriodRecords();
+	            this.invoiceBuilder.setUserId(userId);
+	            this.invoiceBuilder.setProviderId(provider);
+	            
+	            // TODO What is the expected behavior for the empty records list case? 
+	            for (Record record : records) {
+	                addRecordToInvoice(record, plan, paymentStartTime, paymentEndTime);
+	            }
+	            
+	            Invoice invoice = invoiceBuilder.buildInvoice();
+	            invoiceBuilder.reset();
+	            
+	            user.addInvoice(invoice);
+	            this.objectHolder.saveUser(user);
 	        }
-	        
-	        Invoice invoice = invoiceBuilder.buildInvoice();
-	        invoiceBuilder.reset();
-	        
-	        this.objectHolder.registerInvoice(invoice);
 	    }
 	}
 	
@@ -110,42 +104,23 @@ public class DefaultInvoiceManager implements PaymentManager {
 	public String getUserFinanceState(String userId, String provider, String property) throws InvalidParameterException {
 		String propertyValue = "";
 		
-		if (property.equals(ALL_USER_INVOICES_PROPERTY_NAME)) {
-		    MultiConsumerSynchronizedList<Invoice> userInvoices;
-		    
-            try {
-                userInvoices = this.objectHolder.getInvoiceByUserId(userId, provider);
-                List<String> invoiceJsonReps = new ArrayList<String>();
-                
-                Integer consumerId = userInvoices.startIterating();
-                
-                
-                try {
-                    Invoice invoice = userInvoices.getNext(consumerId);
-                    
-                    while (invoice != null) {
-                        synchronized(invoice) {
-                            String invoiceJson = invoice.toString();
-                            invoiceJsonReps.add(invoiceJson);    
-                        }
-                        
-                        invoice = userInvoices.getNext(consumerId);
-                    }
-                } finally {
-                    userInvoices.stopIterating(consumerId);
+        if (property.equals(ALL_USER_INVOICES_PROPERTY_NAME)) {
+            List<String> invoiceJsonReps = new ArrayList<String>();
+            FinanceUser user = this.objectHolder.getUserById(userId, provider);
+            
+            synchronized (user) {
+                List<Invoice> userInvoices = user.getInvoices();
+
+                for (Invoice invoice : userInvoices) {
+                    String invoiceJson = invoice.toString();
+                    invoiceJsonReps.add(invoiceJson);
                 }
-                
+
                 propertyValue = "[" + String.join(PROPERTY_VALUES_SEPARATOR, invoiceJsonReps) + "]";
-                // TODO treat these exceptions
-            } catch (InvalidParameterException e) {
-                e.printStackTrace();
-            } catch (InternalServerErrorException e) {
-                e.printStackTrace();
             }
-		} else {
-			throw new InvalidParameterException(
-					String.format(Messages.Exception.UNKNOWN_FINANCE_PROPERTY, property));
-		}
+        } else {
+            throw new InvalidParameterException(String.format(Messages.Exception.UNKNOWN_FINANCE_PROPERTY, property));
+        }
 		
 		return propertyValue;
 	}

@@ -14,7 +14,7 @@ public class MultiConsumerSynchronizedListTest {
 
     // TODO documentation
     @Test
-    public void testGetNextFromEmptyList() throws InvalidParameterException {
+    public void testGetNextFromEmptyList() throws InvalidParameterException, ModifiedListException {
         MultiConsumerSynchronizedList<String> list = new MultiConsumerSynchronizedList<String>();
         
         Integer consumerId = list.startIterating();
@@ -26,7 +26,7 @@ public class MultiConsumerSynchronizedListTest {
     
     // TODO documentation
     @Test
-    public void testAddItemAndGetNext() throws InvalidParameterException {
+    public void testAddItemAndGetNext() throws InvalidParameterException, ModifiedListException {
         MultiConsumerSynchronizedList<String> list = new MultiConsumerSynchronizedList<String>();
         list.addItem(ITEM_1);
         list.addItem(ITEM_2);
@@ -49,7 +49,7 @@ public class MultiConsumerSynchronizedListTest {
     
     // TODO documentation
     @Test
-    public void testAddItemAndGetNextListMultipleConsumers() throws InvalidParameterException {
+    public void testAddItemAndGetNextListMultipleConsumers() throws InvalidParameterException, ModifiedListException {
         MultiConsumerSynchronizedList<String> list = new MultiConsumerSynchronizedList<String>();
         list.addItem(ITEM_1);
         list.addItem(ITEM_2);
@@ -84,7 +84,7 @@ public class MultiConsumerSynchronizedListTest {
  
     // TODO documentation
     @Test
-    public void testRemoveItem() throws InvalidParameterException {
+    public void testRemoveItem() throws InvalidParameterException, ModifiedListException {
         MultiConsumerSynchronizedList<String> list = new MultiConsumerSynchronizedList<String>();
         list.addItem(ITEM_1);
         list.addItem(ITEM_2);
@@ -116,7 +116,7 @@ public class MultiConsumerSynchronizedListTest {
     
     // TODO documentation
     @Test(expected = InvalidParameterException.class)
-    public void testGetNextUsingInvalidConsumerId() throws InvalidParameterException {
+    public void testGetNextUsingInvalidConsumerId() throws InvalidParameterException, ModifiedListException {
         MultiConsumerSynchronizedList<String> list = new MultiConsumerSynchronizedList<String>();
         
         Integer consumerId = list.startIterating();

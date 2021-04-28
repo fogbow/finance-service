@@ -1,5 +1,6 @@
 package cloud.fogbow.fs.core.plugins.finance.postpaid;
 
+import java.util.List;
 import java.util.Map;
 
 import cloud.fogbow.common.exceptions.ConfigurationErrorException;
@@ -16,6 +17,7 @@ import cloud.fogbow.fs.core.models.InvoiceState;
 import cloud.fogbow.fs.core.plugins.FinancePlugin;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
 import cloud.fogbow.fs.core.util.AccountingServiceClient;
+import cloud.fogbow.fs.core.util.ModifiedListException;
 import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedList;
 import cloud.fogbow.fs.core.util.RasClient;
 import cloud.fogbow.ras.core.models.Operation;
@@ -127,23 +129,35 @@ public class PostPaidFinancePlugin implements FinancePlugin {
         MultiConsumerSynchronizedList<FinanceUser> financeUsers = this.objectHolder
                 .getRegisteredUsersByPaymentType(PLUGIN_NAME);
         Integer consumerId = financeUsers.startIterating();
+        
+        while (true) {
+            try {
+                FinanceUser item = financeUsers.getNext(consumerId);
 
-        try {
-            FinanceUser item = financeUsers.getNext(consumerId);
+                while (item != null) {
+                    if (item.getId().equals(userId) && 
+                            item.getProvider().equals(provider)) {
+                        return true;
+                    }
 
-            while (item != null) {
-                if (item.getId().equals(userId) && 
-                        item.getProvider().equals(provider)) {
-                    return true;
+                    item = financeUsers.getNext(consumerId);
                 }
-
-                item = financeUsers.getNext(consumerId);
-            }
-            
-            return false;
-        } finally {
-            financeUsers.stopIterating(consumerId);
+                
+                financeUsers.stopIterating(consumerId);
+                break;
+                // TODO test
+            } catch (ModifiedListException e) {
+                financeUsers = this.objectHolder
+                        .getRegisteredUsersByPaymentType(PLUGIN_NAME);
+                consumerId = financeUsers.startIterating();
+                // TODO test
+            } catch (Exception e) {
+                financeUsers.stopIterating(consumerId);
+                throw e;
+            }   
         }
+
+        return false;
 	}
 
 	@Override
@@ -157,7 +171,6 @@ public class PostPaidFinancePlugin implements FinancePlugin {
         this.objectHolder.registerUser(userId, provider, PLUGIN_NAME, financeOptions);
 	}
 	
-	// TODO This operation should also remove the user invoices
 	// TODO test
 	@Override
 	public void removeUser(String userId, String provider) throws InvalidParameterException, InternalServerErrorException {
@@ -172,12 +185,20 @@ public class PostPaidFinancePlugin implements FinancePlugin {
 
 	@Override
 	public void updateFinanceState(String userId, String provider, Map<String, String> financeState) throws InvalidParameterException {
-		for (String invoiceId : financeState.keySet()) {
-			Invoice invoice = this.objectHolder.getInvoice(invoiceId);
-			synchronized(invoice) {
-			    invoice.setState(InvoiceState.fromValue(financeState.get(invoiceId)));
-			    this.objectHolder.saveInvoice(invoice);
-			}
+	    FinanceUser user = this.objectHolder.getUserById(userId, provider);
+	    
+        synchronized (user) {
+            List<Invoice> invoices = user.getInvoices();
+
+            for (String invoiceId : financeState.keySet()) {
+                for (Invoice invoice : invoices) {
+                    if (invoice.getInvoiceId().equals(invoiceId)) {
+                        invoice.setState(InvoiceState.fromValue(financeState.get(invoiceId)));
+                    }
+                }
+            }
+		    
+            this.objectHolder.saveUser(user);
 		}
 	}
 	

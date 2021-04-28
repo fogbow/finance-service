@@ -42,7 +42,9 @@ public class DefaultCreditsManagerTest {
     private UserCredits userCredits2;
     private UserCredits userCredits3;
     private FinancePlan financePlan;
-    private FinanceUser financeUser;
+    private FinanceUser financeUser1;
+    private FinanceUser financeUser2;
+    private FinanceUser financeUser3;
     private List<Record> records;
     private Record record1;
     private Record record2;
@@ -58,13 +60,14 @@ public class DefaultCreditsManagerTest {
         this.userCredits1 = Mockito.mock(UserCredits.class);
         this.userCredits2 = Mockito.mock(UserCredits.class);
         this.userCredits3 = Mockito.mock(UserCredits.class);
-        
+
         Mockito.when(userCredits1.getCreditsValue()).thenReturn(10.0);
-        Mockito.when(objectHolder.getUserCreditsByUserId(USER_ID1, PROVIDER1)).thenReturn(userCredits1);
         Mockito.when(userCredits2.getCreditsValue()).thenReturn(0.0);
-        Mockito.when(objectHolder.getUserCreditsByUserId(USER_ID2, PROVIDER2)).thenReturn(userCredits2);
         Mockito.when(userCredits3.getCreditsValue()).thenReturn(-1.0);
-        Mockito.when(objectHolder.getUserCreditsByUserId(USER_ID3, PROVIDER3)).thenReturn(userCredits3);
+        
+        setUpRecords();
+        setUpPlan();
+        setUpDatabase();
         
         DefaultCreditsManager creditsManager = new DefaultCreditsManager(objectHolder, plan, recordUtils);
         
@@ -84,11 +87,12 @@ public class DefaultCreditsManagerTest {
         this.userCredits3 = Mockito.mock(UserCredits.class);
         
         Mockito.when(userCredits1.getCreditsValue()).thenReturn(10.51);
-        Mockito.when(objectHolder.getUserCreditsByUserId(USER_ID1, PROVIDER1)).thenReturn(userCredits1);
         Mockito.when(userCredits2.getCreditsValue()).thenReturn(0.0);
-        Mockito.when(objectHolder.getUserCreditsByUserId(USER_ID2, PROVIDER2)).thenReturn(userCredits2);
         Mockito.when(userCredits3.getCreditsValue()).thenReturn(-1.113);
-        Mockito.when(objectHolder.getUserCreditsByUserId(USER_ID3, PROVIDER3)).thenReturn(userCredits3);
+        
+        setUpRecords();
+        setUpPlan();
+        setUpDatabase();
         
         DefaultCreditsManager creditsManager = new DefaultCreditsManager(objectHolder, plan, recordUtils);
         
@@ -108,6 +112,8 @@ public class DefaultCreditsManagerTest {
     // is unknown, it must throw an InvalidParameterException.
     @Test(expected = InvalidParameterException.class)
     public void testGetUserFinanceStateUnknownProperty() throws InvalidParameterException {
+        this.userCredits1 = Mockito.mock(UserCredits.class);
+        
         DefaultCreditsManager creditsManager = new DefaultCreditsManager(objectHolder, plan, recordUtils);
         
         creditsManager.getUserFinanceState(USER_ID1, PROVIDER1, "unknown_property");
@@ -119,6 +125,8 @@ public class DefaultCreditsManagerTest {
     // Also, it must save the credits in the database.
     @Test
     public void testStartPaymentProcess() throws InternalServerErrorException, InvalidParameterException {
+        this.userCredits1 = Mockito.mock(UserCredits.class);
+        
         setUpRecords();
         setUpPlan();
         setUpDatabase();
@@ -129,15 +137,16 @@ public class DefaultCreditsManagerTest {
         
         Mockito.verify(userCredits1).deduct(resourceItem1, VALUE_ITEM_1, new Double(PAYMENT_END_TIME - PAYMENT_START_TIME));
         Mockito.verify(userCredits1).deduct(resourceItem2, VALUE_ITEM_2, new Double(PAYMENT_END_TIME - PAYMENT_START_TIME));
-        Mockito.verify(objectHolder).saveUserCredits(userCredits1);
     }
 
     // test case: When calling the startPaymentProcess method and the 
     // user has no records for the period, it must not deduct credits.
     @Test
     public void testStartPaymentProcessNoRecords() throws InternalServerErrorException, InvalidParameterException {
+        this.userCredits1 = Mockito.mock(UserCredits.class);
         records = new ArrayList<Record>();
         
+        setUpPlan();
         setUpDatabase();
         
         DefaultCreditsManager creditsManager = new DefaultCreditsManager(objectHolder, plan, recordUtils);
@@ -145,7 +154,6 @@ public class DefaultCreditsManagerTest {
         creditsManager.startPaymentProcess(USER_ID1, PROVIDER1, PAYMENT_START_TIME, PAYMENT_END_TIME);
         
         Mockito.verify(userCredits1, Mockito.never()).deduct(Mockito.any(), Mockito.any(), Mockito.any());
-        Mockito.verify(objectHolder).saveUserCredits(userCredits1);
     }
     
     // test case: When calling the startPaymentProcess method and 
@@ -154,6 +162,8 @@ public class DefaultCreditsManagerTest {
     // InternalServerErrorException.
     @Test
     public void testStartPaymentProcessErrorOnGettingItemFromRecord() throws InternalServerErrorException, InvalidParameterException {
+        this.userCredits1 = Mockito.mock(UserCredits.class);
+        
         record1 = Mockito.mock(Record.class);
         record2 = Mockito.mock(Record.class);
         
@@ -169,6 +179,7 @@ public class DefaultCreditsManagerTest {
         Mockito.when(recordUtils.getTimeFromRecord(record2, PAYMENT_START_TIME, PAYMENT_END_TIME)).
         thenReturn(new Double(PAYMENT_END_TIME - PAYMENT_START_TIME));
          
+        setUpPlan();
         setUpDatabase();
         
         DefaultCreditsManager creditsManager = new DefaultCreditsManager(objectHolder, plan, recordUtils);
@@ -180,7 +191,6 @@ public class DefaultCreditsManagerTest {
         }
         
         Mockito.verify(userCredits1, Mockito.never()).deduct(Mockito.any(), Mockito.any(), Mockito.any());
-        Mockito.verify(objectHolder, Mockito.never()).saveUserCredits(Mockito.any());
     }
     
     // test case: When calling the startPaymentProcess method and 
@@ -189,6 +199,8 @@ public class DefaultCreditsManagerTest {
     // InternalServerErrorException.
     @Test
     public void testStartPaymentProcessErrorOnGettingItemFinancialValue() throws InvalidParameterException, InternalServerErrorException {
+        this.userCredits1 = Mockito.mock(UserCredits.class);
+        
         setUpRecords();
 
         this.financePlan = Mockito.mock(FinancePlan.class);
@@ -206,7 +218,6 @@ public class DefaultCreditsManagerTest {
         }
         
         Mockito.verify(userCredits1, Mockito.never()).deduct(Mockito.any(), Mockito.any(), Mockito.any());
-        Mockito.verify(objectHolder, Mockito.never()).saveUserCredits(Mockito.any());
     }
     
     private void setUpRecords() throws InvalidParameterException {
@@ -236,14 +247,22 @@ public class DefaultCreditsManagerTest {
     }
     
     private void setUpDatabase() throws InvalidParameterException {
-        this.financeUser = Mockito.mock(FinanceUser.class);
-        Mockito.when(financeUser.getPeriodRecords()).thenReturn(records);
+        this.financeUser1 = Mockito.mock(FinanceUser.class);
+        Mockito.when(financeUser1.getPeriodRecords()).thenReturn(records);
+        Mockito.when(financeUser1.getCredits()).thenReturn(this.userCredits1);
+       
+        this.financeUser2 = Mockito.mock(FinanceUser.class);
+        Mockito.when(financeUser2.getPeriodRecords()).thenReturn(records);
+        Mockito.when(financeUser2.getCredits()).thenReturn(this.userCredits2);
         
-        this.userCredits1 = Mockito.mock(UserCredits.class);
+        this.financeUser3 = Mockito.mock(FinanceUser.class);
+        Mockito.when(financeUser3.getPeriodRecords()).thenReturn(records);
+        Mockito.when(financeUser3.getCredits()).thenReturn(this.userCredits3);
         
         this.objectHolder = Mockito.mock(InMemoryFinanceObjectsHolder.class);
-        Mockito.when(objectHolder.getUserById(USER_ID1, PROVIDER1)).thenReturn(financeUser);
+        Mockito.when(objectHolder.getUserById(USER_ID1, PROVIDER1)).thenReturn(financeUser1);
+        Mockito.when(objectHolder.getUserById(USER_ID2, PROVIDER2)).thenReturn(financeUser2);
+        Mockito.when(objectHolder.getUserById(USER_ID3, PROVIDER3)).thenReturn(financeUser3);
         Mockito.when(objectHolder.getFinancePlan(plan)).thenReturn(financePlan);
-        Mockito.when(objectHolder.getUserCreditsByUserId(USER_ID1, PROVIDER1)).thenReturn(userCredits1);
     }
 }

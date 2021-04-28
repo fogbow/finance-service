@@ -35,8 +35,10 @@ public class DefaultCreditsManager implements PaymentManager {
 	
 	@Override
 	public boolean hasPaid(String userId, String provider) throws InvalidParameterException {
-	    UserCredits credits = this.objectHolder.getUserCreditsByUserId(userId, provider);
-	    synchronized(credits) {
+	    FinanceUser user = this.objectHolder.getUserById(userId, provider);
+	    
+	    synchronized(user) {
+	        UserCredits credits = user.getCredits();
 	        return credits.getCreditsValue() >= 0.0;
 	    }
 	}
@@ -45,31 +47,33 @@ public class DefaultCreditsManager implements PaymentManager {
 	public void startPaymentProcess(String userId, String provider, 
 	        Long paymentStartTime, Long paymentEndTime) throws InternalServerErrorException, InvalidParameterException {
 	    FinanceUser user = this.objectHolder.getUserById(userId, provider);
-	    List<Record> records = user.getPeriodRecords();
-	    UserCredits credits = this.objectHolder.getUserCreditsByUserId(userId, provider);
 	    
-	    synchronized(credits) {
-	        FinancePlan plan = this.objectHolder.getFinancePlan(planName);
-	        
-	        for (Record record : records) {
-	            ResourceItem resourceItem;
-	            Double valueToPayPerTimeUnit;
-	            
-	            try {
-	                resourceItem = recordUtils.getItemFromRecord(record);
-	                valueToPayPerTimeUnit = plan.getItemFinancialValue(resourceItem);
-	            } catch (InvalidParameterException e) {
-	                throw new InternalServerErrorException(e.getMessage());
-	            }
-	            
-	            Double timeUsed = recordUtils.getTimeFromRecord(record, 
-	                    paymentStartTime, paymentEndTime);
-	            
-	            credits.deduct(resourceItem, valueToPayPerTimeUnit, timeUsed);
-	        }
-	        
-	        this.objectHolder.saveUserCredits(credits);
-	    }
+        synchronized (user) {
+            FinancePlan plan = this.objectHolder.getFinancePlan(planName);
+
+            synchronized (plan) {
+                List<Record> records = user.getPeriodRecords();
+                UserCredits credits = user.getCredits();
+                
+                for (Record record : records) {
+                    ResourceItem resourceItem;
+                    Double valueToPayPerTimeUnit;
+
+                    try {
+                        resourceItem = recordUtils.getItemFromRecord(record);
+                        valueToPayPerTimeUnit = plan.getItemFinancialValue(resourceItem);
+                    } catch (InvalidParameterException e) {
+                        throw new InternalServerErrorException(e.getMessage());
+                    }
+
+                    Double timeUsed = recordUtils.getTimeFromRecord(record, paymentStartTime, paymentEndTime);
+
+                    credits.deduct(resourceItem, valueToPayPerTimeUnit, timeUsed);
+                }
+
+                this.objectHolder.saveUser(user);
+            }
+        }
 	}
 
 	@Override
@@ -77,9 +81,10 @@ public class DefaultCreditsManager implements PaymentManager {
        String propertyValue = "";
         
         if (property.equals(USER_CREDITS)) {
-            UserCredits userCredits = this.objectHolder.getUserCreditsByUserId(userId, provider);
-            synchronized(userCredits) {
-                propertyValue = String.valueOf(userCredits.getCreditsValue());
+            FinanceUser user = this.objectHolder.getUserById(userId, provider);
+            synchronized(user) {
+                UserCredits credits = user.getCredits();
+                propertyValue = String.valueOf(credits.getCreditsValue());
             }
         } else {
             throw new InvalidParameterException(
