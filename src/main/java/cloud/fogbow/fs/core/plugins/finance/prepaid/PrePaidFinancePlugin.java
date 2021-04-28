@@ -128,7 +128,7 @@ public class PrePaidFinancePlugin implements FinancePlugin {
 	}
 
 	@Override
-	public boolean managesUser(String userId, String provider) throws InvalidParameterException {
+	public boolean managesUser(String userId, String provider) throws InternalServerErrorException {
 	    MultiConsumerSynchronizedList<FinanceUser> financeUsers = 
                 this.objectHolder.getRegisteredUsersByPaymentType(PLUGIN_NAME);
         Integer consumerId = financeUsers.startIterating();

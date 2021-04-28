@@ -58,10 +58,9 @@ public class InMemoryFinanceObjectsHolderTest {
     private FinancePlan plan1;
     private FinancePlan plan2;
     private InMemoryFinanceObjectsHolder objectHolder;
-    private UserCredits newUserCredits;
     
     @Before
-    public void setUp() throws InvalidParameterException, ModifiedListException {
+    public void setUp() throws InvalidParameterException, ModifiedListException, InternalServerErrorException {
         setUpUsers();
         setUpInvoices();
         setUpCredits();
@@ -225,7 +224,7 @@ public class InMemoryFinanceObjectsHolderTest {
         Mockito.verify(planSynchronizedList).removeItem(plan1);
     }
 
-    private void setUpLists() throws InvalidParameterException, ModifiedListException {
+    private void setUpLists() throws InvalidParameterException, ModifiedListException, InternalServerErrorException {
         userSynchronizedList1 = Mockito.mock(MultiConsumerSynchronizedList.class);
         userSynchronizedList2 = Mockito.mock(MultiConsumerSynchronizedList.class);
         planSynchronizedList = Mockito.mock(MultiConsumerSynchronizedList.class);
@@ -269,8 +268,6 @@ public class InMemoryFinanceObjectsHolderTest {
         userCredits2 = Mockito.mock(UserCredits.class);
         Mockito.when(userCredits2.getUserId()).thenReturn(USER_ID_2);
         Mockito.when(userCredits2.getProvider()).thenReturn(PROVIDER_ID_2);
-        
-        newUserCredits = Mockito.mock(UserCredits.class);
         
         creditsList = new ArrayList<UserCredits>();
         creditsList.add(userCredits1);

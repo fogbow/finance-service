@@ -5,7 +5,7 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 import cloud.fogbow.common.exceptions.FogbowException;
-import cloud.fogbow.common.exceptions.InvalidParameterException;
+import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.InMemoryFinanceObjectsHolder;
 import cloud.fogbow.fs.core.models.FinanceUser;
@@ -90,12 +90,12 @@ public class PaymentRunner extends StoppableRunner {
 	            
 	            user = registeredUsers.getNext(consumerId);
 	        }
-	    } catch (InvalidParameterException e) {
-	        // TODO test
-	        LOGGER.error(String.format(Messages.Log.FAILED_TO_DEDUCT_CREDITS, e.getMessage()));
-        } catch (ModifiedListException e) {
+	    } catch (ModifiedListException e) {
             // TODO treat
             e.printStackTrace();
+        } catch (InternalServerErrorException e) {
+            // TODO test
+            LOGGER.error(String.format(Messages.Log.FAILED_TO_DEDUCT_CREDITS, e.getMessage()));
         } finally {
 	        registeredUsers.stopIterating(consumerId);
 	    }

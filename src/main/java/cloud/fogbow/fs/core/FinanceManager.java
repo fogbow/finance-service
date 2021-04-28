@@ -29,7 +29,7 @@ public class FinanceManager {
     private FinancePlanFactory financePlanFactory;
 
     public FinanceManager(InMemoryFinanceObjectsHolder objectHolder, FinancePlanFactory financePlanFactory)
-            throws ConfigurationErrorException, InvalidParameterException {
+            throws ConfigurationErrorException, InvalidParameterException, InternalServerErrorException {
         this.objectHolder = objectHolder;
         this.financePlanFactory = financePlanFactory;
 
@@ -37,7 +37,7 @@ public class FinanceManager {
         createFinancePlugins(objectHolder);
     }
 
-    private void createDefaultPlanIfItDoesNotExist() throws InvalidParameterException {
+    private void createDefaultPlanIfItDoesNotExist() throws InvalidParameterException, InternalServerErrorException {
         String defaultFinancePlanName = PropertiesHolder.getInstance()
                 .getProperty(ConfigurationPropertyKeys.DEFAULT_FINANCE_PLAN_NAME);
         String defaultFinancePlanFilePath = PropertiesHolder.getInstance()
@@ -131,7 +131,7 @@ public class FinanceManager {
     }
 
     public void changeOptions(String userId, String provider, Map<String, String> financeOptions)
-            throws InvalidParameterException {
+            throws InvalidParameterException, InternalServerErrorException {
         FinancePlugin plugin = getUserPlugin(userId, provider);
         plugin.changeOptions(userId, provider, financeOptions);
     }
@@ -147,7 +147,8 @@ public class FinanceManager {
         return plugin.getUserFinanceState(userId, provider, property);
     }
 
-    private FinancePlugin getUserPlugin(String userId, String provider) throws InvalidParameterException {
+    private FinancePlugin getUserPlugin(String userId, String provider) throws InvalidParameterException, 
+    InternalServerErrorException {
         for (FinancePlugin plugin : financePlugins) {
             if (plugin.managesUser(userId, provider)) {
                 return plugin;
@@ -166,15 +167,15 @@ public class FinanceManager {
         this.objectHolder.registerFinancePlan(financePlan);
     }
 
-    public Map<String, String> getFinancePlan(String planName) throws InvalidParameterException {
+    public Map<String, String> getFinancePlan(String planName) throws InvalidParameterException, InternalServerErrorException {
         return this.objectHolder.getFinancePlanMap(planName);
     }
 
-    public void updateFinancePlan(String planName, Map<String, String> planInfo) throws InvalidParameterException {
+    public void updateFinancePlan(String planName, Map<String, String> planInfo) throws InvalidParameterException, InternalServerErrorException {
         this.objectHolder.updateFinancePlan(planName, planInfo);
     }
 
-    public void removeFinancePlan(String planName) throws InvalidParameterException {
+    public void removeFinancePlan(String planName) throws InvalidParameterException, InternalServerErrorException {
         String defaultFinancePlan = PropertiesHolder.getInstance()
                 .getProperty(ConfigurationPropertyKeys.DEFAULT_FINANCE_PLAN_NAME);
 

@@ -45,7 +45,7 @@ public class PrePaidFinancePluginTest {
 	// get all managed users from a DatabaseManager instance and
 	// check if the given user belongs to the managed users list.
 	@Test
-	public void testManagesUser() throws InvalidParameterException, ModifiedListException {
+	public void testManagesUser() throws InvalidParameterException, ModifiedListException, InternalServerErrorException {
 		FinanceUser financeUser1 = new FinanceUser();
 		financeUser1.setId(USER_ID_1);
 		financeUser1.setProvider(PROVIDER_USER_1);

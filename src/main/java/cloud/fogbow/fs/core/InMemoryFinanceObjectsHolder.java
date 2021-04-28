@@ -173,7 +173,7 @@ public class InMemoryFinanceObjectsHolder {
         this.databaseManager.saveFinancePlan(financePlan);
     }
 
-    public FinancePlan getFinancePlan(String planName) throws InvalidParameterException {
+    public FinancePlan getFinancePlan(String planName) throws InternalServerErrorException, InvalidParameterException {
         Integer consumerId = financePlans.startIterating();
         
         while (true) {
@@ -202,17 +202,17 @@ public class InMemoryFinanceObjectsHolder {
         throw new InvalidParameterException(String.format(Messages.Exception.UNABLE_TO_FIND_PLAN, planName));
     }
     
-    public FinancePlan getOrDefaultFinancePlan(String planName) throws InvalidParameterException {
+    public FinancePlan getOrDefaultFinancePlan(String planName) throws InternalServerErrorException, InvalidParameterException {
         try {
             return this.getFinancePlan(planName);
-        } catch (InvalidParameterException e) {
+        } catch (InternalServerErrorException e) {
             String defaultFinancePlan = PropertiesHolder.getInstance()
                     .getProperty(ConfigurationPropertyKeys.DEFAULT_FINANCE_PLAN_NAME);
             return this.getFinancePlan(defaultFinancePlan);
         }
     }
 
-    public void removeFinancePlan(String planName) throws InvalidParameterException {
+    public void removeFinancePlan(String planName) throws InvalidParameterException, InternalServerErrorException {
         FinancePlan plan = getFinancePlan(planName);
         
         synchronized(plan) {
@@ -222,7 +222,7 @@ public class InMemoryFinanceObjectsHolder {
     }
 
     // TODO test
-    public void updateFinancePlan(String planName, Map<String, String> planInfo) throws InvalidParameterException {
+    public void updateFinancePlan(String planName, Map<String, String> planInfo) throws InvalidParameterException, InternalServerErrorException {
         FinancePlan financePlan = getFinancePlan(planName);
         
         synchronized(financePlan) {
@@ -232,7 +232,7 @@ public class InMemoryFinanceObjectsHolder {
     }
 
     // TODO test
-    public Map<String, String> getFinancePlanMap(String planName) throws InvalidParameterException {
+    public Map<String, String> getFinancePlanMap(String planName) throws InvalidParameterException, InternalServerErrorException {
         FinancePlan financePlan = getFinancePlan(planName);   
         
         synchronized(financePlan) {

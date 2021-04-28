@@ -12,6 +12,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import cloud.fogbow.common.exceptions.FogbowException;
+import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.core.InMemoryFinanceObjectsHolder;
 import cloud.fogbow.fs.core.models.FinanceUser;
@@ -165,7 +166,7 @@ public class PaymentRunnerTest {
 		assertEquals(String.valueOf(timeValues.get(1)), user2.getProperty(FinanceUser.USER_LAST_BILLING_TIME));
 	}
 	
-	private void setUpDatabase() throws InvalidParameterException, ModifiedListException {
+	private void setUpDatabase() throws InvalidParameterException, ModifiedListException, InternalServerErrorException {
 		this.user1 = new FinanceUser(new HashMap<String, String>());
 		user1.setId(ID_USER_1);
 		user1.setProvider(PROVIDER_USER_1);

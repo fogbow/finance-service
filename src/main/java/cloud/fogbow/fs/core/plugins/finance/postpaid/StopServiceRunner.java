@@ -3,6 +3,7 @@ package cloud.fogbow.fs.core.plugins.finance.postpaid;
 import org.apache.log4j.Logger;
 
 import cloud.fogbow.common.exceptions.FogbowException;
+import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.InMemoryFinanceObjectsHolder;
@@ -83,12 +84,12 @@ public class StopServiceRunner extends StoppableRunner {
 	            
 	            user = registeredUsers.getNext(consumerId);
 	        }
-	    } catch (InvalidParameterException e) {
-	        // TODO test
-	        LOGGER.error(String.format(Messages.Log.FAILED_TO_MANAGE_RESOURCES, e.getMessage()));
-        } catch (ModifiedListException e) {
+	    } catch (ModifiedListException e) {
             // TODO treat this
             e.printStackTrace();
+            // TODO test
+        } catch (InternalServerErrorException e) {
+            LOGGER.error(String.format(Messages.Log.FAILED_TO_MANAGE_RESOURCES, e.getMessage()));
         } finally {
 	        registeredUsers.stopIterating(consumerId);
 	    }

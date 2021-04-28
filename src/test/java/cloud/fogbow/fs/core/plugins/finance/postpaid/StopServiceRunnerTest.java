@@ -9,6 +9,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import cloud.fogbow.common.exceptions.FogbowException;
+import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.core.InMemoryFinanceObjectsHolder;
 import cloud.fogbow.fs.core.models.FinanceUser;
@@ -178,7 +179,7 @@ public class StopServiceRunnerTest {
         Mockito.verify(rasClient, Mockito.times(1)).resumeResourcesByUser(ID_USER_2);
     }
 	
-	private void setUpDatabase() throws InvalidParameterException, ModifiedListException {
+	private void setUpDatabase() throws InvalidParameterException, ModifiedListException, InternalServerErrorException {
 		this.user1 = new FinanceUser(new HashMap<String, String>());
 		user1.setId(ID_USER_1);
 		user1.setProvider(PROVIDER_USER_1);
@@ -196,7 +197,7 @@ public class StopServiceRunnerTest {
         Mockito.when(objectHolder.getRegisteredUsersByPaymentType(PostPaidFinancePlugin.PLUGIN_NAME)).thenReturn(users);
 	}
 	
-	private void setUpDatabaseResumeResources() throws InvalidParameterException, ModifiedListException {
+	private void setUpDatabaseResumeResources() throws InvalidParameterException, ModifiedListException, InternalServerErrorException {
 		setUpDatabase();
 		
 		user1.setStoppedResources(true);

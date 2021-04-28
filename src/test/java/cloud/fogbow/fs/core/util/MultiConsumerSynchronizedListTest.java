@@ -1,10 +1,11 @@
 package cloud.fogbow.fs.core.util;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
 
-import cloud.fogbow.common.exceptions.InvalidParameterException;
+import cloud.fogbow.common.exceptions.InternalServerErrorException;
 
 public class MultiConsumerSynchronizedListTest {
 
@@ -14,7 +15,7 @@ public class MultiConsumerSynchronizedListTest {
 
     // TODO documentation
     @Test
-    public void testGetNextFromEmptyList() throws InvalidParameterException, ModifiedListException {
+    public void testGetNextFromEmptyList() throws ModifiedListException, InternalServerErrorException {
         MultiConsumerSynchronizedList<String> list = new MultiConsumerSynchronizedList<String>();
         
         Integer consumerId = list.startIterating();
@@ -26,7 +27,7 @@ public class MultiConsumerSynchronizedListTest {
     
     // TODO documentation
     @Test
-    public void testAddItemAndGetNext() throws InvalidParameterException, ModifiedListException {
+    public void testAddItemAndGetNext() throws ModifiedListException, InternalServerErrorException {
         MultiConsumerSynchronizedList<String> list = new MultiConsumerSynchronizedList<String>();
         list.addItem(ITEM_1);
         list.addItem(ITEM_2);
@@ -49,7 +50,7 @@ public class MultiConsumerSynchronizedListTest {
     
     // TODO documentation
     @Test
-    public void testAddItemAndGetNextListMultipleConsumers() throws InvalidParameterException, ModifiedListException {
+    public void testAddItemAndGetNextListMultipleConsumers() throws ModifiedListException, InternalServerErrorException {
         MultiConsumerSynchronizedList<String> list = new MultiConsumerSynchronizedList<String>();
         list.addItem(ITEM_1);
         list.addItem(ITEM_2);
@@ -84,7 +85,7 @@ public class MultiConsumerSynchronizedListTest {
  
     // TODO documentation
     @Test
-    public void testRemoveItem() throws InvalidParameterException, ModifiedListException {
+    public void testRemoveItem() throws ModifiedListException, InternalServerErrorException {
         MultiConsumerSynchronizedList<String> list = new MultiConsumerSynchronizedList<String>();
         list.addItem(ITEM_1);
         list.addItem(ITEM_2);
@@ -115,8 +116,8 @@ public class MultiConsumerSynchronizedListTest {
     }
     
     // TODO documentation
-    @Test(expected = InvalidParameterException.class)
-    public void testGetNextUsingInvalidConsumerId() throws InvalidParameterException, ModifiedListException {
+    @Test(expected = InternalServerErrorException.class)
+    public void testGetNextUsingInvalidConsumerId() throws ModifiedListException, InternalServerErrorException {
         MultiConsumerSynchronizedList<String> list = new MultiConsumerSynchronizedList<String>();
         
         Integer consumerId = list.startIterating();

@@ -62,6 +62,7 @@ public interface PaymentManager {
 	 * 
 	 * @param planName the name of the finance plan to use.
 	 * @throws InvalidParameterException if the finance plan is not known.
+	 * @throws InternalServerErrorException if some error occurs while setting the finance plan.
 	 */
-	void setFinancePlan(String planName) throws InvalidParameterException;
+	void setFinancePlan(String planName) throws InvalidParameterException, InternalServerErrorException;
 }

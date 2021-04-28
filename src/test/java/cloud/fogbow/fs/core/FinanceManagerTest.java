@@ -130,7 +130,7 @@ public class FinanceManagerTest {
 	// of finance plugins is empty, it must throw a ConfigurationErrorException.
 	@Test(expected = ConfigurationErrorException.class)
 	public void testConstructorThrowsExceptionIfNoFinancePluginIsGiven() throws ConfigurationErrorException, 
-	InvalidParameterException {
+	InvalidParameterException, InternalServerErrorException {
 		String pluginString = "";
 
 		PowerMockito.mockStatic(PropertiesHolder.class);
@@ -334,7 +334,7 @@ public class FinanceManagerTest {
 	// test case: When calling the changeOptions method and the user
 	// is not managed by any finance plugin, it must throw an InvalidParameterException.
 	@Test(expected = InvalidParameterException.class)
-	public void testChangeOptionsUnmanagedUser() throws ConfigurationErrorException, InvalidParameterException {
+	public void testChangeOptionsUnmanagedUser() throws ConfigurationErrorException, InvalidParameterException, InternalServerErrorException {
 		setUpFinancePluginUnmanagedUser();
 		Map<String, String> newFinanceOptions = new HashMap<String, String>();
 		
@@ -547,7 +547,7 @@ public class FinanceManagerTest {
 		Mockito.when(this.user3.getOperation()).thenReturn(operation3);
 	}
 	
-	private void setUpFinancePluginUnmanagedUser() throws InvalidParameterException {
+	private void setUpFinancePluginUnmanagedUser() throws InvalidParameterException, InternalServerErrorException {
 		systemUser1 = new SystemUser(USER_ID_1, USER_NAME_1, PROVIDER_USER_1);
 		operation1 = Mockito.mock(RasOperation.class);
 		

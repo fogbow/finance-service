@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import cloud.fogbow.common.exceptions.InvalidParameterException;
+import cloud.fogbow.common.exceptions.InternalServerErrorException;
 
 public class MultiConsumerSynchronizedList<T> {
     private List<T> internalList;
@@ -25,11 +25,11 @@ public class MultiConsumerSynchronizedList<T> {
         }
     }
     
-    public T getNext(Integer consumerIndex) throws InvalidParameterException, ModifiedListException {
+    public T getNext(Integer consumerIndex) throws ModifiedListException, InternalServerErrorException {
         synchronized(internalList) {
             if (!pointers.containsKey(consumerIndex)) {
                 // TODO add message
-                throw new InvalidParameterException();
+                throw new InternalServerErrorException();
             }
             
             Integer pointer = pointers.get(consumerIndex);

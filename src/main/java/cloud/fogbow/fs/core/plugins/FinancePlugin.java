@@ -46,10 +46,10 @@ public interface FinancePlugin {
 	 * @param userId the id of the user to verify.
 	 * @param provider the id of the provider of the user to verify.
 	 * @return a boolean stating whether the user is managed by this plugin or not.
-	 * @throws InvalidParameterException if an error occurs while trying to find the user 
+	 * @throws InternalServerErrorException if an error occurs while trying to find the user 
      * to check state.
 	 */
-	boolean managesUser(String userId, String provider) throws InvalidParameterException;
+	boolean managesUser(String userId, String provider) throws InternalServerErrorException;
 	
 	/**
 	 * Generates and returns a representation of the given property of

@@ -126,7 +126,7 @@ public class DefaultInvoiceManager implements PaymentManager {
 	}
 
 	@Override
-	public void setFinancePlan(String planName) throws InvalidParameterException {
+	public void setFinancePlan(String planName) throws InvalidParameterException, InternalServerErrorException {
 	    this.objectHolder.getFinancePlan(planName);
 	    
 		this.planName = planName;

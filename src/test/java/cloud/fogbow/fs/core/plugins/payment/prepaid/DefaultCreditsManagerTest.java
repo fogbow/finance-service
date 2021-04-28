@@ -55,7 +55,7 @@ public class DefaultCreditsManagerTest {
     // user has a credits value equal to zero or positive, it 
     // must return true. Otherwise, it must return false.
     @Test
-    public void testHasPaid() throws InvalidParameterException {
+    public void testHasPaid() throws InvalidParameterException, InternalServerErrorException {
         this.objectHolder = Mockito.mock(InMemoryFinanceObjectsHolder.class);
         this.userCredits1 = Mockito.mock(UserCredits.class);
         this.userCredits2 = Mockito.mock(UserCredits.class);
@@ -80,7 +80,7 @@ public class DefaultCreditsManagerTest {
     // is DefaultCreditsManager.USER_CREDITS, it must return a String representing
     // the value of the given user credits.
     @Test
-    public void testGetUserFinanceStateUserCreditsProperty() throws InvalidParameterException {
+    public void testGetUserFinanceStateUserCreditsProperty() throws InvalidParameterException, InternalServerErrorException {
         this.objectHolder = Mockito.mock(InMemoryFinanceObjectsHolder.class);
         this.userCredits1 = Mockito.mock(UserCredits.class);
         this.userCredits2 = Mockito.mock(UserCredits.class);
@@ -246,7 +246,7 @@ public class DefaultCreditsManagerTest {
         Mockito.when(financePlan.getItemFinancialValue(resourceItem2)).thenReturn(VALUE_ITEM_2);
     }
     
-    private void setUpDatabase() throws InvalidParameterException {
+    private void setUpDatabase() throws InvalidParameterException, InternalServerErrorException {
         this.financeUser1 = Mockito.mock(FinanceUser.class);
         Mockito.when(financeUser1.getPeriodRecords()).thenReturn(records);
         Mockito.when(financeUser1.getCredits()).thenReturn(this.userCredits1);

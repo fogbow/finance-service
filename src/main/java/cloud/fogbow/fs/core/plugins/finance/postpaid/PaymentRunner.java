@@ -7,7 +7,7 @@ import org.apache.log4j.Logger;
 import com.google.common.annotations.VisibleForTesting;
 
 import cloud.fogbow.common.exceptions.FogbowException;
-import cloud.fogbow.common.exceptions.InvalidParameterException;
+import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.InMemoryFinanceObjectsHolder;
 import cloud.fogbow.fs.core.models.FinanceUser;
@@ -108,12 +108,12 @@ public class PaymentRunner extends StoppableRunner {
 	            
 	            user = registeredUsers.getNext(consumerId);
 	        }
-	    } catch (InvalidParameterException e) {
-	        // TODO test
-	        LOGGER.error(String.format(Messages.Log.FAILED_TO_GENERATE_INVOICE, e.getMessage()));
-        } catch (ModifiedListException e) {
+	    } catch (ModifiedListException e) {
             // TODO treat
             e.printStackTrace();
+        } catch (InternalServerErrorException e) {
+            // TODO test
+            LOGGER.error(String.format(Messages.Log.FAILED_TO_GENERATE_INVOICE, e.getMessage()));
         } finally {
 	        registeredUsers.stopIterating(consumerId);
 	    }
