@@ -35,6 +35,7 @@ public class MultiConsumerSynchronizedList<T> {
             Integer pointer = pointers.get(consumerIndex);
             
             if (pointer.equals(-1)) {
+                // TODO test
                 pointers.remove(consumerIndex);
                 throw new ModifiedListException();
             }

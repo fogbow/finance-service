@@ -85,6 +85,7 @@ public class StopServiceRunner extends StoppableRunner {
 	            user = registeredUsers.getNext(consumerId);
 	        }
 	    } catch (InvalidParameterException e) {
+	        // TODO test
 	        LOGGER.error(String.format(Messages.Log.FAILED_TO_MANAGE_RESOURCES, e.getMessage()));
         } catch (ModifiedListException e) {
             // TODO treat

@@ -21,6 +21,7 @@ public enum InvoiceState {
 			}
 		}
 		
+		// TODO test
 		throw new InvalidParameterException(String.format(Messages.Exception.UNKNOWN_INVOICE_STATE, value));
 	}
 	

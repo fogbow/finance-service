@@ -91,6 +91,7 @@ public class PaymentRunner extends StoppableRunner {
 	            user = registeredUsers.getNext(consumerId);
 	        }
 	    } catch (InvalidParameterException e) {
+	        // TODO test
 	        LOGGER.error(String.format(Messages.Log.FAILED_TO_DEDUCT_CREDITS, e.getMessage()));
         } catch (ModifiedListException e) {
             // TODO treat

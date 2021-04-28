@@ -28,6 +28,8 @@ public enum OperationType {
                 return operationValue;
             }
         }
+        
+        // TODO test
         throw new IllegalArgumentException();
     }
 }

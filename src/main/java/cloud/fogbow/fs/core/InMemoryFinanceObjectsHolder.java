@@ -123,6 +123,7 @@ public class InMemoryFinanceObjectsHolder {
 
                     users.stopIterating(consumerId);
                     break;
+                    // TODO test
                 } catch (ModifiedListException e) {
                     users = usersByPlugin.get(pluginName);
                     consumerId = users.startIterating();
@@ -138,6 +139,7 @@ public class InMemoryFinanceObjectsHolder {
     public MultiConsumerSynchronizedList<FinanceUser> getRegisteredUsersByPaymentType(String pluginName) {
         if (this.usersByPlugin.containsKey(pluginName)) {
             return this.usersByPlugin.get(pluginName);
+            // TODO test
         } else {
             return new MultiConsumerSynchronizedList<FinanceUser>();
         }
@@ -187,6 +189,7 @@ public class InMemoryFinanceObjectsHolder {
 
                 financePlans.stopIterating(consumerId);
                 break;
+                // TODO test
             } catch (ModifiedListException e) {
                 consumerId = financePlans.startIterating();
             } catch (Exception e) {
