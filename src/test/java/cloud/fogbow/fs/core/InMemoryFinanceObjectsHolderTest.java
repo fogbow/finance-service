@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNull;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -58,6 +59,7 @@ public class InMemoryFinanceObjectsHolderTest {
     private List<FinancePlan> plansList;
     private FinancePlan plan1;
     private FinancePlan plan2;
+    private Map<String, String> rulesPlan1;
     private InMemoryFinanceObjectsHolder objectHolder;
     
     @Before
@@ -296,6 +298,36 @@ public class InMemoryFinanceObjectsHolderTest {
         
         Mockito.verify(databaseManager).removeFinancePlan(PLAN_NAME_1);
         Mockito.verify(planSynchronizedList).removeItem(plan1);
+    }
+    
+    // TODO documentation
+    @Test
+    public void testUpdateFinancePlan() throws InternalServerErrorException, InvalidParameterException {
+        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
+        Map<String, String> updatedPlanInfo = new HashMap<String, String>();
+
+        
+        objectHolder.updateFinancePlan(PLAN_NAME_1, updatedPlanInfo);
+        
+        
+        Mockito.verify(plan1).update(updatedPlanInfo);
+        Mockito.verify(databaseManager).saveFinancePlan(plan1);
+        Mockito.verify(planSynchronizedList).stopIterating(Mockito.anyInt());
+    }
+    
+    // TODO documentation
+    @Test
+    public void testGetFinancePlanMap() throws InternalServerErrorException, InvalidParameterException {
+        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
+        rulesPlan1 = new HashMap<String, String>();
+        Mockito.when(plan1.getRulesAsMap()).thenReturn(rulesPlan1);
+        
+        
+        Map<String, String> returnedMap = objectHolder.getFinancePlanMap(PLAN_NAME_1);
+        
+        
+        assertEquals(rulesPlan1, returnedMap);
+        Mockito.verify(planSynchronizedList).stopIterating(Mockito.anyInt());
     }
 
     private void setUpLists() throws InvalidParameterException, ModifiedListException, InternalServerErrorException {

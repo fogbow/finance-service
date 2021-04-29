@@ -255,7 +255,6 @@ public class InMemoryFinanceObjectsHolder {
         }
     }
 
-    // TODO test
     public void updateFinancePlan(String planName, Map<String, String> planInfo) throws InvalidParameterException, InternalServerErrorException {
         FinancePlan financePlan = getFinancePlan(planName);
         
@@ -265,7 +264,6 @@ public class InMemoryFinanceObjectsHolder {
         }
     }
 
-    // TODO test
     public Map<String, String> getFinancePlanMap(String planName) throws InvalidParameterException, InternalServerErrorException {
         FinancePlan financePlan = getFinancePlan(planName);   
         
