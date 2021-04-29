@@ -198,24 +198,13 @@ public class InMemoryFinanceObjectsHolder {
 
     public FinancePlan getFinancePlan(String planName) throws InternalServerErrorException, InvalidParameterException {
         Integer consumerId = financePlans.startIterating();
+        FinancePlan planToReturn = null;
         
-        // TODO refactor
         while (true) {
             try {
-                FinancePlan item = financePlans.getNext(consumerId);
-
-                while (item != null) {
-                    if (item.getName().equals(planName)) {
-                        financePlans.stopIterating(consumerId);
-                        return item;
-                    }
-
-                    item = financePlans.getNext(consumerId);
-                }
-
+                planToReturn = tryToGetPlanFromList(planName, consumerId);
                 financePlans.stopIterating(consumerId);
                 break;
-                // TODO test
             } catch (ModifiedListException e) {
                 consumerId = financePlans.startIterating();
             } catch (Exception e) {
@@ -224,7 +213,28 @@ public class InMemoryFinanceObjectsHolder {
             }
         }
         
+        if (planToReturn != null) {
+            return planToReturn;
+        }
+        
         throw new InvalidParameterException(String.format(Messages.Exception.UNABLE_TO_FIND_PLAN, planName));
+    }
+
+    private FinancePlan tryToGetPlanFromList(String planName, Integer consumerId)
+            throws ModifiedListException, InternalServerErrorException {
+        FinancePlan item = financePlans.getNext(consumerId);
+        FinancePlan planToReturn = null;
+
+        while (item != null) {
+            if (item.getName().equals(planName)) {
+                planToReturn = item;
+                break;
+            }
+
+            item = financePlans.getNext(consumerId);
+        }
+        
+        return planToReturn;
     }
     
     public FinancePlan getOrDefaultFinancePlan(String planName) throws InternalServerErrorException, InvalidParameterException {

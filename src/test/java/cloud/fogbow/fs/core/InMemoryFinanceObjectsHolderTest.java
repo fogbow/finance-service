@@ -114,6 +114,9 @@ public class InMemoryFinanceObjectsHolderTest {
         
         assertEquals(user1, objectHolder.getUserById(USER_ID_1, PROVIDER_ID_1));
         assertEquals(user2, objectHolder.getUserById(USER_ID_2, PROVIDER_ID_2));
+        
+        Mockito.verify(userSynchronizedList1, Mockito.times(2)).stopIterating(Mockito.anyInt());
+        Mockito.verify(userSynchronizedList2, Mockito.times(1)).stopIterating(Mockito.anyInt());
     }
     
     // TODO documentation
@@ -127,6 +130,8 @@ public class InMemoryFinanceObjectsHolderTest {
         objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
         
         assertEquals(user2, objectHolder.getUserById(USER_ID_2, PROVIDER_ID_2));
+        
+        Mockito.verify(userSynchronizedList1, Mockito.times(1)).stopIterating(Mockito.anyInt());
     }
     
     // TODO documentation
@@ -228,6 +233,36 @@ public class InMemoryFinanceObjectsHolderTest {
         
         assertEquals(plan1, objectHolder.getFinancePlan(PLAN_NAME_1));
         assertEquals(plan2, objectHolder.getFinancePlan(PLAN_NAME_2));
+        
+        Mockito.verify(planSynchronizedList, Mockito.times(2)).stopIterating(Mockito.anyInt());
+    }
+    
+    // TODO documentation
+    @Test
+    public void testGetFinancePlanListChanges() throws InternalServerErrorException, ModifiedListException, InvalidParameterException {
+        Mockito.when(planSynchronizedList.getNext(Mockito.anyInt())).
+        thenReturn(plan1).
+        thenThrow(new ModifiedListException()).
+        thenReturn(plan1, plan2);
+        
+        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
+        
+        assertEquals(plan2, objectHolder.getFinancePlan(PLAN_NAME_2));
+        
+        Mockito.verify(planSynchronizedList).stopIterating(Mockito.anyInt());
+    }
+    
+    // TODO documentation
+    @Test(expected = InternalServerErrorException.class)
+    public void testGetFinancePlanListThrowsException() throws InternalServerErrorException, ModifiedListException, InvalidParameterException {
+        Mockito.when(planSynchronizedList.getNext(Mockito.anyInt())).
+        thenReturn(plan1).
+        thenThrow(new InternalServerErrorException()).
+        thenReturn(plan1, plan2);
+        
+        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
+        
+        objectHolder.getFinancePlan(PLAN_NAME_2);
     }
     
     // TODO documentation
