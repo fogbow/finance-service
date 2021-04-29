@@ -137,6 +137,8 @@ public class DefaultCreditsManagerTest {
         
         Mockito.verify(userCredits1).deduct(resourceItem1, VALUE_ITEM_1, new Double(PAYMENT_END_TIME - PAYMENT_START_TIME));
         Mockito.verify(userCredits1).deduct(resourceItem2, VALUE_ITEM_2, new Double(PAYMENT_END_TIME - PAYMENT_START_TIME));
+        Mockito.verify(financeUser1).setProperty(FinanceUser.USER_LAST_BILLING_TIME, String.valueOf(PAYMENT_END_TIME));
+        Mockito.verify(objectHolder).saveUser(financeUser1);
     }
 
     // test case: When calling the startPaymentProcess method and the 

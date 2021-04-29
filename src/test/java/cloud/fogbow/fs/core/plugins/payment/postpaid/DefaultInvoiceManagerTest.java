@@ -20,7 +20,6 @@ import cloud.fogbow.fs.core.models.Invoice;
 import cloud.fogbow.fs.core.models.InvoiceState;
 import cloud.fogbow.fs.core.plugins.payment.ComputeItem;
 import cloud.fogbow.fs.core.plugins.payment.VolumeItem;
-import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedList;
 import cloud.fogbow.fs.core.util.accounting.Record;
 import cloud.fogbow.fs.core.util.accounting.RecordUtils;
 
@@ -44,7 +43,6 @@ public class DefaultInvoiceManagerTest {
 	private static final String INVOICE_2_JSON_REPR = "invoice2json";
 	private static final String INVOICE_3_JSON_REPR = "invoice3json";
 	private static final String INVOICE_4_JSON_REPR = "invoice4json";
-    private static final Integer CONSUMER_ID = 0;
 	private Long invoiceStartTime = 0L;
 	private Long invoiceEndTime = 100L;
 	private InMemoryFinanceObjectsHolder objectHolder;
@@ -79,6 +77,8 @@ public class DefaultInvoiceManagerTest {
 		Mockito.verify(this.invoiceBuilder).addItem(item2, ITEM_2_VALUE, ITEM_2_TIME);
 		Mockito.verify(this.objectHolder).getUserById(USER_ID_1, PROVIDER_ID_1);
 		Mockito.verify(this.user1).addInvoice(invoiceToAdd);
+		Mockito.verify(this.user1).setProperty(FinanceUser.USER_LAST_BILLING_TIME, String.valueOf(invoiceEndTime));
+		Mockito.verify(this.objectHolder).saveUser(user1);
 	}
 	
 	// test case: When calling the startPaymentProcess method, 

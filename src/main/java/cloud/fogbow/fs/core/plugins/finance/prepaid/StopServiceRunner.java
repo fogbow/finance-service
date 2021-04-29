@@ -17,9 +17,9 @@ import cloud.fogbow.fs.core.util.RasClient;
 public class StopServiceRunner extends StoppableRunner {
 	private static Logger LOGGER = Logger.getLogger(StopServiceRunner.class);
 	
+	private InMemoryFinanceObjectsHolder objectHolder;
 	private PaymentManager paymentManager;
 	private RasClient rasClient;
-	private InMemoryFinanceObjectsHolder objectHolder;
 	
     public StopServiceRunner(long stopServiceWaitTime, InMemoryFinanceObjectsHolder objectHolder, PaymentManager paymentManager,
             RasClient rasClient) {
@@ -34,54 +34,16 @@ public class StopServiceRunner extends StoppableRunner {
 		// This runner depends on PrePaidFinancePlugin. Maybe we should 
 		// pass the plugin name as an argument to the constructor, so we 
 		// can reuse this class.
+	    
 	    MultiConsumerSynchronizedList<FinanceUser> registeredUsers = 
 	            this.objectHolder.getRegisteredUsersByPaymentType(PrePaidFinancePlugin.PLUGIN_NAME);
 	    Integer consumerId = registeredUsers.startIterating();
 	    
-	    // TODO refactor
-	    
 	    try {
 	        FinanceUser user = registeredUsers.getNext(consumerId);
 	        
-	        // for each user
 	        while (user != null) {
-	            synchronized (user) {
-	                try {
-	                    boolean paid = this.paymentManager.hasPaid(user.getId(), user.getProvider());
-	                    boolean stoppedResources = user.stoppedResources();
-
-	                    // if user has not paid
-	                    if (!paid && !stoppedResources) {
-	                        // stop resources
-	                        try {
-	                            this.rasClient.pauseResourcesByUser(user.getId());
-	                            // write status in the db
-	                            user.setStoppedResources(true);
-	                            this.objectHolder.saveUser(user);
-	                        } catch (FogbowException e) {
-	                            LOGGER.error(String.format(Messages.Log.FAILED_TO_PAUSE_USER_RESOURCES_FOR_USER, user.getId(),
-	                                    e.getMessage()));
-	                        }
-	                    }
-
-	                    // if user has stopped resources but paid
-	                    if (paid && stoppedResources) {
-	                        // start resources
-	                        try {
-	                            this.rasClient.resumeResourcesByUser(user.getId());
-	                            // write status in db
-	                            user.setStoppedResources(false);
-	                            this.objectHolder.saveUser(user);
-	                        } catch (FogbowException e) {
-	                            LOGGER.error(String.format(Messages.Log.FAILED_TO_RESUME_USER_RESOURCES_FOR_USER, user.getId(),
-	                                    e.getMessage()));
-	                        }
-	                    }
-	                } catch (InvalidParameterException e) {
-	                    LOGGER.error(String.format(Messages.Log.UNABLE_TO_FIND_USER, user.getId(), user.getProvider()));
-	                }
-	            }
-	            
+	            tryToCheckUserState(user);
 	            user = registeredUsers.getNext(consumerId);
 	        }
 	    } catch (ModifiedListException e) {
@@ -94,4 +56,45 @@ public class StopServiceRunner extends StoppableRunner {
 		
 		checkIfMustStop();
 	}
+
+    private void tryToCheckUserState(FinanceUser user) throws InternalServerErrorException {
+        synchronized (user) {
+            try {
+                boolean paid = this.paymentManager.hasPaid(user.getId(), user.getProvider());
+                boolean stoppedResources = user.stoppedResources();
+
+                if (!paid && !stoppedResources) {
+                    tryToPauseResources(user);
+                }
+
+                if (paid && stoppedResources) {
+                    tryToResumeResources(user);
+                }
+            } catch (InvalidParameterException e) {
+                LOGGER.error(String.format(Messages.Log.UNABLE_TO_FIND_USER, user.getId(), user.getProvider()));
+            }
+        }
+    }
+
+    private void tryToPauseResources(FinanceUser user) {
+        try {
+            this.rasClient.pauseResourcesByUser(user.getId());
+            user.setStoppedResources(true);
+            this.objectHolder.saveUser(user);
+        } catch (FogbowException e) {
+            LOGGER.error(String.format(Messages.Log.FAILED_TO_PAUSE_USER_RESOURCES_FOR_USER, user.getId(),
+                    e.getMessage()));
+        }
+    }
+    
+    private void tryToResumeResources(FinanceUser user) {
+        try {
+            this.rasClient.resumeResourcesByUser(user.getId());
+            user.setStoppedResources(false);
+            this.objectHolder.saveUser(user);
+        } catch (FogbowException e) {
+            LOGGER.error(String.format(Messages.Log.FAILED_TO_RESUME_USER_RESOURCES_FOR_USER, user.getId(),
+                    e.getMessage()));
+        }
+    }
 }

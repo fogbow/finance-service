@@ -71,6 +71,7 @@ public class DefaultCreditsManager implements PaymentManager {
                     credits.deduct(resourceItem, valueToPayPerTimeUnit, timeUsed);
                 }
 
+                user.setProperty(FinanceUser.USER_LAST_BILLING_TIME, String.valueOf(paymentEndTime));
                 this.objectHolder.saveUser(user);
             }
         }

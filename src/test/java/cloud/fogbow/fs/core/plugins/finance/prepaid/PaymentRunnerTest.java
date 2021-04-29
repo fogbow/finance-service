@@ -106,10 +106,6 @@ public class PaymentRunnerTest {
 		assertEquals(2, records2.size());
 		assertEquals(RECORD_ID_1, records2.get(0).getId());
 		assertEquals(RECORD_ID_2, records2.get(1).getId());
-		
-		// PaymentRunner changed users last billing time
-		assertEquals(String.valueOf(timeValues.get(0)), user1.getProperty(FinanceUser.USER_LAST_BILLING_TIME));
-		assertEquals(String.valueOf(timeValues.get(1)), user2.getProperty(FinanceUser.USER_LAST_BILLING_TIME));
 	}
 	
 	// test case: When calling the doRun method and an exception
@@ -162,10 +158,6 @@ public class PaymentRunnerTest {
 		assertEquals(2, records2.size());
 		assertEquals(RECORD_ID_1, records2.get(0).getId());
 		assertEquals(RECORD_ID_2, records2.get(1).getId());
-
-		// PaymentRunner changed users last billing time for user2 only
-		assertEquals(String.valueOf(INITIAL_USER_1_LAST_BILLING_TIME), user1.getProperty(FinanceUser.USER_LAST_BILLING_TIME));
-		assertEquals(String.valueOf(timeValues.get(1)), user2.getProperty(FinanceUser.USER_LAST_BILLING_TIME));
 	}
 	
 	// test case: When calling the doRun method and a ModifiedListException
@@ -223,10 +215,6 @@ public class PaymentRunnerTest {
 
         List<Record> records2 = user2.getPeriodRecords();
         assertNull(records2);
-
-        // PaymentRunner changed users last billing time for user1 only
-        assertEquals(String.valueOf(timeValues.get(0)), user1.getProperty(FinanceUser.USER_LAST_BILLING_TIME));
-        assertEquals(String.valueOf(INITIAL_USER_2_LAST_BILLING_TIME), user2.getProperty(FinanceUser.USER_LAST_BILLING_TIME));
     }
     
     // test case: When calling the doRun method and an InternalServerErrorException
@@ -282,11 +270,6 @@ public class PaymentRunnerTest {
 
         List<Record> records2 = user2.getPeriodRecords();
         assertNull(records2);
-
-        // PaymentRunner changed users last billing time for user1 only
-        assertEquals(String.valueOf(timeValues.get(0)), user1.getProperty(FinanceUser.USER_LAST_BILLING_TIME));
-        assertEquals(String.valueOf(INITIAL_USER_2_LAST_BILLING_TIME),
-                user2.getProperty(FinanceUser.USER_LAST_BILLING_TIME));
     }
 	
     private void setUpDatabase() throws InvalidParameterException, ModifiedListException, InternalServerErrorException {

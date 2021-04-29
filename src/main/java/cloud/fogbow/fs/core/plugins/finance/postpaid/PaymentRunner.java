@@ -73,41 +73,11 @@ public class PaymentRunner extends StoppableRunner {
 		        getRegisteredUsersByPaymentType(PostPaidFinancePlugin.PLUGIN_NAME);
 	    Integer consumerId = registeredUsers.startIterating();
 	    
-	    // TODO refactor
-	    
 	    try {
 	        FinanceUser user = registeredUsers.getNext(consumerId);
 	        
 	        while (user != null) {
-	            synchronized(user) {
-	                // if it is billing time
-	                long billingTime = this.timeUtils.getCurrentTimeMillis();
-	                long lastBillingTime = getUserLastBillingTime(user);
-	                long billingInterval = getUserBillingInterval(user);
-	                
-	                if (isBillingTime(billingTime, lastBillingTime, billingInterval)) {
-	                    // get records
-	                    try {
-	                        // Maybe move this conversion to ACCSClient
-	                        String invoiceStartDate = this.timeUtils.toDate(SIMPLE_DATE_FORMAT, lastBillingTime);
-	                        String invoiceEndDate = this.timeUtils.toDate(SIMPLE_DATE_FORMAT, billingTime); 
-	                        List<Record> userRecords = this.accountingServiceClient.getUserRecords(user.getId(), 
-	                                user.getProvider(), invoiceStartDate, invoiceEndDate);
-	                        // write records on db
-	                        user.setPeriodRecords(userRecords);
-	                        
-	                        // generate invoice
-	                        this.paymentManager.startPaymentProcess(user.getId(), user.getProvider(),
-	                                lastBillingTime, billingTime);
-	                        
-	                        user.setProperty(FinanceUser.USER_LAST_BILLING_TIME, String.valueOf(billingTime));
-	                        this.objectHolder.saveUser(user);
-	                    } catch (FogbowException e) {
-	                        LOGGER.error(String.format(Messages.Log.FAILED_TO_GENERATE_INVOICE_FOR_USER, user.getId(), e.getMessage()));
-	                    }
-	                }
-	            }
-	            
+	            tryToRunPaymentForUser(user);
 	            user = registeredUsers.getNext(consumerId);
 	        }
 	    } catch (ModifiedListException e) {
@@ -120,6 +90,39 @@ public class PaymentRunner extends StoppableRunner {
 
 		checkIfMustStop();
 	}
+
+    private void tryToRunPaymentForUser(FinanceUser user) {
+        synchronized(user) {
+            long billingTime = this.timeUtils.getCurrentTimeMillis();
+            long lastBillingTime = getUserLastBillingTime(user);
+            long billingInterval = getUserBillingInterval(user);
+            
+            if (isBillingTime(billingTime, lastBillingTime, billingInterval)) {
+                tryToGenerateInvoiceForUser(user, billingTime, lastBillingTime);
+            }
+        }
+    }
+
+    private void tryToGenerateInvoiceForUser(FinanceUser user, long billingTime, long lastBillingTime) {
+        try {
+            acquireUsageData(user, billingTime, lastBillingTime);
+            this.paymentManager.startPaymentProcess(user.getId(), user.getProvider(),
+                    lastBillingTime, billingTime);
+        } catch (FogbowException e) {
+            LOGGER.error(String.format(Messages.Log.FAILED_TO_GENERATE_INVOICE_FOR_USER, user.getId(), e.getMessage()));
+        }
+    }
+
+    private void acquireUsageData(FinanceUser user, long billingTime, long lastBillingTime) throws FogbowException {
+        // Maybe move this conversion to ACCSClient
+        String invoiceStartDate = this.timeUtils.toDate(SIMPLE_DATE_FORMAT, lastBillingTime);
+        String invoiceEndDate = this.timeUtils.toDate(SIMPLE_DATE_FORMAT, billingTime);
+        // get records
+        List<Record> userRecords = this.accountingServiceClient.getUserRecords(user.getId(), 
+                user.getProvider(), invoiceStartDate, invoiceEndDate);
+        // write records on db
+        user.setPeriodRecords(userRecords);
+    }
 
 	private boolean isBillingTime(long billingTime, long lastBillingTime, long billingInterval) {
 		return billingTime - lastBillingTime >= billingInterval;

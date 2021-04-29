@@ -77,6 +77,8 @@ public class DefaultInvoiceManager implements PaymentManager {
 	            invoiceBuilder.reset();
 	            
 	            user.addInvoice(invoice);
+	            user.setProperty(FinanceUser.USER_LAST_BILLING_TIME, String.valueOf(paymentEndTime));
+
 	            this.objectHolder.saveUser(user);
 	        }
 	    }
