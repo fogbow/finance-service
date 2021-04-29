@@ -15,8 +15,6 @@ import cloud.fogbow.fs.core.models.UserCredits;
 import cloud.fogbow.fs.core.plugins.FinancePlugin;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
 import cloud.fogbow.fs.core.util.AccountingServiceClient;
-import cloud.fogbow.fs.core.util.ModifiedListException;
-import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedList;
 import cloud.fogbow.fs.core.util.RasClient;
 import cloud.fogbow.ras.core.models.Operation;
 import cloud.fogbow.ras.core.models.RasOperation;
@@ -128,38 +126,12 @@ public class PrePaidFinancePlugin implements FinancePlugin {
 	}
 
 	@Override
-	public boolean managesUser(String userId, String provider) throws InternalServerErrorException {
-	    MultiConsumerSynchronizedList<FinanceUser> financeUsers = 
-                this.objectHolder.getRegisteredUsersByPaymentType(PLUGIN_NAME);
-        Integer consumerId = financeUsers.startIterating();
+	public boolean managesUser(String userId, String provider) throws InternalServerErrorException, InvalidParameterException {
+        FinanceUser user = this.objectHolder.getUserById(userId, provider);
         
-        while (true) {
-            try {
-                FinanceUser item = financeUsers.getNext(consumerId);
-
-                while (item != null) {
-                    if (item.getId().equals(userId) && item.getProvider().equals(provider)) {
-                        return true;
-                    }
-
-                    item = financeUsers.getNext(consumerId);
-                }
-
-                financeUsers.stopIterating(consumerId);
-                break;
-                // TODO test
-            } catch (ModifiedListException e) {
-                financeUsers = 
-                        this.objectHolder.getRegisteredUsersByPaymentType(PLUGIN_NAME);
-                consumerId = financeUsers.startIterating();
-                // TODO test
-            } catch (Exception e) {
-                financeUsers.stopIterating(consumerId);
-                throw e;
-            }
+        synchronized(user) {
+            return user.getFinancePluginName().equals(PLUGIN_NAME);
         }
-
-        return false;
 	}
 
 	@Override

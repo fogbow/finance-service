@@ -18,7 +18,6 @@ import cloud.fogbow.fs.core.models.UserCredits;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
 import cloud.fogbow.fs.core.util.AccountingServiceClient;
 import cloud.fogbow.fs.core.util.ModifiedListException;
-import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedList;
 import cloud.fogbow.fs.core.util.RasClient;
 import cloud.fogbow.ras.core.models.Operation;
 import cloud.fogbow.ras.core.models.RasOperation;
@@ -33,7 +32,6 @@ public class PrePaidFinancePluginTest {
 	private static final String PROVIDER_USER_1 = "providerUser1";
 	private static final String PROVIDER_USER_2 = "providerUser2";
 	private static final String PROVIDER_USER_NOT_MANAGED = "providerUserNotManaged";
-    private static final Integer CONSUMER_ID = 0;
 	private InMemoryFinanceObjectsHolder objectHolder;
 	private AccountingServiceClient accountingServiceClient;
 	private RasClient rasClient;
@@ -41,33 +39,37 @@ public class PrePaidFinancePluginTest {
 	private long creditsDeductionWaitTime = 1L;
     private UserCredits userCredits;
 	
-	// test case: When calling the managesUser method, it must
-	// get all managed users from a DatabaseManager instance and
-	// check if the given user belongs to the managed users list.
+    // test case: When calling the managesUser method, it must
+    // get the user from the objects holder and check if the user
+    // is managed by the plugin.
 	@Test
 	public void testManagesUser() throws InvalidParameterException, ModifiedListException, InternalServerErrorException {
-		FinanceUser financeUser1 = new FinanceUser();
-		financeUser1.setId(USER_ID_1);
-		financeUser1.setProvider(PROVIDER_USER_1);
-		
-		FinanceUser financeUser2 = new FinanceUser();
-		financeUser2.setId(USER_ID_2);
-		financeUser2.setProvider(PROVIDER_USER_2);
+        FinanceUser financeUser1 = new FinanceUser();
+        financeUser1.setId(USER_ID_1);
+        financeUser1.setProvider(PROVIDER_USER_1);
+        financeUser1.setFinancePluginName(PrePaidFinancePlugin.PLUGIN_NAME);
 
-        MultiConsumerSynchronizedList<FinanceUser> users = Mockito.mock(MultiConsumerSynchronizedList.class);
+        FinanceUser financeUser2 = new FinanceUser();
+        financeUser2.setId(USER_ID_2);
+        financeUser2.setProvider(PROVIDER_USER_2);
+        financeUser2.setFinancePluginName(PrePaidFinancePlugin.PLUGIN_NAME);
 
-        Mockito.when(users.startIterating()).thenReturn(CONSUMER_ID);
-        Mockito.when(users.getNext(CONSUMER_ID)).thenReturn(financeUser1, financeUser2, null);
-  
+        FinanceUser financeUser3 = new FinanceUser();
+        financeUser3.setId(USER_NOT_MANAGED);
+        financeUser3.setProvider(PROVIDER_USER_NOT_MANAGED);
+        financeUser3.setFinancePluginName("otherplugin");
+
         this.objectHolder = Mockito.mock(InMemoryFinanceObjectsHolder.class);
-        Mockito.when(objectHolder.getRegisteredUsersByPaymentType(PrePaidFinancePlugin.PLUGIN_NAME)).thenReturn(users);
+        Mockito.when(objectHolder.getUserById(USER_ID_1, PROVIDER_USER_1)).thenReturn(financeUser1);
+        Mockito.when(objectHolder.getUserById(USER_ID_2, PROVIDER_USER_2)).thenReturn(financeUser2);
+        Mockito.when(objectHolder.getUserById(USER_NOT_MANAGED, PROVIDER_USER_NOT_MANAGED)).thenReturn(financeUser3);
 
-		PrePaidFinancePlugin prePaidFinancePlugin = new PrePaidFinancePlugin(objectHolder, 
-				accountingServiceClient, rasClient, paymentManager, creditsDeductionWaitTime);
-		
-		assertTrue(prePaidFinancePlugin.managesUser(USER_ID_1, PROVIDER_USER_1));
-		assertTrue(prePaidFinancePlugin.managesUser(USER_ID_2, PROVIDER_USER_2));
-		assertFalse(prePaidFinancePlugin.managesUser(USER_NOT_MANAGED, PROVIDER_USER_NOT_MANAGED));
+        PrePaidFinancePlugin prePaidFinancePlugin = new PrePaidFinancePlugin(objectHolder, accountingServiceClient,
+                rasClient, paymentManager, creditsDeductionWaitTime);
+
+        assertTrue(prePaidFinancePlugin.managesUser(USER_ID_1, PROVIDER_USER_1));
+        assertTrue(prePaidFinancePlugin.managesUser(USER_ID_2, PROVIDER_USER_2));
+        assertFalse(prePaidFinancePlugin.managesUser(USER_NOT_MANAGED, PROVIDER_USER_NOT_MANAGED));
 	}
 	
 	// test case: When calling the isAuthorized method for a
