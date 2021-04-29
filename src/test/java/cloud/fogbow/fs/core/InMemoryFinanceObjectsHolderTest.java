@@ -1,6 +1,7 @@
 package cloud.fogbow.fs.core;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -161,6 +162,19 @@ public class InMemoryFinanceObjectsHolderTest {
         
         assertEquals(userSynchronizedList1, objectHolder.getRegisteredUsersByPaymentType(PLUGIN_NAME_1));
         assertEquals(userSynchronizedList2, objectHolder.getRegisteredUsersByPaymentType(PLUGIN_NAME_2));
+    }
+    
+    // TODO documentation
+    @Test
+    public void testGetRegisteredUsersWithNotInitializedPaymentType() throws InternalServerErrorException, ModifiedListException {
+        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
+        
+        MultiConsumerSynchronizedList<FinanceUser> returnedList = 
+                objectHolder.getRegisteredUsersByPaymentType("notinitializedpaymenttype");
+        
+        Integer consumerId = returnedList.startIterating();
+        
+        assertNull(returnedList.getNext(consumerId));
     }
     
     // TODO documentation

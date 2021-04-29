@@ -163,7 +163,6 @@ public class InMemoryFinanceObjectsHolder {
     public MultiConsumerSynchronizedList<FinanceUser> getRegisteredUsersByPaymentType(String pluginName) {
         if (this.usersByPlugin.containsKey(pluginName)) {
             return this.usersByPlugin.get(pluginName);
-            // TODO test
         } else {
             return new MultiConsumerSynchronizedList<FinanceUser>();
         }
