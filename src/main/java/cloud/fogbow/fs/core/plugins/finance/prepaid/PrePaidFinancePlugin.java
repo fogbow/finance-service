@@ -119,7 +119,7 @@ public class PrePaidFinancePlugin implements FinancePlugin {
 	}
 
 	@Override
-	public boolean isAuthorized(SystemUser user, RasOperation operation) throws InvalidParameterException {
+	public boolean isAuthorized(SystemUser user, RasOperation operation) throws InvalidParameterException, InternalServerErrorException {
 		if (operation.getOperationType().equals(Operation.CREATE)) {
 			return this.paymentManager.hasPaid(user.getId(), user.getIdentityProviderId());
 		}
@@ -163,7 +163,7 @@ public class PrePaidFinancePlugin implements FinancePlugin {
 	}
 
 	@Override
-	public String getUserFinanceState(String userId, String provider, String property) throws InvalidParameterException {
+	public String getUserFinanceState(String userId, String provider, String property) throws InvalidParameterException, InternalServerErrorException {
 		return this.paymentManager.getUserFinanceState(userId, provider, property);
 	}
 
@@ -178,7 +178,7 @@ public class PrePaidFinancePlugin implements FinancePlugin {
 	}
 
 	@Override
-	public void changeOptions(String userId, String provider, Map<String, String> financeOptions) throws InvalidParameterException {
+	public void changeOptions(String userId, String provider, Map<String, String> financeOptions) throws InvalidParameterException, InternalServerErrorException {
 		this.objectHolder.changeOptions(userId, provider, financeOptions);
 	}
 

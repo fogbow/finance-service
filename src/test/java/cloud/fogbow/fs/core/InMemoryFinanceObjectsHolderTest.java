@@ -117,6 +117,31 @@ public class InMemoryFinanceObjectsHolderTest {
     }
     
     // TODO documentation
+    @Test
+    public void testGetUserByIdListChanges() throws InternalServerErrorException, ModifiedListException, InvalidParameterException {
+        Mockito.when(userSynchronizedList1.getNext(Mockito.anyInt())).
+        thenReturn(user1).
+        thenThrow(new ModifiedListException()).
+        thenReturn(user1, user2);
+
+        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
+        
+        assertEquals(user2, objectHolder.getUserById(USER_ID_2, PROVIDER_ID_2));
+    }
+    
+    // TODO documentation
+    @Test(expected = InternalServerErrorException.class)
+    public void testGetUserByIdListThrowsException() throws InternalServerErrorException, ModifiedListException, InvalidParameterException {
+        Mockito.when(userSynchronizedList1.getNext(Mockito.anyInt())).
+        thenReturn(user1).
+        thenThrow(new InternalServerErrorException());
+
+        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
+        
+        objectHolder.getUserById(USER_ID_2, PROVIDER_ID_2);
+    }
+    
+    // TODO documentation
     @Test(expected = InvalidParameterException.class)
     public void testGetUserByIdUnknownUser() throws InternalServerErrorException, InvalidParameterException {
         objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);

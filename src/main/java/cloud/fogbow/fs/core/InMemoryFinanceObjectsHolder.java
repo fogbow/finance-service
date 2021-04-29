@@ -84,7 +84,7 @@ public class InMemoryFinanceObjectsHolder {
         pluginUsers.addItem(user);
     }
     
-    public void saveUser(FinanceUser user) throws InvalidParameterException {
+    public void saveUser(FinanceUser user) throws InvalidParameterException, InternalServerErrorException {
         getUserById(user.getId(), user.getProvider());
         
         synchronized(user) {
@@ -106,35 +106,58 @@ public class InMemoryFinanceObjectsHolder {
         pluginUsers.removeItem(user);
     }
     
-    public FinanceUser getUserById(String id, String provider) throws InvalidParameterException {
+    public FinanceUser getUserById(String id, String provider) throws InternalServerErrorException, InvalidParameterException {
+        FinanceUser userToReturn = null;
+        
         for (String pluginName : usersByPlugin.keySet()) {
-            MultiConsumerSynchronizedList<FinanceUser> users = usersByPlugin.get(pluginName);
-            Integer consumerId = users.startIterating();
-
-            while (true) {
-                try {
-                    FinanceUser item = users.getNext(consumerId);
-                    while (item != null) {
-                        if (item.getId().equals(id) && item.getProvider().equals(provider)) {
-                            return item;
-                        }
-
-                        item = users.getNext(consumerId);
-                    }
-
-                    users.stopIterating(consumerId);
-                    break;
-                    // TODO test
-                } catch (ModifiedListException e) {
-                    users = usersByPlugin.get(pluginName);
-                    consumerId = users.startIterating();
-                } catch (Exception e) {
-                    users.stopIterating(consumerId);
-                }
+            userToReturn = getUserByIdAndPlugin(id, provider, pluginName);
+            
+            if (userToReturn != null) {
+                return userToReturn;
             }
         }
         
         throw new InvalidParameterException(String.format(Messages.Exception.UNABLE_TO_FIND_USER, id, provider)); 
+    }
+
+    private FinanceUser getUserByIdAndPlugin(String id, String provider, String pluginName)
+            throws InternalServerErrorException, InvalidParameterException {
+        MultiConsumerSynchronizedList<FinanceUser> users = usersByPlugin.get(pluginName);
+        Integer consumerId = users.startIterating();
+        FinanceUser userToReturn = null;
+        
+        while (true) {
+            try {
+                userToReturn = getUserFromList(id, provider, users, consumerId);
+                users.stopIterating(consumerId);
+                break;
+            } catch (ModifiedListException e) {
+                users = usersByPlugin.get(pluginName);
+                consumerId = users.startIterating();
+            } catch (Exception e) {
+                users.stopIterating(consumerId);
+                throw e;
+            }
+        }
+        
+        return userToReturn;
+    }
+
+    private FinanceUser getUserFromList(String id, String provider, MultiConsumerSynchronizedList<FinanceUser> users,
+            Integer consumerId) throws ModifiedListException, InternalServerErrorException {
+        FinanceUser item = users.getNext(consumerId);
+        FinanceUser userToReturn = null;
+        
+        while (item != null) {
+            if (item.getId().equals(id) && item.getProvider().equals(provider)) {
+                userToReturn = item;
+                break;
+            }
+
+            item = users.getNext(consumerId);
+        }
+        
+        return userToReturn;
     }
     
     public MultiConsumerSynchronizedList<FinanceUser> getRegisteredUsersByPaymentType(String pluginName) {
@@ -146,7 +169,7 @@ public class InMemoryFinanceObjectsHolder {
         }
     }
 
-    public void changeOptions(String userId, String provider, Map<String, String> financeOptions) throws InvalidParameterException {
+    public void changeOptions(String userId, String provider, Map<String, String> financeOptions) throws InvalidParameterException, InternalServerErrorException {
         FinanceUser user = getUserById(userId, provider);
         
         synchronized(user) {
@@ -176,12 +199,14 @@ public class InMemoryFinanceObjectsHolder {
     public FinancePlan getFinancePlan(String planName) throws InternalServerErrorException, InvalidParameterException {
         Integer consumerId = financePlans.startIterating();
         
+        // TODO refactor
         while (true) {
             try {
                 FinancePlan item = financePlans.getNext(consumerId);
 
                 while (item != null) {
                     if (item.getName().equals(planName)) {
+                        financePlans.stopIterating(consumerId);
                         return item;
                     }
 

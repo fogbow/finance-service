@@ -80,7 +80,7 @@ public class PostPaidFinancePluginTest {
 	// creation operation and the user financial state is good, 
 	// the method must return true.
 	@Test
-	public void testIsAuthorizedCreateOperationUserStateIsGoodFinancially() throws InvalidParameterException {
+	public void testIsAuthorizedCreateOperationUserStateIsGoodFinancially() throws InvalidParameterException, InternalServerErrorException {
 		this.paymentManager = Mockito.mock(PaymentManager.class);
 		Mockito.when(this.paymentManager.hasPaid(USER_ID_1, PROVIDER_USER_1)).thenReturn(true);
 		
@@ -97,7 +97,7 @@ public class PostPaidFinancePluginTest {
 	// operation other than creation and the user financial state is not good, 
 	// the method must return true.
 	@Test
-	public void testIsAuthorizedNonCreationOperationUserStateIsNotGoodFinancially() throws InvalidParameterException {
+	public void testIsAuthorizedNonCreationOperationUserStateIsNotGoodFinancially() throws InvalidParameterException, InternalServerErrorException {
 		this.paymentManager = Mockito.mock(PaymentManager.class);
 		Mockito.when(this.paymentManager.hasPaid(USER_ID_1, PROVIDER_USER_1)).thenReturn(false);
 		
@@ -114,7 +114,7 @@ public class PostPaidFinancePluginTest {
 	// creation operation and the user financial state is not good, 
 	// the method must return false.
 	@Test
-	public void testIsAuthorizedCreationOperationUserStateIsNotGoodFinancially() throws InvalidParameterException {
+	public void testIsAuthorizedCreationOperationUserStateIsNotGoodFinancially() throws InvalidParameterException, InternalServerErrorException {
 		this.paymentManager = Mockito.mock(PaymentManager.class);
 		Mockito.when(this.paymentManager.hasPaid(USER_ID_1, PROVIDER_USER_1)).thenReturn(false);
 		
@@ -183,7 +183,7 @@ public class PostPaidFinancePluginTest {
     // test case: When calling the changeOptions method, it must call the DatabaseManager
     // to change the options for the given user.
     @Test
-    public void testChangeOptions() throws InvalidParameterException {
+    public void testChangeOptions() throws InvalidParameterException, InternalServerErrorException {
         objectHolder = Mockito.mock(InMemoryFinanceObjectsHolder.class);
         
         financeOptions = new HashMap<String, String>();
@@ -203,7 +203,7 @@ public class PostPaidFinancePluginTest {
     // does not contain some required financial option, it must throw an
     // InvalidParameterException.
     @Test(expected = InvalidParameterException.class)
-    public void testChangeOptionsMissingOption() throws InvalidParameterException {
+    public void testChangeOptionsMissingOption() throws InvalidParameterException, InternalServerErrorException {
         objectHolder = Mockito.mock(InMemoryFinanceObjectsHolder.class);
         
         financeOptions = new HashMap<String, String>();
@@ -219,7 +219,7 @@ public class PostPaidFinancePluginTest {
     // contains an invalid value for a required financial option, it must throw an
     // InvalidParameterException.
     @Test(expected = InvalidParameterException.class)
-    public void testChangeOptionsInvalidOption() throws InvalidParameterException {
+    public void testChangeOptionsInvalidOption() throws InvalidParameterException, InternalServerErrorException {
         objectHolder = Mockito.mock(InMemoryFinanceObjectsHolder.class);
         
         financeOptions = new HashMap<String, String>();
@@ -235,7 +235,7 @@ public class PostPaidFinancePluginTest {
     // test case: When calling the updateFinanceState method, it must get the correct invoices
     // from the database, change the invoices states and save the invoices.
     @Test
-    public void testUpdateFinanceState() throws InvalidParameterException {
+    public void testUpdateFinanceState() throws InvalidParameterException, InternalServerErrorException {
         Invoice invoice1 = Mockito.mock(Invoice.class);
         Mockito.when(invoice1.getInvoiceId()).thenReturn(INVOICE_ID_1);
         

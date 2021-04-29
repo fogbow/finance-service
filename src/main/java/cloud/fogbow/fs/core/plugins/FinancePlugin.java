@@ -36,8 +36,10 @@ public interface FinancePlugin {
 	 * @return a boolean stating whether the user is authorized or not.
 	 * @throws InvalidParameterException if an error occurs while trying to find the user 
 	 * to check state.
+	 * @throws InternalServerErrorException if an error occurs while trying to retrieve the
+	 * user state.
 	 */
-	boolean isAuthorized(SystemUser user, RasOperation operation) throws InvalidParameterException;
+	boolean isAuthorized(SystemUser user, RasOperation operation) throws InvalidParameterException, InternalServerErrorException;
 	
 	/**
 	 * Verifies if this plugin manages the financial state
@@ -61,8 +63,10 @@ public interface FinancePlugin {
 	 * @return a representation of the property.
 	 * @throws InvalidParameterException if an error occurs while trying to find the user or
 	 * the property is invalid.
+	 * @throws InternalServerErrorException if an error occurs while trying to retrieve the user
+	 * state.
 	 */
-	String getUserFinanceState(String userId, String provider, String property) throws InvalidParameterException;
+	String getUserFinanceState(String userId, String provider, String property) throws InvalidParameterException, InternalServerErrorException;
 
 	/**
 	 * Returns a String representing the FinancePlugin name.
@@ -100,8 +104,9 @@ public interface FinancePlugin {
 	 * @param financeOptions the new financial options to follow.
 	 * @throws InvalidParameterException if an error occurs while trying to find the user
 	 * or the options are invalid.
+	 * @throws InternalServerErrorException if an error occurs while trying to update the options.
 	 */
-	void changeOptions(String userId, String provider, Map<String, String> financeOptions) throws InvalidParameterException;
+	void changeOptions(String userId, String provider, Map<String, String> financeOptions) throws InvalidParameterException, InternalServerErrorException;
 	
 	/**
 	 * Updates the user financial state using the given map.

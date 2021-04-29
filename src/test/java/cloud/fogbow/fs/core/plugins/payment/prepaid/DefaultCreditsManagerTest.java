@@ -111,7 +111,7 @@ public class DefaultCreditsManagerTest {
     // test case: When calling the getUserFinanceState, if the given property
     // is unknown, it must throw an InvalidParameterException.
     @Test(expected = InvalidParameterException.class)
-    public void testGetUserFinanceStateUnknownProperty() throws InvalidParameterException {
+    public void testGetUserFinanceStateUnknownProperty() throws InvalidParameterException, InternalServerErrorException {
         this.userCredits1 = Mockito.mock(UserCredits.class);
         
         DefaultCreditsManager creditsManager = new DefaultCreditsManager(objectHolder, plan, recordUtils);

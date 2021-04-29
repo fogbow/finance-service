@@ -25,8 +25,10 @@ public interface PaymentManager {
 	 * @return a boolean stating whether the user state is adequate or not.
 	 * @throws InvalidParameterException if the user is not found or the parameters 
 	 * are invalid.
+	 * @throws InternalServerErrorException if an error occurs while trying to retrieve the user
+	 * state.
 	 */
-	boolean hasPaid(String userId, String provider) throws InvalidParameterException;
+	boolean hasPaid(String userId, String provider) throws InvalidParameterException, InternalServerErrorException;
 	
 	/**
 	 * Starts payment for the resources consumed by the 
@@ -53,8 +55,9 @@ public interface PaymentManager {
 	 * @param property a description of the property to generate.
 	 * @return a representation of the property.
 	 * @throws InvalidParameterException if the user is not found or the property is not known.
+	 * @throws InternalServerErrorException if an error occurs while trying to retrieve the user state.
 	 */
-	String getUserFinanceState(String userId, String provider, String property) throws InvalidParameterException;
+	String getUserFinanceState(String userId, String provider, String property) throws InvalidParameterException, InternalServerErrorException;
 	
 	/**
 	 * Sets the name of the {@link cloud.fogbow.fs.core.models.FinancePlan} this payment manager 

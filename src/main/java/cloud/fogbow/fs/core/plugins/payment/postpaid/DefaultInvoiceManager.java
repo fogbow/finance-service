@@ -41,7 +41,7 @@ public class DefaultInvoiceManager implements PaymentManager {
     }
 	
 	@Override
-	public boolean hasPaid(String userId, String provider) throws InvalidParameterException {
+	public boolean hasPaid(String userId, String provider) throws InvalidParameterException, InternalServerErrorException {
         FinanceUser user = this.objectHolder.getUserById(userId, provider);
 
         synchronized(user) {
@@ -96,7 +96,7 @@ public class DefaultInvoiceManager implements PaymentManager {
 	}
 
 	@Override
-	public String getUserFinanceState(String userId, String provider, String property) throws InvalidParameterException {
+	public String getUserFinanceState(String userId, String provider, String property) throws InvalidParameterException, InternalServerErrorException {
 		String propertyValue = "";
 		
         if (property.equals(ALL_USER_INVOICES_PROPERTY_NAME)) {
