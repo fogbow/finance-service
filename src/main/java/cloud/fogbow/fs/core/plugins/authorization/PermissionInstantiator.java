@@ -2,7 +2,7 @@ package cloud.fogbow.fs.core.plugins.authorization;
 
 import java.util.Set;
 
-import cloud.fogbow.common.models.Permission;
+import cloud.fogbow.common.models.policy.Permission;
 import cloud.fogbow.fs.core.FsClassFactory;
 
 public class PermissionInstantiator {

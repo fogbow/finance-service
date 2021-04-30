@@ -4,7 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import cloud.fogbow.common.exceptions.InvalidParameterException;
-import cloud.fogbow.common.models.Permission;
+import cloud.fogbow.common.models.policy.Permission;
 import cloud.fogbow.fs.constants.SystemConstants;
 import cloud.fogbow.fs.core.PropertiesHolder;
 import cloud.fogbow.fs.core.models.OperationType;
