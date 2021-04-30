@@ -52,8 +52,14 @@ public class AllowOnlyPermission implements Permission<FsOperation> {
     }
     
     @Override
-    public Set<OperationType> getOperationsTypes() {
-        return allowedOperationTypes;
+    public Set<String> getOperationsTypes() {
+        HashSet<String> operationsStrings = new HashSet<String>(); 
+        
+        for (OperationType operation : allowedOperationTypes) {
+            operationsStrings.add(operation.getValue());
+        }
+        
+        return operationsStrings;
     }
 
     @Override

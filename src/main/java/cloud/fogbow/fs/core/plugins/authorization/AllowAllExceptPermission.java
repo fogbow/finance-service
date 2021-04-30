@@ -56,8 +56,14 @@ public class AllowAllExceptPermission implements Permission<FsOperation> {
     }
     
     @Override
-    public Set<OperationType> getOperationsTypes() {
-        return notAllowedOperationTypes;
+    public Set<String> getOperationsTypes() {
+        HashSet<String> operationsStrings = new HashSet<String>(); 
+        
+        for (OperationType operation : notAllowedOperationTypes) {
+            operationsStrings.add(operation.getValue());
+        }
+        
+        return operationsStrings;
     }
 
     @Override
