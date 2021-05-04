@@ -81,7 +81,7 @@ public class ApplicationFacadeTest {
 	public void testAddUser() throws FogbowException {
 		setUpPublicKeysHolder();
         setUpAuthentication();
-        setUpAuthorization();
+        setUpAuthorization(OperationType.ADD_USER);
         setUpApplicationFacade();
         
         this.user = new User(userIdToAdd, userProviderToAdd, financePluginUserToAdd, userFinanceOptionsToAdd);
@@ -101,7 +101,7 @@ public class ApplicationFacadeTest {
 	public void testAddUserFinishesOperationIfOperationFails() throws FogbowException  {
 		setUpPublicKeysHolder();
         setUpAuthentication();
-        setUpAuthorization();
+        setUpAuthorization(OperationType.ADD_USER);
         
         this.financeManager = Mockito.mock(FinanceManager.class);
 		this.synchronizationManager = Mockito.mock(SynchronizationManager.class);
@@ -131,7 +131,7 @@ public class ApplicationFacadeTest {
 	public void testRemoveUser() throws FogbowException {
 		setUpPublicKeysHolder();
 		setUpAuthentication();
-		setUpAuthorization();
+		setUpAuthorization(OperationType.REMOVE_USER);
 		setUpApplicationFacade();
 
 		ApplicationFacade.getInstance().removeUser(adminToken, this.userIdToRemove, this.userProviderToRemove);
@@ -149,7 +149,7 @@ public class ApplicationFacadeTest {
 	public void testRemoveUserFinishesOperationIfOperationFails() throws FogbowException {
 		setUpPublicKeysHolder();
 		setUpAuthentication();
-		setUpAuthorization();
+		setUpAuthorization(OperationType.REMOVE_USER);
 
 		this.financeManager = Mockito.mock(FinanceManager.class);
 		this.synchronizationManager = Mockito.mock(SynchronizationManager.class);
@@ -179,7 +179,7 @@ public class ApplicationFacadeTest {
 	public void testChangeOptions() throws FogbowException {
 		setUpPublicKeysHolder();
 		setUpAuthentication();
-		setUpAuthorization();
+		setUpAuthorization(OperationType.CHANGE_OPTIONS);
 		setUpApplicationFacade();
 
 		ApplicationFacade.getInstance().changeOptions(adminToken, this.userIdToChange, 
@@ -199,7 +199,7 @@ public class ApplicationFacadeTest {
 	public void testChangeOptionsFinishesOperationIfOperationFails() throws FogbowException {
 		setUpPublicKeysHolder();
 		setUpAuthentication();
-		setUpAuthorization();
+		setUpAuthorization(OperationType.CHANGE_OPTIONS);
 
 		this.financeManager = Mockito.mock(FinanceManager.class);
 		this.synchronizationManager = Mockito.mock(SynchronizationManager.class);
@@ -230,7 +230,7 @@ public class ApplicationFacadeTest {
 	public void testUpdateFinanceState() throws FogbowException {
 		setUpPublicKeysHolder();
 		setUpAuthentication();
-		setUpAuthorization();
+		setUpAuthorization(OperationType.UPDATE_FINANCE_STATE);
 		setUpApplicationFacade();
 
 		ApplicationFacade.getInstance().updateFinanceState(adminToken, this.userIdToChange, 
@@ -250,7 +250,7 @@ public class ApplicationFacadeTest {
 	public void testUpdateFinanceStateFinishesOperationIfOperationFails() throws FogbowException {
 		setUpPublicKeysHolder();
 		setUpAuthentication();
-		setUpAuthorization();
+		setUpAuthorization(OperationType.UPDATE_FINANCE_STATE);
 
 		this.financeManager = Mockito.mock(FinanceManager.class);
 		this.synchronizationManager = Mockito.mock(SynchronizationManager.class);
@@ -281,7 +281,7 @@ public class ApplicationFacadeTest {
     public void testGetFinanceStateProperty() throws FogbowException {
         setUpPublicKeysHolder();
         setUpAuthentication();
-        setUpAuthorization();
+        setUpAuthorization(OperationType.GET_FINANCE_STATE);
         setUpApplicationFacade();
         
         Mockito.when(financeManager.getFinanceStateProperty(userIdToChange, 
@@ -303,7 +303,7 @@ public class ApplicationFacadeTest {
     public void testGetFinanceStatePropertyFinishesOperationIfOperationFails() throws FogbowException {
         setUpPublicKeysHolder();
         setUpAuthentication();
-        setUpAuthorization();
+        setUpAuthorization(OperationType.GET_FINANCE_STATE);
         setUpApplicationFacade();
         
         Mockito.when(financeManager.getFinanceStateProperty(userIdToChange, 
@@ -327,8 +327,6 @@ public class ApplicationFacadeTest {
 	@Test
 	public void testIsAuthorized() throws FogbowException {
 	    setUpPublicKeysHolder();
-        setUpAuthentication();
-        setUpAuthorization();
         setUpApplicationFacade();
         
         Boolean authorized = true;
@@ -349,8 +347,6 @@ public class ApplicationFacadeTest {
     @Test
     public void testIsAuthorizedFinishesOperationIfOperationFails() throws FogbowException {
         setUpPublicKeysHolder();
-        setUpAuthentication();
-        setUpAuthorization();
         setUpApplicationFacade();
 
         AuthorizableUser authorizableUser = Mockito.mock(AuthorizableUser.class);
@@ -374,8 +370,6 @@ public class ApplicationFacadeTest {
     @Test
     public void testGetPublicKey() throws FogbowException, GeneralSecurityException {
         setUpPublicKeysHolder();
-        setUpAuthentication();
-        setUpAuthorization();
         setUpApplicationFacade();
         
         RSAPublicKey rsaPublicKey = Mockito.mock(RSAPublicKey.class);
@@ -406,8 +400,6 @@ public class ApplicationFacadeTest {
     @Test
     public void testGetPublicKeyFinishesOperationIfOperationFailsOnKeysHolder() throws FogbowException, GeneralSecurityException {
         setUpPublicKeysHolder();
-        setUpAuthentication();
-        setUpAuthorization();
         setUpApplicationFacade();
 
         ServiceAsymmetricKeysHolder asymmetricKeysHolder = Mockito.mock(ServiceAsymmetricKeysHolder.class);
@@ -432,8 +424,6 @@ public class ApplicationFacadeTest {
     @Test
     public void testGetPublicKeyFinishesOperationIfOperationFailsOnCryptoUtil() throws FogbowException, GeneralSecurityException {
         setUpPublicKeysHolder();
-        setUpAuthentication();
-        setUpAuthorization();
         setUpApplicationFacade();
         
         RSAPublicKey rsaPublicKey = Mockito.mock(RSAPublicKey.class);
@@ -464,7 +454,7 @@ public class ApplicationFacadeTest {
     public void testCreateFinancePlan() throws FogbowException {
         setUpPublicKeysHolder();
         setUpAuthentication();
-        setUpAuthorization();
+        setUpAuthorization(OperationType.CREATE_FINANCE_PLAN);
         setUpApplicationFacade();
         
         
@@ -484,7 +474,7 @@ public class ApplicationFacadeTest {
     public void testCreateFinancePlanFinishesOperationIfOperationFails() throws FogbowException {
         setUpPublicKeysHolder();
         setUpAuthentication();
-        setUpAuthorization();
+        setUpAuthorization(OperationType.CREATE_FINANCE_PLAN);
         setUpApplicationFacade();
         
         Mockito.doThrow(InvalidParameterException.class).when(financeManager).createFinancePlan(newPlanName, newPlanInfo);
@@ -508,7 +498,7 @@ public class ApplicationFacadeTest {
     public void testGetFinancePlan() throws FogbowException {
         setUpPublicKeysHolder();
         setUpAuthentication();
-        setUpAuthorization();
+        setUpAuthorization(OperationType.GET_FINANCE_PLAN);
         setUpApplicationFacade();
         
         Mockito.when(financeManager.getFinancePlan(newPlanName)).thenReturn(newPlanInfo);
@@ -528,7 +518,7 @@ public class ApplicationFacadeTest {
     public void testGetFinancePlanFinishesOperationIfOperationFails() throws FogbowException {
         setUpPublicKeysHolder();
         setUpAuthentication();
-        setUpAuthorization();
+        setUpAuthorization(OperationType.GET_FINANCE_PLAN);
         setUpApplicationFacade();
         
         Mockito.when(financeManager.getFinancePlan(newPlanName)).thenThrow(new InvalidParameterException());
@@ -551,7 +541,7 @@ public class ApplicationFacadeTest {
     public void testUpdateFinancePlan() throws FogbowException {
         setUpPublicKeysHolder();
         setUpAuthentication();
-        setUpAuthorization();
+        setUpAuthorization(OperationType.UPDATE_FINANCE_PLAN);
         setUpApplicationFacade();
 
         
@@ -571,7 +561,7 @@ public class ApplicationFacadeTest {
     public void testUpdateFinancePlanFinishesOperationIfOperationFails() throws FogbowException {
         setUpPublicKeysHolder();
         setUpAuthentication();
-        setUpAuthorization();
+        setUpAuthorization(OperationType.UPDATE_FINANCE_PLAN);
         setUpApplicationFacade();
 
         Mockito.doThrow(InvalidParameterException.class).when(financeManager).updateFinancePlan(planToUpdate, updatedPlanInfo);
@@ -595,7 +585,7 @@ public class ApplicationFacadeTest {
     public void testRemoveFinancePlan() throws FogbowException {
         setUpPublicKeysHolder();
         setUpAuthentication();
-        setUpAuthorization();
+        setUpAuthorization(OperationType.REMOVE_FINANCE_PLAN);
         setUpApplicationFacade();
 
         
@@ -615,7 +605,7 @@ public class ApplicationFacadeTest {
     public void testRemoveFinancePlanFinishesOperationIfOperationFails() throws FogbowException {
         setUpPublicKeysHolder();
         setUpAuthentication();
-        setUpAuthorization();
+        setUpAuthorization(OperationType.REMOVE_FINANCE_PLAN);
         setUpApplicationFacade();
 
         Mockito.doThrow(InvalidParameterException.class).when(financeManager).removeFinancePlan(planToRemove);
@@ -657,9 +647,9 @@ public class ApplicationFacadeTest {
 		BDDMockito.given(AuthenticationUtil.authenticate(asPublicKey, adminToken)).willReturn(systemUser);
 	}
 	
-	private void setUpAuthorization() throws UnauthorizedRequestException {
+	private void setUpAuthorization(OperationType operationType) throws UnauthorizedRequestException {
 		this.authorizationPlugin = Mockito.mock(AuthorizationPlugin.class);
-        this.operation = new FsOperation(OperationType.ADD_USER);
+        this.operation = new FsOperation(operationType);
         Mockito.when(authorizationPlugin.isAuthorized(systemUser, operation)).thenReturn(true);
 	}
 }

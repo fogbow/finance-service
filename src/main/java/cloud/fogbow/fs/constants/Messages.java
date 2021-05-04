@@ -34,7 +34,9 @@ public class Messages {
 		public static final String UNKNOWN_RESOURCE_ITEM = "Unknown resource item: %s.";
 		public static final String UNKNOWN_RESOURCE_ITEM_TYPE = "Unknown resource item type: %s.";
 		public static final String UNMANAGED_USER = "The user %s is not managed by any finance plugin.";
+		public static final String USER_DOES_NOT_HAVE_ENOUGH_PERMISSION = "User does not have permission to perform operation";
 		public static final String USER_IS_NOT_ADMIN = "Not-admin user trying to perform admin-only operation.";
+        public static final String WRONG_POLICY_TYPE = "Wrong policy type. Type should be '%s' but is '%s'.";
 	}
 	
 	public static class Log {

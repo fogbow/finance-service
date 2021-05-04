@@ -5,8 +5,6 @@ import java.util.Set;
 
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.common.models.policy.Permission;
-import cloud.fogbow.fs.constants.SystemConstants;
-import cloud.fogbow.fs.core.PropertiesHolder;
 import cloud.fogbow.fs.core.models.OperationType;
 
 public class AllowAllExceptPermission implements Permission<FsOperation> {
@@ -20,25 +18,6 @@ public class AllowAllExceptPermission implements Permission<FsOperation> {
     
     public AllowAllExceptPermission(Set<OperationType> notAllowedOperationTypes) {
         this.notAllowedOperationTypes = notAllowedOperationTypes;
-    }
-    
-    public AllowAllExceptPermission(String name, Set<OperationType> notAllowedOperationTypes) {
-        this.name = name;
-        this.notAllowedOperationTypes = notAllowedOperationTypes;
-    }
-    
-    public AllowAllExceptPermission(String permissionName) throws InvalidParameterException {
-        this.notAllowedOperationTypes = new HashSet<OperationType>();
-        this.name = permissionName;
-        
-        String operationTypesString = PropertiesHolder.getInstance().getProperty(permissionName + 
-                SystemConstants.OPERATIONS_LIST_KEY_SUFFIX).trim();
-        
-        if (!operationTypesString.isEmpty()) {
-            for (String operationString : operationTypesString.split(SystemConstants.OPERATION_NAME_SEPARATOR)) {
-                this.notAllowedOperationTypes.add(OperationType.fromString(operationString.trim()));
-            }            
-        }
     }
 
     @Override
@@ -67,8 +46,14 @@ public class AllowAllExceptPermission implements Permission<FsOperation> {
     }
 
     @Override
-    public void setOperationTypes(Set operations) {
-        this.notAllowedOperationTypes = (Set<OperationType>) operations;
+    public void setOperationTypes(Set<String> operations) throws InvalidParameterException {
+        Set<OperationType> fsOperations = new HashSet<OperationType>();
+        
+        for (String operationName : operations) {
+            fsOperations.add(OperationType.fromString(operationName));
+        }
+        
+        this.notAllowedOperationTypes = fsOperations;
     }
 
     @Override
