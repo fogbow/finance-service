@@ -1,4 +1,4 @@
-package cloud.fogbow.fs.core.plugins.authorization;
+package cloud.fogbow.fs.core.plugins.authorization.role;
 
 import org.apache.log4j.Logger;
 
@@ -12,6 +12,7 @@ import cloud.fogbow.common.util.HomeDir;
 import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
 import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.PropertiesHolder;
+import cloud.fogbow.fs.core.plugins.authorization.FsOperation;
 
 public class RoleAuthorizationPlugin implements AuthorizationPlugin<FsOperation> {
 

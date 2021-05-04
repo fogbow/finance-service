@@ -1,4 +1,4 @@
-package cloud.fogbow.fs.core.plugins.authorization;
+package cloud.fogbow.fs.core.plugins.authorization.role;
 
 import static org.junit.Assert.assertTrue;
 
@@ -21,6 +21,7 @@ import cloud.fogbow.common.util.HomeDir;
 import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
 import cloud.fogbow.fs.core.PropertiesHolder;
 import cloud.fogbow.fs.core.models.OperationType;
+import cloud.fogbow.fs.core.plugins.authorization.FsOperation;
 
 
 @RunWith(PowerMockRunner.class)

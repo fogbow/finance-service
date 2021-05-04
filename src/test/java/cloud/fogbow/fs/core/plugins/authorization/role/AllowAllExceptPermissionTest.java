@@ -1,4 +1,4 @@
-package cloud.fogbow.fs.core.plugins.authorization;
+package cloud.fogbow.fs.core.plugins.authorization.role;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -14,31 +14,32 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.core.PropertiesHolder;
 import cloud.fogbow.fs.core.models.OperationType;
+import cloud.fogbow.fs.core.plugins.authorization.FsOperation;
 
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({PropertiesHolder.class})
-public class AllowOnlyPermissionTest {
-    private AllowOnlyPermission permission;
-    private Set<OperationType> allowedOperations = getOperationTypeSet(OperationType.ADD_USER, 
-                                                                  OperationType.CHANGE_OPTIONS);
+@PrepareForTest({ PropertiesHolder.class })
+public class AllowAllExceptPermissionTest {
+
+    private AllowAllExceptPermission permission;
+    private Set<OperationType> notAllowedOperations = getOperationTypeSet(OperationType.ADD_USER, OperationType.CREATE_FINANCE_PLAN);
+    private Set<OperationType> updatedNotAllowedOperations =  getOperationTypeSet(OperationType.ADD_USER);
     private Set<OperationType> noOperation = getOperationTypeSet();
-    private Set<OperationType> updatedAllowedOperations = getOperationTypeSet(OperationType.ADD_USER);
-    
-    // test case: if the list of the allowed operations types contains 
+
+    // test case: if the list of the not allowed operations types contains
     // the type of the operation passed as argument, the method isAuthorized must
-    // return true. Otherwise, it must return false.
+    // return false. Otherwise, it must return true.
     @Test
     public void testIsAuthorized() throws InvalidParameterException {
-        permission = new AllowOnlyPermission(allowedOperations);
-        checkIsAuthorizedUsesTheCorrectOperations(allowedOperations);
+        permission = new AllowAllExceptPermission(notAllowedOperations);
+        checkIsAuthorizedUsesTheCorrectOperations(notAllowedOperations);
     }
-    
-    // test case: if the list of the allowed operations is empty,
-    // the method isAuthorized must always return false.
+
+    // test case: if the list of the not allowed operations is empty,
+    // the method isAuthorized must always return true.
     @Test
-    public void testIsAuthorizedNoAuthorizedOperation() throws InvalidParameterException {
-        permission = new AllowOnlyPermission(noOperation);
+    public void testIsAuthorizedAllOperationsAreAuthorized() throws InvalidParameterException {
+        permission = new AllowAllExceptPermission(noOperation);
         checkIsAuthorizedUsesTheCorrectOperations(noOperation);
     }
     
@@ -46,11 +47,11 @@ public class AllowOnlyPermissionTest {
     // update the operations used by the permission.
     @Test
     public void testSetOperationTypes() throws InvalidParameterException {
-        permission = new AllowOnlyPermission(allowedOperations);
-        checkIsAuthorizedUsesTheCorrectOperations(allowedOperations);
+        permission = new AllowAllExceptPermission(notAllowedOperations);
+        checkIsAuthorizedUsesTheCorrectOperations(notAllowedOperations);
         
-        permission.setOperationTypes(getOperationTypeStringSet(updatedAllowedOperations));
-        checkIsAuthorizedUsesTheCorrectOperations(updatedAllowedOperations);
+        permission.setOperationTypes(getOperationTypeStringSet(updatedNotAllowedOperations));
+        checkIsAuthorizedUsesTheCorrectOperations(updatedNotAllowedOperations);
     }
     
     private void checkIsAuthorizedUsesTheCorrectOperations(Set<OperationType> operations) {
@@ -58,9 +59,9 @@ public class AllowOnlyPermissionTest {
             FsOperation operation = new FsOperation(type);
 
             if (operations.contains(type)) {
-                assertTrue(permission.isAuthorized(operation));
-            } else {
                 assertFalse(permission.isAuthorized(operation));
+            } else {
+                assertTrue(permission.isAuthorized(operation));
             }
         }
     }

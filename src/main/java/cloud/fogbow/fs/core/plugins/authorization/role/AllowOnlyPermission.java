@@ -1,4 +1,4 @@
-package cloud.fogbow.fs.core.plugins.authorization;
+package cloud.fogbow.fs.core.plugins.authorization.role;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -6,6 +6,7 @@ import java.util.Set;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.common.models.policy.Permission;
 import cloud.fogbow.fs.core.models.OperationType;
+import cloud.fogbow.fs.core.plugins.authorization.FsOperation;
 
 public class AllowOnlyPermission implements Permission<FsOperation> {
 

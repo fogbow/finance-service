@@ -1,4 +1,4 @@
-package cloud.fogbow.fs.core.plugins.authorization;
+package cloud.fogbow.fs.core.plugins.authorization.role;
 
 import java.io.File;
 
@@ -11,6 +11,7 @@ import cloud.fogbow.common.util.HomeDir;
 import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
 import cloud.fogbow.fs.core.FsClassFactory;
 import cloud.fogbow.fs.core.PropertiesHolder;
+import cloud.fogbow.fs.core.plugins.authorization.FsOperation;
 
 public class PolicyInstantiator {
     private FsClassFactory classFactory;
