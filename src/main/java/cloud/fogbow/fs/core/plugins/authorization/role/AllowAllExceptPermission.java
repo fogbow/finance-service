@@ -26,6 +26,7 @@ public class AllowAllExceptPermission implements Permission<FsOperation> {
         return !this.notAllowedOperationTypes.contains(operation.getOperationType());
     }
     
+    // TODO test
     @Override
     public boolean equals(Object o) {
         if (o instanceof AllowAllExceptPermission) {
@@ -35,6 +36,7 @@ public class AllowAllExceptPermission implements Permission<FsOperation> {
         return false;
     }
     
+    // TODO test
     @Override
     public Set<String> getOperationsTypes() {
         HashSet<String> operationsStrings = new HashSet<String>(); 

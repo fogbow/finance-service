@@ -160,6 +160,7 @@ public class MultiConsumerSynchronizedListTest {
     }
     
     // TODO documentation
+    // TODO fix this test
     @Test
     public void testRemoveResetsCurrentIterations() throws InternalServerErrorException, ModifiedListException {
         MultiConsumerSynchronizedList<String> list = new MultiConsumerSynchronizedList<String>();

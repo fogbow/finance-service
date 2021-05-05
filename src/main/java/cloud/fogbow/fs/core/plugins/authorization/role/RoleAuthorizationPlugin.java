@@ -38,6 +38,7 @@ public class RoleAuthorizationPlugin implements AuthorizationPlugin<FsOperation>
         try {
             this.rolePolicy = policyInstantiator.getRolePolicyInstanceFromFile(policyFilePath);
         } catch (WrongPolicyTypeException e) {
+            // TODO test
             throw new ConfigurationErrorException(String.format(Messages.Exception.WRONG_POLICY_TYPE,
                     e.getExpectedType(), e.getCurrentType()));
         }

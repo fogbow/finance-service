@@ -35,6 +35,7 @@ public class AllowOnlyPermission implements Permission<FsOperation> {
         return false;
     }
     
+    // TODO test
     @Override
     public Set<String> getOperationsTypes() {
         HashSet<String> operationsStrings = new HashSet<String>(); 
@@ -46,6 +47,7 @@ public class AllowOnlyPermission implements Permission<FsOperation> {
         return operationsStrings;
     }
 
+    // TODO test
     @Override
     public void setOperationTypes(Set<String> operations) throws InvalidParameterException {
         Set<OperationType> fsOperations = new HashSet<OperationType>();

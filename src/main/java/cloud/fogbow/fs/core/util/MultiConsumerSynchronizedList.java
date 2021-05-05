@@ -39,6 +39,7 @@ public class MultiConsumerSynchronizedList<T> {
                 throw new ModifiedListException();
             }
             
+            // TODO remove the second condition, since it is not used anymore
             if (internalList.size() <= pointer ||
                     pointer.equals(-1)) {
                 return null;

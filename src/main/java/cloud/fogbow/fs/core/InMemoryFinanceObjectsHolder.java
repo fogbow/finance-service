@@ -236,6 +236,7 @@ public class InMemoryFinanceObjectsHolder {
         return planToReturn;
     }
     
+    // TODO test
     public FinancePlan getOrDefaultFinancePlan(String planName) throws InternalServerErrorException, InvalidParameterException {
         try {
             return this.getFinancePlan(planName);

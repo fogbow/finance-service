@@ -30,6 +30,7 @@ public class FinancePlan {
 	private Map<ResourceItem, Double> plan;
 	private Map<String, String> basePlan;
 	
+	// TODO test
     public FinancePlan(String planName, String planPath) throws InvalidParameterException {
     	Map<String, String> planInfo = getPlanFromFile(planPath);
     	Map<ResourceItem, Double> plan = validatePlanInfo(planInfo);
