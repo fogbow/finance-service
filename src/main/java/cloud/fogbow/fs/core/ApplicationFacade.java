@@ -232,10 +232,40 @@ public class ApplicationFacade {
 		}
 	}
 	
+    public void setPolicy(String userToken, String policy) throws FogbowException {
+        LOGGER.info(String.format(Messages.Log.SETTING_POLICY));
+        
+        authenticateAndAuthorize(userToken, new FsOperation(OperationType.SET_POLICY));
+        synchronizationManager.setAsReloading();
+        
+        try {
+            synchronizationManager.waitForRequests();
+            this.authorizationPlugin.setPolicy(policy);
+            
+        } finally {
+            synchronizationManager.finishReloading();
+        }
+    }
+
+    public void updatePolicy(String userToken, String policy) throws FogbowException {
+        LOGGER.info(String.format(Messages.Log.UPDATING_POLICY));
+        
+        authenticateAndAuthorize(userToken, new FsOperation(OperationType.UPDATE_POLICY));
+        synchronizationManager.setAsReloading();
+        
+        try {
+            synchronizationManager.waitForRequests();
+            this.authorizationPlugin.updatePolicy(policy);
+            
+        } finally {
+            synchronizationManager.finishReloading();
+        }
+    }
+	
 	private void authenticateAndAuthorize(String userToken, FsOperation operation)
 			throws FogbowException, UnauthenticatedUserException, UnauthorizedRequestException {
 		RSAPublicKey asPublicKey = FsPublicKeysHolder.getInstance().getAsPublicKey();
         SystemUser systemUser = AuthenticationUtil.authenticate(asPublicKey, userToken);
         this.authorizationPlugin.isAuthorized(systemUser, operation);
-	}	
+	}
 }

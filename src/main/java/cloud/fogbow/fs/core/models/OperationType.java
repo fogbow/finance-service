@@ -13,7 +13,9 @@ public enum OperationType {
     CREATE_FINANCE_PLAN("createFinancePlan"),
     GET_FINANCE_PLAN("getFinancePlan"),
     UPDATE_FINANCE_PLAN("updateFinancePlan"),
-    REMOVE_FINANCE_PLAN("removeFinancePlan");
+    REMOVE_FINANCE_PLAN("removeFinancePlan"),
+    SET_POLICY("setPolicy"),
+    UPDATE_POLICY("updatePolicy");
 
     private String value;
     

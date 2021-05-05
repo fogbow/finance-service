@@ -17,6 +17,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import cloud.fogbow.as.core.util.AuthenticationUtil;
+import cloud.fogbow.common.exceptions.ConfigurationErrorException;
 import cloud.fogbow.common.exceptions.FogbowException;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
@@ -64,6 +65,8 @@ public class ApplicationFacadeTest {
 	private Map<String, String> updatedPlanInfo = new HashMap<String, String>();
 	
 	private String planToRemove = "planToRemove";
+	
+	private String newPolicy = "newPolicy";
 	
 	private FsPublicKeysHolder keysHolder;
 	private RSAPublicKey asPublicKey;
@@ -619,6 +622,94 @@ public class ApplicationFacadeTest {
         Mockito.verify(financeManager, Mockito.times(1)).removeFinancePlan(planToRemove);
         Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
         Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
+        Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
+    }
+    
+    // test case: When calling the setPolicy method, it must authorize the
+    // operation and call the AuthorizationPlugin. Also, it must start and finish
+    // reloading correctly using the SynchronizationManager.
+    @Test
+    public void testSetPolicy() throws FogbowException {
+        setUpPublicKeysHolder();
+        setUpAuthentication();
+        setUpAuthorization(OperationType.SET_POLICY);
+        setUpApplicationFacade();
+        
+        
+        ApplicationFacade.getInstance().setPolicy(adminToken, newPolicy);
+        
+        
+        Mockito.verify(authorizationPlugin, Mockito.times(1)).setPolicy(newPolicy);
+        Mockito.verify(synchronizationManager, Mockito.times(1)).setAsReloading();
+        Mockito.verify(synchronizationManager, Mockito.times(1)).finishReloading();
+        Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
+    }
+    
+    // test case: When calling the setPolicy method, if the call to
+    // AuthorizationPlugin.setPolicy throws an exception, the method
+    // must rethrow the exception and finish the reloading correctly.
+    @Test
+    public void testSetPolicyFinishesReloadingIfOperationFails() throws FogbowException {
+        setUpPublicKeysHolder();
+        setUpAuthentication();
+        setUpAuthorization(OperationType.SET_POLICY);
+        setUpApplicationFacade();
+        
+        Mockito.doThrow(ConfigurationErrorException.class).when(authorizationPlugin).setPolicy(newPolicy);
+        
+        try {
+            ApplicationFacade.getInstance().setPolicy(adminToken, newPolicy);
+            Assert.fail("setPolicy is expected to throw exception.");
+        } catch(ConfigurationErrorException e) {
+        }
+        
+        Mockito.verify(authorizationPlugin, Mockito.times(1)).setPolicy(newPolicy);
+        Mockito.verify(synchronizationManager, Mockito.times(1)).setAsReloading();
+        Mockito.verify(synchronizationManager, Mockito.times(1)).finishReloading();
+        Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
+    }
+    
+    // test case: When calling the updatePolicy method, it must authorize the
+    // operation and call the AuthorizationPlugin. Also, it must start and finish
+    // reloading correctly using the SynchronizationManager.
+    @Test
+    public void testUpdatePolicy() throws FogbowException {
+        setUpPublicKeysHolder();
+        setUpAuthentication();
+        setUpAuthorization(OperationType.UPDATE_POLICY);
+        setUpApplicationFacade();
+        
+        
+        ApplicationFacade.getInstance().updatePolicy(adminToken, newPolicy);
+        
+        
+        Mockito.verify(authorizationPlugin, Mockito.times(1)).updatePolicy(newPolicy);
+        Mockito.verify(synchronizationManager, Mockito.times(1)).setAsReloading();
+        Mockito.verify(synchronizationManager, Mockito.times(1)).finishReloading();
+        Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
+    }
+    
+    // test case: When calling the updatePolicy method, if the call to
+    // AuthorizationPlugin.updatePolicy throws an exception, the method
+    // must rethrow the exception and finish the reloading correctly.
+    @Test
+    public void testUpdatePolicyFinishesReloadingIfOperationFails() throws FogbowException {
+        setUpPublicKeysHolder();
+        setUpAuthentication();
+        setUpAuthorization(OperationType.UPDATE_POLICY);
+        setUpApplicationFacade();
+        
+        Mockito.doThrow(ConfigurationErrorException.class).when(authorizationPlugin).updatePolicy(newPolicy);
+        
+        try {
+            ApplicationFacade.getInstance().updatePolicy(adminToken, newPolicy);
+            Assert.fail("setPolicy is expected to throw exception.");
+        } catch(ConfigurationErrorException e) {
+        }
+        
+        Mockito.verify(authorizationPlugin, Mockito.times(1)).updatePolicy(newPolicy);
+        Mockito.verify(synchronizationManager, Mockito.times(1)).setAsReloading();
+        Mockito.verify(synchronizationManager, Mockito.times(1)).finishReloading();
         Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
     }
     

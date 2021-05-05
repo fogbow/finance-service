@@ -2,6 +2,7 @@ package cloud.fogbow.fs.constants;
 
 public class Messages {
 	public static class Exception {
+	    public static final String ADMIN_ROLE_NOT_SPECIFIED = "Admin role is not specified in the configuration file.";
 	    public static final String CANNOT_ADD_NEGATIVE_CREDITS = "Cannot add negative credits value.";
 	    public static final String CANNOT_REMOVE_DEFAULT_FINANCE_PLAN = "Cannot remove default finance plan.";
 		public static final String GENERIC_EXCEPTION_S = "Operation returned error: %s.";
@@ -37,6 +38,8 @@ public class Messages {
 		public static final String USER_DOES_NOT_HAVE_ENOUGH_PERMISSION = "User does not have permission to perform operation";
 		public static final String USER_IS_NOT_ADMIN = "Not-admin user trying to perform admin-only operation.";
         public static final String WRONG_POLICY_TYPE = "Wrong policy type. Type should be '%s' but is '%s'.";
+        public static final String POLICY_CLASS_NOT_SPECIFIED = "Policy class is not specified in the configuration file.";
+        public static final String POLICY_FILE_NAME_NOT_SPECIFIED = "Policy file name is not specified in the configuration file.";
 	}
 	
 	public static class Log {
@@ -61,9 +64,11 @@ public class Messages {
 		public static final String RELOADING_PUBLIC_KEYS_HOLDER = "Reloading public keys holder.";
 		public static final String REMOVING_FINANCE_PLAN = "Removing finance plan: %s.";
 		public static final String REMOVING_USER = "Removing user: %s.";
+		public static final String SETTING_POLICY = "Setting policy.";
 		public static final String UNABLE_TO_FIND_USER = "Unable to find user %s, provider %s.";
 		public static final String UPDATING_FINANCE_STATE = "Updating finance state of user: %s.";
 		public static final String UPDATING_FINANCE_PLAN = "Updating finance plan: %s.";
+		public static final String UPDATING_POLICY = "Updating policy.";
 		public static final String USER_LIST_CHANGED_SKIPPING_CREDITS_DEDUCTION = "User list changed. Skipping credits deduction.";
 		public static final String USER_LIST_CHANGED_SKIPPING_INVOICE_GENERATION = "User list changed. Skipping invoice generation.";
         public static final String USER_LIST_CHANGED_SKIPPING_USER_PAYMENT_STATE_CHECK = "User list changed. Skipping user payment state check.";
