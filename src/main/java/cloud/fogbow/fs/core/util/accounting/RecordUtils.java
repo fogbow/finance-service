@@ -8,9 +8,9 @@ import com.google.gson.internal.LinkedTreeMap;
 
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.constants.Messages;
-import cloud.fogbow.fs.core.plugins.payment.ComputeItem;
-import cloud.fogbow.fs.core.plugins.payment.ResourceItem;
-import cloud.fogbow.fs.core.plugins.payment.VolumeItem;
+import cloud.fogbow.fs.core.models.ComputeItem;
+import cloud.fogbow.fs.core.models.ResourceItem;
+import cloud.fogbow.fs.core.models.VolumeItem;
 import cloud.fogbow.fs.core.util.JsonUtils;
 
 

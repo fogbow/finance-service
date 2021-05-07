@@ -17,8 +17,6 @@ import javax.persistence.Table;
 
 import com.google.gson.Gson;
 
-import cloud.fogbow.fs.core.plugins.payment.ResourceItem;
-
 @Entity
 @Table(name = "invoice_table")
 public class Invoice {

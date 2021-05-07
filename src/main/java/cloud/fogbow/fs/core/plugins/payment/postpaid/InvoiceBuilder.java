@@ -6,7 +6,7 @@ import java.util.UUID;
 
 import cloud.fogbow.fs.core.models.Invoice;
 import cloud.fogbow.fs.core.models.InvoiceState;
-import cloud.fogbow.fs.core.plugins.payment.ResourceItem;
+import cloud.fogbow.fs.core.models.ResourceItem;
 
 public class InvoiceBuilder {
 

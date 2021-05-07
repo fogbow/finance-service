@@ -9,11 +9,11 @@ import java.util.List;
 import org.junit.Test;
 
 import cloud.fogbow.common.exceptions.InvalidParameterException;
+import cloud.fogbow.fs.core.models.ComputeItem;
 import cloud.fogbow.fs.core.models.Invoice;
 import cloud.fogbow.fs.core.models.InvoiceState;
-import cloud.fogbow.fs.core.plugins.payment.ComputeItem;
-import cloud.fogbow.fs.core.plugins.payment.ResourceItem;
-import cloud.fogbow.fs.core.plugins.payment.VolumeItem;
+import cloud.fogbow.fs.core.models.ResourceItem;
+import cloud.fogbow.fs.core.models.VolumeItem;
 
 public class InvoiceBuilderTest {
 

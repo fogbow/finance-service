@@ -1,4 +1,4 @@
-package cloud.fogbow.fs.core.plugins.payment;
+package cloud.fogbow.fs.core.models;
 
 import static org.junit.Assert.*;
 

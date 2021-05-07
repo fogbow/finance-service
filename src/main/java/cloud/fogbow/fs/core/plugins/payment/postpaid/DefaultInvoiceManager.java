@@ -11,8 +11,8 @@ import cloud.fogbow.fs.core.models.FinancePlan;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.models.Invoice;
 import cloud.fogbow.fs.core.models.InvoiceState;
+import cloud.fogbow.fs.core.models.ResourceItem;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
-import cloud.fogbow.fs.core.plugins.payment.ResourceItem;
 import cloud.fogbow.fs.core.util.accounting.Record;
 import cloud.fogbow.fs.core.util.accounting.RecordUtils;
 

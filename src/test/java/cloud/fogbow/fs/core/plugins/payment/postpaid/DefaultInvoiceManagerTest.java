@@ -14,12 +14,12 @@ import org.mockito.Mockito;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.core.InMemoryFinanceObjectsHolder;
+import cloud.fogbow.fs.core.models.ComputeItem;
 import cloud.fogbow.fs.core.models.FinancePlan;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.models.Invoice;
 import cloud.fogbow.fs.core.models.InvoiceState;
-import cloud.fogbow.fs.core.plugins.payment.ComputeItem;
-import cloud.fogbow.fs.core.plugins.payment.VolumeItem;
+import cloud.fogbow.fs.core.models.VolumeItem;
 import cloud.fogbow.fs.core.util.accounting.Record;
 import cloud.fogbow.fs.core.util.accounting.RecordUtils;
 

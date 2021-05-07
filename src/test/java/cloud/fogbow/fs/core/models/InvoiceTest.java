@@ -14,8 +14,6 @@ import java.util.Set;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import cloud.fogbow.fs.core.plugins.payment.ResourceItem;
-
 public class InvoiceTest {
 
     private static final String INVOICE_ID = "invoiceId";

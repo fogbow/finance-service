@@ -7,7 +7,6 @@ import javax.persistence.Table;
 
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.constants.Messages;
-import cloud.fogbow.fs.core.plugins.payment.ResourceItem;
 
 @Entity
 @Table(name = "credits_table")

@@ -9,9 +9,6 @@ import java.util.Scanner;
 import cloud.fogbow.common.exceptions.FatalErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.constants.Messages;
-import cloud.fogbow.fs.core.plugins.payment.ComputeItem;
-import cloud.fogbow.fs.core.plugins.payment.ResourceItem;
-import cloud.fogbow.fs.core.plugins.payment.VolumeItem;
 
 public class FinancePlan {
 

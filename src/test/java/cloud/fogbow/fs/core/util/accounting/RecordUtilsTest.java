@@ -8,8 +8,8 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import cloud.fogbow.common.exceptions.InvalidParameterException;
-import cloud.fogbow.fs.core.plugins.payment.ComputeItem;
-import cloud.fogbow.fs.core.plugins.payment.VolumeItem;
+import cloud.fogbow.fs.core.models.ComputeItem;
+import cloud.fogbow.fs.core.models.VolumeItem;
 
 public class RecordUtilsTest {
 

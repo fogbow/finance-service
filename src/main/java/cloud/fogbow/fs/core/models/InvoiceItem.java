@@ -9,8 +9,6 @@ import javax.persistence.Id;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
-import cloud.fogbow.fs.core.plugins.payment.ResourceItem;
-
 @Entity
 @Table(name = "invoice_items_table")
 public class InvoiceItem {

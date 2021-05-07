@@ -5,8 +5,6 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 
 import cloud.fogbow.common.exceptions.InvalidParameterException;
-import cloud.fogbow.fs.core.plugins.payment.ResourceItem;
-import cloud.fogbow.fs.core.plugins.payment.VolumeItem;
 
 public class UserCreditsTest {
 

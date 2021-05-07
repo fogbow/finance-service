@@ -8,9 +8,9 @@ import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.InMemoryFinanceObjectsHolder;
 import cloud.fogbow.fs.core.models.FinancePlan;
 import cloud.fogbow.fs.core.models.FinanceUser;
+import cloud.fogbow.fs.core.models.ResourceItem;
 import cloud.fogbow.fs.core.models.UserCredits;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
-import cloud.fogbow.fs.core.plugins.payment.ResourceItem;
 import cloud.fogbow.fs.core.util.accounting.Record;
 import cloud.fogbow.fs.core.util.accounting.RecordUtils;
 
