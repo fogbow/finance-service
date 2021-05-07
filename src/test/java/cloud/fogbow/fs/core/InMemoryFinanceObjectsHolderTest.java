@@ -192,7 +192,7 @@ public class InMemoryFinanceObjectsHolderTest {
         
         Mockito.verify(user1).setProperty("option1", "optionvalue1");
         Mockito.verify(user1).setProperty("option2", "optionvalue2");
-        Mockito.verify(databaseManager).changeOptions(user1, newOptions);
+        Mockito.verify(databaseManager).saveUser(user1);
     }
     
     // TODO documentation
@@ -347,8 +347,6 @@ public class InMemoryFinanceObjectsHolderTest {
     private void setUpDatabase() {
         databaseManager = Mockito.mock(DatabaseManager.class);
         Mockito.when(databaseManager.getRegisteredUsers()).thenReturn(usersList);
-        Mockito.when(databaseManager.getRegisteredInvoices()).thenReturn(invoicesList);
-        Mockito.when(databaseManager.getRegisteredUserCredits()).thenReturn(creditsList);
         Mockito.when(databaseManager.getRegisteredFinancePlans()).thenReturn(plansList);
     }
 

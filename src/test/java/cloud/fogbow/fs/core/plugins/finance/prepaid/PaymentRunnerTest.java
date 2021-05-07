@@ -1,8 +1,5 @@
 package cloud.fogbow.fs.core.plugins.finance.prepaid;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -92,20 +89,9 @@ public class PaymentRunnerTest {
 		
 		// PaymentRunner triggered payment correctly
 		Mockito.verify(paymentManager, Mockito.times(1)).startPaymentProcess(ID_USER_1, PROVIDER_USER_1, 
-		        INITIAL_USER_1_LAST_BILLING_TIME, timeValues.get(0));
+		        INITIAL_USER_1_LAST_BILLING_TIME, timeValues.get(0), userRecords);
 		Mockito.verify(paymentManager, Mockito.times(1)).startPaymentProcess(ID_USER_2, PROVIDER_USER_2, 
-		        INITIAL_USER_2_LAST_BILLING_TIME, timeValues.get(1));
-		
-		// PaymentRunner set the last period records
-		List<Record> records = user1.getPeriodRecords();
-		assertEquals(2, records.size());
-		assertEquals(RECORD_ID_1, records.get(0).getId());
-		assertEquals(RECORD_ID_2, records.get(1).getId());
-		
-		List<Record> records2 = user2.getPeriodRecords();
-		assertEquals(2, records2.size());
-		assertEquals(RECORD_ID_1, records2.get(0).getId());
-		assertEquals(RECORD_ID_2, records2.get(1).getId());
+		        INITIAL_USER_2_LAST_BILLING_TIME, timeValues.get(1), userRecords);
 	}
 	
 	// test case: When calling the doRun method and an exception
@@ -143,21 +129,9 @@ public class PaymentRunnerTest {
 		
 		// PaymentRunner triggered payment correctly
 		Mockito.verify(paymentManager, Mockito.never()).startPaymentProcess(ID_USER_1, PROVIDER_USER_1, 
-                INITIAL_USER_1_LAST_BILLING_TIME, timeValues.get(0));
+                INITIAL_USER_1_LAST_BILLING_TIME, timeValues.get(0), userRecords);
         Mockito.verify(paymentManager, Mockito.times(1)).startPaymentProcess(ID_USER_2, PROVIDER_USER_2, 
-                INITIAL_USER_2_LAST_BILLING_TIME, timeValues.get(1));
-
-		// PaymentRunner set the last period records
-		
-		// An exception is thrown when acquiring user1 records.
-		// Therefore, user1 state has no records.
-		List<Record> records = user1.getPeriodRecords();
-		assertNull(records);
-
-		List<Record> records2 = user2.getPeriodRecords();
-		assertEquals(2, records2.size());
-		assertEquals(RECORD_ID_1, records2.get(0).getId());
-		assertEquals(RECORD_ID_2, records2.get(1).getId());
+                INITIAL_USER_2_LAST_BILLING_TIME, timeValues.get(1), userRecords);
 	}
 	
 	// test case: When calling the doRun method and a ModifiedListException
@@ -200,21 +174,9 @@ public class PaymentRunnerTest {
         
         // PaymentRunner triggered payment correctly
         Mockito.verify(paymentManager, Mockito.times(1)).startPaymentProcess(ID_USER_1, PROVIDER_USER_1, 
-                INITIAL_USER_1_LAST_BILLING_TIME, timeValues.get(0));
+                INITIAL_USER_1_LAST_BILLING_TIME, timeValues.get(0), userRecords);
         Mockito.verify(paymentManager, Mockito.never()).startPaymentProcess(ID_USER_2, PROVIDER_USER_2,
-                INITIAL_USER_2_LAST_BILLING_TIME, timeValues.get(1));
-
-        // PaymentRunner set the last period records
-        
-        // An exception is thrown when trying to get user2.
-        // Therefore, user2 state has no records.
-        List<Record> records = user1.getPeriodRecords();
-        assertEquals(2, records.size());
-        assertEquals(RECORD_ID_1, records.get(0).getId());
-        assertEquals(RECORD_ID_2, records.get(1).getId());
-
-        List<Record> records2 = user2.getPeriodRecords();
-        assertNull(records2);
+                INITIAL_USER_2_LAST_BILLING_TIME, timeValues.get(1), userRecords);
     }
     
     // test case: When calling the doRun method and an InternalServerErrorException
@@ -255,21 +217,9 @@ public class PaymentRunnerTest {
 
         // PaymentRunner triggered payment correctly
         Mockito.verify(paymentManager, Mockito.times(1)).startPaymentProcess(ID_USER_1, PROVIDER_USER_1,
-                INITIAL_USER_1_LAST_BILLING_TIME, timeValues.get(0));
+                INITIAL_USER_1_LAST_BILLING_TIME, timeValues.get(0), userRecords);
         Mockito.verify(paymentManager, Mockito.never()).startPaymentProcess(ID_USER_2, PROVIDER_USER_2,
-                INITIAL_USER_2_LAST_BILLING_TIME, timeValues.get(1));
-
-        // PaymentRunner set the last period records
-
-        // An exception is thrown when trying to get user2.
-        // Therefore, user2 state has no records.
-        List<Record> records = user1.getPeriodRecords();
-        assertEquals(2, records.size());
-        assertEquals(RECORD_ID_1, records.get(0).getId());
-        assertEquals(RECORD_ID_2, records.get(1).getId());
-
-        List<Record> records2 = user2.getPeriodRecords();
-        assertNull(records2);
+                INITIAL_USER_2_LAST_BILLING_TIME, timeValues.get(1), userRecords);
     }
 	
     private void setUpDatabase() throws InvalidParameterException, ModifiedListException, InternalServerErrorException {

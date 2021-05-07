@@ -1,8 +1,12 @@
 package cloud.fogbow.fs.core.plugins;
 
+import java.util.List;
+
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
+import cloud.fogbow.fs.core.util.accounting.Record;
 
+// TODO update documentation
 /**
  * A payment management abstraction, capable of starting
  * payment for users based in their financial state. This 
@@ -44,7 +48,8 @@ public interface PaymentManager {
 	 * @throws InvalidParameterException if the user is not found or the parameters 
      * are invalid.
 	 */
-	void startPaymentProcess(String userId, String provider, Long paymentStartTime, Long paymentEndTime) throws InternalServerErrorException, InvalidParameterException;
+	void startPaymentProcess(String userId, String provider, Long paymentStartTime, Long paymentEndTime, 
+	        List<Record> records) throws InternalServerErrorException, InvalidParameterException;
 	
 	/**
 	 * Generates and returns a representation of the given property of

@@ -1,13 +1,26 @@
 package cloud.fogbow.fs.core.plugins.payment;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Table;
+
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.constants.Messages;
 
+@Entity
+@Table(name = "volume_item_table")
 public class VolumeItem extends ResourceItem {
 	public static final String ITEM_TYPE_NAME = "volume";
+
+    private static final String SIZE_COLUMN_SIZE = "size";
 	
+    @Column(name = SIZE_COLUMN_SIZE)
 	private int size;
 
+    public VolumeItem() {
+        
+    }
+    
 	public VolumeItem(int size) throws InvalidParameterException {
 		setSize(size);
 	}

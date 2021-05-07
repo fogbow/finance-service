@@ -133,7 +133,7 @@ public class DefaultCreditsManagerTest {
         
         DefaultCreditsManager creditsManager = new DefaultCreditsManager(objectHolder, plan, recordUtils);
         
-        creditsManager.startPaymentProcess(USER_ID1, PROVIDER1, PAYMENT_START_TIME, PAYMENT_END_TIME);
+        creditsManager.startPaymentProcess(USER_ID1, PROVIDER1, PAYMENT_START_TIME, PAYMENT_END_TIME, records);
         
         Mockito.verify(userCredits1).deduct(resourceItem1, VALUE_ITEM_1, new Double(PAYMENT_END_TIME - PAYMENT_START_TIME));
         Mockito.verify(userCredits1).deduct(resourceItem2, VALUE_ITEM_2, new Double(PAYMENT_END_TIME - PAYMENT_START_TIME));
@@ -153,7 +153,7 @@ public class DefaultCreditsManagerTest {
         
         DefaultCreditsManager creditsManager = new DefaultCreditsManager(objectHolder, plan, recordUtils);
         
-        creditsManager.startPaymentProcess(USER_ID1, PROVIDER1, PAYMENT_START_TIME, PAYMENT_END_TIME);
+        creditsManager.startPaymentProcess(USER_ID1, PROVIDER1, PAYMENT_START_TIME, PAYMENT_END_TIME, records);
         
         Mockito.verify(userCredits1, Mockito.never()).deduct(Mockito.any(), Mockito.any(), Mockito.any());
     }
@@ -187,7 +187,7 @@ public class DefaultCreditsManagerTest {
         DefaultCreditsManager creditsManager = new DefaultCreditsManager(objectHolder, plan, recordUtils);
         
         try {
-            creditsManager.startPaymentProcess(USER_ID1, PROVIDER1, PAYMENT_START_TIME, PAYMENT_END_TIME);
+            creditsManager.startPaymentProcess(USER_ID1, PROVIDER1, PAYMENT_START_TIME, PAYMENT_END_TIME, records);
             Assert.fail("startPaymentProcess is expected to throw exception.");
         } catch (InternalServerErrorException e) {
         }
@@ -214,7 +214,7 @@ public class DefaultCreditsManagerTest {
         DefaultCreditsManager creditsManager = new DefaultCreditsManager(objectHolder, plan, recordUtils);
         
         try {
-            creditsManager.startPaymentProcess(USER_ID1, PROVIDER1, PAYMENT_START_TIME, PAYMENT_END_TIME);            
+            creditsManager.startPaymentProcess(USER_ID1, PROVIDER1, PAYMENT_START_TIME, PAYMENT_END_TIME, records);            
             Assert.fail("startPaymentProcess is expected to throw exception.");
         } catch (InternalServerErrorException e) {
         }
@@ -250,15 +250,12 @@ public class DefaultCreditsManagerTest {
     
     private void setUpDatabase() throws InvalidParameterException, InternalServerErrorException {
         this.financeUser1 = Mockito.mock(FinanceUser.class);
-        Mockito.when(financeUser1.getPeriodRecords()).thenReturn(records);
         Mockito.when(financeUser1.getCredits()).thenReturn(this.userCredits1);
        
         this.financeUser2 = Mockito.mock(FinanceUser.class);
-        Mockito.when(financeUser2.getPeriodRecords()).thenReturn(records);
         Mockito.when(financeUser2.getCredits()).thenReturn(this.userCredits2);
         
         this.financeUser3 = Mockito.mock(FinanceUser.class);
-        Mockito.when(financeUser3.getPeriodRecords()).thenReturn(records);
         Mockito.when(financeUser3.getCredits()).thenReturn(this.userCredits3);
         
         this.objectHolder = Mockito.mock(InMemoryFinanceObjectsHolder.class);

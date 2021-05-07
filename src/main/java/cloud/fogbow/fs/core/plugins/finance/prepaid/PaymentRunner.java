@@ -90,22 +90,22 @@ public class PaymentRunner extends StoppableRunner {
 
     private void tryToDeductCreditsForUser(FinanceUser user, long billingTime, long lastBillingTime) {
         try {
-            acquireUsageData(user, billingTime, lastBillingTime);
+            List<Record> records = acquireUsageData(user, billingTime, lastBillingTime);
             this.paymentManager.startPaymentProcess(user.getId(), user.getProvider(), lastBillingTime,
-                    billingTime);
+                    billingTime, records);
         } catch (FogbowException e) {
             LOGGER.error(String.format(Messages.Log.FAILED_TO_DEDUCT_CREDITS_FOR_USER, user.getId(), e.getMessage()));
         }
     }
 
-    private void acquireUsageData(FinanceUser user, long billingTime, long lastBillingTime) throws FogbowException {
+    private List<Record> acquireUsageData(FinanceUser user, long billingTime, long lastBillingTime) throws FogbowException {
         // Maybe move this conversion to ACCSClient
         String invoiceStartDate = this.timeUtils.toDate(SIMPLE_DATE_FORMAT, lastBillingTime);
         String invoiceEndDate = this.timeUtils.toDate(SIMPLE_DATE_FORMAT, billingTime);
         
         List<Record> userRecords = this.accountingServiceClient.getUserRecords(user.getId(),
                 user.getProvider(), invoiceStartDate, invoiceEndDate);
-
-        user.setPeriodRecords(userRecords);
+        
+        return userRecords;
     }
 }

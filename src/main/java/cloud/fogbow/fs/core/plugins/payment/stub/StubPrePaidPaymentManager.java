@@ -1,52 +1,30 @@
 package cloud.fogbow.fs.core.plugins.payment.stub;
 
+import java.util.List;
+
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
-import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
+import cloud.fogbow.fs.core.util.accounting.Record;
 
 public class StubPrePaidPaymentManager implements PaymentManager {
 
-	private static final String USER_CREDITS = "credits";
-	private DatabaseManager databaseManager;
-	
 	public StubPrePaidPaymentManager(DatabaseManager databaseManager) {
-		this.databaseManager = databaseManager;
 	}
 	
 	@Override
 	public boolean hasPaid(String userId, String provider) throws InvalidParameterException {
-		FinanceUser user = databaseManager.getUserById(userId, provider);
-		String creditsString = user.getProperty(USER_CREDITS);
-		
-		if (creditsString == null) {
-			return true;
-		} else {
-			Long credits = Long.valueOf(creditsString);
-			return (credits > 0);
-		}
+	    return true;
 	}
 
 	@Override
 	public void startPaymentProcess(String userId, String provider, 
-	        Long paymentStartTime, Long paymentEndTime) throws InvalidParameterException {
-		FinanceUser user = databaseManager.getUserById(userId, provider);
-		String creditsString = user.getProperty(USER_CREDITS);
-		
-		if (creditsString != null) {
-			Long credits = Long.valueOf(creditsString);
-			
-			if (credits > 0) {
-				Long updatedCredits = credits - 1;
-				user.setProperty(USER_CREDITS, updatedCredits.toString());
-			}
-		}
+	        Long paymentStartTime, Long paymentEndTime, List<Record> records) throws InvalidParameterException {
 	}
 
 	@Override
 	public String getUserFinanceState(String userId, String provider, String property) throws InvalidParameterException {
-		FinanceUser user = databaseManager.getUserById(userId, provider);
-		return user.getProperty(USER_CREDITS);
+		return property;
 	}
 
 	@Override

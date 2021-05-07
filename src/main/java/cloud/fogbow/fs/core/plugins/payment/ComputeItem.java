@@ -1,14 +1,30 @@
 package cloud.fogbow.fs.core.plugins.payment;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Table;
+
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.constants.Messages;
 
+@Entity
+@Table(name = "compute_item_table")
 public class ComputeItem extends ResourceItem {
 	public static final String ITEM_TYPE_NAME = "compute";
-	
+
+    private static final String VCPU_COLUMN_NAME = "vcpu";
+    private static final String RAM_COLUMN_NAME = "ram";
+
+    @Column(name = VCPU_COLUMN_NAME)
 	private int vCPU;
+    
+    @Column(name = RAM_COLUMN_NAME)
 	private int ram;
 	
+    public ComputeItem() {
+        
+    }
+    
 	public ComputeItem(int vCPU, int ram) throws InvalidParameterException {
 		setvCPU(vCPU);
 		setRam(ram);

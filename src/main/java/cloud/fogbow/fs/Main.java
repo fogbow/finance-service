@@ -1,5 +1,6 @@
 package cloud.fogbow.fs;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
@@ -20,6 +21,9 @@ import cloud.fogbow.fs.core.util.SynchronizationManager;
 @Component
 public class Main implements ApplicationRunner {
 
+    @Autowired
+    private DatabaseManager databaseManager;
+    
 	@Override
 	public void run(ApplicationArguments args) throws Exception {
 		String publicKeyFilePath = PropertiesHolder.getInstance().getProperty(FogbowConstants.PUBLIC_KEY_FILE_PATH);
@@ -30,7 +34,6 @@ public class Main implements ApplicationRunner {
         AuthorizationPlugin<FsOperation> authorizationPlugin = AuthorizationPluginInstantiator.getAuthorizationPlugin();
         ApplicationFacade.getInstance().setAuthorizationPlugin(authorizationPlugin);
         
-		DatabaseManager databaseManager = new DatabaseManager();
 		InMemoryFinanceObjectsHolder objectHolder = new InMemoryFinanceObjectsHolder(databaseManager);
 		
 		FinanceManager financeManager = new FinanceManager(objectHolder, new FinancePlanFactory());

@@ -176,7 +176,7 @@ public class InMemoryFinanceObjectsHolder {
                 user.setProperty(option, financeOptions.get(option));
             }
             
-            this.databaseManager.changeOptions(user, financeOptions);
+            this.databaseManager.saveUser(user);
         }
     }
 

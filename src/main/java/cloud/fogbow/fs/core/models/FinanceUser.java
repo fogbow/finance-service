@@ -1,25 +1,64 @@
 package cloud.fogbow.fs.core.models;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.ElementCollection;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+
 import org.apache.log4j.Logger;
 
-import cloud.fogbow.fs.core.util.accounting.Record;
-
-public class FinanceUser {
+@Entity
+@Table(name = "finance_user_table")
+public class FinanceUser implements Serializable {
+    private static final long serialVersionUID = 1L;
+    
+    public static final String PAYMENT_TYPE_KEY = "paymentType";
+    public static final String PAYMENT_STATUS_KEY = "paymentStatus";
+    public static final String USER_LAST_BILLING_TIME = "last_billing_time";
+    
+    private static final String PROVIDER_COLUMN_NAME = "provider";
+    private static final String FINANCE_PLUGIN_NAME_COLUMN_NAME = "finance_plugin_name";
+    private static final String STOPPED_RESOURCES_COLUMN_NAME = "stopped_resources";
+    private static final String PROPERTIES_COLUMN_NAME = "properties";
+    private static final String INVOICES_COLUMN_NAME = "invoices";
+    
+    @Transient
 	private static final Logger LOGGER = Logger.getLogger(FinanceUser.class);
-	public static final String PAYMENT_TYPE_KEY = "paymentType";
-	public static final String PAYMENT_STATUS_KEY = "paymentStatus";
-	public static final String USER_LAST_BILLING_TIME = "last_billing_time";
 	
+    // FIXME primary key should be both id and provider
+    @Column
+    @Id
 	private String id;
+    
+    @Column(name = PROVIDER_COLUMN_NAME)
 	private String provider;
+    
+    @Column(name = FINANCE_PLUGIN_NAME_COLUMN_NAME)
 	private String financePluginName;
-	private List<Record> periodRecords;
+    
+    @Column(name = STOPPED_RESOURCES_COLUMN_NAME)
 	private boolean stoppedResources;
+    
+    @Column(name = PROPERTIES_COLUMN_NAME)
+    @ElementCollection(fetch = FetchType.EAGER)
 	private Map<String, String> properties;
+    
+    @Column(name = INVOICES_COLUMN_NAME)
+    @ElementCollection(fetch = FetchType.EAGER)
+    @OneToMany(cascade={CascadeType.ALL})
 	private List<Invoice> invoices;
+    
+    @OneToOne(cascade={CascadeType.ALL})
 	private UserCredits credits;
 
     public FinanceUser() {
@@ -33,14 +72,6 @@ public class FinanceUser {
         this.setProperty(USER_LAST_BILLING_TIME, String.valueOf(billingTime));
 	}
 	
-	public List<Record> getPeriodRecords() {
-		return periodRecords;
-	}
-
-	public void setPeriodRecords(List<Record> periodRecords) {
-		this.periodRecords = periodRecords;
-	}
-
 	public String getProvider() {
 		return provider;
 	}

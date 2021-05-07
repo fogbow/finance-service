@@ -2,6 +2,10 @@ package cloud.fogbow.fs.core.plugins.payment.postpaid;
 
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.junit.Test;
 
 import cloud.fogbow.common.exceptions.InvalidParameterException;
@@ -47,16 +51,24 @@ public class InvoiceBuilderTest {
 		invoiceBuilder.addItem(resourceItem3, VALUE_ITEM_3, TIME_USED_ITEM_3);
 		Invoice invoice = invoiceBuilder.buildInvoice();
 		
+		List<Double> possibleValues = new ArrayList<Double>();
+		possibleValues.addAll(Arrays.asList(VALUE_ITEM_1*TIME_USED_ITEM_1, 
+                VALUE_ITEM_2*TIME_USED_ITEM_2, VALUE_ITEM_3*TIME_USED_ITEM_3));
+		
 		assertEquals(USER_ID_1, invoice.getUserId());
 		assertEquals(PROVIDER_ID_1, invoice.getProviderId());
 		assertEquals(InvoiceState.WAITING, invoice.getState());
-		assertEquals(3, invoice.getInvoiceItems().keySet().size());
-		assertEquals(new Double(VALUE_ITEM_1*TIME_USED_ITEM_1), 
-				invoice.getInvoiceItems().get(resourceItem1));
-		assertEquals(new Double(VALUE_ITEM_2*TIME_USED_ITEM_2), 
-				invoice.getInvoiceItems().get(resourceItem2));
-		assertEquals(new Double(VALUE_ITEM_3*TIME_USED_ITEM_3),
-				invoice.getInvoiceItems().get(resourceItem3));
+		assertEquals(3, invoice.getInvoiceItemsList().size());
+		
+		assertTrue(possibleValues.contains(invoice.getInvoiceItemsList().get(0).getValue()));
+		possibleValues.remove(invoice.getInvoiceItemsList().get(0).getValue());
+		
+		assertTrue(possibleValues.contains(invoice.getInvoiceItemsList().get(1).getValue()));
+		possibleValues.remove(invoice.getInvoiceItemsList().get(1).getValue());
+		
+		assertTrue(possibleValues.contains(invoice.getInvoiceItemsList().get(2).getValue()));
+		possibleValues.remove(invoice.getInvoiceItemsList().get(2).getValue());
+
 		assertEquals(new Double(VALUE_ITEM_1*TIME_USED_ITEM_1 + VALUE_ITEM_2*TIME_USED_ITEM_2 
 				+ VALUE_ITEM_3*TIME_USED_ITEM_3), invoice.getInvoiceTotal());
 	}
@@ -75,7 +87,7 @@ public class InvoiceBuilderTest {
 		assertEquals(USER_ID_1, invoice.getUserId());
 		assertEquals(PROVIDER_ID_1, invoice.getProviderId());
 		assertEquals(InvoiceState.WAITING, invoice.getState());
-		assertEquals(0, invoice.getInvoiceItems().keySet().size());
+		assertEquals(0, invoice.getInvoiceItemsList().size());
 		assertEquals(new Double(0.0), invoice.getInvoiceTotal());
 	}
 	
@@ -96,9 +108,9 @@ public class InvoiceBuilderTest {
         assertEquals(USER_ID_1, invoice1.getUserId());
         assertEquals(PROVIDER_ID_1, invoice1.getProviderId());
         assertEquals(InvoiceState.WAITING, invoice1.getState());
-        assertEquals(1, invoice1.getInvoiceItems().keySet().size());
+        assertEquals(1, invoice1.getInvoiceItemsList().size());
         assertEquals(new Double(VALUE_ITEM_1*TIME_USED_ITEM_1), 
-                invoice1.getInvoiceItems().get(resourceItem1));
+                invoice1.getInvoiceItemsList().get(0).getValue());
         assertEquals(new Double(VALUE_ITEM_1*TIME_USED_ITEM_1), invoice1.getInvoiceTotal());
         
         
@@ -115,7 +127,7 @@ public class InvoiceBuilderTest {
         assertEquals(USER_ID_2, invoice2.getUserId());
         assertEquals(PROVIDER_ID_2, invoice2.getProviderId());
         assertEquals(InvoiceState.WAITING, invoice2.getState());
-        assertEquals(0, invoice2.getInvoiceItems().keySet().size());
+        assertEquals(0, invoice2.getInvoiceItemsList().size());
         assertEquals(new Double(0.0), invoice2.getInvoiceTotal());
 	}
 }

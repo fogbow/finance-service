@@ -1,10 +1,21 @@
 package cloud.fogbow.fs.core.plugins.payment;
 
-// TODO I think we should create a new abstraction,
-// "ConsumedResourceItem", which holds an ID, 
-// a value and a ResourceItem. This abstraction should
-// be the one used in the Invoice, leaving the 
-// ResourceItem to be used to map resource descriptions.
-public class ResourceItem {
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
+import javax.persistence.Table;
 
+
+@Entity
+@Inheritance(strategy = InheritanceType.JOINED)
+@Table(name = "resource_item_table")
+public class ResourceItem {
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(nullable = false, unique = true)
+    private Long id;
 }

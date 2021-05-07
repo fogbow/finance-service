@@ -69,7 +69,7 @@ public class DefaultInvoiceManagerTest {
 		DefaultInvoiceManager invoiceManager = new DefaultInvoiceManager(objectHolder, 
 				PLAN_NAME_1, resourceItemFactory, invoiceBuilder);
 		
-		invoiceManager.startPaymentProcess(USER_ID_1, PROVIDER_ID_1, invoiceStartTime, invoiceEndTime);
+		invoiceManager.startPaymentProcess(USER_ID_1, PROVIDER_ID_1, invoiceStartTime, invoiceEndTime, this.records);
 		
 		Mockito.verify(this.invoiceBuilder).setUserId(USER_ID_1);
 		Mockito.verify(this.invoiceBuilder).setProviderId(PROVIDER_ID_1);
@@ -94,7 +94,7 @@ public class DefaultInvoiceManagerTest {
 		DefaultInvoiceManager invoiceManager = new DefaultInvoiceManager(objectHolder, 
 				PLAN_NAME_1, resourceItemFactory, invoiceBuilder);
 		
-		invoiceManager.startPaymentProcess(USER_ID_1, PROVIDER_ID_1, invoiceStartTime, invoiceEndTime);
+		invoiceManager.startPaymentProcess(USER_ID_1, PROVIDER_ID_1, invoiceStartTime, invoiceEndTime, this.records);
 	}
 	
 	// test case: When calling the startPaymentProcess method, 
@@ -110,7 +110,7 @@ public class DefaultInvoiceManagerTest {
 		DefaultInvoiceManager invoiceManager = new DefaultInvoiceManager(objectHolder, 
 				PLAN_NAME_1, resourceItemFactory, invoiceBuilder);
 		
-		invoiceManager.startPaymentProcess(USER_ID_1, PROVIDER_ID_1, invoiceStartTime, invoiceEndTime);
+		invoiceManager.startPaymentProcess(USER_ID_1, PROVIDER_ID_1, invoiceStartTime, invoiceEndTime, this.records);
 	}
 
 	// test case: When calling the hasPaid method, it must check 
@@ -263,7 +263,6 @@ public class DefaultInvoiceManagerTest {
 		this.user1 = Mockito.mock(FinanceUser.class);
 		this.user2 = Mockito.mock(FinanceUser.class);
 		this.user3 = Mockito.mock(FinanceUser.class);
-		Mockito.when(user1.getPeriodRecords()).thenReturn(this.records);
 		
 		this.invoiceToAdd = Mockito.mock(Invoice.class);
 	}

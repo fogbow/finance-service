@@ -1,18 +1,30 @@
 package cloud.fogbow.fs.core.models;
 
+import javax.persistence.Column;
+import javax.persistence.EmbeddedId;
+import javax.persistence.Entity;
+import javax.persistence.Table;
+
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.plugins.payment.ResourceItem;
 
+@Entity
+@Table(name = "credits_table")
 public class UserCredits {
 
-    private String userId;
-    private String provider;
+    @EmbeddedId
+    private UserId userId;
+
+    @Column
     private Double credits;
 
+    public UserCredits() {
+        
+    }
+    
 	public UserCredits(String userId, String provider) {
-        this.userId = userId;
-        this.provider = provider;
+	    this.userId = new UserId(userId, provider);
         this.credits = 0.0;
     }
 
@@ -44,10 +56,10 @@ public class UserCredits {
     }
 
     public String getUserId() {
-        return userId;
+        return userId.getUserId();
     }
 
     public String getProvider() {
-        return provider;
+        return userId.getProvider();
     }
 }
