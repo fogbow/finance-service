@@ -157,6 +157,8 @@ public class InMemoryFinanceObjectsHolderTest {
         objectHolder.getUserById("unknownuser", "unknownprovider");
     }
     
+    // TODO add test for unknown provider on getUserById
+    
     // TODO documentation
     @Test
     public void testGetRegisteredUsersByPaymentType() throws InvalidParameterException, InternalServerErrorException {

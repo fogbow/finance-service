@@ -23,6 +23,7 @@ public class FsPublicKeysHolder {
 		return instance;
 	}
 
+	// TODO test
 	public static void reset() {
 		instance = null;
 	}
