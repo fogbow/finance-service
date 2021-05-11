@@ -62,8 +62,7 @@ public class InMemoryFinanceObjectsHolder {
     public void registerUser(String userId, String provider, String pluginName, Map<String, String> financeOptions) throws InternalServerErrorException {
         FinanceUser user = new FinanceUser(financeOptions);
 
-        user.setId(userId);
-        user.setProvider(provider);
+        user.setUserId(userId, provider);
         user.setFinancePluginName(pluginName);
         user.setCredits(userCreditsFactory.getUserCredits(userId, provider));
         user.setInvoices(new ArrayList<Invoice>());

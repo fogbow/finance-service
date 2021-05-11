@@ -257,13 +257,11 @@ public class PaymentRunnerTest {
 
     private void setUpUsers() {
         this.user1 = new FinanceUser(new HashMap<String, String>());
-        user1.setId(ID_USER_1);
-        user1.setProvider(PROVIDER_USER_1);
+        user1.setUserId(ID_USER_1, PROVIDER_USER_1);
         user1.setProperty(FinanceUser.USER_LAST_BILLING_TIME, String.valueOf(INITIAL_USER_1_LAST_BILLING_TIME));
 
         this.user2 = new FinanceUser(new HashMap<String, String>());
-        user2.setId(ID_USER_2);
-        user2.setProvider(PROVIDER_USER_2);
+        user2.setUserId(ID_USER_2, PROVIDER_USER_2);
         user2.setProperty(FinanceUser.USER_LAST_BILLING_TIME, String.valueOf(INITIAL_USER_2_LAST_BILLING_TIME));
     }
     

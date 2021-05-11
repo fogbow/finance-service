@@ -45,18 +45,15 @@ public class PrePaidFinancePluginTest {
 	@Test
 	public void testManagesUser() throws InvalidParameterException, ModifiedListException, InternalServerErrorException {
         FinanceUser financeUser1 = new FinanceUser();
-        financeUser1.setId(USER_ID_1);
-        financeUser1.setProvider(PROVIDER_USER_1);
+        financeUser1.setUserId(USER_ID_1, PROVIDER_USER_1);
         financeUser1.setFinancePluginName(PrePaidFinancePlugin.PLUGIN_NAME);
 
         FinanceUser financeUser2 = new FinanceUser();
-        financeUser2.setId(USER_ID_2);
-        financeUser2.setProvider(PROVIDER_USER_2);
+        financeUser2.setUserId(USER_ID_2, PROVIDER_USER_2);
         financeUser2.setFinancePluginName(PrePaidFinancePlugin.PLUGIN_NAME);
 
         FinanceUser financeUser3 = new FinanceUser();
-        financeUser3.setId(USER_NOT_MANAGED);
-        financeUser3.setProvider(PROVIDER_USER_NOT_MANAGED);
+        financeUser3.setUserId(USER_NOT_MANAGED, PROVIDER_USER_NOT_MANAGED);
         financeUser3.setFinancePluginName("otherplugin");
 
         this.objectHolder = Mockito.mock(InMemoryFinanceObjectsHolder.class);

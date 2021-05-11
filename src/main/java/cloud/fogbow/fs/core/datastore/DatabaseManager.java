@@ -10,6 +10,7 @@ import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.models.FinancePlan;
 import cloud.fogbow.fs.core.models.FinanceUser;
+import cloud.fogbow.fs.core.models.UserId;
 
 @Component
 public class DatabaseManager {
@@ -28,7 +29,7 @@ public class DatabaseManager {
     }
 	
 	public void removeUser(String userId, String provider) throws InvalidParameterException {
-		FinanceUser user = userRepository.findByIdAndProvider(userId, provider);
+	    FinanceUser user = userRepository.findByUserId(new UserId(userId, provider));
 		userRepository.delete(user);
 	}
 
