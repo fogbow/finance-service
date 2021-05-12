@@ -26,11 +26,13 @@ public class FsPublicKeysHolderTest {
     private static final String ACCS_PORT = "accs_port";
     private static final String RAS_URL = "ras_url";
     private static final String RAS_PORT = "ras_port";
-    private RSAPublicKey publicKey;
+    private RSAPublicKey asPublicKey;
+    private RSAPublicKey accsPublicKey;
+    private RSAPublicKey rasPublicKey;
 
     @Test
     public void testGetAsPublicKey() throws FogbowException {
-        publicKey = Mockito.mock(RSAPublicKey.class);
+        asPublicKey = Mockito.mock(RSAPublicKey.class);
         
         PowerMockito.mockStatic(PublicKeysHolder.class);
         
@@ -42,14 +44,14 @@ public class FsPublicKeysHolderTest {
         BDDMockito.given(PropertiesHolder.getInstance()).willReturn(propertiesHolder);
         
         BDDMockito.given(PublicKeysHolder.getPublicKey(AS_URL, AS_PORT, 
-                cloud.fogbow.as.api.http.request.PublicKey.PUBLIC_KEY_ENDPOINT)).willReturn(publicKey);
+                cloud.fogbow.as.api.http.request.PublicKey.PUBLIC_KEY_ENDPOINT)).willReturn(asPublicKey);
         
-        assertEquals(publicKey, FsPublicKeysHolder.getInstance().getAsPublicKey());
+        assertEquals(asPublicKey, FsPublicKeysHolder.getInstance().getAsPublicKey());
     }
     
     @Test
     public void testGetAccsPublicKey() throws FogbowException {
-        publicKey = Mockito.mock(RSAPublicKey.class);
+        accsPublicKey = Mockito.mock(RSAPublicKey.class);
         
         PowerMockito.mockStatic(PublicKeysHolder.class);
         
@@ -61,14 +63,14 @@ public class FsPublicKeysHolderTest {
         BDDMockito.given(PropertiesHolder.getInstance()).willReturn(propertiesHolder);
         
         BDDMockito.given(PublicKeysHolder.getPublicKey(ACCS_URL, ACCS_PORT, 
-                cloud.fogbow.accs.api.http.request.PublicKey.PUBLIC_KEY_ENDPOINT)).willReturn(publicKey);
+                cloud.fogbow.accs.api.http.request.PublicKey.PUBLIC_KEY_ENDPOINT)).willReturn(accsPublicKey);
         
-        assertEquals(publicKey, FsPublicKeysHolder.getInstance().getAccsPublicKey());
+        assertEquals(accsPublicKey, FsPublicKeysHolder.getInstance().getAccsPublicKey());
     }
     
     @Test
     public void testGetRasPublicKey() throws FogbowException {
-        publicKey = Mockito.mock(RSAPublicKey.class);
+        rasPublicKey = Mockito.mock(RSAPublicKey.class);
         
         PowerMockito.mockStatic(PublicKeysHolder.class);
         
@@ -80,8 +82,8 @@ public class FsPublicKeysHolderTest {
         BDDMockito.given(PropertiesHolder.getInstance()).willReturn(propertiesHolder);
         
         BDDMockito.given(PublicKeysHolder.getPublicKey(RAS_URL, RAS_PORT, 
-                cloud.fogbow.ras.api.http.request.PublicKey.PUBLIC_KEY_ENDPOINT)).willReturn(publicKey);
+                cloud.fogbow.ras.api.http.request.PublicKey.PUBLIC_KEY_ENDPOINT)).willReturn(rasPublicKey);
         
-        assertEquals(publicKey, FsPublicKeysHolder.getInstance().getRasPublicKey());
+        assertEquals(rasPublicKey, FsPublicKeysHolder.getInstance().getRasPublicKey());
     }
 }
