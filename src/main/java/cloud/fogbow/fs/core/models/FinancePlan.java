@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
-import cloud.fogbow.common.exceptions.FatalErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.constants.Messages;
 
@@ -27,7 +26,6 @@ public class FinancePlan {
 	private Map<ResourceItem, Double> plan;
 	private Map<String, String> basePlan;
 	
-	// TODO test
     public FinancePlan(String planName, String planPath) throws InvalidParameterException {
     	Map<String, String> planInfo = getPlanFromFile(planPath);
     	Map<ResourceItem, Double> plan = validatePlanInfo(planInfo);
@@ -43,7 +41,7 @@ public class FinancePlan {
 		this.plan = plan;
 	}
 	
-    private Map<String, String> getPlanFromFile(String planPath) {
+    private Map<String, String> getPlanFromFile(String planPath) throws InvalidParameterException {
         try {
         	Map<String, String> planInfo = new HashMap<String, String>();
         	File file = new File(planPath);
@@ -64,7 +62,7 @@ public class FinancePlan {
             
             return planInfo;
         } catch (FileNotFoundException e) {
-            throw new FatalErrorException(String.format(
+            throw new InvalidParameterException(String.format(
                     Messages.Exception.UNABLE_TO_READ_CONFIGURATION_FILE_S, planPath));
         }
     }

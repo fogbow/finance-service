@@ -10,10 +10,16 @@ import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.BDDMockito;
 import org.mockito.Mockito;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
+import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.models.FinancePlan;
 import cloud.fogbow.fs.core.models.FinanceUser;
@@ -24,6 +30,8 @@ import cloud.fogbow.fs.core.util.ModifiedListException;
 import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedList;
 import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedListFactory;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({PropertiesHolder.class})
 public class InMemoryFinanceObjectsHolderTest {
 
     private static final String PLUGIN_NAME_1 = "plugin1";
@@ -154,10 +162,16 @@ public class InMemoryFinanceObjectsHolderTest {
     public void testGetUserByIdUnknownUser() throws InternalServerErrorException, InvalidParameterException {
         objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
         
-        objectHolder.getUserById("unknownuser", "unknownprovider");
+        objectHolder.getUserById("unknownuser", PROVIDER_ID_1);
     }
     
-    // TODO add test for unknown provider on getUserById
+    // TODO documentation
+    @Test(expected = InvalidParameterException.class)
+    public void testGetUserByIdUnknownProvider() throws InternalServerErrorException, InvalidParameterException {
+        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
+        
+        objectHolder.getUserById(USER_ID_1, "unknownprovider");
+    }
     
     // TODO documentation
     @Test
@@ -289,6 +303,41 @@ public class InMemoryFinanceObjectsHolderTest {
         objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
         
         objectHolder.getFinancePlan("unknownplan");
+    }
+    
+    // TODO documentation
+    @Test
+    public void testGetOrDefaultFinancePlanPlanExists() throws InternalServerErrorException, InvalidParameterException, ModifiedListException {
+        PowerMockito.mockStatic(PropertiesHolder.class);
+        PropertiesHolder propertiesHolder = Mockito.mock(PropertiesHolder.class);
+        Mockito.when(propertiesHolder.getProperty(ConfigurationPropertyKeys.DEFAULT_FINANCE_PLAN_NAME)).thenReturn(PLAN_NAME_1);
+        
+        BDDMockito.given(PropertiesHolder.getInstance()).willReturn(propertiesHolder);
+        
+        
+        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
+        
+        
+        assertEquals(plan2, objectHolder.getOrDefaultFinancePlan(PLAN_NAME_2));
+    }
+    
+    // TODO documentation
+    @Test
+    public void testGetOrDefaultFinancePlanPlanDoesNotExist() throws InternalServerErrorException, InvalidParameterException, ModifiedListException {
+        PowerMockito.mockStatic(PropertiesHolder.class);
+        PropertiesHolder propertiesHolder = Mockito.mock(PropertiesHolder.class);
+        Mockito.when(propertiesHolder.getProperty(ConfigurationPropertyKeys.DEFAULT_FINANCE_PLAN_NAME)).thenReturn(PLAN_NAME_1);
+        
+        BDDMockito.given(PropertiesHolder.getInstance()).willReturn(propertiesHolder);
+        
+        // in this case we need to perform two iterations over the plans list
+        Mockito.when(planSynchronizedList.getNext(Mockito.anyInt())).thenReturn(plan1, plan2, null, plan1, plan2, null);
+        
+        
+        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
+        
+        
+        assertEquals(plan1, objectHolder.getOrDefaultFinancePlan("unknownplan"));
     }
     
     // TODO documentation

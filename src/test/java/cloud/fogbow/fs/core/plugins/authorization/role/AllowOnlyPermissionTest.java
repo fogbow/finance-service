@@ -1,5 +1,6 @@
 package cloud.fogbow.fs.core.plugins.authorization.role;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -20,9 +21,14 @@ import cloud.fogbow.fs.core.plugins.authorization.FsOperation;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({PropertiesHolder.class})
 public class AllowOnlyPermissionTest {
-    private AllowOnlyPermission permission;
-    private Set<OperationType> allowedOperations = getOperationTypeSet(OperationType.ADD_USER, 
+    private static final String PERMISSION_NAME_1 = "permission1";
+    private static final String PERMISSION_NAME_2 = "permission2";
+    private AllowOnlyPermission permission1;
+    private AllowOnlyPermission permission2;
+    private Set<OperationType> allowedOperations1 = getOperationTypeSet(OperationType.ADD_USER, 
                                                                   OperationType.CHANGE_OPTIONS);
+    private Set<OperationType> allowedOperations2 = getOperationTypeSet(OperationType.CREATE_FINANCE_PLAN, 
+            OperationType.GET_FINANCE_STATE);
     private Set<OperationType> noOperation = getOperationTypeSet();
     private Set<OperationType> updatedAllowedOperations = getOperationTypeSet(OperationType.ADD_USER);
     
@@ -31,15 +37,15 @@ public class AllowOnlyPermissionTest {
     // return true. Otherwise, it must return false.
     @Test
     public void testIsAuthorized() throws InvalidParameterException {
-        permission = new AllowOnlyPermission(allowedOperations);
-        checkIsAuthorizedUsesTheCorrectOperations(allowedOperations);
+        permission1 = new AllowOnlyPermission(allowedOperations1);
+        checkIsAuthorizedUsesTheCorrectOperations(allowedOperations1);
     }
     
     // test case: if the list of the allowed operations is empty,
     // the method isAuthorized must always return false.
     @Test
     public void testIsAuthorizedNoAuthorizedOperation() throws InvalidParameterException {
-        permission = new AllowOnlyPermission(noOperation);
+        permission1 = new AllowOnlyPermission(noOperation);
         checkIsAuthorizedUsesTheCorrectOperations(noOperation);
     }
     
@@ -47,11 +53,99 @@ public class AllowOnlyPermissionTest {
     // update the operations used by the permission.
     @Test
     public void testSetOperationTypes() throws InvalidParameterException {
-        permission = new AllowOnlyPermission(allowedOperations);
-        checkIsAuthorizedUsesTheCorrectOperations(allowedOperations);
+        permission1 = new AllowOnlyPermission(allowedOperations1);
+        checkIsAuthorizedUsesTheCorrectOperations(allowedOperations1);
         
-        permission.setOperationTypes(getOperationTypeStringSet(updatedAllowedOperations));
+        permission1.setOperationTypes(getOperationTypeStringSet(updatedAllowedOperations));
         checkIsAuthorizedUsesTheCorrectOperations(updatedAllowedOperations);
+    }
+    
+    // test case: when calling the equals method passing a permission with same name
+    // and same operations, it must return true.
+    @Test
+    public void testEqualsSameNameAndOperations() {
+        permission1 = new AllowOnlyPermission(allowedOperations1);
+        permission1.setName(PERMISSION_NAME_1);
+        
+        permission2 = new AllowOnlyPermission(getOperationTypeSet(OperationType.ADD_USER, 
+                OperationType.CHANGE_OPTIONS));
+        permission2.setName(PERMISSION_NAME_1);
+        
+        assertTrue(permission1.equals(permission2));
+        assertTrue(permission2.equals(permission1));
+    }
+    
+    // test case: when calling the equals method passing a permission with different name
+    // and same operations, it must return false.
+    @Test
+    public void testEqualsDifferentNamesAndSameOperations() {
+        permission1 = new AllowOnlyPermission(allowedOperations1);
+        permission1.setName(PERMISSION_NAME_1);
+        
+        permission2 = new AllowOnlyPermission(getOperationTypeSet(OperationType.ADD_USER, 
+                OperationType.CHANGE_OPTIONS));
+        permission2.setName(PERMISSION_NAME_2);
+        
+        assertFalse(permission1.equals(permission2));
+        assertFalse(permission2.equals(permission1));
+    }
+    
+    // test case: when calling the equals method passing a permission with same name and
+    // different operations, it must return false.
+    @Test
+    public void testEqualsSameNameAndDifferentOperations() {
+        permission1 = new AllowOnlyPermission(allowedOperations1);
+        permission1.setName(PERMISSION_NAME_1);
+        
+        permission2 = new AllowOnlyPermission(allowedOperations2);
+        permission2.setName(PERMISSION_NAME_1);
+        
+        assertFalse(permission1.equals(permission2));
+        assertFalse(permission2.equals(permission1));
+    }
+    
+    // test case: when calling the equals method passing a permission with different name
+    // and different operations, it must return false.
+    @Test
+    public void testEqualsDifferentNamesAndDifferentOperations() {
+        permission1 = new AllowOnlyPermission(allowedOperations1);
+        permission1.setName(PERMISSION_NAME_1);
+        
+        permission2 = new AllowOnlyPermission(allowedOperations2);
+        permission2.setName(PERMISSION_NAME_2);
+        
+        assertFalse(permission1.equals(permission2));
+        assertFalse(permission2.equals(permission1));
+    }
+    
+    // test case: when calling the equals method passing an object which is not an
+    // instance of AllowOnlyPermission, it must return false.
+    @Test
+    public void testEqualsDifferentObjectTypes() {
+        permission1 = new AllowOnlyPermission(allowedOperations1);
+        permission1.setName(PERMISSION_NAME_1);
+        
+        assertFalse(permission1.equals(new Object()));
+    }
+    
+    // test case: when calling the getOperationsTypes method, it must return a Set
+    // containing the names of the operations types used by the permission.
+    @Test
+    public void testGetOperationsTypes() {
+        permission1 = new AllowOnlyPermission(allowedOperations1);
+        permission1.setName(PERMISSION_NAME_1);
+        
+        permission2 = new AllowOnlyPermission(noOperation);
+        permission2.setName(PERMISSION_NAME_2);
+        
+        Set<String> operationsNames1 = permission1.getOperationsTypes();
+        Set<String> operationsNames2 = permission2.getOperationsTypes();
+
+        assertEquals(2, operationsNames1.size());
+        assertTrue(operationsNames1.contains(OperationType.ADD_USER.getValue()));
+        assertTrue(operationsNames1.contains(OperationType.CHANGE_OPTIONS.getValue()));
+        
+        assertEquals(0, operationsNames2.size());
     }
     
     private void checkIsAuthorizedUsesTheCorrectOperations(Set<OperationType> operations) {
@@ -59,9 +153,9 @@ public class AllowOnlyPermissionTest {
             FsOperation operation = new FsOperation(type);
 
             if (operations.contains(type)) {
-                assertTrue(permission.isAuthorized(operation));
+                assertTrue(permission1.isAuthorized(operation));
             } else {
-                assertFalse(permission.isAuthorized(operation));
+                assertFalse(permission1.isAuthorized(operation));
             }
         }
     }

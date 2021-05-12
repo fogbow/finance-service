@@ -160,7 +160,6 @@ public class MultiConsumerSynchronizedListTest {
     }
     
     // TODO documentation
-    // TODO fix this test
     @Test
     public void testRemoveResetsCurrentIterations() throws InternalServerErrorException, ModifiedListException {
         MultiConsumerSynchronizedList<String> list = new MultiConsumerSynchronizedList<String>();
@@ -173,7 +172,7 @@ public class MultiConsumerSynchronizedListTest {
         String firstItem = list.getNext(consumerId);
         String secondItem = list.getNext(consumerId);
         
-        list.removeItem(ITEM_4);
+        list.removeItem(ITEM_2);
         
         try {
             list.getNext(consumerId);

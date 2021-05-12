@@ -105,6 +105,7 @@ public class RoleAuthorizationPluginTest {
         this.plugin = new RoleAuthorizationPlugin(this.policyInstantiator);
     }
 
+    // TODO documentation
     @Test
     public void constructorReadsConfigurationCorrectly() throws ConfigurationErrorException {
         Mockito.verify(this.rolePolicy, Mockito.atLeastOnce()).validate();
@@ -112,7 +113,18 @@ public class RoleAuthorizationPluginTest {
         Mockito.verify(propertiesHolder, Mockito.times(1)).getProperty(ConfigurationPropertyKeys.POLICY_FILE_KEY);
         PowerMockito.verifyStatic(PropertiesHolder.class, Mockito.atLeastOnce());
     }
+    
+    // TODO documentation
+    @Test(expected = ConfigurationErrorException.class)
+    public void constructorThrowsExceptionIfPolicyTypeIsWrong() throws ConfigurationErrorException, WrongPolicyTypeException {
+        this.policyInstantiator = Mockito.mock(PolicyInstantiator.class);
+        Mockito.when(this.policyInstantiator.getRolePolicyInstanceFromFile(policyFilePath)).
+        thenThrow(new WrongPolicyTypeException("", ""));
+        
+        new RoleAuthorizationPlugin(this.policyInstantiator);
+    }
 
+    // TODO documentation
     @Test
     public void testIsAuthorized() throws UnauthorizedRequestException {
         SystemUser user1 = new SystemUser(userId1, userName1, identityProviderId);

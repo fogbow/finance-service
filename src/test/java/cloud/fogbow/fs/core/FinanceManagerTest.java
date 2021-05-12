@@ -397,6 +397,44 @@ public class FinanceManagerTest {
 		Mockito.verify(plugin2, Mockito.times(1)).stopThreads();
 	}
 	
+	// test case: When calling the reset plugins method, it must get
+    // the names of the finance plugins from a PropertiesHolder
+    // instance and call the FinancePluginInstantiator to 
+    // instantiate the finance plugins.
+	@Test
+	public void testResetPlugins() throws FogbowException {
+	    setUpFinancePlugin();
+	    
+	    FinanceManager financeManager = new FinanceManager(financePlugins, objectHolder, financePlanFactory);
+	    
+	    String pluginName3 = "plugin3";
+        String pluginName4 = "plugin4";
+        
+        String pluginString = String.join(FinanceManager.FINANCE_PLUGINS_CLASS_NAMES_SEPARATOR, 
+                pluginName3, pluginName4);
+        
+        PowerMockito.mockStatic(PropertiesHolder.class);
+        PropertiesHolder propertiesHolder = Mockito.mock(PropertiesHolder.class);
+        Mockito.when(propertiesHolder.getProperty(
+                ConfigurationPropertyKeys.FINANCE_PLUGINS_CLASS_NAMES)).thenReturn(pluginString);
+        BDDMockito.given(PropertiesHolder.getInstance()).willReturn(propertiesHolder);
+	    
+        PowerMockito.mockStatic(FinancePluginInstantiator.class);
+        BDDMockito.given(FinancePluginInstantiator.getFinancePlugin(pluginName3, objectHolder)).willReturn(plugin1);
+        BDDMockito.given(FinancePluginInstantiator.getFinancePlugin(pluginName4, objectHolder)).willReturn(plugin2);
+	    
+	    
+	    financeManager.resetPlugins();
+	    
+	    
+	    Mockito.verify(propertiesHolder, Mockito.times(1)).getProperty(ConfigurationPropertyKeys.FINANCE_PLUGINS_CLASS_NAMES);
+        
+        PowerMockito.verifyStatic(FinancePluginInstantiator.class);
+        FinancePluginInstantiator.getFinancePlugin(pluginName3, objectHolder);
+        PowerMockito.verifyStatic(FinancePluginInstantiator.class);
+        FinancePluginInstantiator.getFinancePlugin(pluginName4, objectHolder);
+	}
+	
 	// test case: When calling the createFinancePlan method, it must call the 
 	// FinancePlanFactory to create a new FinancePlan and call the saveFinancePlan
 	// method of the DatabaseManager.

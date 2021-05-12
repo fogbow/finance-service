@@ -29,7 +29,7 @@ public class FinanceManager {
     private FinancePlanFactory financePlanFactory;
 
     public FinanceManager(InMemoryFinanceObjectsHolder objectHolder, FinancePlanFactory financePlanFactory)
-            throws ConfigurationErrorException, InvalidParameterException, InternalServerErrorException {
+            throws ConfigurationErrorException, InternalServerErrorException {
         this.objectHolder = objectHolder;
         this.financePlanFactory = financePlanFactory;
 
@@ -37,7 +37,7 @@ public class FinanceManager {
         createFinancePlugins(objectHolder);
     }
 
-    private void createDefaultPlanIfItDoesNotExist() throws InvalidParameterException, InternalServerErrorException {
+    private void createDefaultPlanIfItDoesNotExist() throws InternalServerErrorException, ConfigurationErrorException {
         String defaultFinancePlanName = PropertiesHolder.getInstance()
                 .getProperty(ConfigurationPropertyKeys.DEFAULT_FINANCE_PLAN_NAME);
         String defaultFinancePlanFilePath = PropertiesHolder.getInstance()
@@ -46,9 +46,18 @@ public class FinanceManager {
         try {
             this.objectHolder.getFinancePlan(defaultFinancePlanName);
         } catch (InvalidParameterException e) {
+            tryToCreateDefaultFinancePlan(defaultFinancePlanName, defaultFinancePlanFilePath);
+        }
+    }
+
+    private void tryToCreateDefaultFinancePlan(String defaultFinancePlanName, String defaultFinancePlanFilePath)
+            throws ConfigurationErrorException {
+        try {
             FinancePlan financePlan = this.financePlanFactory.createFinancePlan(defaultFinancePlanName,
                     defaultFinancePlanFilePath);
             this.objectHolder.registerFinancePlan(financePlan);
+        } catch (InvalidParameterException e) {
+            throw new ConfigurationErrorException(e.getMessage());
         }
     }
 
@@ -107,6 +116,10 @@ public class FinanceManager {
         for (FinancePlugin plugin : financePlugins) {
             plugin.stopThreads();
         }
+    }
+    
+    public void resetPlugins() throws ConfigurationErrorException {
+        createFinancePlugins(objectHolder);
     }
 
     /*

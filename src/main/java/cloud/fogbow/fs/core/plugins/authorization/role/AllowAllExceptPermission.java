@@ -26,17 +26,25 @@ public class AllowAllExceptPermission implements Permission<FsOperation> {
         return !this.notAllowedOperationTypes.contains(operation.getOperationType());
     }
     
-    // TODO test
     @Override
     public boolean equals(Object o) {
-        if (o instanceof AllowAllExceptPermission) {
-            return this.name.equals(((AllowAllExceptPermission) o).name);
+        if (!(o instanceof AllowAllExceptPermission)) {
+            return false;
         }
         
-        return false;
+        AllowAllExceptPermission other = (AllowAllExceptPermission) o;
+        
+        if (!this.name.equals(other.name)) {
+            return false;
+        }
+        
+        if (!this.notAllowedOperationTypes.equals(other.notAllowedOperationTypes)) {
+            return false;
+        }
+        
+        return true;
     }
     
-    // TODO test
     @Override
     public Set<String> getOperationsTypes() {
         HashSet<String> operationsStrings = new HashSet<String>(); 

@@ -321,6 +321,31 @@ public class FinancePlanTest {
 		
 		plan.getItemFinancialValue(unknownItem1);
 	}
+	
+	// test case: When creating a FinancePlan object using a file as data source, 
+    // the constructor must read the plan data from the file, validate the data and
+    // set up the FinancePlan object correctly.
+    @Test
+    public void testConstructorReadPlanFromFile() throws InvalidParameterException {
+        FinancePlan plan = new FinancePlan(PLAN_NAME, "src/test/resources/private/test_plan.txt");
+        
+        ResourceItem computeItem1 = new ComputeItem(COMPUTE_1_VCPU, COMPUTE_1_RAM);
+        ResourceItem computeItem2 = new ComputeItem(COMPUTE_2_VCPU, COMPUTE_2_RAM);
+        ResourceItem volumeItem1 = new VolumeItem(VOLUME_1_SIZE);
+        ResourceItem volumeItem2 = new VolumeItem(VOLUME_2_SIZE);
+
+        assertEquals(COMPUTE_1_VALUE, plan.getItemFinancialValue(computeItem1));
+        assertEquals(COMPUTE_2_VALUE, plan.getItemFinancialValue(computeItem2));
+        assertEquals(VOLUME_1_VALUE, plan.getItemFinancialValue(volumeItem1));
+        assertEquals(VOLUME_2_VALUE, plan.getItemFinancialValue(volumeItem2));
+    }
+    
+    // test case: When creating a FinancePlan object using a file as data source and
+    // the data source file does not exist, the constructor must throw an InvalidParameterException.
+    @Test(expected = InvalidParameterException.class)
+    public void testConstructorDataSourceFileDoesNotExist() throws InvalidParameterException {
+        new FinancePlan(PLAN_NAME, "unknown_file.txt");
+    }
 
 	private void setUpPlanInfo() {
 		setUpPlanInfo(getValidCompute1String(), getValidCompute2String(),

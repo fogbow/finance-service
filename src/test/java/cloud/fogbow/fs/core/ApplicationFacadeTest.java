@@ -17,6 +17,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import cloud.fogbow.as.core.util.AuthenticationUtil;
+import cloud.fogbow.common.constants.FogbowConstants;
 import cloud.fogbow.common.exceptions.ConfigurationErrorException;
 import cloud.fogbow.common.exceptions.FogbowException;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
@@ -35,10 +36,13 @@ import cloud.fogbow.fs.core.util.SynchronizationManager;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({FsPublicKeysHolder.class, AuthenticationUtil.class, 
-    ServiceAsymmetricKeysHolder.class, CryptoUtil.class})
+    ServiceAsymmetricKeysHolder.class, CryptoUtil.class, 
+    AuthorizationPluginInstantiator.class, PropertiesHolder.class})
 public class ApplicationFacadeTest {
 
-	private String adminId = "adminId";
+	private static final String PRIVATE_KEY_FILEPATH_AFTER_RELOAD = "privatekeyfilepathafter";
+    private static final String PUBLIC_KEY_FILEPATH_AFTER_RELOAD = "publickeyfilepathafter";
+    private String adminId = "adminId";
 	private String adminUserName = "adminUserName";
 	private String adminProvider = "adminProvider";
 	private String adminToken = "token";
@@ -713,7 +717,50 @@ public class ApplicationFacadeTest {
         Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
     }
     
-	// TODO add reload test
+    // test case: When calling the reload method, it must stop the running services, 
+    // reset all configuration and key holders and restart the services.
+    @Test
+    public void testReload() throws FogbowException {
+        setUpPublicKeysHolder();
+        setUpAuthentication();
+        setUpAuthorization(OperationType.RELOAD);
+        setUpApplicationFacade();
+        
+        PropertiesHolder propertiesHolderAfterReload = Mockito.mock(PropertiesHolder.class);
+        Mockito.when(propertiesHolderAfterReload.getProperty(FogbowConstants.PUBLIC_KEY_FILE_PATH)).
+                    thenReturn(PUBLIC_KEY_FILEPATH_AFTER_RELOAD);
+        Mockito.when(propertiesHolderAfterReload.getProperty(FogbowConstants.PRIVATE_KEY_FILE_PATH)).
+                    thenReturn(PRIVATE_KEY_FILEPATH_AFTER_RELOAD);
+        
+        PowerMockito.mockStatic(PropertiesHolder.class);
+        BDDMockito.given(PropertiesHolder.getInstance()).willReturn(propertiesHolderAfterReload);
+        
+        PowerMockito.mockStatic(AuthorizationPluginInstantiator.class);
+        PowerMockito.mockStatic(ServiceAsymmetricKeysHolder.class);
+
+        
+        ApplicationFacade.getInstance().reload(adminToken);
+        
+
+        Mockito.verify(financeManager).stopPlugins();
+        Mockito.verify(financeManager).resetPlugins();
+        Mockito.verify(financeManager).startPlugins();
+        Mockito.verify(synchronizationManager).setAsReloading();
+        Mockito.verify(synchronizationManager).finishReloading();
+        Mockito.verify(authorizationPlugin).isAuthorized(systemUser, operation);
+        
+        PowerMockito.verifyStatic(PropertiesHolder.class);
+        PropertiesHolder.reset();
+        
+        PowerMockito.verifyStatic(FsPublicKeysHolder.class);
+        FsPublicKeysHolder.reset();
+        
+        PowerMockito.verifyStatic(ServiceAsymmetricKeysHolder.class);
+        ServiceAsymmetricKeysHolder.reset(PUBLIC_KEY_FILEPATH_AFTER_RELOAD, PRIVATE_KEY_FILEPATH_AFTER_RELOAD);
+        
+        PowerMockito.verifyStatic(AuthorizationPluginInstantiator.class);
+        AuthorizationPluginInstantiator.getAuthorizationPlugin();
+    }
 	
 	private void setUpApplicationFacade() {
 		this.financeManager = Mockito.mock(FinanceManager.class);

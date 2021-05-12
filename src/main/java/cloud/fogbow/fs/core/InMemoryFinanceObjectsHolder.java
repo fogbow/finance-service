@@ -235,11 +235,10 @@ public class InMemoryFinanceObjectsHolder {
         return planToReturn;
     }
     
-    // TODO test
     public FinancePlan getOrDefaultFinancePlan(String planName) throws InternalServerErrorException, InvalidParameterException {
         try {
             return this.getFinancePlan(planName);
-        } catch (InternalServerErrorException e) {
+        } catch (InvalidParameterException e) {
             String defaultFinancePlan = PropertiesHolder.getInstance()
                     .getProperty(ConfigurationPropertyKeys.DEFAULT_FINANCE_PLAN_NAME);
             return this.getFinancePlan(defaultFinancePlan);

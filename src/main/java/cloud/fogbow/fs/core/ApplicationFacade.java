@@ -22,7 +22,6 @@ import cloud.fogbow.fs.api.parameters.User;
 import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.models.OperationType;
 import cloud.fogbow.fs.core.plugins.authorization.FsOperation;
-import cloud.fogbow.fs.core.util.FinancePlanFactory;
 import cloud.fogbow.fs.core.util.SynchronizationManager;
 
 public class ApplicationFacade {
@@ -30,7 +29,6 @@ public class ApplicationFacade {
 	private static Logger LOGGER = Logger.getLogger(ApplicationFacade.class);
 	private static ApplicationFacade instance;
 	private FinanceManager financeManager;
-	private InMemoryFinanceObjectsHolder objectHolder;
 	private AuthorizationPlugin<FsOperation> authorizationPlugin;
 	private SynchronizationManager synchronizationManager;
 	
@@ -52,11 +50,7 @@ public class ApplicationFacade {
 	public void setFinanceManager(FinanceManager financeManager) { 
 		this.financeManager = financeManager;
 	}
-	
-	public void setDatabaseObjectHolder(InMemoryFinanceObjectsHolder objectHolder) {
-	    this.objectHolder = objectHolder;
-	}
-	
+
 	public void setSynchronizationManager(SynchronizationManager synchronizationManager) {
 		this.synchronizationManager = synchronizationManager;
 	}
@@ -210,6 +204,9 @@ public class ApplicationFacade {
 		try {
 			synchronizationManager.waitForRequests();
 	        
+			LOGGER.info(Messages.Log.STOPPING_FINANCE_PLUGINS);
+			this.financeManager.stopPlugins();
+			
 			LOGGER.info(Messages.Log.RELOADING_PROPERTIES_HOLDER);
 			PropertiesHolder.reset();
 			
@@ -225,8 +222,8 @@ public class ApplicationFacade {
 			this.authorizationPlugin = AuthorizationPluginInstantiator.getAuthorizationPlugin();
 
 			LOGGER.info(Messages.Log.RELOADING_FINANCE_PLUGINS);
-			this.financeManager = new FinanceManager(objectHolder, new FinancePlanFactory());
-			financeManager.startPlugins();
+			this.financeManager.resetPlugins();
+			this.financeManager.startPlugins();
 		} finally {
 			synchronizationManager.finishReloading();
 		}

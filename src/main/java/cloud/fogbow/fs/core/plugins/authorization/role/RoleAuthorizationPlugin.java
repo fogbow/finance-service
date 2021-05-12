@@ -1,7 +1,5 @@
 package cloud.fogbow.fs.core.plugins.authorization.role;
 
-import org.apache.log4j.Logger;
-
 import cloud.fogbow.common.exceptions.ConfigurationErrorException;
 import cloud.fogbow.common.exceptions.UnauthorizedRequestException;
 import cloud.fogbow.common.exceptions.WrongPolicyTypeException;
@@ -15,8 +13,6 @@ import cloud.fogbow.fs.core.PropertiesHolder;
 import cloud.fogbow.fs.core.plugins.authorization.FsOperation;
 
 public class RoleAuthorizationPlugin implements AuthorizationPlugin<FsOperation> {
-
-    private static Logger LOGGER = Logger.getLogger(RoleAuthorizationPlugin.class);
     /*
      * The user IDs used in the policy rules must follow this format, a string
      * containing the regular user ID and the provider ID, separated by dot.
@@ -38,7 +34,6 @@ public class RoleAuthorizationPlugin implements AuthorizationPlugin<FsOperation>
         try {
             this.rolePolicy = policyInstantiator.getRolePolicyInstanceFromFile(policyFilePath);
         } catch (WrongPolicyTypeException e) {
-            // TODO test
             throw new ConfigurationErrorException(String.format(Messages.Exception.WRONG_POLICY_TYPE,
                     e.getExpectedType(), e.getCurrentType()));
         }
