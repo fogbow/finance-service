@@ -26,20 +26,20 @@ public class RecordUtils {
 		this.jsonUtils = new JsonUtils();
 	}
 	
-	// TODO test
-	public List<Record> getRecordsFromString(String recordsString) {
+	public List<Record> getRecordsFromString(String recordsString) throws InvalidParameterException {
     	ArrayList<Record> recordList = new ArrayList<Record>();
         ArrayList<LinkedTreeMap<String, Object>> rawRecordsList = 
         		this.jsonUtils.fromJson(recordsString, ArrayList.class);
 
         for (LinkedTreeMap<String, Object> rawRecord : rawRecordsList) {
         	Record record;
+        	String recordType = (String) rawRecord.get(RESOURCE_TYPE_KEY);
         	
-        	switch((String) rawRecord.get(RESOURCE_TYPE_KEY)) {
+        	switch(recordType) {
         		case COMPUTE_RESOURCE: record = getComputeRecord(rawRecord); break;
         		case VOLUME_RESOURCE: record = getVolumeRecord(rawRecord); break;
-        		// TODO treat this
-        		default: record = null;
+        		default: throw new InvalidParameterException(
+        		        String.format(Messages.Exception.INVALID_RECORD_TYPE, recordType));
             }
         	
         	recordList.add(record);
@@ -48,22 +48,27 @@ public class RecordUtils {
         return recordList;
 	}
 
-	private ComputeRecord getComputeRecord(LinkedTreeMap<String, Object> rawRecord) {
+	private ComputeRecord getComputeRecord(LinkedTreeMap<String, Object> rawRecord) throws InvalidParameterException {
 		String jsonRepr = this.jsonUtils.toJson((LinkedTreeMap<String, Object>) rawRecord);
-		return this.jsonUtils.fromJson(jsonRepr, ComputeRecord.class);
+		ComputeRecord computeRecord = this.jsonUtils.fromJson(jsonRepr, ComputeRecord.class);
+		computeRecord.validate();
+		return computeRecord;
 	}
 	
-	private VolumeRecord getVolumeRecord(LinkedTreeMap<String, Object> rawRecord) {
+	private VolumeRecord getVolumeRecord(LinkedTreeMap<String, Object> rawRecord) throws InvalidParameterException {
 		String jsonRepr = this.jsonUtils.toJson((LinkedTreeMap<String, Object>) rawRecord);
-		return this.jsonUtils.fromJson(jsonRepr, VolumeRecord.class);
+		VolumeRecord volumeRecord = this.jsonUtils.fromJson(jsonRepr, VolumeRecord.class);
+		volumeRecord.validate();
+		return volumeRecord;
 	}
-
+	
 	public class ComputeRecord extends Record {
 		private ComputeSpec spec;
 		
 		public ComputeRecord(Long id, String orderId, String resourceType, ComputeSpec spec, String requester, Timestamp startTime,
-				  Timestamp startDate, Timestamp endTime, Timestamp endDate, long duration, OrderState state) {
+				  Timestamp startDate, Timestamp endTime, Timestamp endDate, long duration, OrderState state) throws InvalidParameterException {
 			super(id, orderId, resourceType, requester, startTime, startDate, endTime, endDate, duration, state);
+			this.spec = spec;
 		}
 		
 		@Override
@@ -75,6 +80,13 @@ public class RecordUtils {
 		public void setSpec(OrderSpec orderSpec) {
 			this.spec = (ComputeSpec) orderSpec;
 		}
+
+        public void validate() throws InvalidParameterException {
+            checkRecordPropertyIsNotNull("resourceType", getResourceType());
+            checkRecordPropertyIsNotNull("spec", getSpec());
+            checkRecordPropertyIsNotNull("startTime", getStartTime());
+            checkRecordPropertyIsNotNull("startDate", getStartDate());
+        }
 	}
 	
 	public class VolumeRecord extends Record {
@@ -94,6 +106,13 @@ public class RecordUtils {
 		public void setSpec(OrderSpec orderSpec) {
 			this.spec = (VolumeSpec) orderSpec;
 		}
+
+        public void validate() throws InvalidParameterException {
+            checkRecordPropertyIsNotNull("resourceType", getResourceType());
+            checkRecordPropertyIsNotNull("spec", getSpec());
+            checkRecordPropertyIsNotNull("startTime", getStartTime());
+            checkRecordPropertyIsNotNull("startDate", getStartDate());
+        }
 	}
 	
    public Double getTimeFromRecord(Record record, Long paymentStartTime, Long paymentEndTime) {

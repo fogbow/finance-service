@@ -3,6 +3,9 @@ package cloud.fogbow.fs.core.util.accounting;
 import java.sql.Timestamp;
 import java.util.Objects;
 
+import cloud.fogbow.common.exceptions.InvalidParameterException;
+import cloud.fogbow.fs.constants.Messages;
+
 public abstract class Record {
 	private Long id;
 	private String orderId;
@@ -97,6 +100,14 @@ public abstract class Record {
 	public Timestamp getEndDate() {
 		return endDate;
 	}
+	
+    protected void checkRecordPropertyIsNotNull(String propertyName, Object o) 
+            throws InvalidParameterException {
+        if (o == null) {
+            throw new InvalidParameterException(
+                    String.format(Messages.Exception.INVALID_RECORD_PROPERTY, propertyName));
+        }
+    }
 
 	@Override
 	public boolean equals(Object o) {

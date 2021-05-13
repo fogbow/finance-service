@@ -24,6 +24,7 @@ import cloud.fogbow.common.constants.FogbowConstants;
 import cloud.fogbow.common.constants.HttpMethod;
 import cloud.fogbow.common.exceptions.FogbowException;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
+import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.common.exceptions.UnauthenticatedUserException;
 import cloud.fogbow.common.exceptions.UnavailableProviderException;
 import cloud.fogbow.common.util.CryptoUtil;
@@ -182,7 +183,7 @@ public class AccountingServiceClientTest {
 		this.responseVolumeRecords.add(recordVolume);
 	}
 	
-	private void setUpResponse(int returnCodeComputeRequest, int returnCodeVolumeRequest) {
+	private void setUpResponse(int returnCodeComputeRequest, int returnCodeVolumeRequest) throws InvalidParameterException {
 		this.recordUtils = Mockito.mock(RecordUtils.class);
 		
 		Mockito.when(this.recordUtils.getRecordsFromString(responseComputeContent)).thenReturn(responseComputeRecords);

@@ -22,6 +22,7 @@ import cloud.fogbow.common.constants.HttpMethod;
 import cloud.fogbow.common.exceptions.ConfigurationErrorException;
 import cloud.fogbow.common.exceptions.FogbowException;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
+import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.common.exceptions.UnavailableProviderException;
 import cloud.fogbow.common.util.CryptoUtil;
 import cloud.fogbow.common.util.ServiceAsymmetricKeysHolder;
@@ -142,7 +143,7 @@ public class AccountingServiceClient {
         return HttpRequestClient.doGenericRequest(HttpMethod.GET, endpoint, headers, body);
     }
     
-    private List<Record> getRecordsFromResponse(HttpResponse response) {
+    private List<Record> getRecordsFromResponse(HttpResponse response) throws InvalidParameterException {
     	return recordUtil.getRecordsFromString(response.getContent());
     }
 }
