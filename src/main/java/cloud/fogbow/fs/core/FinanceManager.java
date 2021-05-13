@@ -19,6 +19,7 @@ import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
 import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.models.FinancePlan;
 import cloud.fogbow.fs.core.plugins.FinancePlugin;
+import cloud.fogbow.fs.core.plugins.FinancePluginInstantiator;
 import cloud.fogbow.fs.core.util.FinancePlanFactory;
 
 public class FinanceManager {

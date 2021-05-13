@@ -29,6 +29,7 @@ import cloud.fogbow.fs.api.parameters.User;
 import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
 import cloud.fogbow.fs.core.models.FinancePlan;
 import cloud.fogbow.fs.core.plugins.FinancePlugin;
+import cloud.fogbow.fs.core.plugins.FinancePluginInstantiator;
 import cloud.fogbow.fs.core.util.FinancePlanFactory;
 import cloud.fogbow.ras.core.models.RasOperation;
 
