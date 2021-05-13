@@ -36,6 +36,13 @@ import cloud.fogbow.fs.core.util.accounting.Record;
 import cloud.fogbow.fs.core.util.accounting.RecordUtils;
 
 public class AccountingServiceClient {
+    // This string represents the date format
+    // expected by the AccountingService, as
+    // specified in the RecordService class. The format
+    // is specified through a private field, which
+    // I think should be made public to possible
+    // clients of ACCS' API.
+    static final String SIMPLE_DATE_FORMAT = "yyyy-MM-dd";
 	private static final String COMPUTE_RESOURCE = "compute";
 	private static final String VOLUME_RESOURCE = "volume";
 	private static final List<String> RESOURCE_TYPES = Arrays.asList(COMPUTE_RESOURCE, VOLUME_RESOURCE);
@@ -50,6 +57,7 @@ public class AccountingServiceClient {
 	private String localProvider;
 	private String publicKeyString;
 	private RecordUtils recordUtil;
+	private TimeUtils timeUtils;
 	
 	public AccountingServiceClient() throws ConfigurationErrorException {
 		this(new AuthenticationServiceClient(),
@@ -58,12 +66,13 @@ public class AccountingServiceClient {
 				PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.MANAGER_PASSWORD_KEY),
 				PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.ACCS_URL_KEY),
 				PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.ACCS_PORT_KEY),
-				new RecordUtils());
+				new RecordUtils(), new TimeUtils());
 	}
 	
 	public AccountingServiceClient(AuthenticationServiceClient authenticationServiceClient, 
 			String localProvider, String managerUserName, String managerPassword, 
-			String accountingServiceAddress, String accountingServicePort, RecordUtils recordUtil) 
+			String accountingServiceAddress, String accountingServicePort, RecordUtils recordUtil, 
+			TimeUtils timeUtils) 
 					throws ConfigurationErrorException {
 		this.authenticationServiceClient = authenticationServiceClient;
 		this.localProvider = localProvider;
@@ -72,6 +81,7 @@ public class AccountingServiceClient {
 		this.accountingServiceAddress = accountingServiceAddress;
 		this.accountingServicePort = accountingServicePort;
 		this.recordUtil = recordUtil;
+		this.timeUtils = timeUtils;
 		
 		try {
 			this.publicKeyString = CryptoUtil.toBase64(ServiceAsymmetricKeysHolder.getInstance().getPublicKey());
@@ -82,32 +92,36 @@ public class AccountingServiceClient {
 		}
 	}
 	
-	public List<Record> getUserRecords(String userId, String requester, String startDate, String endDate) throws FogbowException {
-		List<Record> userRecords = new ArrayList<Record>();
-		
-		try {
-			// TODO We should not need to get this token in all the calls to getUserRecords
-			// I think we should keep the value and reacquire the token after a certain time
-			String token = authenticationServiceClient.getToken(publicKeyString, managerUserName, managerPassword);
-			Key keyToDecrypt = ServiceAsymmetricKeysHolder.getInstance().getPrivateKey();
-			Key keyToEncrypt = FsPublicKeysHolder.getInstance().getAccsPublicKey(); 
-			
-			String newToken = TokenProtector.rewrap(keyToDecrypt, keyToEncrypt, token, FogbowConstants.TOKEN_STRING_SEPARATOR);
+    public List<Record> getUserRecords(String userId, String requester, long startTime, long endTime) throws FogbowException {
+        List<Record> userRecords = new ArrayList<Record>();
 
-			// TODO This implementation does not look very efficient. We should
-			// try to find another solution, maybe adding a more powerful 
-			// API method to ACCS
-			for (String resourceType : RESOURCE_TYPES) {
-				HttpResponse response = doRequestAndCheckStatus(newToken, userId, requester, localProvider, resourceType, startDate, endDate);
-				userRecords.addAll(getRecordsFromResponse(response));
-			}
-		} catch (URISyntaxException e) {
-			throw new FogbowException(e.getMessage());
-		}
-		
-		return userRecords;
-	}
-	
+        try {
+            String requestStartDate = this.timeUtils.toDate(SIMPLE_DATE_FORMAT, startTime);
+            String requestEndDate = this.timeUtils.toDate(SIMPLE_DATE_FORMAT, endTime);
+            
+            // TODO We should not need to get this token in all the calls to getUserRecords
+            // I think we should keep the value and reacquire the token after a certain time
+            String token = authenticationServiceClient.getToken(publicKeyString, managerUserName, managerPassword);
+            Key keyToDecrypt = ServiceAsymmetricKeysHolder.getInstance().getPrivateKey();
+            Key keyToEncrypt = FsPublicKeysHolder.getInstance().getAccsPublicKey(); 
+            
+            String newToken = TokenProtector.rewrap(keyToDecrypt, keyToEncrypt, token, FogbowConstants.TOKEN_STRING_SEPARATOR);
+
+            // TODO This implementation does not look very efficient. We should
+            // try to find another solution, maybe adding a more powerful 
+            // API method to ACCS
+            for (String resourceType : RESOURCE_TYPES) {
+                HttpResponse response = doRequestAndCheckStatus(newToken, userId, requester, localProvider, resourceType, 
+                        requestStartDate, requestEndDate);
+                userRecords.addAll(getRecordsFromResponse(response));
+            }
+        } catch (URISyntaxException e) {
+            throw new FogbowException(e.getMessage());
+        }
+        
+        return userRecords;
+    }
+
     private HttpResponse doRequestAndCheckStatus(String token, String userId, String requester, 
     		String localProvider, String resourceType, String startDate, String endDate) throws URISyntaxException, FogbowException {
         String endpoint = getAccountingEndpoint(cloud.fogbow.accs.api.http.request.ResourceUsage.USAGE_ENDPOINT, 

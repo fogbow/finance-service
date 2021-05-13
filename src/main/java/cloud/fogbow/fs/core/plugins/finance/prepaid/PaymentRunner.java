@@ -19,13 +19,6 @@ import cloud.fogbow.fs.core.util.accounting.Record;
 
 public class PaymentRunner extends StoppableRunner {
 	private static Logger LOGGER = Logger.getLogger(PaymentRunner.class);
-	// This string represents the date format
-	// expected by the AccountingService, as
-	// specified in the RecordService class. The format
-	// is specified through a private field, which
-	// I think should be made public to possible
-	// clients of ACCS' API.
-	static final String SIMPLE_DATE_FORMAT = "yyyy-MM-dd";
 	private InMemoryFinanceObjectsHolder objectHolder;
 	private PaymentManager paymentManager;
 	private AccountingServiceClient accountingServiceClient;
@@ -98,14 +91,9 @@ public class PaymentRunner extends StoppableRunner {
         }
     }
 
-    private List<Record> acquireUsageData(FinanceUser user, long billingTime, long lastBillingTime) throws FogbowException {
-        // Maybe move this conversion to ACCSClient
-        String invoiceStartDate = this.timeUtils.toDate(SIMPLE_DATE_FORMAT, lastBillingTime);
-        String invoiceEndDate = this.timeUtils.toDate(SIMPLE_DATE_FORMAT, billingTime);
-        
-        List<Record> userRecords = this.accountingServiceClient.getUserRecords(user.getId(),
-                user.getProvider(), invoiceStartDate, invoiceEndDate);
-        
-        return userRecords;
+    private List<Record> acquireUsageData(FinanceUser user, long billingTime, long lastBillingTime) 
+            throws FogbowException {
+        return this.accountingServiceClient.getUserRecords(user.getId(),
+                user.getProvider(), lastBillingTime, billingTime);
     }
 }

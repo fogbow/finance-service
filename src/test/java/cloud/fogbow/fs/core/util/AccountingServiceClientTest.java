@@ -53,6 +53,8 @@ public class AccountingServiceClientTest {
 	private String rewrapAdminToken = "rewrapAdminToken";
 
 	// records fields
+	private long startTime = 100;
+	private long endTime = 200;
 	private String userId = "user";
 	private String requester = "requester";
 	private String requestStartDate = "01-01-1970";
@@ -77,6 +79,7 @@ public class AccountingServiceClientTest {
 	private String responseVolumeContent = "responseVolumeContent";
 	private int successCode = 200;
 	private int errorCode = 500;
+    private TimeUtils timeUtils;
 
 	// test case: When calling the method getUserRecords, it must set up 
 	// one request for each resource type correctly and return the correct 
@@ -91,9 +94,9 @@ public class AccountingServiceClientTest {
 		
 		AccountingServiceClient accsClient = new AccountingServiceClient(authenticationServiceClient, 
 				localProvider, managerUserName, managerPassword, 
-				accountingServiceAddress, accountingServicePort, recordUtils);
+				accountingServiceAddress, accountingServicePort, recordUtils, timeUtils);
 
-		List<Record> userRecords = accsClient.getUserRecords(userId, requester, requestStartDate, requestEndDate);
+		List<Record> userRecords = accsClient.getUserRecords(userId, requester, startTime, endTime);
 		
 		assertEquals(3, userRecords.size());
 		assertTrue(userRecords.contains(recordCompute1));
@@ -113,9 +116,9 @@ public class AccountingServiceClientTest {
 		
 		AccountingServiceClient accsClient = new AccountingServiceClient(authenticationServiceClient, 
 				localProvider, managerUserName, managerPassword, 
-				accountingServiceAddress, accountingServicePort, recordUtils);
+				accountingServiceAddress, accountingServicePort, recordUtils, timeUtils);
 
-		accsClient.getUserRecords(userId, requester, requestStartDate, requestEndDate);
+		accsClient.getUserRecords(userId, requester, startTime, endTime);
 	}
 	
 	// test case: When calling the method getUserRecords and the return code
@@ -130,9 +133,9 @@ public class AccountingServiceClientTest {
 		
 		AccountingServiceClient accsClient = new AccountingServiceClient(authenticationServiceClient, 
 				localProvider, managerUserName, managerPassword, 
-				accountingServiceAddress, accountingServicePort, recordUtils);
+				accountingServiceAddress, accountingServicePort, recordUtils, timeUtils);
 
-		accsClient.getUserRecords(userId, requester, requestStartDate, requestEndDate);
+		accsClient.getUserRecords(userId, requester, startTime, endTime);
 	}
 
 	private void setUpKeys() throws InternalServerErrorException, FogbowException, UnauthenticatedUserException,
@@ -184,6 +187,13 @@ public class AccountingServiceClientTest {
 	}
 	
 	private void setUpResponse(int returnCodeComputeRequest, int returnCodeVolumeRequest) throws InvalidParameterException {
+	    this.timeUtils = Mockito.mock(TimeUtils.class);
+	    
+	    Mockito.when(this.timeUtils.toDate(AccountingServiceClient.SIMPLE_DATE_FORMAT, startTime)).
+	            thenReturn(requestStartDate);
+	    Mockito.when(this.timeUtils.toDate(AccountingServiceClient.SIMPLE_DATE_FORMAT, endTime)).
+	            thenReturn(requestEndDate);
+	    
 		this.recordUtils = Mockito.mock(RecordUtils.class);
 		
 		Mockito.when(this.recordUtils.getRecordsFromString(responseComputeContent)).thenReturn(responseComputeRecords);

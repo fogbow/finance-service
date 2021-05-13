@@ -1,8 +1,5 @@
 package cloud.fogbow.fs.core.plugins.finance.postpaid;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -327,7 +324,7 @@ public class PaymentRunnerTest {
 		
 		this.accountingServiceClient = Mockito.mock(AccountingServiceClient.class);
 		Mockito.doReturn(userRecords).when(accountingServiceClient).getUserRecords(Mockito.anyString(), Mockito.anyString(), 
-				Mockito.anyString(), Mockito.anyString());
+				Mockito.anyLong(), Mockito.anyLong());
 	}
 	
 	private void setUpErrorAccounting() throws FogbowException {
@@ -340,15 +337,11 @@ public class PaymentRunnerTest {
 		userRecords.add(record1);
 		userRecords.add(record2);
 		
-		TimeUtils timeUtils = new TimeUtils();
-		
 		this.accountingServiceClient = Mockito.mock(AccountingServiceClient.class);
-		Mockito.doThrow(FogbowException.class).when(accountingServiceClient).getUserRecords(ID_USER_1, 
-				PROVIDER_USER_1, timeUtils.toDate(PaymentRunner.SIMPLE_DATE_FORMAT, INITIAL_USER_1_LAST_BILLING_TIME), 
-						timeUtils.toDate(PaymentRunner.SIMPLE_DATE_FORMAT, timeValues.get(0)));
-		
-		Mockito.doReturn(userRecords).when(accountingServiceClient).getUserRecords(ID_USER_2, 
-				PROVIDER_USER_2, timeUtils.toDate(PaymentRunner.SIMPLE_DATE_FORMAT, INITIAL_USER_2_LAST_BILLING_TIME), 
-				timeUtils.toDate(PaymentRunner.SIMPLE_DATE_FORMAT, timeValues.get(1)));
+
+        Mockito.doThrow(FogbowException.class).when(accountingServiceClient).getUserRecords(ID_USER_1, 
+                PROVIDER_USER_1, INITIAL_USER_1_LAST_BILLING_TIME, timeValues.get(0));
+        Mockito.doReturn(userRecords).when(accountingServiceClient).getUserRecords(ID_USER_2, PROVIDER_USER_2,
+                INITIAL_USER_2_LAST_BILLING_TIME, timeValues.get(1));
 	}
 }

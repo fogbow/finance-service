@@ -4,8 +4,6 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import com.google.common.annotations.VisibleForTesting;
-
 import cloud.fogbow.common.exceptions.FogbowException;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.fs.constants.Messages;
@@ -21,14 +19,6 @@ import cloud.fogbow.fs.core.util.accounting.Record;
 
 public class PaymentRunner extends StoppableRunner {
 	private static Logger LOGGER = Logger.getLogger(PaymentRunner.class);
-	// This string represents the date format 
-	// expected by the AccountingService, as
-	// specified in the RecordService class. The format
-	// is specified through a private field, which 
-	// I think should be made public to possible
-	// clients of ACCS' API.
-	@VisibleForTesting
-	static final String SIMPLE_DATE_FORMAT = "yyyy-MM-dd";
     /**
      * The key to use to indicate the amount of time to 
      * wait between consecutive billing processes.
@@ -114,14 +104,8 @@ public class PaymentRunner extends StoppableRunner {
     }
 
     private List<Record> acquireUsageData(FinanceUser user, long billingTime, long lastBillingTime) throws FogbowException {
-        // Maybe move this conversion to ACCSClient
-        String invoiceStartDate = this.timeUtils.toDate(SIMPLE_DATE_FORMAT, lastBillingTime);
-        String invoiceEndDate = this.timeUtils.toDate(SIMPLE_DATE_FORMAT, billingTime);
-        // get records
-        List<Record> userRecords = this.accountingServiceClient.getUserRecords(user.getId(), 
-                user.getProvider(), invoiceStartDate, invoiceEndDate);
-        
-        return userRecords;
+        return this.accountingServiceClient.getUserRecords(user.getId(),
+                user.getProvider(), lastBillingTime, billingTime);
     }
 
 	private boolean isBillingTime(long billingTime, long lastBillingTime, long billingInterval) {
