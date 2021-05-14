@@ -52,7 +52,7 @@ public class FinanceManager {
     }
 
     private void tryToCreateDefaultFinancePlan(String defaultFinancePlanName, String defaultFinancePlanFilePath)
-            throws ConfigurationErrorException {
+            throws ConfigurationErrorException, InternalServerErrorException {
         try {
             FinancePlan financePlan = this.financePlanFactory.createFinancePlan(defaultFinancePlanName,
                     defaultFinancePlanFilePath);
@@ -176,7 +176,8 @@ public class FinanceManager {
      * Plan management
      */
 
-    public void createFinancePlan(String planName, Map<String, String> planInfo) throws InvalidParameterException {
+    public void createFinancePlan(String planName, Map<String, String> planInfo) throws InvalidParameterException, 
+            InternalServerErrorException {
         FinancePlan financePlan = this.financePlanFactory.createFinancePlan(planName, planInfo);
         this.objectHolder.registerFinancePlan(financePlan);
     }

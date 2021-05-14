@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -47,6 +48,7 @@ public class InMemoryFinanceObjectsHolderTest {
     private static final String INVOICE_ID_3 = "invoiceId3";
     private static final String PLAN_NAME_1 = "plan1";
     private static final String PLAN_NAME_2 = "plan2";
+    private static final String NEW_PLAN_NAME_1 = "newplan1";
     
     private DatabaseManager databaseManager;
     private MultiConsumerSynchronizedListFactory listFactory;
@@ -105,6 +107,15 @@ public class InMemoryFinanceObjectsHolderTest {
         
         Mockito.verify(userSynchronizedList1, Mockito.times(2)).addItem(Mockito.any(FinanceUser.class));
         Mockito.verify(databaseManager).saveUser(Mockito.any(FinanceUser.class));
+    }
+    
+    // TODO documentation
+    @Test(expected = InvalidParameterException.class)
+    public void cannotRegisterUserWithAlreadyUsedUserIdAndProvider() throws InternalServerErrorException, 
+            InvalidParameterException {
+        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
+
+        objectHolder.registerUser(USER_ID_1, PROVIDER_ID_1, PLUGIN_NAME_1, rulesPlan1);
     }
     
     // TODO documentation
@@ -236,7 +247,8 @@ public class InMemoryFinanceObjectsHolderTest {
     // TODO documentation
     @Test
     public void testRegisterFinancePlan() throws InvalidParameterException, InternalServerErrorException {
-        FinancePlan newFinancePlan = Mockito.mock(FinancePlan.class); 
+        FinancePlan newFinancePlan = Mockito.mock(FinancePlan.class);
+        Mockito.when(newFinancePlan.getName()).thenReturn(NEW_PLAN_NAME_1);
         
         objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
         
@@ -244,6 +256,22 @@ public class InMemoryFinanceObjectsHolderTest {
         
         Mockito.verify(planSynchronizedList).addItem(newFinancePlan);
         Mockito.verify(databaseManager).saveFinancePlan(newFinancePlan);
+    }
+
+    // TODO documentation
+    @Test
+    public void testCannotRegisterFinancePlanWithAlreadyUsedName() throws InternalServerErrorException, InvalidParameterException {
+        FinancePlan newFinancePlan1 = Mockito.mock(FinancePlan.class);
+        Mockito.when(newFinancePlan1.getName()).thenReturn(PLAN_NAME_1);
+
+        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
+        
+        try {
+            objectHolder.registerFinancePlan(newFinancePlan1);
+            Assert.fail("Expected to throw Exception.");
+        } catch (InvalidParameterException e) {
+            
+        }
     }
     
     // TODO documentation

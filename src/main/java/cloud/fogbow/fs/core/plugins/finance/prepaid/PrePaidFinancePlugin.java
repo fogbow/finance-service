@@ -140,7 +140,7 @@ public class PrePaidFinancePlugin implements FinancePlugin {
 	}
 
 	@Override
-	public void addUser(String userId, String provider, Map<String, String> financeOptions) throws InternalServerErrorException {
+	public void addUser(String userId, String provider, Map<String, String> financeOptions) throws InternalServerErrorException, InvalidParameterException {
         this.objectHolder.registerUser(userId, provider, PLUGIN_NAME, financeOptions);
 	}
 

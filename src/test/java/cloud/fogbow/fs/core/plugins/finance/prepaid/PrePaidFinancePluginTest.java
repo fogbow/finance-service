@@ -124,7 +124,7 @@ public class PrePaidFinancePluginTest {
 	// to create the user, create a UserCredits instance for the new user and 
 	// save the user credits using the DatabaseManager.
 	@Test
-	public void testAddUser() throws InternalServerErrorException {
+	public void testAddUser() throws InternalServerErrorException, InvalidParameterException {
 	    this.userCredits = Mockito.mock(UserCredits.class);
 	    this.objectHolder = Mockito.mock(InMemoryFinanceObjectsHolder.class);
 	    

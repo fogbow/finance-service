@@ -24,14 +24,14 @@ public class InMemoryFinanceObjectsHolder {
     private MultiConsumerSynchronizedListFactory listFactory;
     private Map<String, MultiConsumerSynchronizedList<FinanceUser>> usersByPlugin;
     private MultiConsumerSynchronizedList<FinancePlan> financePlans;
-    
+
     public InMemoryFinanceObjectsHolder(DatabaseManager databaseManager) throws InternalServerErrorException {
-        this(databaseManager, new MultiConsumerSynchronizedListFactory(), 
-                new UserCreditsFactory());
+        this(databaseManager, new MultiConsumerSynchronizedListFactory(), new UserCreditsFactory());
     }
-    
-    public InMemoryFinanceObjectsHolder(DatabaseManager databaseManager, 
-            MultiConsumerSynchronizedListFactory listFactory, UserCreditsFactory userCreditsFactory) throws InternalServerErrorException {
+
+    public InMemoryFinanceObjectsHolder(DatabaseManager databaseManager,
+            MultiConsumerSynchronizedListFactory listFactory, UserCreditsFactory userCreditsFactory)
+            throws InternalServerErrorException {
         this.userCreditsFactory = userCreditsFactory;
         this.databaseManager = databaseManager;
         this.listFactory = listFactory;
@@ -39,15 +39,15 @@ public class InMemoryFinanceObjectsHolder {
         // read users data
         List<FinanceUser> databaseUsers = this.databaseManager.getRegisteredUsers();
         usersByPlugin = new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
-        
+
         for (FinanceUser user : databaseUsers) {
             addUserByPlugin(user);
         }
-        
+
         // read finance plans data
         List<FinancePlan> databaseFinancePlans = this.databaseManager.getRegisteredFinancePlans();
         financePlans = listFactory.getList();
-        
+
         for (FinancePlan plan : databaseFinancePlans) {
             financePlans.addItem(plan);
         }
@@ -59,65 +59,79 @@ public class InMemoryFinanceObjectsHolder {
      * 
      */
 
-    public void registerUser(String userId, String provider, String pluginName, Map<String, String> financeOptions) throws InternalServerErrorException {
-        // FIXME must check if the user exists
-        FinanceUser user = new FinanceUser(financeOptions);
+    public void registerUser(String userId, String provider, String pluginName, Map<String, String> financeOptions)
+            throws InternalServerErrorException, InvalidParameterException {
+        checkIfUserExists(userId, provider);
 
+        FinanceUser user = new FinanceUser(financeOptions);
         user.setUserId(userId, provider);
         user.setFinancePluginName(pluginName);
         user.setCredits(userCreditsFactory.getUserCredits(userId, provider));
         user.setInvoices(new ArrayList<Invoice>());
-        
+
         addUserByPlugin(user);
-        
+
         this.databaseManager.saveUser(user);
     }
-    
+
+    private void checkIfUserExists(String userId, String provider) throws InternalServerErrorException, 
+            InvalidParameterException {
+        try {
+            getUserById(userId, provider);
+        } catch (InvalidParameterException e) {
+            return;
+        }
+        
+        throw new InvalidParameterException(String.format(Messages.Exception.USER_ALREADY_EXISTS, provider, userId));
+    }
+
     private void addUserByPlugin(FinanceUser user) throws InternalServerErrorException {
         String pluginName = user.getFinancePluginName();
-        
+
         if (!usersByPlugin.containsKey(pluginName)) {
             usersByPlugin.put(pluginName, this.listFactory.getList());
         }
-        
+
         MultiConsumerSynchronizedList<FinanceUser> pluginUsers = usersByPlugin.get(pluginName);
         pluginUsers.addItem(user);
     }
-    
+
     public void saveUser(FinanceUser user) throws InvalidParameterException, InternalServerErrorException {
         getUserById(user.getId(), user.getProvider());
-        
-        synchronized(user) {
+
+        synchronized (user) {
             this.databaseManager.saveUser(user);
         }
     }
-    
-    public void removeUser(String userId, String provider) throws InvalidParameterException, InternalServerErrorException {
+
+    public void removeUser(String userId, String provider)
+            throws InvalidParameterException, InternalServerErrorException {
         FinanceUser userToRemove = getUserById(userId, provider);
-        
-        synchronized(userToRemove) {
+
+        synchronized (userToRemove) {
             removeUserByPlugin(userToRemove);
             this.databaseManager.removeUser(userId, provider);
         }
     }
-    
+
     private void removeUserByPlugin(FinanceUser user) throws InternalServerErrorException {
         MultiConsumerSynchronizedList<FinanceUser> pluginUsers = usersByPlugin.get(user.getFinancePluginName());
         pluginUsers.removeItem(user);
     }
-    
-    public FinanceUser getUserById(String id, String provider) throws InternalServerErrorException, InvalidParameterException {
+
+    public FinanceUser getUserById(String id, String provider)
+            throws InternalServerErrorException, InvalidParameterException {
         FinanceUser userToReturn = null;
-        
+
         for (String pluginName : usersByPlugin.keySet()) {
             userToReturn = getUserByIdAndPlugin(id, provider, pluginName);
-            
+
             if (userToReturn != null) {
                 return userToReturn;
             }
         }
-        
-        throw new InvalidParameterException(String.format(Messages.Exception.UNABLE_TO_FIND_USER, id, provider)); 
+
+        throw new InvalidParameterException(String.format(Messages.Exception.UNABLE_TO_FIND_USER, id, provider));
     }
 
     private FinanceUser getUserByIdAndPlugin(String id, String provider, String pluginName)
@@ -125,7 +139,7 @@ public class InMemoryFinanceObjectsHolder {
         MultiConsumerSynchronizedList<FinanceUser> users = usersByPlugin.get(pluginName);
         Integer consumerId = users.startIterating();
         FinanceUser userToReturn = null;
-        
+
         while (true) {
             try {
                 userToReturn = getUserFromList(id, provider, users, consumerId);
@@ -139,7 +153,7 @@ public class InMemoryFinanceObjectsHolder {
                 throw e;
             }
         }
-        
+
         return userToReturn;
     }
 
@@ -147,7 +161,7 @@ public class InMemoryFinanceObjectsHolder {
             Integer consumerId) throws ModifiedListException, InternalServerErrorException {
         FinanceUser item = users.getNext(consumerId);
         FinanceUser userToReturn = null;
-        
+
         while (item != null) {
             if (item.getId().equals(id) && item.getProvider().equals(provider)) {
                 userToReturn = item;
@@ -156,10 +170,10 @@ public class InMemoryFinanceObjectsHolder {
 
             item = users.getNext(consumerId);
         }
-        
+
         return userToReturn;
     }
-    
+
     public MultiConsumerSynchronizedList<FinanceUser> getRegisteredUsersByPaymentType(String pluginName) {
         if (this.usersByPlugin.containsKey(pluginName)) {
             return this.usersByPlugin.get(pluginName);
@@ -168,14 +182,15 @@ public class InMemoryFinanceObjectsHolder {
         }
     }
 
-    public void changeOptions(String userId, String provider, Map<String, String> financeOptions) throws InvalidParameterException, InternalServerErrorException {
+    public void changeOptions(String userId, String provider, Map<String, String> financeOptions)
+            throws InvalidParameterException, InternalServerErrorException {
         FinanceUser user = getUserById(userId, provider);
-        
-        synchronized(user) {
+
+        synchronized (user) {
             for (String option : financeOptions.keySet()) {
                 user.setProperty(option, financeOptions.get(option));
             }
-            
+
             this.databaseManager.saveUser(user);
         }
     }
@@ -185,13 +200,23 @@ public class InMemoryFinanceObjectsHolder {
      * FinancePlans methods
      * 
      */
-    
-    public void registerFinancePlan(FinancePlan financePlan) {
-        // FIXME must check if the plan exists
+
+    public void registerFinancePlan(FinancePlan financePlan) throws InternalServerErrorException, InvalidParameterException {
+        checkIfPlanExists(financePlan.getName());
         this.financePlans.addItem(financePlan);
         this.databaseManager.saveFinancePlan(financePlan);
     }
-    
+
+    private void checkIfPlanExists(String name) throws InternalServerErrorException, InvalidParameterException {
+        try {
+            getFinancePlan(name);
+        } catch (InvalidParameterException e) {
+            return;
+        }
+        
+        throw new InvalidParameterException(String.format(Messages.Exception.FINANCE_PLAN_ALREADY_EXISTS, name));
+    }
+
     public void saveFinancePlan(FinancePlan financePlan) {
         this.databaseManager.saveFinancePlan(financePlan);
     }
@@ -199,7 +224,7 @@ public class InMemoryFinanceObjectsHolder {
     public FinancePlan getFinancePlan(String planName) throws InternalServerErrorException, InvalidParameterException {
         Integer consumerId = financePlans.startIterating();
         FinancePlan planToReturn = null;
-        
+
         while (true) {
             try {
                 planToReturn = tryToGetPlanFromList(planName, consumerId);
@@ -212,11 +237,11 @@ public class InMemoryFinanceObjectsHolder {
                 throw e;
             }
         }
-        
+
         if (planToReturn != null) {
             return planToReturn;
         }
-        
+
         throw new InvalidParameterException(String.format(Messages.Exception.UNABLE_TO_FIND_PLAN, planName));
     }
 
@@ -233,11 +258,12 @@ public class InMemoryFinanceObjectsHolder {
 
             item = financePlans.getNext(consumerId);
         }
-        
+
         return planToReturn;
     }
-    
-    public FinancePlan getOrDefaultFinancePlan(String planName) throws InternalServerErrorException, InvalidParameterException {
+
+    public FinancePlan getOrDefaultFinancePlan(String planName)
+            throws InternalServerErrorException, InvalidParameterException {
         try {
             return this.getFinancePlan(planName);
         } catch (InvalidParameterException e) {
@@ -249,26 +275,28 @@ public class InMemoryFinanceObjectsHolder {
 
     public void removeFinancePlan(String planName) throws InvalidParameterException, InternalServerErrorException {
         FinancePlan plan = getFinancePlan(planName);
-        
-        synchronized(plan) {
+
+        synchronized (plan) {
             this.financePlans.removeItem(plan);
             this.databaseManager.removeFinancePlan(planName);
         }
     }
 
-    public void updateFinancePlan(String planName, Map<String, String> planInfo) throws InvalidParameterException, InternalServerErrorException {
+    public void updateFinancePlan(String planName, Map<String, String> planInfo)
+            throws InvalidParameterException, InternalServerErrorException {
         FinancePlan financePlan = getFinancePlan(planName);
-        
-        synchronized(financePlan) {
+
+        synchronized (financePlan) {
             financePlan.update(planInfo);
             saveFinancePlan(financePlan);
         }
     }
 
-    public Map<String, String> getFinancePlanMap(String planName) throws InvalidParameterException, InternalServerErrorException {
-        FinancePlan financePlan = getFinancePlan(planName);   
-        
-        synchronized(financePlan) {
+    public Map<String, String> getFinancePlanMap(String planName)
+            throws InvalidParameterException, InternalServerErrorException {
+        FinancePlan financePlan = getFinancePlan(planName);
+
+        synchronized (financePlan) {
             return financePlan.getRulesAsMap();
         }
     }
