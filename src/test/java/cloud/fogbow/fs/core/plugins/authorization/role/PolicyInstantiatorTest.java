@@ -39,7 +39,8 @@ public class PolicyInstantiatorTest {
     private PermissionInstantiator<FsOperation> permissionInstantiator;
     private RolePolicy<FsOperation> policy;
 
-    // TODO documentation
+    // test case: When creating a new PolicyInstantiator instance, the constructor
+    // must get the required configuration from the PropertiesHolder.
     @Test
     public void testConstructorReadsConfiguration() throws ConfigurationErrorException {
         setUpConfiguration();
@@ -56,7 +57,8 @@ public class PolicyInstantiatorTest {
         HomeDir.getPath();
     }
 
-    // TODO documentation
+    // test case: When creating a new PolicyInstantiator instance and the configuration
+    // does not specify an admin role, it must throw a ConfigurationErrorException.
     @Test(expected = ConfigurationErrorException.class)
     public void testConstructorConfigurationDoesNotSpecifyAdminRole() throws ConfigurationErrorException {
         setUpConfiguration();
@@ -67,7 +69,8 @@ public class PolicyInstantiatorTest {
         new PolicyInstantiator(classFactory, permissionInstantiator);
     }
     
-    // TODO documentation
+    // test case: When creating a new PolicyInstantiator instance and the configuration
+    // does not specify a policy file, it must throw a ConfigurationErrorException.
     @Test(expected = ConfigurationErrorException.class)
     public void testConstructorConfigurationDoesNotSpecifyPolicyFile() throws ConfigurationErrorException {
         setUpConfiguration();
@@ -78,7 +81,8 @@ public class PolicyInstantiatorTest {
         new PolicyInstantiator(classFactory, permissionInstantiator);
     }
     
-    // TODO documentation
+    // test case: When creating a new PolicyInstantiator instance and the configuration
+    // does not specify a policy class name, it must throw a ConfigurationErrorException.
     @Test(expected = ConfigurationErrorException.class)
     public void testConstructorConfigurationDoesNotSpecifyPolicyClass() throws ConfigurationErrorException {
         setUpConfiguration();
@@ -89,7 +93,8 @@ public class PolicyInstantiatorTest {
         new PolicyInstantiator(classFactory, permissionInstantiator);
     }
     
-    // TODO documentation
+    // test case: When calling the method getRolePolicyInstance passing a policy String, it must create a new
+    // policy instance using the ClassFactory createPluginInstance method and passing the policy String as argument.
     @Test
     public void testGetRolePolicyInstance() throws ConfigurationErrorException, WrongPolicyTypeException {
         setUpConfiguration();
@@ -107,7 +112,8 @@ public class PolicyInstantiatorTest {
                 ADMIN_ROLE, HOME_DIR_PATH + POLICY_FILE);
     }
     
-    // TODO documentation
+    // test case: When calling the method getRolePolicyInstanceFromFile passing a policy file path, it must create a new
+    // policy instance using the ClassFactory createPluginInstance method and passing the policy file as argument.
     @Test
     public void testGetRolePolicyInstanceFromFile() throws ConfigurationErrorException, WrongPolicyTypeException {
         setUpConfiguration();

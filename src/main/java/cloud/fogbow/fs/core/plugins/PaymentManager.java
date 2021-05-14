@@ -6,7 +6,6 @@ import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.core.util.accounting.Record;
 
-// TODO update documentation
 /**
  * A payment management abstraction, capable of starting
  * payment for users based in their financial state. This 
@@ -44,6 +43,9 @@ public interface PaymentManager {
 	 * 
 	 * @param userId the id of the user to start payment.
 	 * @param provider the id of the provider of the user to start payment.
+	 * @param paymentStartTime the start time of the period to consider when starting the payment process.
+	 * @param paymentEndTime the end time of the period to consider when starting the payment process.
+	 * @param records a list containing the records related to the user in the period.
 	 * @throws InternalServerErrorException if some error occurs in the payment process.
 	 * @throws InvalidParameterException if the user is not found or the parameters 
      * are invalid.

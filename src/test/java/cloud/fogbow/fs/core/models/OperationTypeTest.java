@@ -8,7 +8,9 @@ import cloud.fogbow.common.exceptions.InvalidParameterException;
 
 public class OperationTypeTest {
 
-    // TODO documentation
+    // test case: When calling the fromString method, it
+    // must return the OperationType instance represented
+    // by the given String.
     @Test
     public void testFromValue() throws InvalidParameterException {
         assertEquals(OperationType.RELOAD, OperationType.fromString(OperationType.RELOAD.getValue()));
@@ -23,7 +25,9 @@ public class OperationTypeTest {
         assertEquals(OperationType.REMOVE_FINANCE_PLAN, OperationType.fromString(OperationType.REMOVE_FINANCE_PLAN.getValue()));
     }
     
-    // TODO documentation
+    // test case: When calling the fromString method passing as argument
+    // a String that does not represent any OperationType instance, 
+    // it must throw an InvalidParameterException.
     @Test(expected = InvalidParameterException.class)
     public void testFromValueInvalidValue() throws InvalidParameterException {
         OperationType.fromString("invalidvalue");

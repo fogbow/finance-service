@@ -217,10 +217,6 @@ public class InMemoryFinanceObjectsHolder {
         throw new InvalidParameterException(String.format(Messages.Exception.FINANCE_PLAN_ALREADY_EXISTS, name));
     }
 
-    public void saveFinancePlan(FinancePlan financePlan) {
-        this.databaseManager.saveFinancePlan(financePlan);
-    }
-
     public FinancePlan getFinancePlan(String planName) throws InternalServerErrorException, InvalidParameterException {
         Integer consumerId = financePlans.startIterating();
         FinancePlan planToReturn = null;
@@ -290,6 +286,10 @@ public class InMemoryFinanceObjectsHolder {
             financePlan.update(planInfo);
             saveFinancePlan(financePlan);
         }
+    }
+    
+    private void saveFinancePlan(FinancePlan financePlan) throws InternalServerErrorException, InvalidParameterException {
+        this.databaseManager.saveFinancePlan(financePlan);
     }
 
     public Map<String, String> getFinancePlanMap(String planName)

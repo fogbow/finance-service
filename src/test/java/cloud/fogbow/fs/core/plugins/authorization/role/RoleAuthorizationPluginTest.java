@@ -105,7 +105,8 @@ public class RoleAuthorizationPluginTest {
         this.plugin = new RoleAuthorizationPlugin(this.policyInstantiator);
     }
 
-    // TODO documentation
+    // test case: When creating a new instance of RoleAuthorizationPlugin, the constructor 
+    // must read the policy file name, load the correct role policy and validate the policy. 
     @Test
     public void constructorReadsConfigurationCorrectly() throws ConfigurationErrorException {
         Mockito.verify(this.rolePolicy, Mockito.atLeastOnce()).validate();
@@ -114,7 +115,9 @@ public class RoleAuthorizationPluginTest {
         PowerMockito.verifyStatic(PropertiesHolder.class, Mockito.atLeastOnce());
     }
     
-    // TODO documentation
+    // test case: When creating a new instance of RoleAuthorizationPlugin and 
+    // the PolicyInstantiator throws a WrongPolicyTypeException, the constructor
+    // must rethrow the exception.
     @Test(expected = ConfigurationErrorException.class)
     public void constructorThrowsExceptionIfPolicyTypeIsWrong() throws ConfigurationErrorException, WrongPolicyTypeException {
         this.policyInstantiator = Mockito.mock(PolicyInstantiator.class);
@@ -124,7 +127,13 @@ public class RoleAuthorizationPluginTest {
         new RoleAuthorizationPlugin(this.policyInstantiator);
     }
 
-    // TODO documentation
+    // test case: When calling the isAuthorized method, it must call the RolePolicy 
+    // userIsAuthorized method to determine whether or not the user has permission to 
+    // perform the given operation.
+    // In this test:
+    // user 1 can perform getFinanceState, but not addUser or reload operations
+    // user 2 can perform getFinanceState and addUser, but not reload operations
+    // userWithDefaultRole can perform getFinanceState, but not addUser or reload operations
     @Test
     public void testIsAuthorized() throws UnauthorizedRequestException {
         SystemUser user1 = new SystemUser(userId1, userName1, identityProviderId);
