@@ -2,13 +2,28 @@ package cloud.fogbow.fs.core.models;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.ElementCollection;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
+import javax.persistence.PostLoad;
+import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.constants.Messages;
 
+@Entity
+@Table(name = "finance_plan_table")
 public class FinancePlan {
 
 	public static final String PLAN_FIELDS_SEPARATOR = "-";
@@ -22,23 +37,64 @@ public class FinancePlan {
 	public static final int VOLUME_SIZE_FIELD_INDEX = 1;
 	public static final int VOLUME_VALUE_FIELD_INDEX = 2;
 	
+	private static final String FINANCE_PLAN_ID_COLUMN_NAME = "finance_plan_id";
+    private static final String FINANCE_PLAN_ITEMS_COLUMN_NAME = "finance_plan_items";
+	
+    @Column(name = FINANCE_PLAN_ID_COLUMN_NAME)
+	@Id
 	private String name;
+	
+	@Transient
 	private Map<ResourceItem, Double> plan;
-	private Map<String, String> basePlan;
+	
+    @Column(name = FINANCE_PLAN_ITEMS_COLUMN_NAME)
+    @ElementCollection(fetch = FetchType.EAGER)
+    @OneToMany(cascade={CascadeType.ALL})
+	private List<FinancePlanItem> items;
+	
+	public FinancePlan() {
+	    
+	}
 	
     public FinancePlan(String planName, String planPath) throws InvalidParameterException {
     	Map<String, String> planInfo = getPlanFromFile(planPath);
     	Map<ResourceItem, Double> plan = validatePlanInfo(planInfo);
+    	this.items = getDatabaseItems(plan);
+    	
 		this.name = planName;
-		this.basePlan = planInfo;
 		this.plan = plan;
     }
+    
+    @PostLoad
+    private void startUp() {
+        plan = getPlanFromDatabaseItems(items);
+    }
 	
-	public FinancePlan(String planName, Map<String, String> planInfo) throws InvalidParameterException {
+	private List<FinancePlanItem> getDatabaseItems(Map<ResourceItem, Double> inMemoryPlan) {
+	    List<FinancePlanItem> databasePlanItems = new ArrayList<FinancePlanItem>();
+	    
+	    for (ResourceItem item : inMemoryPlan.keySet()) {
+	        databasePlanItems.add(new FinancePlanItem(item, inMemoryPlan.get(item)));
+	    }
+	    
+        return databasePlanItems;
+    }
+	
+	private Map<ResourceItem, Double> getPlanFromDatabaseItems(List<FinancePlanItem> databaseItems) {
+        Map<ResourceItem, Double> plan = new HashMap<ResourceItem, Double>();
+        
+        for (FinancePlanItem item : databaseItems) {
+            plan.put(item.getItem(), item.getValue());
+        }
+        
+        return plan;
+    }
+
+    public FinancePlan(String planName, Map<String, String> planInfo) throws InvalidParameterException {
 		Map<ResourceItem, Double> plan = validatePlanInfo(planInfo);
 		this.name = planName;
-		this.basePlan = planInfo;
 		this.plan = plan;
+		this.items = getDatabaseItems(plan);
 	}
 	
     private Map<String, String> getPlanFromFile(String planPath) throws InvalidParameterException {
@@ -143,13 +199,24 @@ public class FinancePlan {
 	}
 	
 	public Map<String, String> getRulesAsMap() {
-		return basePlan;
+	    return generateRulesRepr();
 	}
 
-	// TODO discuss how this operation should be performed
+	private Map<String, String> generateRulesRepr() {
+        Map<String, String> rulesRepr = new HashMap<String, String>();
+	    
+        for (ResourceItem item : this.plan.keySet()) {
+            rulesRepr.put(item.toString(), String.valueOf(this.plan.get(item)));
+        }
+        
+        return rulesRepr;
+    }
+
+    // TODO discuss how this operation should be performed
 	public void update(Map<String, String> planInfo) throws InvalidParameterException {
 		Map<ResourceItem, Double> newPlan = validatePlanInfo(planInfo);
 		this.plan = newPlan;
+		this.items = getDatabaseItems(newPlan);
 	}
 
 	public Double getItemFinancialValue(ResourceItem resourceItem) throws InvalidParameterException {

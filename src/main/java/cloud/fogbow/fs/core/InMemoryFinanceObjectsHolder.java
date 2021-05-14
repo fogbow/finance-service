@@ -60,6 +60,7 @@ public class InMemoryFinanceObjectsHolder {
      */
 
     public void registerUser(String userId, String provider, String pluginName, Map<String, String> financeOptions) throws InternalServerErrorException {
+        // FIXME must check if the user exists
         FinanceUser user = new FinanceUser(financeOptions);
 
         user.setUserId(userId, provider);
@@ -186,6 +187,7 @@ public class InMemoryFinanceObjectsHolder {
      */
     
     public void registerFinancePlan(FinancePlan financePlan) {
+        // FIXME must check if the plan exists
         this.financePlans.addItem(financePlan);
         this.databaseManager.saveFinancePlan(financePlan);
     }
