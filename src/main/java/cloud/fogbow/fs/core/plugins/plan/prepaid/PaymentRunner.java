@@ -1,4 +1,4 @@
-package cloud.fogbow.fs.core.plugins.finance.prepaid;
+package cloud.fogbow.fs.core.plugins.plan.prepaid;
 
 import java.util.List;
 
@@ -7,41 +7,42 @@ import org.apache.log4j.Logger;
 import cloud.fogbow.common.exceptions.FogbowException;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.fs.constants.Messages;
-import cloud.fogbow.fs.core.InMemoryFinanceObjectsHolder;
+import cloud.fogbow.fs.core.InMemoryUsersHolder;
 import cloud.fogbow.fs.core.models.FinanceUser;
-import cloud.fogbow.fs.core.plugins.PaymentManager;
-import cloud.fogbow.fs.core.plugins.finance.StoppableRunner;
 import cloud.fogbow.fs.core.util.AccountingServiceClient;
 import cloud.fogbow.fs.core.util.ModifiedListException;
 import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedList;
+import cloud.fogbow.fs.core.util.StoppableRunner;
 import cloud.fogbow.fs.core.util.TimeUtils;
 import cloud.fogbow.fs.core.util.accounting.Record;
 
-@Deprecated
 public class PaymentRunner extends StoppableRunner {
 	private static Logger LOGGER = Logger.getLogger(PaymentRunner.class);
-	private InMemoryFinanceObjectsHolder objectHolder;
-	private PaymentManager paymentManager;
+	private String planName;
+	private InMemoryUsersHolder usersHolder;
+	private CreditsManager paymentManager;
 	private AccountingServiceClient accountingServiceClient;
 	private TimeUtils timeUtils;
 	
-    public PaymentRunner(long creditsDeductionWaitTime, InMemoryFinanceObjectsHolder objectHolder,
-            AccountingServiceClient accountingServiceClient, PaymentManager paymentManager) {
+    public PaymentRunner(String planName, long creditsDeductionWaitTime, InMemoryUsersHolder usersHolder,
+            AccountingServiceClient accountingServiceClient, CreditsManager paymentManager) {
+        this.planName = planName;
         this.timeUtils = new TimeUtils();
         this.sleepTime = creditsDeductionWaitTime;
         this.accountingServiceClient = accountingServiceClient;
         this.paymentManager = paymentManager;
-        this.objectHolder = objectHolder;
+        this.usersHolder = usersHolder;
     }
     
-    public PaymentRunner(long creditsDeductionWaitTime, InMemoryFinanceObjectsHolder objectHolder,
-            AccountingServiceClient accountingServiceClient, PaymentManager paymentManager, 
+    public PaymentRunner(String planName, long creditsDeductionWaitTime, InMemoryUsersHolder usersHolder,
+            AccountingServiceClient accountingServiceClient, CreditsManager paymentManager, 
             TimeUtils timeUtils) {
+        this.planName = planName;
         this.timeUtils = timeUtils;
         this.sleepTime = creditsDeductionWaitTime;
         this.accountingServiceClient = accountingServiceClient;
         this.paymentManager = paymentManager;
-        this.objectHolder = objectHolder;
+        this.usersHolder = usersHolder;
     }
 	
 	private long getUserLastBillingTime(FinanceUser user) {
@@ -51,8 +52,8 @@ public class PaymentRunner extends StoppableRunner {
 	
 	@Override
 	public void doRun() {
-	    MultiConsumerSynchronizedList<FinanceUser> registeredUsers = objectHolder.
-	                getRegisteredUsersByPaymentType(PrePaidFinancePlugin.PLUGIN_NAME);
+	    MultiConsumerSynchronizedList<FinanceUser> registeredUsers = usersHolder.
+	                getRegisteredUsersByPlan(this.planName);
 	    Integer consumerId = registeredUsers.startIterating();
 	    
 	    try {

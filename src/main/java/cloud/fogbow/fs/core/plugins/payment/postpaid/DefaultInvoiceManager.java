@@ -16,6 +16,7 @@ import cloud.fogbow.fs.core.plugins.PaymentManager;
 import cloud.fogbow.fs.core.util.accounting.Record;
 import cloud.fogbow.fs.core.util.accounting.RecordUtils;
 
+@Deprecated
 public class DefaultInvoiceManager implements PaymentManager {
 	public static final String PROPERTY_VALUES_SEPARATOR = ",";
 	public static final String ALL_USER_INVOICES_PROPERTY_NAME = "ALL_USER_INVOICES";
@@ -61,7 +62,7 @@ public class DefaultInvoiceManager implements PaymentManager {
 	    FinanceUser user = this.objectHolder.getUserById(userId, provider);
 	    
 	    synchronized(user) {
-	        FinancePlan plan = this.objectHolder.getOrDefaultFinancePlan(planName);
+	        FinancePlan plan = null;//this.objectHolder.getOrDefaultFinancePlan(planName);
 	        
 	        synchronized(plan) {
 	            this.invoiceBuilder.setUserId(userId);
@@ -123,7 +124,7 @@ public class DefaultInvoiceManager implements PaymentManager {
 
 	@Override
 	public void setFinancePlan(String planName) throws InvalidParameterException, InternalServerErrorException {
-	    this.objectHolder.getFinancePlan(planName);
+//	    this.objectHolder.getFinancePlan(planName);
 	    
 		this.planName = planName;
 	}

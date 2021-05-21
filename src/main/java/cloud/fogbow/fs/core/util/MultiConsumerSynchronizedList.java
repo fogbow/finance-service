@@ -74,4 +74,10 @@ public class MultiConsumerSynchronizedList<T> {
             pointers.put(key, -1);
         }
     }
+    
+    public boolean isEmpty() {
+        synchronized(internalList) {
+            return internalList.isEmpty();
+        }
+    }
 }

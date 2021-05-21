@@ -5,6 +5,7 @@ import java.util.Map;
 public class User {
 	private String userId;
 	private String provider;
+	// FIXME update
 	private String financePluginName;
 	private Map<String, String> financeOptions;
 	

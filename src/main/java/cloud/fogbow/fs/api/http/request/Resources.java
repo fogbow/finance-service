@@ -55,7 +55,7 @@ public class Resources {
 	public ResponseEntity<Boolean> createFinancePlan(
 			@RequestHeader(value = SystemConstants.SYSTEM_USER_TOKEN_HEADER_KEY) String systemUserToken,
 			@RequestBody RequestFinancePlan financePlan) throws FogbowException {
-		ApplicationFacade.getInstance().createFinancePlan(systemUserToken, financePlan.getPlanName(), financePlan.getPlanInfo());
+		ApplicationFacade.getInstance().createFinancePlan(systemUserToken, financePlan.getPluginClassName(), financePlan.getPlanInfo());
 		return new ResponseEntity<Boolean>(HttpStatus.OK);
 	}
 	
@@ -71,14 +71,15 @@ public class Resources {
 	
 	// TODO documentation
 	// FIXME constant
-	@RequestMapping(value = "/plan", method = RequestMethod.PUT)
-	public ResponseEntity<Boolean> updateFinancePlan(
-			@RequestHeader(value = SystemConstants.SYSTEM_USER_TOKEN_HEADER_KEY) String systemUserToken,
-			@RequestBody RequestFinancePlan financePlan) throws FogbowException {
-		ApplicationFacade.getInstance().updateFinancePlan(systemUserToken, financePlan.getPlanName(), financePlan.getPlanInfo());
-		return new ResponseEntity<Boolean>(HttpStatus.OK);
-	}
-	
+    @RequestMapping(value = "/plan/{planName}", method = RequestMethod.PUT)
+    public ResponseEntity<Boolean> changeFinancePlanOptions(
+            @PathVariable String planName,
+            @RequestHeader(value = SystemConstants.SYSTEM_USER_TOKEN_HEADER_KEY) String systemUserToken,
+            @RequestBody HashMap<String, String> financeOptions) throws FogbowException {
+        ApplicationFacade.getInstance().changePlanOptions(systemUserToken, planName, financeOptions);
+        return new ResponseEntity<Boolean>(HttpStatus.OK);
+    }
+
 	// TODO documentation
 	// FIXME constant
 	@RequestMapping(value = "/plan/{planName}", method = RequestMethod.DELETE)

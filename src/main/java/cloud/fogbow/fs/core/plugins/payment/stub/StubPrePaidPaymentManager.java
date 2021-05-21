@@ -7,6 +7,7 @@ import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
 import cloud.fogbow.fs.core.util.accounting.Record;
 
+@Deprecated
 public class StubPrePaidPaymentManager implements PaymentManager {
 
 	public StubPrePaidPaymentManager(DatabaseManager databaseManager) {

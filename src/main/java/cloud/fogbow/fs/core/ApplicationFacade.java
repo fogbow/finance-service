@@ -103,19 +103,6 @@ public class ApplicationFacade {
 		}
 	}
 
-	public void changeOptions(String userToken, String userId, String provider, HashMap<String, String> financeOptions) throws UnauthenticatedUserException, UnauthorizedRequestException, FogbowException {
-		LOGGER.info(String.format(Messages.Log.CHANGING_OPTIONS, userId));
-		
-		authenticateAndAuthorize(userToken, new FsOperation(OperationType.CHANGE_OPTIONS));
-		synchronizationManager.startOperation();
-		
-		try {
-			this.financeManager.changeOptions(userId, provider, financeOptions);			
-		} finally {
-			synchronizationManager.finishOperation();
-		}
-	}
-
 	public void updateFinanceState(String userToken, String userId, String provider, HashMap<String, String> financeState) throws UnauthenticatedUserException, UnauthorizedRequestException, FogbowException {
 		LOGGER.info(String.format(Messages.Log.UPDATING_FINANCE_STATE, userId));
 		
@@ -142,14 +129,14 @@ public class ApplicationFacade {
 		}
 	}
 	
-	public void createFinancePlan(String userToken, String planName, Map<String, String> planInfo) throws FogbowException {
-		LOGGER.info(String.format(Messages.Log.CREATING_FINANCE_PLAN, planName));
+	public void createFinancePlan(String userToken, String pluginClassName, Map<String, String> planInfo) throws FogbowException {
+		LOGGER.info(String.format(Messages.Log.CREATING_FINANCE_PLAN, pluginClassName));
 		
 		authenticateAndAuthorize(userToken, new FsOperation(OperationType.CREATE_FINANCE_PLAN));
 		synchronizationManager.startOperation();
 
 		try {
-			this.financeManager.createFinancePlan(planName, planInfo);
+		    this.financeManager.createFinancePlan(pluginClassName, planInfo);
 		} finally {
 			synchronizationManager.finishOperation();
 		}
@@ -162,25 +149,24 @@ public class ApplicationFacade {
 		synchronizationManager.startOperation();
 
 		try {
-			return this.financeManager.getFinancePlan(planName);
+		    return this.financeManager.getFinancePlanOptions(planName);
 		} finally {
 			synchronizationManager.finishOperation();
 		}
 	}
 
-	public void updateFinancePlan(String userToken, String planName,
-			Map<String, String> planInfo) throws FogbowException {
-		LOGGER.info(String.format(Messages.Log.UPDATING_FINANCE_PLAN, planName));
-		
-		authenticateAndAuthorize(userToken, new FsOperation(OperationType.UPDATE_FINANCE_PLAN));
-		synchronizationManager.startOperation();
-
-		try {
-			this.financeManager.updateFinancePlan(planName, planInfo);
-		} finally {
-			synchronizationManager.finishOperation();
-		}
-	}
+   public void changePlanOptions(String userToken, String planName, HashMap<String, String> financeOptions) throws UnauthenticatedUserException, UnauthorizedRequestException, FogbowException {
+        LOGGER.info(String.format(Messages.Log.CHANGING_OPTIONS, planName));
+        
+        authenticateAndAuthorize(userToken, new FsOperation(OperationType.CHANGE_OPTIONS));
+        synchronizationManager.startOperation();
+        
+        try {
+            this.financeManager.changeOptions(planName, financeOptions);
+        } finally {
+            synchronizationManager.finishOperation();
+        }
+    }
 
 	public void removeFinancePlan(String userToken, String planName) throws FogbowException {
 		LOGGER.info(String.format(Messages.Log.REMOVING_FINANCE_PLAN, planName));
@@ -189,7 +175,7 @@ public class ApplicationFacade {
 		synchronizationManager.startOperation();
 
 		try {
-			this.financeManager.removeFinancePlan(planName);
+		    this.financeManager.removeFinancePlan(planName);
 		} finally {
 			synchronizationManager.finishOperation();
 		}

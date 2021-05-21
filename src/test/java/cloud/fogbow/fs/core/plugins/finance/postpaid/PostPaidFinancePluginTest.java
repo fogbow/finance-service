@@ -143,7 +143,7 @@ public class PostPaidFinancePluginTest {
 	    
 	    
 	    Mockito.verify(this.objectHolder).registerUser(USER_ID_1, PROVIDER_USER_1, 
-	            PostPaidFinancePlugin.PLUGIN_NAME, financeOptions);
+	            PostPaidFinancePlugin.PLUGIN_NAME);
 	}
 	
 	// test case: When calling the addUser method and the finance options map 

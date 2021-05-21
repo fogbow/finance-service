@@ -6,9 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import cloud.fogbow.common.exceptions.InvalidParameterException;
-import cloud.fogbow.fs.core.models.FinancePlan;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.models.UserId;
+import cloud.fogbow.fs.core.plugins.PlanPlugin;
 
 @Component
 public class DatabaseManager {
@@ -17,7 +17,7 @@ public class DatabaseManager {
 	private UserRepository userRepository;
 	
 	@Autowired
-	private FinancePlanRepository financePlanRepository;
+	private PlanPluginRepository planPluginRepository;
 	
 	public DatabaseManager() {
 	}
@@ -35,15 +35,15 @@ public class DatabaseManager {
 	    return userRepository.findAll();
 	}
 
-	public void saveFinancePlan(FinancePlan financePlan) {
-	    financePlanRepository.save(financePlan);
-	}
+    public List<PlanPlugin> getRegisteredPlanPlugins() {
+        return planPluginRepository.findAll();
+    }
 
-	public List<FinancePlan> getRegisteredFinancePlans() {
-	    return financePlanRepository.findAll();
-	}
-	
-	public void removeFinancePlan(String planName) {
-	    financePlanRepository.delete(financePlanRepository.getOne(planName));
-	}
+    public void savePlanPlugin(PlanPlugin plugin) {
+        planPluginRepository.save(plugin);
+    }
+
+    public void removePlanPlugin(PlanPlugin plugin) {
+        planPluginRepository.delete(plugin);
+    }
 }

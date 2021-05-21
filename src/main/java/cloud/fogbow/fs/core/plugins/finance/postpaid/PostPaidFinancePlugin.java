@@ -21,6 +21,7 @@ import cloud.fogbow.fs.core.util.RasClient;
 import cloud.fogbow.ras.core.models.Operation;
 import cloud.fogbow.ras.core.models.RasOperation;
 
+@Deprecated
 public class PostPaidFinancePlugin implements FinancePlugin {
 	/**
 	 * A textual reference to this plugin. 
@@ -139,7 +140,7 @@ public class PostPaidFinancePlugin implements FinancePlugin {
 	@Override
 	public void addUser(String userId, String provider, Map<String, String> financeOptions) throws InvalidParameterException, InternalServerErrorException {
 	    validateFinanceOptions(financeOptions);
-        this.objectHolder.registerUser(userId, provider, PLUGIN_NAME, financeOptions);
+        this.objectHolder.registerUser(userId, provider, PLUGIN_NAME);
 	}
 	
 	@Override

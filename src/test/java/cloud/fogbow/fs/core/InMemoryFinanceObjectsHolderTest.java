@@ -17,6 +17,7 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import cloud.fogbow.common.exceptions.ConfigurationErrorException;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
@@ -25,7 +26,8 @@ import cloud.fogbow.fs.core.models.FinancePlan;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.models.Invoice;
 import cloud.fogbow.fs.core.models.UserCredits;
-import cloud.fogbow.fs.core.plugins.payment.prepaid.UserCreditsFactory;
+import cloud.fogbow.fs.core.plugins.PlanPlugin;
+import cloud.fogbow.fs.core.plugins.plan.prepaid.UserCreditsFactory;
 import cloud.fogbow.fs.core.util.ModifiedListException;
 import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedList;
 import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedListFactory;
@@ -65,9 +67,9 @@ public class InMemoryFinanceObjectsHolderTest {
     private List<UserCredits> creditsList;
     private UserCredits userCredits1;
     private UserCredits userCredits2;
-    private List<FinancePlan> plansList;
-    private FinancePlan plan1;
-    private FinancePlan plan2;
+    private List<PlanPlugin> plansList;
+    private PlanPlugin plan1;
+    private PlanPlugin plan2;
     private Map<String, String> rulesPlan1;
     private InMemoryFinanceObjectsHolder objectHolder;
     
@@ -85,11 +87,11 @@ public class InMemoryFinanceObjectsHolderTest {
     // must acquire the data from FinanceUsers and FinancePlans using the DatabaseManager and
     // prepare its internal data holding lists properly.
     @Test
-    public void testConstructorSetsUpDataStructuresCorrectly() throws InternalServerErrorException, InvalidParameterException {
+    public void testConstructorSetsUpDataStructuresCorrectly() throws InternalServerErrorException, InvalidParameterException, ConfigurationErrorException {
         new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
         
         Mockito.verify(databaseManager).getRegisteredUsers();
-        Mockito.verify(databaseManager).getRegisteredFinancePlans();
+        Mockito.verify(databaseManager).getRegisteredPlanPlugins();
         
         Mockito.verify(listFactory, Mockito.times(3)).getList();
         
@@ -102,10 +104,10 @@ public class InMemoryFinanceObjectsHolderTest {
     // test case: When calling the method registerUser, it must add a new FinanceUser instance
     // to the list of FinanceUsers and persist the new user by calling the DatabaseManager.
     @Test
-    public void testRegisterUser() throws InternalServerErrorException, InvalidParameterException {
+    public void testRegisterUser() throws InternalServerErrorException, InvalidParameterException, ConfigurationErrorException {
         objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
         
-        objectHolder.registerUser(USER_ID_TO_ADD, PROVIDER_ID_TO_ADD, PLUGIN_NAME_1, new HashMap<String, String>());
+        objectHolder.registerUser(USER_ID_TO_ADD, PROVIDER_ID_TO_ADD, PLUGIN_NAME_1);
         
         Mockito.verify(userSynchronizedList1, Mockito.times(2)).addItem(Mockito.any(FinanceUser.class));
         Mockito.verify(databaseManager).saveUser(Mockito.any(FinanceUser.class));
@@ -115,16 +117,16 @@ public class InMemoryFinanceObjectsHolderTest {
     // used by an already registered user, it must throw an InvalidParameterException.
     @Test(expected = InvalidParameterException.class)
     public void cannotRegisterUserWithAlreadyUsedUserIdAndProvider() throws InternalServerErrorException, 
-            InvalidParameterException {
+            InvalidParameterException, ConfigurationErrorException {
         objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
 
-        objectHolder.registerUser(USER_ID_1, PROVIDER_ID_1, PLUGIN_NAME_1, rulesPlan1);
+        objectHolder.registerUser(USER_ID_1, PROVIDER_ID_1, PLUGIN_NAME_1);
     }
     
     // test case: When calling the method removeUser, it must remove the given user from
     // the list of FinanceUsers and delete the user from the database using the DatabaseManager.
     @Test
-    public void testRemoveUser() throws InternalServerErrorException, InvalidParameterException {
+    public void testRemoveUser() throws InternalServerErrorException, InvalidParameterException, ConfigurationErrorException {
         objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
         
         objectHolder.removeUser(USER_ID_1, PROVIDER_ID_1);
@@ -136,7 +138,7 @@ public class InMemoryFinanceObjectsHolderTest {
     // test case: When calling the method removeUser passing unknown UserId and ProviderId, it 
     // must throw an InvalidParameterException.
     @Test(expected = InvalidParameterException.class)
-    public void testRemoveUnknownUser() throws InternalServerErrorException, InvalidParameterException {
+    public void testRemoveUnknownUser() throws InternalServerErrorException, InvalidParameterException, ConfigurationErrorException {
         objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
         
         objectHolder.removeUser("unknownuser", "unknownprovider");
@@ -145,7 +147,7 @@ public class InMemoryFinanceObjectsHolderTest {
     // test case: When calling the method getUserById, it must iterate over the correct list of 
     // users and return the correct user.
     @Test
-    public void testGetUserById() throws InvalidParameterException, InternalServerErrorException {
+    public void testGetUserById() throws InvalidParameterException, InternalServerErrorException, ConfigurationErrorException {
         objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
         
         assertEquals(user1, objectHolder.getUserById(USER_ID_1, PROVIDER_ID_1));
@@ -159,7 +161,7 @@ public class InMemoryFinanceObjectsHolderTest {
     // occurs while the method is iterating over it, it must restart the iteration and return 
     // the correct user.
     @Test
-    public void testGetUserByIdListChanges() throws InternalServerErrorException, ModifiedListException, InvalidParameterException {
+    public void testGetUserByIdListChanges() throws InternalServerErrorException, ModifiedListException, InvalidParameterException, ConfigurationErrorException {
         Mockito.when(userSynchronizedList1.getNext(Mockito.anyInt())).
         thenReturn(user1).
         thenThrow(new ModifiedListException()).
@@ -175,7 +177,7 @@ public class InMemoryFinanceObjectsHolderTest {
     // test case: When calling the method getUserById and the internal user list throws an
     // InternalServerErrorException while iterating over it, it must rethrow the exception.
     @Test(expected = InternalServerErrorException.class)
-    public void testGetUserByIdListThrowsException() throws InternalServerErrorException, ModifiedListException, InvalidParameterException {
+    public void testGetUserByIdListThrowsException() throws InternalServerErrorException, ModifiedListException, InvalidParameterException, ConfigurationErrorException {
         Mockito.when(userSynchronizedList1.getNext(Mockito.anyInt())).
         thenReturn(user1).
         thenThrow(new InternalServerErrorException());
@@ -188,7 +190,7 @@ public class InMemoryFinanceObjectsHolderTest {
     // test case: When calling the method getUserById and the UserId passed as parameter is 
     // not known, it must throw an InvalidParameterException.
     @Test(expected = InvalidParameterException.class)
-    public void testGetUserByIdUnknownUser() throws InternalServerErrorException, InvalidParameterException {
+    public void testGetUserByIdUnknownUser() throws InternalServerErrorException, InvalidParameterException, ConfigurationErrorException {
         objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
         
         objectHolder.getUserById("unknownuser", PROVIDER_ID_1);
@@ -197,7 +199,7 @@ public class InMemoryFinanceObjectsHolderTest {
     // test case: When calling the method getUserById and the ProviderId passed as parameter 
     // is not known, it must throw an InvalidParameterException.
     @Test(expected = InvalidParameterException.class)
-    public void testGetUserByIdUnknownProvider() throws InternalServerErrorException, InvalidParameterException {
+    public void testGetUserByIdUnknownProvider() throws InternalServerErrorException, InvalidParameterException, ConfigurationErrorException {
         objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
         
         objectHolder.getUserById(USER_ID_1, "unknownprovider");
@@ -206,7 +208,7 @@ public class InMemoryFinanceObjectsHolderTest {
     // test case: When calling the method getRegisteredUsersByPaymentType, it must return
     // the list of users that use the given payment type.
     @Test
-    public void testGetRegisteredUsersByPaymentType() throws InvalidParameterException, InternalServerErrorException {
+    public void testGetRegisteredUsersByPaymentType() throws InvalidParameterException, InternalServerErrorException, ConfigurationErrorException {
         objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
         
         assertEquals(userSynchronizedList1, objectHolder.getRegisteredUsersByPaymentType(PLUGIN_NAME_1));
@@ -216,7 +218,7 @@ public class InMemoryFinanceObjectsHolderTest {
     // test case: When calling the method getRegisteredUsersByPaymentType passing as argument
     // a payment type not used by any FinanceUser, it must return an empty list.
     @Test
-    public void testGetRegisteredUsersWithPaymentTypeNotUsedByAnyUser() throws InternalServerErrorException, ModifiedListException {
+    public void testGetRegisteredUsersWithPaymentTypeNotUsedByAnyUser() throws InternalServerErrorException, ModifiedListException, ConfigurationErrorException {
         objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
         
         MultiConsumerSynchronizedList<FinanceUser> returnedList = 
@@ -231,7 +233,7 @@ public class InMemoryFinanceObjectsHolderTest {
     // used by the given user using the data contained in the given options map and
     // then persist the changes using the DatabaseManager.
     @Test
-    public void testChangeOptions() throws InvalidParameterException, InternalServerErrorException {
+    public void testChangeOptions() throws InvalidParameterException, InternalServerErrorException, ConfigurationErrorException {
         HashMap<String, String> newOptions = new HashMap<String, String>();
         newOptions.put("option1", "optionvalue1");
         newOptions.put("option2", "optionvalue2");
@@ -248,7 +250,7 @@ public class InMemoryFinanceObjectsHolderTest {
     // test case: When calling the method saveUser, it must persist the user
     // data using the DatabaseManager.
     @Test
-    public void testSaveUser() throws InvalidParameterException, InternalServerErrorException {
+    public void testSaveUser() throws InvalidParameterException, InternalServerErrorException, ConfigurationErrorException {
         objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
         
         objectHolder.saveUser(user1);
@@ -259,7 +261,7 @@ public class InMemoryFinanceObjectsHolderTest {
     // test case: When calling the method saveUser and the user is not known, 
     // it must throw an InvalidParameterException.
     @Test(expected = InvalidParameterException.class)
-    public void testSaveUserUnknownUser() throws InvalidParameterException, InternalServerErrorException {
+    public void testSaveUserUnknownUser() throws InvalidParameterException, InternalServerErrorException, ConfigurationErrorException {
         FinanceUser unknownUser = Mockito.mock(FinanceUser.class);
         Mockito.when(unknownUser.getId()).thenReturn("unknownuser");
         Mockito.when(unknownUser.getProvider()).thenReturn("unknownprovider");
@@ -268,199 +270,199 @@ public class InMemoryFinanceObjectsHolderTest {
         
         objectHolder.saveUser(unknownUser);
     }
-    
-    // test case: When calling the method registerFinancePlan, it must add the new 
-    // FinancePlan to the list of finance plans and then persist the plan using
-    // the DatabaseManager.
-    @Test
-    public void testRegisterFinancePlan() throws InvalidParameterException, InternalServerErrorException {
-        FinancePlan newFinancePlan = Mockito.mock(FinancePlan.class);
-        Mockito.when(newFinancePlan.getName()).thenReturn(NEW_PLAN_NAME_1);
-        
-        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
-        
-        objectHolder.registerFinancePlan(newFinancePlan);
-        
-        Mockito.verify(planSynchronizedList).addItem(newFinancePlan);
-        Mockito.verify(databaseManager).saveFinancePlan(newFinancePlan);
-    }
-
-    // test case: When calling the method registerFinancePlan and the
-    // FinancePlan passed as argument uses an already used plan name, 
-    // it must throw an InvalidParameterException.
-    @Test(expected = InvalidParameterException.class)
-    public void testCannotRegisterFinancePlanWithAlreadyUsedName() throws InternalServerErrorException, InvalidParameterException {
-        FinancePlan newFinancePlan1 = Mockito.mock(FinancePlan.class);
-        Mockito.when(newFinancePlan1.getName()).thenReturn(PLAN_NAME_1);
-
-        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
-        
-
-        objectHolder.registerFinancePlan(newFinancePlan1);
-    }
-    
-    // test case: When calling the method getFinancePlan, it must iterate 
-    // correctly over the plans list and return the correct FinancePlan instance.
-    @Test
-    public void testGetFinancePlan() throws InvalidParameterException, InternalServerErrorException {
-        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
-        
-        assertEquals(plan1, objectHolder.getFinancePlan(PLAN_NAME_1));
-        assertEquals(plan2, objectHolder.getFinancePlan(PLAN_NAME_2));
-        
-        Mockito.verify(planSynchronizedList, Mockito.times(2)).stopIterating(Mockito.anyInt());
-    }
-    
-    // test case: When calling the method getFinancePlan and a concurrent modification on the 
-    // plans list occurs, it must restart the iteration and return the correct FinancePlan instance.
-    @Test
-    public void testGetFinancePlanListChanges() throws InternalServerErrorException, ModifiedListException, InvalidParameterException {
-        Mockito.when(planSynchronizedList.getNext(Mockito.anyInt())).
-        thenReturn(plan1).
-        thenThrow(new ModifiedListException()).
-        thenReturn(plan1, plan2);
-        
-        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
-        
-        assertEquals(plan2, objectHolder.getFinancePlan(PLAN_NAME_2));
-        
-        Mockito.verify(planSynchronizedList).stopIterating(Mockito.anyInt());
-    }
-    
-    // test case: When calling the method getFinancePlan and the plans list throws an
-    // InternalServerErrorException, it must rethrow the exception.
-    @Test(expected = InternalServerErrorException.class)
-    public void testGetFinancePlanListThrowsException() throws InternalServerErrorException, ModifiedListException, InvalidParameterException {
-        Mockito.when(planSynchronizedList.getNext(Mockito.anyInt())).
-        thenReturn(plan1).
-        thenThrow(new InternalServerErrorException()).
-        thenReturn(plan1, plan2);
-        
-        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
-        
-        objectHolder.getFinancePlan(PLAN_NAME_2);
-    }
-    
-    // test case: When calling the method getFinancePlan passing as argument an unknown
-    // plan name, it must throw an InvalidParameterException.
-    @Test(expected = InvalidParameterException.class)
-    public void testGetFinancePlanUnknownPlan() throws InvalidParameterException, InternalServerErrorException {
-        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
-        
-        objectHolder.getFinancePlan("unknownplan");
-    }
-    
-    // test case: When calling the method getOrDefaultFinancePlan and the given plan
-    // exists, it must return the FinancePlan instance.
-    @Test
-    public void testGetOrDefaultFinancePlanPlanExists() throws InternalServerErrorException, InvalidParameterException, ModifiedListException {
-        PowerMockito.mockStatic(PropertiesHolder.class);
-        PropertiesHolder propertiesHolder = Mockito.mock(PropertiesHolder.class);
-        Mockito.when(propertiesHolder.getProperty(ConfigurationPropertyKeys.DEFAULT_FINANCE_PLAN_NAME)).thenReturn(PLAN_NAME_1);
-        
-        BDDMockito.given(PropertiesHolder.getInstance()).willReturn(propertiesHolder);
-        
-        
-        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
-        
-        
-        assertEquals(plan2, objectHolder.getOrDefaultFinancePlan(PLAN_NAME_2));
-    }
-    
-    // test case: When calling the method getOrDefaultFinancePlan and the given plan
-    // does not exist, it must return the default FinancePlan.
-    @Test
-    public void testGetOrDefaultFinancePlanPlanDoesNotExist() throws InternalServerErrorException, InvalidParameterException, ModifiedListException {
-        PowerMockito.mockStatic(PropertiesHolder.class);
-        PropertiesHolder propertiesHolder = Mockito.mock(PropertiesHolder.class);
-        Mockito.when(propertiesHolder.getProperty(ConfigurationPropertyKeys.DEFAULT_FINANCE_PLAN_NAME)).thenReturn(PLAN_NAME_1);
-        
-        BDDMockito.given(PropertiesHolder.getInstance()).willReturn(propertiesHolder);
-        
-        // Since we look for the given plan and then look for the default plan, 
-        // in this case we need to perform two iterations over the plans list.
-        Mockito.when(planSynchronizedList.getNext(Mockito.anyInt())).thenReturn(plan1, plan2, null, plan1, plan2, null);
-        
-        
-        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
-        
-        
-        assertEquals(plan1, objectHolder.getOrDefaultFinancePlan("unknownplan"));
-    }
-    
-    // test case: When calling the method removeFinancePlan, it must remove the given plan
-    // from the plans list and delete the plan from the database using the DatabaseManager.
-    @Test
-    public void testRemoveFinancePlan() throws InvalidParameterException, InternalServerErrorException {
-        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
-        
-        objectHolder.removeFinancePlan(PLAN_NAME_1);
-        
-        Mockito.verify(databaseManager).removeFinancePlan(PLAN_NAME_1);
-        Mockito.verify(planSynchronizedList).removeItem(plan1);
-    }
-    
-    // test case: When calling the method removeFinancePlan passing as argument
-    // an unknown plan, it must throw an InvalidParameterException.
-    @Test(expected = InvalidParameterException.class)
-    public void testRemoveFinancePlanUnknownPlan() throws InternalServerErrorException, InvalidParameterException {
-        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
-        
-        objectHolder.removeFinancePlan("unknownplan");
-    }
-    
-    // test case: When calling the method updateFinancePlan, it must call the method 
-    // update on the correct FinancePlan instance and then persist the plan data
-    // using the DatabaseManager.
-    @Test
-    public void testUpdateFinancePlan() throws InternalServerErrorException, InvalidParameterException {
-        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
-        Map<String, String> updatedPlanInfo = new HashMap<String, String>();
-
-        
-        objectHolder.updateFinancePlan(PLAN_NAME_1, updatedPlanInfo);
-        
-        
-        Mockito.verify(plan1).update(updatedPlanInfo);
-        Mockito.verify(databaseManager).saveFinancePlan(plan1);
-        Mockito.verify(planSynchronizedList).stopIterating(Mockito.anyInt());
-    }
-    
-    // test case: When calling the method updateFinancePlan passing as argument
-    // an unknown plan, it must throw an InvalidParameterException.
-    @Test(expected = InvalidParameterException.class)
-    public void testUpdateFinancePlanUnknownPlan() throws InternalServerErrorException, InvalidParameterException {
-        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
-        Map<String, String> updatedPlanInfo = new HashMap<String, String>();
-
-        
-        objectHolder.updateFinancePlan("unknownplan", updatedPlanInfo);
-    }
-    
-    // test case: When calling the method getFinancePlan map, it must return a 
-    // Map containing the plan data related to the correct FinancePlan instance.
-    @Test
-    public void testGetFinancePlanMap() throws InternalServerErrorException, InvalidParameterException {
-        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
-        rulesPlan1 = new HashMap<String, String>();
-        Mockito.when(plan1.getRulesAsMap()).thenReturn(rulesPlan1);
-        
-        
-        Map<String, String> returnedMap = objectHolder.getFinancePlanMap(PLAN_NAME_1);
-        
-        
-        assertEquals(rulesPlan1, returnedMap);
-        Mockito.verify(planSynchronizedList).stopIterating(Mockito.anyInt());
-    }
-    
-    // test case: When calling the method getFinancePlanMap passing as argument
-    // an unknown plan, it must throw an InvalidParameterException.
-    @Test(expected = InvalidParameterException.class)
-    public void testGetFinancePlanMapUnknownPlan() throws InternalServerErrorException, InvalidParameterException {
-        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
-
-        objectHolder.getFinancePlanMap("unknownplan");
-    }
+//    
+//    // test case: When calling the method registerFinancePlan, it must add the new 
+//    // FinancePlan to the list of finance plans and then persist the plan using
+//    // the DatabaseManager.
+//    @Test
+//    public void testRegisterFinancePlan() throws InvalidParameterException, InternalServerErrorException {
+//        FinancePlan newFinancePlan = Mockito.mock(FinancePlan.class);
+//        Mockito.when(newFinancePlan.getName()).thenReturn(NEW_PLAN_NAME_1);
+//        
+//        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
+//        
+//        objectHolder.registerFinancePlan(newFinancePlan);
+//        
+//        Mockito.verify(planSynchronizedList).addItem(newFinancePlan);
+//        Mockito.verify(databaseManager).saveFinancePlan(newFinancePlan);
+//    }
+//
+//    // test case: When calling the method registerFinancePlan and the
+//    // FinancePlan passed as argument uses an already used plan name, 
+//    // it must throw an InvalidParameterException.
+//    @Test(expected = InvalidParameterException.class)
+//    public void testCannotRegisterFinancePlanWithAlreadyUsedName() throws InternalServerErrorException, InvalidParameterException {
+//        FinancePlan newFinancePlan1 = Mockito.mock(FinancePlan.class);
+//        Mockito.when(newFinancePlan1.getName()).thenReturn(PLAN_NAME_1);
+//
+//        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
+//        
+//
+//        objectHolder.registerFinancePlan(newFinancePlan1);
+//    }
+//    
+//    // test case: When calling the method getFinancePlan, it must iterate 
+//    // correctly over the plans list and return the correct FinancePlan instance.
+//    @Test
+//    public void testGetFinancePlan() throws InvalidParameterException, InternalServerErrorException {
+//        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
+//        
+//        assertEquals(plan1, objectHolder.getFinancePlan(PLAN_NAME_1));
+//        assertEquals(plan2, objectHolder.getFinancePlan(PLAN_NAME_2));
+//        
+//        Mockito.verify(planSynchronizedList, Mockito.times(2)).stopIterating(Mockito.anyInt());
+//    }
+//    
+//    // test case: When calling the method getFinancePlan and a concurrent modification on the 
+//    // plans list occurs, it must restart the iteration and return the correct FinancePlan instance.
+//    @Test
+//    public void testGetFinancePlanListChanges() throws InternalServerErrorException, ModifiedListException, InvalidParameterException {
+//        Mockito.when(planSynchronizedList.getNext(Mockito.anyInt())).
+//        thenReturn(plan1).
+//        thenThrow(new ModifiedListException()).
+//        thenReturn(plan1, plan2);
+//        
+//        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
+//        
+//        assertEquals(plan2, objectHolder.getFinancePlan(PLAN_NAME_2));
+//        
+//        Mockito.verify(planSynchronizedList).stopIterating(Mockito.anyInt());
+//    }
+//    
+//    // test case: When calling the method getFinancePlan and the plans list throws an
+//    // InternalServerErrorException, it must rethrow the exception.
+//    @Test(expected = InternalServerErrorException.class)
+//    public void testGetFinancePlanListThrowsException() throws InternalServerErrorException, ModifiedListException, InvalidParameterException {
+//        Mockito.when(planSynchronizedList.getNext(Mockito.anyInt())).
+//        thenReturn(plan1).
+//        thenThrow(new InternalServerErrorException()).
+//        thenReturn(plan1, plan2);
+//        
+//        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
+//        
+//        objectHolder.getFinancePlan(PLAN_NAME_2);
+//    }
+//    
+//    // test case: When calling the method getFinancePlan passing as argument an unknown
+//    // plan name, it must throw an InvalidParameterException.
+//    @Test(expected = InvalidParameterException.class)
+//    public void testGetFinancePlanUnknownPlan() throws InvalidParameterException, InternalServerErrorException {
+//        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
+//        
+//        objectHolder.getFinancePlan("unknownplan");
+//    }
+//    
+//    // test case: When calling the method getOrDefaultFinancePlan and the given plan
+//    // exists, it must return the FinancePlan instance.
+//    @Test
+//    public void testGetOrDefaultFinancePlanPlanExists() throws InternalServerErrorException, InvalidParameterException, ModifiedListException {
+//        PowerMockito.mockStatic(PropertiesHolder.class);
+//        PropertiesHolder propertiesHolder = Mockito.mock(PropertiesHolder.class);
+//        Mockito.when(propertiesHolder.getProperty(ConfigurationPropertyKeys.DEFAULT_FINANCE_PLAN_NAME)).thenReturn(PLAN_NAME_1);
+//        
+//        BDDMockito.given(PropertiesHolder.getInstance()).willReturn(propertiesHolder);
+//        
+//        
+//        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
+//        
+//        
+//        assertEquals(plan2, objectHolder.getOrDefaultFinancePlan(PLAN_NAME_2));
+//    }
+//    
+//    // test case: When calling the method getOrDefaultFinancePlan and the given plan
+//    // does not exist, it must return the default FinancePlan.
+//    @Test
+//    public void testGetOrDefaultFinancePlanPlanDoesNotExist() throws InternalServerErrorException, InvalidParameterException, ModifiedListException {
+//        PowerMockito.mockStatic(PropertiesHolder.class);
+//        PropertiesHolder propertiesHolder = Mockito.mock(PropertiesHolder.class);
+//        Mockito.when(propertiesHolder.getProperty(ConfigurationPropertyKeys.DEFAULT_FINANCE_PLAN_NAME)).thenReturn(PLAN_NAME_1);
+//        
+//        BDDMockito.given(PropertiesHolder.getInstance()).willReturn(propertiesHolder);
+//        
+//        // Since we look for the given plan and then look for the default plan, 
+//        // in this case we need to perform two iterations over the plans list.
+//        Mockito.when(planSynchronizedList.getNext(Mockito.anyInt())).thenReturn(plan1, plan2, null, plan1, plan2, null);
+//        
+//        
+//        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
+//        
+//        
+//        assertEquals(plan1, objectHolder.getOrDefaultFinancePlan("unknownplan"));
+//    }
+//    
+//    // test case: When calling the method removeFinancePlan, it must remove the given plan
+//    // from the plans list and delete the plan from the database using the DatabaseManager.
+//    @Test
+//    public void testRemoveFinancePlan() throws InvalidParameterException, InternalServerErrorException {
+//        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
+//        
+//        objectHolder.removeFinancePlan(PLAN_NAME_1);
+//        
+//        Mockito.verify(databaseManager).removeFinancePlan(PLAN_NAME_1);
+//        Mockito.verify(planSynchronizedList).removeItem(plan1);
+//    }
+//    
+//    // test case: When calling the method removeFinancePlan passing as argument
+//    // an unknown plan, it must throw an InvalidParameterException.
+//    @Test(expected = InvalidParameterException.class)
+//    public void testRemoveFinancePlanUnknownPlan() throws InternalServerErrorException, InvalidParameterException {
+//        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
+//        
+//        objectHolder.removeFinancePlan("unknownplan");
+//    }
+//    
+//    // test case: When calling the method updateFinancePlan, it must call the method 
+//    // update on the correct FinancePlan instance and then persist the plan data
+//    // using the DatabaseManager.
+//    @Test
+//    public void testUpdateFinancePlan() throws InternalServerErrorException, InvalidParameterException {
+//        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
+//        Map<String, String> updatedPlanInfo = new HashMap<String, String>();
+//
+//        
+//        objectHolder.updateFinancePlan(PLAN_NAME_1, updatedPlanInfo);
+//        
+//        
+//        Mockito.verify(plan1).update(updatedPlanInfo);
+//        Mockito.verify(databaseManager).saveFinancePlan(plan1);
+//        Mockito.verify(planSynchronizedList).stopIterating(Mockito.anyInt());
+//    }
+//    
+//    // test case: When calling the method updateFinancePlan passing as argument
+//    // an unknown plan, it must throw an InvalidParameterException.
+//    @Test(expected = InvalidParameterException.class)
+//    public void testUpdateFinancePlanUnknownPlan() throws InternalServerErrorException, InvalidParameterException {
+//        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
+//        Map<String, String> updatedPlanInfo = new HashMap<String, String>();
+//
+//        
+//        objectHolder.updateFinancePlan("unknownplan", updatedPlanInfo);
+//    }
+//    
+//    // test case: When calling the method getFinancePlan map, it must return a 
+//    // Map containing the plan data related to the correct FinancePlan instance.
+//    @Test
+//    public void testGetFinancePlanMap() throws InternalServerErrorException, InvalidParameterException {
+//        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
+//        rulesPlan1 = new HashMap<String, String>();
+//        Mockito.when(plan1.getRulesAsMap()).thenReturn(rulesPlan1);
+//        
+//        
+//        Map<String, String> returnedMap = objectHolder.getFinancePlanMap(PLAN_NAME_1);
+//        
+//        
+//        assertEquals(rulesPlan1, returnedMap);
+//        Mockito.verify(planSynchronizedList).stopIterating(Mockito.anyInt());
+//    }
+//    
+//    // test case: When calling the method getFinancePlanMap passing as argument
+//    // an unknown plan, it must throw an InvalidParameterException.
+//    @Test(expected = InvalidParameterException.class)
+//    public void testGetFinancePlanMapUnknownPlan() throws InternalServerErrorException, InvalidParameterException {
+//        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, listFactory, userCreditsFactory);
+//
+//        objectHolder.getFinancePlanMap("unknownplan");
+//    }
 
     private void setUpLists() throws InvalidParameterException, ModifiedListException, InternalServerErrorException {
         userSynchronizedList1 = Mockito.mock(MultiConsumerSynchronizedList.class);
@@ -479,17 +481,17 @@ public class InMemoryFinanceObjectsHolderTest {
     private void setUpDatabase() {
         databaseManager = Mockito.mock(DatabaseManager.class);
         Mockito.when(databaseManager.getRegisteredUsers()).thenReturn(usersList);
-        Mockito.when(databaseManager.getRegisteredFinancePlans()).thenReturn(plansList);
+        Mockito.when(databaseManager.getRegisteredPlanPlugins()).thenReturn(plansList);
     }
 
     private void setUpPlans() {
-        plan1 = Mockito.mock(FinancePlan.class);
+        plan1 = Mockito.mock(PlanPlugin.class);
         Mockito.when(plan1.getName()).thenReturn(PLAN_NAME_1);
         
-        plan2 = Mockito.mock(FinancePlan.class);
+        plan2 = Mockito.mock(PlanPlugin.class);
         Mockito.when(plan2.getName()).thenReturn(PLAN_NAME_2);
         
-        plansList = new ArrayList<FinancePlan>();
+        plansList = new ArrayList<PlanPlugin>();
         plansList.add(plan1);
         plansList.add(plan2);
     }

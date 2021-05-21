@@ -1,9 +1,9 @@
 package cloud.fogbow.fs.core;
 
 import java.security.interfaces.RSAPublicKey;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
+
+import org.apache.log4j.Logger;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -17,110 +17,150 @@ import cloud.fogbow.fs.api.parameters.AuthorizableUser;
 import cloud.fogbow.fs.api.parameters.User;
 import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
 import cloud.fogbow.fs.constants.Messages;
-import cloud.fogbow.fs.core.models.FinancePlan;
-import cloud.fogbow.fs.core.plugins.FinancePlugin;
-import cloud.fogbow.fs.core.plugins.FinancePluginInstantiator;
+import cloud.fogbow.fs.core.plugins.PlanPlugin;
+import cloud.fogbow.fs.core.plugins.PlanPluginInstantiator;
 import cloud.fogbow.fs.core.util.FinancePlanFactory;
+import cloud.fogbow.fs.core.util.ModifiedListException;
+import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedList;
+import cloud.fogbow.ras.core.models.RasOperation;
 
 public class FinanceManager {
+    private static Logger LOGGER = Logger.getLogger(FinanceManager.class);
     @VisibleForTesting
     static final String FINANCE_PLUGINS_CLASS_NAMES_SEPARATOR = ",";
-    private List<FinancePlugin> financePlugins;
     private InMemoryFinanceObjectsHolder objectHolder;
-    private FinancePlanFactory financePlanFactory;
 
     public FinanceManager(InMemoryFinanceObjectsHolder objectHolder, FinancePlanFactory financePlanFactory)
-            throws ConfigurationErrorException, InternalServerErrorException {
+            throws ConfigurationErrorException, InternalServerErrorException, InvalidParameterException {
         this.objectHolder = objectHolder;
-        this.financePlanFactory = financePlanFactory;
 
-        createDefaultPlanIfItDoesNotExist();
-        createFinancePlugins(objectHolder);
-    }
-
-    private void createDefaultPlanIfItDoesNotExist() throws InternalServerErrorException, ConfigurationErrorException {
-        String defaultFinancePlanName = PropertiesHolder.getInstance()
-                .getProperty(ConfigurationPropertyKeys.DEFAULT_FINANCE_PLAN_NAME);
-        String defaultFinancePlanFilePath = PropertiesHolder.getInstance()
-                .getProperty(ConfigurationPropertyKeys.DEFAULT_FINANCE_PLAN_FILE_PATH);
-
-        try {
-            this.objectHolder.getFinancePlan(defaultFinancePlanName);
-        } catch (InvalidParameterException e) {
-            tryToCreateDefaultFinancePlan(defaultFinancePlanName, defaultFinancePlanFilePath);
+        if (objectHolder.getPlanPlugins().isEmpty()) {
+            tryToCreateDefaultPlanPlugin();
         }
     }
-
-    private void tryToCreateDefaultFinancePlan(String defaultFinancePlanName, String defaultFinancePlanFilePath)
-            throws ConfigurationErrorException, InternalServerErrorException {
-        try {
-            FinancePlan financePlan = this.financePlanFactory.createFinancePlan(defaultFinancePlanName,
-                    defaultFinancePlanFilePath);
-            this.objectHolder.registerFinancePlan(financePlan);
-        } catch (InvalidParameterException e) {
-            throw new ConfigurationErrorException(e.getMessage());
-        }
-    }
-
-    private void createFinancePlugins(InMemoryFinanceObjectsHolder objectHolder) throws ConfigurationErrorException {
-        ArrayList<FinancePlugin> financePlugins = new ArrayList<FinancePlugin>();
-
-        String financePluginsString = PropertiesHolder.getInstance()
-                .getProperty(ConfigurationPropertyKeys.FINANCE_PLUGINS_CLASS_NAMES);
-
-        if (financePluginsString.isEmpty()) {
-            throw new ConfigurationErrorException(Messages.Exception.NO_FINANCE_PLUGIN_SPECIFIED);
-        }
-
-        for (String financePluginClassName : financePluginsString.split(FINANCE_PLUGINS_CLASS_NAMES_SEPARATOR)) {
-            financePlugins.add(FinancePluginInstantiator.getFinancePlugin(financePluginClassName, objectHolder));
-        }
-
-        this.financePlugins = financePlugins;
-    }
-
-    public FinanceManager(List<FinancePlugin> financePlugins, InMemoryFinanceObjectsHolder objectHolder,
-            FinancePlanFactory financePlanFactory) throws ConfigurationErrorException {
-        if (financePlugins.isEmpty()) {
-            throw new ConfigurationErrorException(Messages.Exception.NO_FINANCE_PLUGIN_SPECIFIED);
-        }
-        this.financePlugins = financePlugins;
+    
+    public FinanceManager(InMemoryFinanceObjectsHolder objectHolder)
+            throws ConfigurationErrorException, InternalServerErrorException, InvalidParameterException {
         this.objectHolder = objectHolder;
-        this.financePlanFactory = financePlanFactory;
+        
+        if (objectHolder.getPlanPlugins().isEmpty()) {
+            tryToCreateDefaultPlanPlugin();
+        }
+    }
+
+    private void tryToCreateDefaultPlanPlugin() throws ConfigurationErrorException, InvalidParameterException, InternalServerErrorException {
+        String defaultPlanPluginType = PropertiesHolder.getInstance()
+                .getProperty(ConfigurationPropertyKeys.DEFAULT_PLAN_PLUGIN_TYPE);
+        PlanPlugin plugin = PlanPluginInstantiator.getPlanPlugin(defaultPlanPluginType, objectHolder.getInMemoryUsersHolder());
+        objectHolder.registerPlanPlugin(plugin);
     }
 
     public boolean isAuthorized(AuthorizableUser user) throws FogbowException {
         String userToken = user.getUserToken();
         RSAPublicKey rasPublicKey = FsPublicKeysHolder.getInstance().getRasPublicKey();
         SystemUser authenticatedUser = AuthenticationUtil.authenticate(rasPublicKey, userToken);
-
-        for (FinancePlugin plugin : financePlugins) {
-            String userId = authenticatedUser.getId();
-            String userProvider = authenticatedUser.getIdentityProviderId();
+        
+        MultiConsumerSynchronizedList<PlanPlugin> planPlugins = this.objectHolder.getPlanPlugins();
+        boolean authorized = false;
+        
+        while (true) {
+            Integer consumerId = planPlugins.startIterating();
             
-            if (plugin.managesUser(userId, userProvider)) {
-                return plugin.isAuthorized(authenticatedUser, user.getOperation());
+            try {
+                authorized = tryToAuthorize(planPlugins, authenticatedUser, user.getOperation(), consumerId);
+                planPlugins.stopIterating(consumerId);
+                break;
+            } catch (ModifiedListException e) {
+                consumerId = planPlugins.startIterating();
+            } catch (Exception e) {
+                planPlugins.stopIterating(consumerId);
+                throw e;
             }
         }
+        
+        return authorized;
+    }
 
+    private boolean tryToAuthorize(MultiConsumerSynchronizedList<PlanPlugin> planPlugins, SystemUser authenticatedUser, RasOperation operation, Integer consumerId) 
+            throws InvalidParameterException, InternalServerErrorException, ModifiedListException {
+        PlanPlugin plugin = planPlugins.getNext(consumerId);
+        boolean authorized = false;
+        
+        while (plugin != null) {
+            synchronized(plugin) {
+                if (plugin.isRegisteredUser(authenticatedUser)) {
+                    authorized = plugin.isAuthorized(authenticatedUser, operation);
+                    return authorized;
+                }  
+            }
+            
+            plugin = planPlugins.getNext(consumerId);
+        }
+        
         throw new InvalidParameterException(
                 String.format(Messages.Exception.UNMANAGED_USER, authenticatedUser.getId()));
     }
 
-    public void startPlugins() {
-        for (FinancePlugin plugin : financePlugins) {
-            plugin.startThreads();
+    public void startPlugins() throws InternalServerErrorException {
+        while (true) {
+            MultiConsumerSynchronizedList<PlanPlugin> planPlugins = this.objectHolder.getPlanPlugins();
+            Integer consumerId = planPlugins.startIterating();
+            
+            try {
+                tryToStart(planPlugins, consumerId);
+                planPlugins.stopIterating(consumerId);
+                break;
+            } catch (ModifiedListException e) {
+                consumerId = planPlugins.startIterating();
+            } catch (Exception e) {
+                planPlugins.stopIterating(consumerId);
+                throw e;
+            }
         }
     }
 
-    public void stopPlugins() {
-        for (FinancePlugin plugin : financePlugins) {
-            plugin.stopThreads();
+    private void tryToStart(MultiConsumerSynchronizedList<PlanPlugin> planPlugins, Integer consumerId) throws InternalServerErrorException, ModifiedListException {
+        PlanPlugin plugin = planPlugins.getNext(consumerId);
+        
+        while (plugin != null) {
+            // FIXME possible multiple start on the same plugin 
+            // in the case of failure in the iteration?
+            plugin.startThreads();
+            plugin = planPlugins.getNext(consumerId);
+        }   
+    }
+
+    public void stopPlugins() throws InternalServerErrorException {
+        while (true) {
+            MultiConsumerSynchronizedList<PlanPlugin> planPlugins = this.objectHolder.getPlanPlugins();
+            Integer consumerId = planPlugins.startIterating();
+            
+            try {
+                tryToStop(planPlugins, consumerId);
+                planPlugins.stopIterating(consumerId);
+                break;
+            } catch (ModifiedListException e) {
+                consumerId = planPlugins.startIterating();
+            } catch (Exception e) {
+                planPlugins.stopIterating(consumerId);
+                throw e;
+            }
         }
     }
     
-    public void resetPlugins() throws ConfigurationErrorException {
-        createFinancePlugins(objectHolder);
+    private void tryToStop(MultiConsumerSynchronizedList<PlanPlugin> planPlugins, Integer consumerId) throws InternalServerErrorException, ModifiedListException {
+        PlanPlugin plugin = planPlugins.getNext(consumerId);
+        
+        while (plugin != null) {
+            // FIXME possible multiple start on the same plugin 
+            // in the case of failure in the iteration?
+            plugin.startThreads();
+            plugin = planPlugins.getNext(consumerId);
+        }  
+    }
+
+    public void resetPlugins() throws ConfigurationErrorException, InternalServerErrorException {
+        objectHolder.reset();
     }
 
     /*
@@ -128,76 +168,121 @@ public class FinanceManager {
      */
 
     public void addUser(User user) throws InvalidParameterException, InternalServerErrorException {
-        for (FinancePlugin plugin : financePlugins) {
-            if (plugin.getName().equals(user.getFinancePluginName())) {
-                plugin.addUser(user.getUserId(), user.getProvider(), user.getFinanceOptions());
-                return;
+        while (true) {
+            MultiConsumerSynchronizedList<PlanPlugin> planPlugins = this.objectHolder.getPlanPlugins();
+            Integer consumerId = planPlugins.startIterating();
+            
+            try {
+                tryToAdd(planPlugins, new SystemUser(user.getUserId(), user.getUserId(), user.getProvider()), user.getFinancePluginName(), consumerId);
+                planPlugins.stopIterating(consumerId);
+                break;
+            } catch (ModifiedListException e) {
+                consumerId = planPlugins.startIterating();
+            } catch (Exception e) {
+                planPlugins.stopIterating(consumerId);
+                throw e;
             }
         }
+    }
 
-        throw new InvalidParameterException(String.format(Messages.Exception.UNMANAGED_USER, user.getUserId()));
+    private void tryToAdd(MultiConsumerSynchronizedList<PlanPlugin> planPlugins, SystemUser user, String pluginName, Integer consumerId) 
+            throws InternalServerErrorException, ModifiedListException, InvalidParameterException {
+        PlanPlugin plugin = planPlugins.getNext(consumerId);
+        
+        while (plugin != null) {
+            synchronized(plugin) {
+                if (plugin.getName().equals(pluginName)) {
+                    plugin.registerUser(user);
+                    return;
+                }
+            }
+            
+            plugin = planPlugins.getNext(consumerId);
+        } 
+        
+        throw new InvalidParameterException(String.format(Messages.Exception.UNMANAGED_USER, user.getId()));
     }
 
     public void removeUser(String userId, String provider)
             throws InvalidParameterException, InternalServerErrorException {
-        FinancePlugin plugin = getUserPlugin(userId, provider);
-        plugin.removeUser(userId, provider);
-    }
-
-    public void changeOptions(String userId, String provider, Map<String, String> financeOptions)
-            throws InvalidParameterException, InternalServerErrorException {
-        FinancePlugin plugin = getUserPlugin(userId, provider);
-        plugin.changeOptions(userId, provider, financeOptions);
+        PlanPlugin plugin = getUserPlugin(userId, provider);
+        synchronized(plugin) {
+            plugin.unregisterUser(new SystemUser(userId, userId, provider));
+        }
     }
 
     public void updateFinanceState(String userId, String provider, Map<String, String> financeState)
             throws InvalidParameterException, InternalServerErrorException {
-        FinancePlugin plugin = getUserPlugin(userId, provider);
-        plugin.updateFinanceState(userId, provider, financeState);
+        PlanPlugin plugin = getUserPlugin(userId, provider);
+        synchronized(plugin) {
+            plugin.updateUserFinanceState(new SystemUser(userId, userId, provider), financeState);
+        }
     }
 
     public String getFinanceStateProperty(String userId, String provider, String property) throws FogbowException {
-        FinancePlugin plugin = getUserPlugin(userId, provider);
-        return plugin.getUserFinanceState(userId, provider, property);
+        PlanPlugin plugin = getUserPlugin(userId, provider);
+        synchronized(plugin) {
+            return plugin.getUserFinanceState(new SystemUser(userId, userId, provider), property);
+        }
     }
 
-    private FinancePlugin getUserPlugin(String userId, String provider) throws InvalidParameterException, 
+    private PlanPlugin getUserPlugin(String userId, String provider) throws InvalidParameterException, 
     InternalServerErrorException {
-        for (FinancePlugin plugin : financePlugins) {
-            if (plugin.managesUser(userId, provider)) {
-                return plugin;
+        PlanPlugin plugin = null;
+        
+        while (true) {
+            MultiConsumerSynchronizedList<PlanPlugin> planPlugins = this.objectHolder.getPlanPlugins();
+            Integer consumerId = planPlugins.startIterating();
+            
+            try {
+                plugin = tryToGet(planPlugins, new SystemUser(userId, userId, provider), consumerId);
+                planPlugins.stopIterating(consumerId);
+                break;
+            } catch (ModifiedListException e) {
+                consumerId = planPlugins.startIterating();
+            } catch (Exception e) {
+                planPlugins.stopIterating(consumerId);
+                throw e;
             }
         }
-
-        throw new InvalidParameterException(String.format(Messages.Exception.UNMANAGED_USER, userId));
+        
+        return plugin;
     }
 
+    private PlanPlugin tryToGet(MultiConsumerSynchronizedList<PlanPlugin> planPlugins, SystemUser user, Integer consumerId) 
+            throws InternalServerErrorException, ModifiedListException, InvalidParameterException {
+        PlanPlugin plugin = planPlugins.getNext(consumerId);
+        
+        while (plugin != null) {
+            if (plugin.isRegisteredUser(user)) {
+                return plugin;
+            }
+            
+            plugin = planPlugins.getNext(consumerId);
+        } 
+        
+        throw new InvalidParameterException(String.format(Messages.Exception.UNMANAGED_USER, user.getId()));
+    }
+    
     /*
      * Plan management
      */
 
-    public void createFinancePlan(String planName, Map<String, String> planInfo) throws InvalidParameterException, 
-            InternalServerErrorException {
-        FinancePlan financePlan = this.financePlanFactory.createFinancePlan(planName, planInfo);
-        this.objectHolder.registerFinancePlan(financePlan);
+    public void createFinancePlan(String pluginClassName, Map<String, String> pluginOptions) throws InternalServerErrorException, InvalidParameterException {
+        PlanPlugin plugin = PlanPluginInstantiator.getPlanPlugin(pluginClassName, pluginOptions, objectHolder.getInMemoryUsersHolder());
+        this.objectHolder.registerPlanPlugin(plugin);
     }
-
-    public Map<String, String> getFinancePlan(String planName) throws InvalidParameterException, InternalServerErrorException {
-        return this.objectHolder.getFinancePlanMap(planName);
+    
+    public void removeFinancePlan(String pluginName) throws InternalServerErrorException, InvalidParameterException {
+        this.objectHolder.removePlanPlugin(pluginName);
     }
-
-    public void updateFinancePlan(String planName, Map<String, String> planInfo) throws InvalidParameterException, InternalServerErrorException {
-        this.objectHolder.updateFinancePlan(planName, planInfo);
+    
+    public void changeOptions(String planName, Map<String, String> financeOptions)
+            throws InvalidParameterException, InternalServerErrorException {
+        this.objectHolder.updatePlanPlugin(planName, financeOptions);
     }
-
-    public void removeFinancePlan(String planName) throws InvalidParameterException, InternalServerErrorException {
-        String defaultFinancePlan = PropertiesHolder.getInstance()
-                .getProperty(ConfigurationPropertyKeys.DEFAULT_FINANCE_PLAN_NAME);
-
-        if (defaultFinancePlan.equals(planName)) {
-            throw new InvalidParameterException(Messages.Exception.CANNOT_REMOVE_DEFAULT_FINANCE_PLAN);
-        }
-        
-        this.objectHolder.removeFinancePlan(planName);
+    
+    public Map<String, String> getFinancePlanOptions(String pluginName) throws InternalServerErrorException, InvalidParameterException {
+        return this.objectHolder.getPlanPluginOptions(pluginName);
     }
 }

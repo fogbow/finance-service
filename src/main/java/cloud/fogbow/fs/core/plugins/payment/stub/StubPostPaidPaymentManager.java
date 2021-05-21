@@ -7,6 +7,7 @@ import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
 import cloud.fogbow.fs.core.util.accounting.Record;
 
+@Deprecated
 public class StubPostPaidPaymentManager implements PaymentManager {
 
 	public static final String PAYMENT_STATUS_OK = "payment_ok";

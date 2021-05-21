@@ -14,6 +14,7 @@ import cloud.fogbow.fs.core.plugins.PaymentManager;
 import cloud.fogbow.fs.core.util.accounting.Record;
 import cloud.fogbow.fs.core.util.accounting.RecordUtils;
 
+@Deprecated
 public class DefaultCreditsManager implements PaymentManager {
 	public static final String USER_CREDITS = "USER_CREDITS";
 	
@@ -49,7 +50,7 @@ public class DefaultCreditsManager implements PaymentManager {
 	    FinanceUser user = this.objectHolder.getUserById(userId, provider);
 	    
         synchronized (user) {
-            FinancePlan plan = this.objectHolder.getOrDefaultFinancePlan(planName);
+            FinancePlan plan = null;//this.objectHolder.getOrDefaultFinancePlan(planName);
 
             synchronized (plan) {
                 UserCredits credits = user.getCredits();
@@ -96,7 +97,7 @@ public class DefaultCreditsManager implements PaymentManager {
 
     @Override
     public void setFinancePlan(String planName) throws InvalidParameterException, InternalServerErrorException {
-        this.objectHolder.getFinancePlan(planName);
+//        this.objectHolder.getFinancePlan(planName);
         
         this.planName = planName;
     }

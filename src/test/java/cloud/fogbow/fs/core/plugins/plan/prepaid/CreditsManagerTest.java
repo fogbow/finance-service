@@ -1,4 +1,4 @@
-package cloud.fogbow.fs.core.plugins.payment.prepaid;
+package cloud.fogbow.fs.core.plugins.plan.prepaid;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -8,13 +8,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
-import cloud.fogbow.fs.core.InMemoryFinanceObjectsHolder;
+import cloud.fogbow.fs.core.InMemoryUsersHolder;
 import cloud.fogbow.fs.core.models.ComputeItem;
 import cloud.fogbow.fs.core.models.FinancePlan;
 import cloud.fogbow.fs.core.models.FinanceUser;
@@ -24,20 +23,18 @@ import cloud.fogbow.fs.core.models.VolumeItem;
 import cloud.fogbow.fs.core.util.accounting.Record;
 import cloud.fogbow.fs.core.util.accounting.RecordUtils;
 
-public class DefaultCreditsManagerTest {
-
+public class CreditsManagerTest {
     private static final String USER_ID1 = "userId1";
     private static final String PROVIDER1 = "provider1";
     private static final String USER_ID2 = "userId2";
     private static final String PROVIDER2 = "provider2";
     private static final String USER_ID3 = "userId3";
     private static final String PROVIDER3 = "provider3";
-    private static final String plan = "plan";
     private static final Long PAYMENT_START_TIME = 1L;
     private static final Long PAYMENT_END_TIME = 100L;
     private static final Double VALUE_ITEM_1 = 10.0;
     private static final Double VALUE_ITEM_2 = 5.0;
-    private InMemoryFinanceObjectsHolder objectHolder;
+    private InMemoryUsersHolder objectHolder;
     private RecordUtils recordUtils;
     private UserCredits userCredits1;
     private UserCredits userCredits2;
@@ -57,7 +54,7 @@ public class DefaultCreditsManagerTest {
     // must return true. Otherwise, it must return false.
     @Test
     public void testHasPaid() throws InvalidParameterException, InternalServerErrorException {
-        this.objectHolder = Mockito.mock(InMemoryFinanceObjectsHolder.class);
+        this.objectHolder = Mockito.mock(InMemoryUsersHolder.class);
         this.userCredits1 = Mockito.mock(UserCredits.class);
         this.userCredits2 = Mockito.mock(UserCredits.class);
         this.userCredits3 = Mockito.mock(UserCredits.class);
@@ -70,7 +67,7 @@ public class DefaultCreditsManagerTest {
         setUpPlan();
         setUpDatabase();
         
-        DefaultCreditsManager creditsManager = new DefaultCreditsManager(objectHolder, plan, recordUtils);
+        CreditsManager creditsManager = new CreditsManager(objectHolder, financePlan, recordUtils);
         
         assertTrue(creditsManager.hasPaid(USER_ID1, PROVIDER1));
         assertTrue(creditsManager.hasPaid(USER_ID2, PROVIDER2));
@@ -82,7 +79,7 @@ public class DefaultCreditsManagerTest {
     // the value of the given user credits.
     @Test
     public void testGetUserFinanceStateUserCreditsProperty() throws InvalidParameterException, InternalServerErrorException {
-        this.objectHolder = Mockito.mock(InMemoryFinanceObjectsHolder.class);
+        this.objectHolder = Mockito.mock(InMemoryUsersHolder.class);
         this.userCredits1 = Mockito.mock(UserCredits.class);
         this.userCredits2 = Mockito.mock(UserCredits.class);
         this.userCredits3 = Mockito.mock(UserCredits.class);
@@ -95,14 +92,14 @@ public class DefaultCreditsManagerTest {
         setUpPlan();
         setUpDatabase();
         
-        DefaultCreditsManager creditsManager = new DefaultCreditsManager(objectHolder, plan, recordUtils);
+        CreditsManager creditsManager = new CreditsManager(objectHolder, financePlan, recordUtils);
         
         String returnedPropertyUser1 = creditsManager.getUserFinanceState(USER_ID1, PROVIDER1, 
-                DefaultCreditsManager.USER_CREDITS);
+                CreditsManager.USER_CREDITS);
         String returnedPropertyUser2 = creditsManager.getUserFinanceState(USER_ID2, PROVIDER2, 
-                DefaultCreditsManager.USER_CREDITS);
+                CreditsManager.USER_CREDITS);
         String returnedPropertyUser3 = creditsManager.getUserFinanceState(USER_ID3, PROVIDER3, 
-                DefaultCreditsManager.USER_CREDITS);
+                CreditsManager.USER_CREDITS);
         
         assertEquals("10.51", returnedPropertyUser1);
         assertEquals("0.0", returnedPropertyUser2);
@@ -115,7 +112,7 @@ public class DefaultCreditsManagerTest {
     public void testGetUserFinanceStateUnknownProperty() throws InvalidParameterException, InternalServerErrorException {
         this.userCredits1 = Mockito.mock(UserCredits.class);
         
-        DefaultCreditsManager creditsManager = new DefaultCreditsManager(objectHolder, plan, recordUtils);
+        CreditsManager creditsManager = new CreditsManager(objectHolder, financePlan, recordUtils);
         
         creditsManager.getUserFinanceState(USER_ID1, PROVIDER1, "unknown_property");
     }
@@ -124,7 +121,6 @@ public class DefaultCreditsManagerTest {
     // the user records and the finance plan from the database and deduct 
     // the resource items from the UserCredits according to the user records.
     // Also, it must save the credits in the database.
-    @Ignore
     @Test
     public void testStartPaymentProcess() throws InternalServerErrorException, InvalidParameterException {
         this.userCredits1 = Mockito.mock(UserCredits.class);
@@ -133,7 +129,7 @@ public class DefaultCreditsManagerTest {
         setUpPlan();
         setUpDatabase();
         
-        DefaultCreditsManager creditsManager = new DefaultCreditsManager(objectHolder, plan, recordUtils);
+        CreditsManager creditsManager = new CreditsManager(objectHolder, financePlan, recordUtils);
         
         creditsManager.startPaymentProcess(USER_ID1, PROVIDER1, PAYMENT_START_TIME, PAYMENT_END_TIME, records);
         
@@ -145,7 +141,6 @@ public class DefaultCreditsManagerTest {
 
     // test case: When calling the startPaymentProcess method and the 
     // user has no records for the period, it must not deduct credits.
-    @Ignore
     @Test
     public void testStartPaymentProcessNoRecords() throws InternalServerErrorException, InvalidParameterException {
         this.userCredits1 = Mockito.mock(UserCredits.class);
@@ -154,7 +149,7 @@ public class DefaultCreditsManagerTest {
         setUpPlan();
         setUpDatabase();
         
-        DefaultCreditsManager creditsManager = new DefaultCreditsManager(objectHolder, plan, recordUtils);
+        CreditsManager creditsManager = new CreditsManager(objectHolder, financePlan, recordUtils);
         
         creditsManager.startPaymentProcess(USER_ID1, PROVIDER1, PAYMENT_START_TIME, PAYMENT_END_TIME, records);
         
@@ -165,7 +160,6 @@ public class DefaultCreditsManagerTest {
     // the RecordUtils throws an exception when getting the resource items
     // from the records, it must catch the exception and throw an
     // InternalServerErrorException.
-    @Ignore
     @Test
     public void testStartPaymentProcessErrorOnGettingItemFromRecord() throws InternalServerErrorException, InvalidParameterException {
         this.userCredits1 = Mockito.mock(UserCredits.class);
@@ -188,7 +182,7 @@ public class DefaultCreditsManagerTest {
         setUpPlan();
         setUpDatabase();
         
-        DefaultCreditsManager creditsManager = new DefaultCreditsManager(objectHolder, plan, recordUtils);
+        CreditsManager creditsManager = new CreditsManager(objectHolder, financePlan, recordUtils);
         
         try {
             creditsManager.startPaymentProcess(USER_ID1, PROVIDER1, PAYMENT_START_TIME, PAYMENT_END_TIME, records);
@@ -203,7 +197,6 @@ public class DefaultCreditsManagerTest {
     // the FinancePlan throws an exception when getting the financial value 
     // of a resource item, it must catch the exception and throw an
     // InternalServerErrorException.
-    @Ignore
     @Test
     public void testStartPaymentProcessErrorOnGettingItemFinancialValue() throws InvalidParameterException, InternalServerErrorException {
         this.userCredits1 = Mockito.mock(UserCredits.class);
@@ -216,7 +209,7 @@ public class DefaultCreditsManagerTest {
         
         setUpDatabase();
         
-        DefaultCreditsManager creditsManager = new DefaultCreditsManager(objectHolder, plan, recordUtils);
+        CreditsManager creditsManager = new CreditsManager(objectHolder, financePlan, recordUtils);
         
         try {
             creditsManager.startPaymentProcess(USER_ID1, PROVIDER1, PAYMENT_START_TIME, PAYMENT_END_TIME, records);            
@@ -263,7 +256,7 @@ public class DefaultCreditsManagerTest {
         this.financeUser3 = Mockito.mock(FinanceUser.class);
         Mockito.when(financeUser3.getCredits()).thenReturn(this.userCredits3);
         
-        this.objectHolder = Mockito.mock(InMemoryFinanceObjectsHolder.class);
+        this.objectHolder = Mockito.mock(InMemoryUsersHolder.class);
         Mockito.when(objectHolder.getUserById(USER_ID1, PROVIDER1)).thenReturn(financeUser1);
         Mockito.when(objectHolder.getUserById(USER_ID2, PROVIDER2)).thenReturn(financeUser2);
         Mockito.when(objectHolder.getUserById(USER_ID3, PROVIDER3)).thenReturn(financeUser3);

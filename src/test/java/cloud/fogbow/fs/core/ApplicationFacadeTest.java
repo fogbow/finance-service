@@ -179,56 +179,7 @@ public class ApplicationFacadeTest {
 		Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
 	}
 
-	// test case: When calling the changeOptions method, it must authorize the
-	// operation and call the FinanceManager. Also, it must start and finish
-	// operations correctly using the SynchronizationManager.
-	@Test
-	public void testChangeOptions() throws FogbowException {
-		setUpPublicKeysHolder();
-		setUpAuthentication();
-		setUpAuthorization(OperationType.CHANGE_OPTIONS);
-		setUpApplicationFacade();
 
-		ApplicationFacade.getInstance().changeOptions(adminToken, this.userIdToChange, 
-				this.userProviderToChange, this.newOptions);
-
-		Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
-        Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
-		Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
-		Mockito.verify(financeManager, Mockito.times(1)).changeOptions(this.userIdToChange, 
-				this.userProviderToChange, this.newOptions);
-	}
-	
-	// test case: When calling the changeOptions method, if the call to
-	// FinanceManager.changeOptions throws an exception, the method
-	// must rethrow the exception and finish the operation correctly.
-	@Test
-	public void testChangeOptionsFinishesOperationIfOperationFails() throws FogbowException {
-		setUpPublicKeysHolder();
-		setUpAuthentication();
-		setUpAuthorization(OperationType.CHANGE_OPTIONS);
-
-		this.financeManager = Mockito.mock(FinanceManager.class);
-		this.synchronizationManager = Mockito.mock(SynchronizationManager.class);
-
-		ApplicationFacade.getInstance().setAuthorizationPlugin(authorizationPlugin);
-		ApplicationFacade.getInstance().setFinanceManager(financeManager);
-		ApplicationFacade.getInstance().setSynchronizationManager(synchronizationManager);
-
-		Mockito.doThrow(FogbowException.class).when(this.financeManager).changeOptions(this.userIdToChange, 
-				this.userProviderToChange, this.newOptions);
-
-		try {
-			ApplicationFacade.getInstance().changeOptions(this.adminToken, this.userIdToChange, 
-					this.userProviderToChange, this.newOptions);
-			Assert.fail("changeOptions is expected to throw exception.");
-		} catch (FogbowException e) {
-		}
-
-		Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
-		Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
-		Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
-	}
 	
 	// test case: When calling the updateFinanceState method, it must authorize the
 	// operation and call the FinanceManager. Also, it must start and finish
@@ -508,7 +459,7 @@ public class ApplicationFacadeTest {
         setUpAuthorization(OperationType.GET_FINANCE_PLAN);
         setUpApplicationFacade();
         
-        Mockito.when(financeManager.getFinancePlan(newPlanName)).thenReturn(newPlanInfo);
+        Mockito.when(financeManager.getFinancePlanOptions(newPlanName)).thenReturn(newPlanInfo);
 
         Map<String, String> returnedPlan = ApplicationFacade.getInstance().getFinancePlan(adminToken, newPlanName);
         
@@ -528,7 +479,7 @@ public class ApplicationFacadeTest {
         setUpAuthorization(OperationType.GET_FINANCE_PLAN);
         setUpApplicationFacade();
         
-        Mockito.when(financeManager.getFinancePlan(newPlanName)).thenThrow(new InvalidParameterException());
+        Mockito.when(financeManager.getFinancePlanOptions(newPlanName)).thenThrow(new InvalidParameterException());
 
         try {
             ApplicationFacade.getInstance().getFinancePlan(adminToken, newPlanName);
@@ -541,45 +492,52 @@ public class ApplicationFacadeTest {
         Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
     }
     
-    // test case: When calling the updateFinancePlan method, it must authorize the
+    // test case: When calling the changeOptions method, it must authorize the
     // operation and call the FinanceManager. Also, it must start and finish
     // operations correctly using the SynchronizationManager.
     @Test
-    public void testUpdateFinancePlan() throws FogbowException {
+    public void testChangeOptions() throws FogbowException {
         setUpPublicKeysHolder();
         setUpAuthentication();
-        setUpAuthorization(OperationType.UPDATE_FINANCE_PLAN);
+        setUpAuthorization(OperationType.CHANGE_OPTIONS);
         setUpApplicationFacade();
 
-        
-        ApplicationFacade.getInstance().updateFinancePlan(adminToken, planToUpdate, updatedPlanInfo);
-        
-        
-        Mockito.verify(financeManager, Mockito.times(1)).updateFinancePlan(planToUpdate, updatedPlanInfo);
+        ApplicationFacade.getInstance().changePlanOptions(adminToken, this.planToUpdate,
+                this.newOptions);
+
         Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
         Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
         Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
+        Mockito.verify(financeManager, Mockito.times(1)).changeOptions(this.planToUpdate,
+                this.newOptions);
     }
     
-    // test case: When calling the updateFinancePlan method, if the call to
-    // FinanceManager.updateFinancePlan throws an exception, the method
+    // test case: When calling the changeOptions method, if the call to
+    // FinanceManager.changeOptions throws an exception, the method
     // must rethrow the exception and finish the operation correctly.
     @Test
-    public void testUpdateFinancePlanFinishesOperationIfOperationFails() throws FogbowException {
+    public void testChangeOptionsFinishesOperationIfOperationFails() throws FogbowException {
         setUpPublicKeysHolder();
         setUpAuthentication();
-        setUpAuthorization(OperationType.UPDATE_FINANCE_PLAN);
-        setUpApplicationFacade();
+        setUpAuthorization(OperationType.CHANGE_OPTIONS);
 
-        Mockito.doThrow(InvalidParameterException.class).when(financeManager).updateFinancePlan(planToUpdate, updatedPlanInfo);
-        
+        this.financeManager = Mockito.mock(FinanceManager.class);
+        this.synchronizationManager = Mockito.mock(SynchronizationManager.class);
+
+        ApplicationFacade.getInstance().setAuthorizationPlugin(authorizationPlugin);
+        ApplicationFacade.getInstance().setFinanceManager(financeManager);
+        ApplicationFacade.getInstance().setSynchronizationManager(synchronizationManager);
+
+        Mockito.doThrow(FogbowException.class).when(this.financeManager).changeOptions(this.planToUpdate, 
+                this.newOptions);
+
         try {
-            ApplicationFacade.getInstance().updateFinancePlan(adminToken, planToUpdate, updatedPlanInfo);
-            Assert.fail("updateFinancePlan is expected to throw exception.");
-        } catch(InvalidParameterException e) {
+            ApplicationFacade.getInstance().changePlanOptions(this.adminToken, 
+                    this.planToUpdate, this.newOptions);
+            Assert.fail("changeOptions is expected to throw exception.");
+        } catch (FogbowException e) {
         }
-        
-        Mockito.verify(financeManager, Mockito.times(1)).updateFinancePlan(planToUpdate, updatedPlanInfo);
+
         Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
         Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
         Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);

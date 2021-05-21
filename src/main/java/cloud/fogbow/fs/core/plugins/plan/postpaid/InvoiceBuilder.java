@@ -1,4 +1,4 @@
-package cloud.fogbow.fs.core.plugins.payment.postpaid;
+package cloud.fogbow.fs.core.plugins.plan.postpaid;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -8,7 +8,6 @@ import cloud.fogbow.fs.core.models.Invoice;
 import cloud.fogbow.fs.core.models.InvoiceState;
 import cloud.fogbow.fs.core.models.ResourceItem;
 
-@Deprecated
 public class InvoiceBuilder {
 
 	private Map<ResourceItem, Double> items;

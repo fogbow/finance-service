@@ -1,0 +1,19 @@
+package cloud.fogbow.fs.core.plugins;
+
+import java.util.Map;
+
+import cloud.fogbow.fs.core.FsClassFactory;
+import cloud.fogbow.fs.core.InMemoryUsersHolder;
+
+public class PlanPluginInstantiator {
+    private static FsClassFactory classFactory = new FsClassFactory();
+
+    public static PlanPlugin getPlanPlugin(String className, InMemoryUsersHolder usersHolder) {
+        return (PlanPlugin) classFactory.createPluginInstance(className, usersHolder);
+    }
+
+    public static PlanPlugin getPlanPlugin(String className, Map<String, String> pluginOptions,
+            InMemoryUsersHolder usersHolder) {
+        return (PlanPlugin) classFactory.createPluginInstance(className, pluginOptions, usersHolder);
+    }
+}

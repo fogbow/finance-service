@@ -1,4 +1,4 @@
-package cloud.fogbow.fs.core.plugins.finance.prepaid;
+package cloud.fogbow.fs.core.plugins.plan.prepaid;
 
 import org.apache.log4j.Logger;
 
@@ -6,38 +6,38 @@ import cloud.fogbow.common.exceptions.FogbowException;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.constants.Messages;
-import cloud.fogbow.fs.core.InMemoryFinanceObjectsHolder;
+import cloud.fogbow.fs.core.InMemoryUsersHolder;
 import cloud.fogbow.fs.core.models.FinanceUser;
-import cloud.fogbow.fs.core.plugins.PaymentManager;
-import cloud.fogbow.fs.core.plugins.finance.StoppableRunner;
 import cloud.fogbow.fs.core.util.ModifiedListException;
 import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedList;
 import cloud.fogbow.fs.core.util.RasClient;
+import cloud.fogbow.fs.core.util.StoppableRunner;
 
-@Deprecated
 public class StopServiceRunner extends StoppableRunner {
 	private static Logger LOGGER = Logger.getLogger(StopServiceRunner.class);
 	
-	private InMemoryFinanceObjectsHolder objectHolder;
-	private PaymentManager paymentManager;
+	private String planName;
+	private InMemoryUsersHolder usersHolder;
+	private CreditsManager paymentManager;
 	private RasClient rasClient;
 	
-    public StopServiceRunner(long stopServiceWaitTime, InMemoryFinanceObjectsHolder objectHolder, PaymentManager paymentManager,
-            RasClient rasClient) {
+    public StopServiceRunner(String planName, long stopServiceWaitTime, InMemoryUsersHolder usersHolder, 
+            CreditsManager paymentManager, RasClient rasClient) {
+        this.planName = planName;
         this.sleepTime = stopServiceWaitTime;
-        this.objectHolder = objectHolder;
+        this.usersHolder = usersHolder;
         this.paymentManager = paymentManager;
         this.rasClient = rasClient;
     }
 
 	@Override
 	public void doRun() {
-		// This runner depends on PrePaidFinancePlugin. Maybe we should 
+		// This runner depends on PrePaidPlanPlugin. Maybe we should 
 		// pass the plugin name as an argument to the constructor, so we 
 		// can reuse this class.
 	    
 	    MultiConsumerSynchronizedList<FinanceUser> registeredUsers = 
-	            this.objectHolder.getRegisteredUsersByPaymentType(PrePaidFinancePlugin.PLUGIN_NAME);
+	            this.usersHolder.getRegisteredUsersByPlan(this.planName);
 	    Integer consumerId = registeredUsers.startIterating();
 	    
 	    try {
@@ -81,7 +81,7 @@ public class StopServiceRunner extends StoppableRunner {
         try {
             this.rasClient.pauseResourcesByUser(user.getId());
             user.setStoppedResources(true);
-            this.objectHolder.saveUser(user);
+            this.usersHolder.saveUser(user);
         } catch (FogbowException e) {
             LOGGER.error(String.format(Messages.Log.FAILED_TO_PAUSE_USER_RESOURCES_FOR_USER, user.getId(),
                     e.getMessage()));
@@ -92,7 +92,7 @@ public class StopServiceRunner extends StoppableRunner {
         try {
             this.rasClient.resumeResourcesByUser(user.getId());
             user.setStoppedResources(false);
-            this.objectHolder.saveUser(user);
+            this.usersHolder.saveUser(user);
         } catch (FogbowException e) {
             LOGGER.error(String.format(Messages.Log.FAILED_TO_RESUME_USER_RESOURCES_FOR_USER, user.getId(),
                     e.getMessage()));

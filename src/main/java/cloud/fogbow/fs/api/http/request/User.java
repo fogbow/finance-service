@@ -1,7 +1,5 @@
 package cloud.fogbow.fs.api.http.request;
 
-import java.util.HashMap;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -41,15 +39,4 @@ public class User {
         ApplicationFacade.getInstance().removeUser(systemUserToken, userId, provider);
         return new ResponseEntity<Boolean>(HttpStatus.OK);
     }
-	
-	// TODO documentation
-	@RequestMapping(value = "/{provider}/{userId}", method = RequestMethod.PUT)
-	public ResponseEntity<Boolean> changeOptions(
-			@PathVariable String userId,
-			@PathVariable String provider,
-			@RequestHeader(value = SystemConstants.SYSTEM_USER_TOKEN_HEADER_KEY) String systemUserToken,
-			@RequestBody HashMap<String, String> financeOptions) throws FogbowException {
-		ApplicationFacade.getInstance().changeOptions(systemUserToken, userId, provider, financeOptions);
-		return new ResponseEntity<Boolean>(HttpStatus.OK);
-	}
 }

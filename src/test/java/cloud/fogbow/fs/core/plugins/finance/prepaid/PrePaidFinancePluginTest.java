@@ -138,7 +138,7 @@ public class PrePaidFinancePluginTest {
         
         
         Mockito.verify(objectHolder).registerUser(USER_ID_1, PROVIDER_USER_1, 
-                PrePaidFinancePlugin.PLUGIN_NAME, financeOptions);
+                PrePaidFinancePlugin.PLUGIN_NAME);
 	}
 	
 	// test case: When calling the updateFinanceState method, it must get 

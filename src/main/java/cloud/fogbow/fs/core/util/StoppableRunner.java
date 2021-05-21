@@ -1,8 +1,7 @@
-package cloud.fogbow.fs.core.plugins.finance;
+package cloud.fogbow.fs.core.util;
 
 // Maybe we should move this class to common package and
 // remove this version and RAS'.
-@Deprecated
 public abstract class StoppableRunner implements Runnable {
 
     private boolean mustStop;
