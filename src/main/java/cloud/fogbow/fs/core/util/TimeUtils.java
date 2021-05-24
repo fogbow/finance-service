@@ -8,6 +8,7 @@ public class TimeUtils {
 		return System.currentTimeMillis();
 	}
 	
+	// TODO test
 	public String toDate(String dateFormat, long lastBillingTime) {
 		Date date = new Date(lastBillingTime); 
 		return new SimpleDateFormat(dateFormat).format(date);

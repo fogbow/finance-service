@@ -361,8 +361,8 @@ public class FinanceManagerTest {
         Mockito.when(this.objectHolder.getInMemoryUsersHolder()).thenReturn(this.usersHolder);
         
         Mockito.when(this.objectHolder.getPlanPlugins()).thenReturn(plugins);
-        Mockito.when(this.objectHolder.getPlanPluginPlan(PLUGIN_1_NAME)).thenReturn(this.plan1);
-        Mockito.when(this.objectHolder.getPlanPluginPlan(PLUGIN_2_NAME)).thenReturn(this.plan2);
+        Mockito.when(this.objectHolder.getPlanPlugin(PLUGIN_1_NAME)).thenReturn(this.plan1);
+        Mockito.when(this.objectHolder.getPlanPlugin(PLUGIN_2_NAME)).thenReturn(this.plan2);
         Mockito.when(plugins.startIterating()).thenReturn(0);
         Mockito.when(plugins.getNext(Mockito.anyInt())).thenReturn(this.plan1, this.plan2, null);
         Mockito.when(plugins.isEmpty()).thenReturn(false);

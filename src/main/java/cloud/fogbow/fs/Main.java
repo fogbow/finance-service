@@ -12,6 +12,7 @@ import cloud.fogbow.fs.core.ApplicationFacade;
 import cloud.fogbow.fs.core.AuthorizationPluginInstantiator;
 import cloud.fogbow.fs.core.FinanceManager;
 import cloud.fogbow.fs.core.InMemoryFinanceObjectsHolder;
+import cloud.fogbow.fs.core.InMemoryUsersHolder;
 import cloud.fogbow.fs.core.PropertiesHolder;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.plugins.authorization.FsOperation;
@@ -33,7 +34,8 @@ public class Main implements ApplicationRunner {
         AuthorizationPlugin<FsOperation> authorizationPlugin = AuthorizationPluginInstantiator.getAuthorizationPlugin();
         ApplicationFacade.getInstance().setAuthorizationPlugin(authorizationPlugin);
         
-		InMemoryFinanceObjectsHolder objectHolder = new InMemoryFinanceObjectsHolder(databaseManager);
+        InMemoryUsersHolder usersHolder = new InMemoryUsersHolder(databaseManager);
+		InMemoryFinanceObjectsHolder objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, usersHolder);
 		
 		FinanceManager financeManager = new FinanceManager(objectHolder);
 		ApplicationFacade.getInstance().setFinanceManager(financeManager);

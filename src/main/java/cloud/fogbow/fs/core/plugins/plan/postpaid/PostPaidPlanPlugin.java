@@ -86,6 +86,7 @@ public class PostPaidPlanPlugin extends PlanPlugin {
         
     }
     
+    // TODO test
     public PostPaidPlanPlugin(InMemoryUsersHolder usersHolder) throws ConfigurationErrorException, 
                     InvalidParameterException, InternalServerErrorException {
         this.usersHolder = usersHolder;
@@ -99,6 +100,7 @@ public class PostPaidPlanPlugin extends PlanPlugin {
         this.paymentManager = new InvoiceManager(this.usersHolder, plan);
     }
     
+    // TODO test
     public PostPaidPlanPlugin(InMemoryUsersHolder usersHolder, Map<String, String> financeOptions)
             throws ConfigurationErrorException, InvalidParameterException, InternalServerErrorException {
         this.usersHolder = usersHolder;
@@ -111,6 +113,7 @@ public class PostPaidPlanPlugin extends PlanPlugin {
         this.paymentManager = new InvoiceManager(this.usersHolder, plan);
     }
     
+    // TODO test
     public PostPaidPlanPlugin(String name, InMemoryUsersHolder usersHolder, AccountingServiceClient accountingServiceClient,
             RasClient rasClient, InvoiceManager paymentManager, Map<String, String> financeOptions) 
                     throws InvalidParameterException, InternalServerErrorException {
@@ -137,6 +140,7 @@ public class PostPaidPlanPlugin extends PlanPlugin {
         return options;
     }
 
+    // TODO test
     @Override
     public void setOptions(Map<String, String> financeOptions) throws InvalidParameterException {
         validateFinanceOptions(financeOptions);
@@ -247,6 +251,7 @@ public class PostPaidPlanPlugin extends PlanPlugin {
         this.usersHolder.removeUser(user.getId(), user.getIdentityProviderId()); 
     }
 
+    // TODO test
     @Override
     public Map<String, String> getOptions() {
         HashMap<String, String> options = new HashMap<String, String>();
@@ -294,6 +299,7 @@ public class PostPaidPlanPlugin extends PlanPlugin {
         return true;
     }
 
+    // TODO test
     @Override
     public void setUp(Object... params) throws ConfigurationErrorException {
         InMemoryUsersHolder objectsHolder = (InMemoryUsersHolder) params[0];

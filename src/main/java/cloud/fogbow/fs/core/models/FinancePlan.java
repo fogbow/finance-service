@@ -65,6 +65,7 @@ public class FinancePlan {
 		this.plan = plan;
     }
     
+    // TODO test
     @PostLoad
     private void startUp() {
         plan = getPlanFromDatabaseItems(items);
@@ -198,6 +199,7 @@ public class FinancePlan {
 		}
 	}
 	
+	// TODO test
 	public Map<String, String> getRulesAsMap() {
 	    return generateRulesRepr();
 	}
@@ -212,6 +214,7 @@ public class FinancePlan {
         return rulesRepr;
     }
 
+	// TODO test
     // TODO discuss how this operation should be performed
 	public void update(Map<String, String> planInfo) throws InvalidParameterException {
 		Map<ResourceItem, Double> newPlan = validatePlanInfo(planInfo);

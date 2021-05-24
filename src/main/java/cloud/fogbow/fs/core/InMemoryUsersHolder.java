@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import cloud.fogbow.common.exceptions.ConfigurationErrorException;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
@@ -17,7 +19,6 @@ import cloud.fogbow.fs.core.util.ModifiedListException;
 import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedList;
 import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedListFactory;
 
-// TODO test
 public class InMemoryUsersHolder {
     private DatabaseManager databaseManager;
     private UserCreditsFactory userCreditsFactory;
@@ -29,7 +30,8 @@ public class InMemoryUsersHolder {
         this(databaseManager, new MultiConsumerSynchronizedListFactory(), new UserCreditsFactory());
     }
 
-    public InMemoryUsersHolder(DatabaseManager databaseManager,
+    @VisibleForTesting
+    InMemoryUsersHolder(DatabaseManager databaseManager,
             MultiConsumerSynchronizedListFactory listFactory, UserCreditsFactory userCreditsFactory)
             throws InternalServerErrorException, ConfigurationErrorException {
         this.userCreditsFactory = userCreditsFactory;
@@ -44,11 +46,21 @@ public class InMemoryUsersHolder {
         }
     }
     
+    @VisibleForTesting
+    InMemoryUsersHolder(DatabaseManager databaseManager, 
+            UserCreditsFactory userCreditsFactory, 
+            MultiConsumerSynchronizedListFactory listFactory, 
+            Map<String, MultiConsumerSynchronizedList<FinanceUser>> usersByPlugin) {
+        this.databaseManager = databaseManager;
+        this.userCreditsFactory = userCreditsFactory;
+        this.listFactory = listFactory;
+        this.usersByPlugin = usersByPlugin;
+    }
+    
     public void registerUser(String userId, String provider, String pluginName)
             throws InternalServerErrorException, InvalidParameterException {
         checkIfUserExists(userId, provider);
 
-        // FIXME
         FinanceUser user = new FinanceUser(new HashMap<String, String>());
         user.setUserId(userId, provider);
         user.setFinancePluginName(pluginName);
@@ -56,7 +68,7 @@ public class InMemoryUsersHolder {
         user.setInvoices(new ArrayList<Invoice>());
 
         addUserByPlugin(user);
-
+        
         this.databaseManager.saveUser(user);
     }
 
@@ -77,7 +89,7 @@ public class InMemoryUsersHolder {
         if (!usersByPlugin.containsKey(pluginName)) {
             usersByPlugin.put(pluginName, this.listFactory.getList());
         }
-
+        
         MultiConsumerSynchronizedList<FinanceUser> pluginUsers = usersByPlugin.get(pluginName);
         pluginUsers.addItem(user);
     }
@@ -160,6 +172,7 @@ public class InMemoryUsersHolder {
         return userToReturn;
     }
 
+    @Deprecated
     public MultiConsumerSynchronizedList<FinanceUser> getRegisteredUsersByPaymentType(String pluginName) {
         if (this.usersByPlugin.containsKey(pluginName)) {
             return this.usersByPlugin.get(pluginName);
@@ -185,7 +198,7 @@ public class InMemoryUsersHolder {
         if (this.usersByPlugin.containsKey(pluginName)) {
             return this.usersByPlugin.get(pluginName);
         } else {
-            return new MultiConsumerSynchronizedList<FinanceUser>();
+            return this.listFactory.getList();
         }
     }
 }

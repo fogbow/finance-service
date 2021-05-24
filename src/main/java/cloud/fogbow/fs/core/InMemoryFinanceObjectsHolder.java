@@ -3,8 +3,6 @@ package cloud.fogbow.fs.core;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
-
 import cloud.fogbow.common.exceptions.ConfigurationErrorException;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
@@ -12,35 +10,39 @@ import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.plugins.PlanPlugin;
-import cloud.fogbow.fs.core.plugins.plan.prepaid.UserCreditsFactory;
 import cloud.fogbow.fs.core.util.ModifiedListException;
 import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedList;
 import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedListFactory;
 
 public class InMemoryFinanceObjectsHolder {
-    private static Logger LOGGER = Logger.getLogger(InMemoryFinanceObjectsHolder.class);
-    
     private DatabaseManager databaseManager;
     private MultiConsumerSynchronizedList<PlanPlugin> planPlugins;
     private InMemoryUsersHolder usersHolder;
+    private MultiConsumerSynchronizedListFactory listFactory;
 
-    public InMemoryFinanceObjectsHolder(DatabaseManager databaseManager) throws InternalServerErrorException, ConfigurationErrorException {
-        this(databaseManager, new MultiConsumerSynchronizedListFactory(), new UserCreditsFactory());
+    public InMemoryFinanceObjectsHolder(DatabaseManager databaseManager, InMemoryUsersHolder usersHolder)
+            throws InternalServerErrorException, ConfigurationErrorException {
+        this(databaseManager, usersHolder, new MultiConsumerSynchronizedListFactory());
     }
 
-    public InMemoryFinanceObjectsHolder(DatabaseManager databaseManager,
-            MultiConsumerSynchronizedListFactory listFactory, UserCreditsFactory userCreditsFactory)
+    public InMemoryFinanceObjectsHolder(DatabaseManager databaseManager, InMemoryUsersHolder usersHolder,
+            MultiConsumerSynchronizedListFactory listFactory)
             throws InternalServerErrorException, ConfigurationErrorException {
         this.databaseManager = databaseManager;
-        loadData(listFactory, userCreditsFactory);
+        this.usersHolder = usersHolder;
+        this.listFactory = listFactory;
+        loadData();
+    }
+    
+    public InMemoryFinanceObjectsHolder(DatabaseManager databaseManager, InMemoryUsersHolder usersHolder,
+            MultiConsumerSynchronizedListFactory listFactory, MultiConsumerSynchronizedList<PlanPlugin> planPlugins) {
+        this.databaseManager = databaseManager;
+        this.usersHolder = usersHolder;
+        this.listFactory = listFactory;
+        this.planPlugins = planPlugins;
     }
 
-    private void loadData(MultiConsumerSynchronizedListFactory listFactory,
-            UserCreditsFactory userCreditsFactory) throws InternalServerErrorException, ConfigurationErrorException {
-        // read users data
-        this.usersHolder = new InMemoryUsersHolder(databaseManager, listFactory, userCreditsFactory);
-        
-        // read plan plugins data
+    private void loadData() throws InternalServerErrorException, ConfigurationErrorException {
         List<PlanPlugin> databasePlanPlugins = this.databaseManager.getRegisteredPlanPlugins();
         planPlugins = listFactory.getList();
         
@@ -51,11 +53,15 @@ public class InMemoryFinanceObjectsHolder {
     }
 
     public void reset() throws InternalServerErrorException, ConfigurationErrorException {
-        loadData(new MultiConsumerSynchronizedListFactory(), new UserCreditsFactory());
+        loadData();
     }
     
     public InMemoryUsersHolder getInMemoryUsersHolder() {
         return this.usersHolder;
+    }
+    
+    public MultiConsumerSynchronizedList<PlanPlugin> getPlanPlugins() {
+        return this.planPlugins;
     }
     
     /*
@@ -104,22 +110,13 @@ public class InMemoryFinanceObjectsHolder {
      * 
      */
 
-    // TODO test
-    public MultiConsumerSynchronizedList<PlanPlugin> getPlanPlugins() {
-        return planPlugins;
-    }
-
-    // TODO test
     public void registerPlanPlugin(PlanPlugin plugin) throws InternalServerErrorException, InvalidParameterException {
-        LOGGER.info(plugin.getName());
-        
         checkIfPluginExists(plugin.getName());
         this.planPlugins.addItem(plugin);
         this.databaseManager.savePlanPlugin(plugin);
     }
 
-    // TODO test
-    public PlanPlugin getPlanPluginPlan(String pluginName) throws InternalServerErrorException, InvalidParameterException {
+    public PlanPlugin getPlanPlugin(String pluginName) throws InternalServerErrorException, InvalidParameterException {
         Integer consumerId = planPlugins.startIterating();
         PlanPlugin planToReturn = null;
 
@@ -162,18 +159,17 @@ public class InMemoryFinanceObjectsHolder {
     
     private void checkIfPluginExists(String name) throws InternalServerErrorException, InvalidParameterException {
         try {
-            getPlanPluginPlan(name);
+            getPlanPlugin(name);
         } catch (InvalidParameterException e) {
             return;
         }
         
-        // FIXME message
         throw new InvalidParameterException(String.format(Messages.Exception.FINANCE_PLAN_ALREADY_EXISTS, name));
     }
 
-    // TODO test
     public void removePlanPlugin(String pluginName) throws InternalServerErrorException, InvalidParameterException {
-        PlanPlugin planPlugin = getPlanPluginPlan(pluginName);
+        // TODO how should we treat the users who use this plan?
+        PlanPlugin planPlugin = getPlanPlugin(pluginName);
         
         synchronized(planPlugin) {
             planPlugins.removeItem(planPlugin);
@@ -181,20 +177,19 @@ public class InMemoryFinanceObjectsHolder {
         }
     }
 
-    // TODO test
     public void updatePlanPlugin(String pluginName, Map<String, String> pluginOptions) 
             throws InternalServerErrorException, InvalidParameterException {
-        PlanPlugin planPlugin = getPlanPluginPlan(pluginName);
+        PlanPlugin planPlugin = getPlanPlugin(pluginName);
         
         synchronized(planPlugin) {
             planPlugin.setOptions(pluginOptions);
+            this.databaseManager.savePlanPlugin(planPlugin);
         }
     }
 
-    // TODO test
     public Map<String, String> getPlanPluginOptions(String pluginName) 
             throws InternalServerErrorException, InvalidParameterException {
-        PlanPlugin planPlugin = getPlanPluginPlan(pluginName);
+        PlanPlugin planPlugin = getPlanPlugin(pluginName);
         
         synchronized(planPlugin) {
             return planPlugin.getOptions();

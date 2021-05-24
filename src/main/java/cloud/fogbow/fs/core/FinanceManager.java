@@ -24,6 +24,7 @@ import cloud.fogbow.fs.core.util.ModifiedListException;
 import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedList;
 import cloud.fogbow.ras.core.models.RasOperation;
 
+// TODO test ModifiedListException
 public class FinanceManager {
     private static Logger LOGGER = Logger.getLogger(FinanceManager.class);
     @VisibleForTesting

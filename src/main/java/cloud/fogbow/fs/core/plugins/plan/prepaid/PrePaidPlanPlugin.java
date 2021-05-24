@@ -83,6 +83,7 @@ public class PrePaidPlanPlugin extends PlanPlugin {
         
     }
     
+    // TODO test
     public PrePaidPlanPlugin(InMemoryUsersHolder usersHolder) 
             throws ConfigurationErrorException, InvalidParameterException {
         this.usersHolder = usersHolder;
@@ -96,6 +97,7 @@ public class PrePaidPlanPlugin extends PlanPlugin {
         this.paymentManager = new CreditsManager(this.usersHolder, plan);
     }
     
+    // TODO test
     public PrePaidPlanPlugin(InMemoryUsersHolder usersHolder, Map<String, String> financeOptions) 
             throws ConfigurationErrorException, InvalidParameterException {
         this.usersHolder = usersHolder;
@@ -108,6 +110,7 @@ public class PrePaidPlanPlugin extends PlanPlugin {
         this.paymentManager = new CreditsManager(this.usersHolder, plan);
     }
     
+    // TODO test
     public PrePaidPlanPlugin(InMemoryUsersHolder usersHolder, AccountingServiceClient accountingServiceClient,
             RasClient rasClient, CreditsManager paymentManager, Map<String, String> financeOptions) throws InvalidParameterException {
         this.accountingServiceClient = accountingServiceClient;
@@ -119,6 +122,7 @@ public class PrePaidPlanPlugin extends PlanPlugin {
         setOptions(financeOptions);
     }
     
+    // TODO test
     private Map<String, String> loadOptionsFromConfig() {
         Map<String, String> options = new HashMap<String, String>();
 
@@ -129,6 +133,7 @@ public class PrePaidPlanPlugin extends PlanPlugin {
         return options;
     }
     
+    // TODO test
     @Override
     public void setOptions(Map<String, String> financeOptions) throws InvalidParameterException {
         validateFinanceOptions(financeOptions);
@@ -247,6 +252,7 @@ public class PrePaidPlanPlugin extends PlanPlugin {
         this.usersHolder.removeUser(user.getId(), user.getIdentityProviderId());
     }
 
+    // TODO test
     @Override
     public Map<String, String> getOptions() {
         HashMap<String, String> options = new HashMap<String, String>();
@@ -290,7 +296,8 @@ public class PrePaidPlanPlugin extends PlanPlugin {
             this.usersHolder.saveUser(user);
         }
     }
-
+    
+    // TODO test
     @Override
     public void setUp(Object... params) throws ConfigurationErrorException {
         InMemoryUsersHolder usersHolder = (InMemoryUsersHolder) params[0];
