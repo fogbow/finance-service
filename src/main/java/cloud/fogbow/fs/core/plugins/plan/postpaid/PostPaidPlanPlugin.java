@@ -24,6 +24,7 @@ import cloud.fogbow.fs.core.models.Invoice;
 import cloud.fogbow.fs.core.models.InvoiceState;
 import cloud.fogbow.fs.core.plugins.PlanPlugin;
 import cloud.fogbow.fs.core.util.AccountingServiceClient;
+import cloud.fogbow.fs.core.util.FinancePlanFactory;
 import cloud.fogbow.fs.core.util.JsonUtils;
 import cloud.fogbow.fs.core.util.RasClient;
 import cloud.fogbow.ras.core.models.Operation;
@@ -72,7 +73,13 @@ public class PostPaidPlanPlugin extends PlanPlugin {
     
     @Transient
     private InMemoryUsersHolder usersHolder;
-
+    
+    @Transient
+    private JsonUtils jsonUtils;
+    
+    @Transient
+    private FinancePlanFactory planFactory;
+    
     @Column(name = USER_BILLING_TIME_COLUMN_NAME)
     private long userBillingTime;
     
@@ -86,86 +93,71 @@ public class PostPaidPlanPlugin extends PlanPlugin {
         
     }
     
-    // TODO test
     public PostPaidPlanPlugin(InMemoryUsersHolder usersHolder) throws ConfigurationErrorException, 
-                    InvalidParameterException, InternalServerErrorException {
-        this.usersHolder = usersHolder;
-        this.accountingServiceClient = new AccountingServiceClient();
-        this.rasClient = new RasClient();
-        this.threadsAreRunning = false;
-
-        Map<String, String> financeOptions = loadOptionsFromConfig();
-        setOptions(financeOptions);
-        
-        this.paymentManager = new InvoiceManager(this.usersHolder, plan);
+                    InvalidParameterException, InternalServerErrorException { 
+        this(usersHolder, new PostPaidPluginOptionsLoader().load());
     }
-    
-    // TODO test
+
     public PostPaidPlanPlugin(InMemoryUsersHolder usersHolder, Map<String, String> financeOptions)
             throws ConfigurationErrorException, InvalidParameterException, InternalServerErrorException {
-        this.usersHolder = usersHolder;
-        this.accountingServiceClient = new AccountingServiceClient();
-        this.rasClient = new RasClient();
-        this.threadsAreRunning = false;
-
-        setOptions(financeOptions);
+        this(usersHolder, new AccountingServiceClient(), new RasClient(),
+                new FinancePlanFactory(), new JsonUtils(), financeOptions);
         
         this.paymentManager = new InvoiceManager(this.usersHolder, plan);
     }
     
-    // TODO test
-    public PostPaidPlanPlugin(String name, InMemoryUsersHolder usersHolder, AccountingServiceClient accountingServiceClient,
-            RasClient rasClient, InvoiceManager paymentManager, Map<String, String> financeOptions) 
+    PostPaidPlanPlugin(InMemoryUsersHolder usersHolder, AccountingServiceClient accountingServiceClient,
+            RasClient rasClient, FinancePlanFactory planFactory, JsonUtils jsonUtils, Map<String, String> financeOptions) 
                     throws InvalidParameterException, InternalServerErrorException {
         this.usersHolder = usersHolder;
         this.accountingServiceClient = accountingServiceClient;
         this.rasClient = rasClient;
-        this.paymentManager = paymentManager;
+        this.planFactory = planFactory;
         this.threadsAreRunning = false;
-        this.name = name;
-        
+
         setOptions(financeOptions);
-        
-        this.paymentManager = paymentManager;
     }
     
-    private Map<String, String> loadOptionsFromConfig() {
-        Map<String, String> options = new HashMap<String, String>();
-
-        options.put(PaymentRunner.USER_BILLING_INTERVAL, PropertiesHolder.getInstance().getProperty(PaymentRunner.USER_BILLING_INTERVAL));
-        options.put(FINANCE_PLAN_RULES_FILE_PATH, PropertiesHolder.getInstance().getProperty(FINANCE_PLAN_RULES_FILE_PATH));
-        options.put(PLAN_PLUGIN_NAME, PropertiesHolder.getInstance().getProperty(PLAN_PLUGIN_NAME));
-        options.put(INVOICE_WAIT_TIME, PropertiesHolder.getInstance().getProperty(INVOICE_WAIT_TIME));
+    PostPaidPlanPlugin(String name, long userBillingInterval, long invoiceWaitTime, InMemoryUsersHolder usersHolder, 
+            AccountingServiceClient accountingServiceClient, RasClient rasClient, InvoiceManager invoiceManager, 
+            FinancePlanFactory planFactory, JsonUtils jsonUtils, FinancePlan financePlan, Map<String, String> financeOptions) 
+                    throws InvalidParameterException, InternalServerErrorException {
+        this(name, userBillingInterval, invoiceWaitTime, usersHolder, accountingServiceClient, rasClient, invoiceManager, 
+                planFactory, jsonUtils, financePlan);
         
-        return options;
+        setOptions(financeOptions);
     }
-
-    // TODO test
+    
+    PostPaidPlanPlugin(String name, long userBillingInterval, long invoiceWaitTime, InMemoryUsersHolder usersHolder, 
+            AccountingServiceClient accountingServiceClient, RasClient rasClient, InvoiceManager invoiceManager, 
+            FinancePlanFactory planFactory, JsonUtils jsonUtils, FinancePlan financePlan) 
+                    throws InvalidParameterException, InternalServerErrorException {
+        this.name = name;
+        this.userBillingTime = userBillingInterval;
+        this.invoiceWaitTime = invoiceWaitTime;
+        this.usersHolder = usersHolder;
+        this.accountingServiceClient = accountingServiceClient;
+        this.rasClient = rasClient;
+        this.planFactory = planFactory;
+        this.paymentManager = invoiceManager;
+        this.jsonUtils = jsonUtils;
+        this.plan = financePlan;
+        this.threadsAreRunning = false;
+    }
+    
     @Override
     public void setOptions(Map<String, String> financeOptions) throws InvalidParameterException {
         validateFinanceOptions(financeOptions);
         
+        String oldPluginName = this.name;
         this.name = financeOptions.get(PLAN_PLUGIN_NAME);
         this.userBillingTime = Long.valueOf(financeOptions.get(PaymentRunner.USER_BILLING_INTERVAL));
         this.invoiceWaitTime = Long.valueOf(financeOptions.get(INVOICE_WAIT_TIME));
         
-        JsonUtils jsonUtils = new JsonUtils();
+        setUpPlanFromOptions(financeOptions, this.planFactory);
         
-        // TODO refactor
-        if (financeOptions.containsKey(FINANCE_PLAN_RULES)) {
-            Map<String, String> planInfo = jsonUtils.fromJson(financeOptions.get(FINANCE_PLAN_RULES), Map.class);
-            
-            if (this.plan == null) {
-                this.plan = new FinancePlan(this.name, planInfo);
-            } else {
-                synchronized(this.plan) {
-                    this.plan.update(planInfo);
-                }
-            }
-        } else if (financeOptions.containsKey(FINANCE_PLAN_RULES_FILE_PATH))  {
-            String financePlanFilePath = financeOptions.get(FINANCE_PLAN_RULES_FILE_PATH);
-            this.plan = new FinancePlan(this.name, financePlanFilePath);
-        }
+        // FIXME
+        // this.usersHolder.moveUsersFromPlugin(oldPluginName, this.name);
     }
     
     private void validateFinanceOptions(Map<String, String> financeOptions) throws InvalidParameterException {
@@ -176,7 +168,7 @@ public class PostPaidPlanPlugin extends PlanPlugin {
         checkPropertyIsParsable(financeOptions.get(PaymentRunner.USER_BILLING_INTERVAL), PaymentRunner.USER_BILLING_INTERVAL);
         checkPropertyIsParsable(financeOptions.get(INVOICE_WAIT_TIME), INVOICE_WAIT_TIME);
     }
-    
+
     private void checkContainsProperty(Map<String, String> financeOptions, String property) throws InvalidParameterException {
         if (!financeOptions.keySet().contains(property)) {
             throw new InvalidParameterException(
@@ -192,10 +184,49 @@ public class PostPaidPlanPlugin extends PlanPlugin {
                     String.format(Messages.Exception.INVALID_FINANCE_OPTION, property, propertyName));
         }
     }
+    
+    private void setUpPlanFromOptions(Map<String, String> financeOptions, FinancePlanFactory planFactory) throws InvalidParameterException {
+        if (financeOptions.containsKey(FINANCE_PLAN_RULES)) {
+            setUpPlanFromRulesString(financeOptions.get(FINANCE_PLAN_RULES), planFactory);
+        } else if (financeOptions.containsKey(FINANCE_PLAN_RULES_FILE_PATH))  {
+            setUpPlanFromRulesFile(financeOptions.get(FINANCE_PLAN_RULES_FILE_PATH), planFactory);
+        }
+    }
 
+    private void setUpPlanFromRulesString(String rulesString, FinancePlanFactory planFactory)
+            throws InvalidParameterException {
+        Map<String, String> planInfo = this.jsonUtils.fromJson(rulesString, Map.class);
+        
+        if (this.plan == null) {
+            this.plan = planFactory.createFinancePlan(this.name, planInfo);
+        } else {
+            synchronized(this.plan) {
+                // FIXME should also set the plan name
+                this.plan.update(planInfo);
+            }
+        }
+    }
+    
+    private void setUpPlanFromRulesFile(String financePlanFilePath, FinancePlanFactory planFactory)
+            throws InvalidParameterException {
+        this.plan = planFactory.createFinancePlan(this.name, financePlanFilePath);
+    }
+    
     @Override
     public String getName() {
         return this.name;
+    }
+    
+    @Override
+    public Map<String, String> getOptions() {
+        HashMap<String, String> options = new HashMap<String, String>();
+        String planRules = this.jsonUtils.toJson(plan.getRulesAsMap());
+        
+        options.put(FINANCE_PLAN_RULES, planRules);
+        options.put(PaymentRunner.USER_BILLING_INTERVAL, String.valueOf(userBillingTime));
+        options.put(INVOICE_WAIT_TIME, String.valueOf(invoiceWaitTime));
+
+        return options;
     }
     
     @Override
@@ -256,20 +287,6 @@ public class PostPaidPlanPlugin extends PlanPlugin {
         this.usersHolder.removeUser(user.getId(), user.getIdentityProviderId()); 
     }
 
-    // TODO test
-    @Override
-    public Map<String, String> getOptions() {
-        HashMap<String, String> options = new HashMap<String, String>();
-        JsonUtils jsonUtils = new JsonUtils();
-        String planRules = jsonUtils.toJson(plan.getRulesAsMap());
-        
-        options.put(FINANCE_PLAN_RULES, planRules);
-        options.put(PaymentRunner.USER_BILLING_INTERVAL, String.valueOf(userBillingTime));
-        options.put(INVOICE_WAIT_TIME, String.valueOf(invoiceWaitTime));
-
-        return options;
-    }
-
     @Override
     public String getUserFinanceState(SystemUser user, String property) throws InvalidParameterException, InternalServerErrorException {
         return this.paymentManager.getUserFinanceState(user.getId(), user.getIdentityProviderId(), property);
@@ -296,7 +313,8 @@ public class PostPaidPlanPlugin extends PlanPlugin {
     }
 
     @Override
-    public boolean isAuthorized(SystemUser user, RasOperation operation) throws InvalidParameterException, InternalServerErrorException {
+    public boolean isAuthorized(SystemUser user, RasOperation operation) 
+            throws InvalidParameterException, InternalServerErrorException {
         if (operation.getOperationType().equals(Operation.CREATE)) {
             return this.paymentManager.hasPaid(user.getId(), user.getIdentityProviderId());
         }
@@ -315,5 +333,30 @@ public class PostPaidPlanPlugin extends PlanPlugin {
         this.threadsAreRunning = false;
         
         this.paymentManager = new InvoiceManager(this.usersHolder, plan);
+    }
+    
+    static class PostPaidPluginOptionsLoader {
+        public Map<String, String> load() throws ConfigurationErrorException {
+            Map<String, String> options = new HashMap<String, String>();
+            
+            setOptionIfNotNull(options, PaymentRunner.USER_BILLING_INTERVAL);
+            setOptionIfNotNull(options, FINANCE_PLAN_RULES_FILE_PATH);
+            setOptionIfNotNull(options, PLAN_PLUGIN_NAME);
+            setOptionIfNotNull(options, INVOICE_WAIT_TIME);
+
+            return options;
+        }
+        
+        private void setOptionIfNotNull(Map<String, String> options, String optionName) 
+                throws ConfigurationErrorException {
+            String optionValue = PropertiesHolder.getInstance().getProperty(optionName);
+            
+            if (optionValue == null) {
+                throw new ConfigurationErrorException(
+                        String.format(Messages.Exception.MISSING_FINANCE_OPTION, optionName));
+            } else {
+                options.put(optionName, optionValue);
+            }
+        }
     }
 }

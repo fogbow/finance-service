@@ -201,4 +201,12 @@ public class InMemoryUsersHolder {
             return this.listFactory.getList();
         }
     }
+
+    // TODO finish this implementation
+    public void moveUsersFromPlugin(String currentPlanName, String newPlanName) {
+        MultiConsumerSynchronizedList<FinanceUser> usersToMove = this.usersByPlugin.get(currentPlanName);
+        this.usersByPlugin.remove(currentPlanName);
+        usersByPlugin.put(newPlanName, usersToMove);
+        // TODO should update the users
+    }
 }
