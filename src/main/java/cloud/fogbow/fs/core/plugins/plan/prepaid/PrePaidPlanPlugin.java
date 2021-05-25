@@ -218,6 +218,11 @@ public class PrePaidPlanPlugin extends PlanPlugin {
             this.threadsAreRunning = false;
         }
     }
+    
+    @Override
+    public boolean isStarted() {
+        return threadsAreRunning;
+    }
 
     @Override
     public boolean isAuthorized(SystemUser user, RasOperation operation) throws InvalidParameterException, InternalServerErrorException {

@@ -78,6 +78,7 @@ public class FinanceManagerTest {
     private InMemoryUsersHolder usersHolder;
     private PlanPlugin plan1;
     private PlanPlugin plan2;
+    private MultiConsumerSynchronizedList<PlanPlugin> plugins;
 
 	// test case: When calling the constructor, it must get
 	// the names of the finance plugins from a PropertiesHolder
@@ -159,6 +160,21 @@ public class FinanceManagerTest {
 		financeManager.isAuthorized(user1);
 	}
 	
+	// TODO documentation
+	@Test
+	public void testIsAuthorizedModifiedListExceptionIsThrown() throws ModifiedListException, FogbowException {
+        setUpFinancePlugin();
+        setUpAuthentication();
+	    
+	    Mockito.when(plugins.getNext(Mockito.anyInt())).
+	    thenReturn(this.plan1).
+	    thenThrow(new ModifiedListException()).
+	    thenReturn(this.plan1, this.plan2, null);
+	    
+	    FinanceManager financeManager = new FinanceManager(objectHolder);
+	    assertTrue(financeManager.isAuthorized(user2));
+	}
+	
 	// test case: When calling the getFinanceStateProperty method passing an AuthorizableUser, 
 	// it must check which finance plugin manages the user and call the getUserFinanceState
 	// method of the plugin.
@@ -179,6 +195,22 @@ public class FinanceManagerTest {
 
 		FinanceManager financeManager = new FinanceManager(objectHolder);
 		financeManager.getFinanceStateProperty(USER_ID_1, PROVIDER_USER_1, PROPERTY_NAME_1);
+	}
+	
+	// TODO documentation
+	@Test
+	public void testGentFinanceStatePropertyModifiedListExceptionIsThrown() throws FogbowException, ModifiedListException {
+        setUpFinancePlugin();
+        setUpAuthentication();
+        
+        Mockito.when(plugins.getNext(Mockito.anyInt())).
+        thenReturn(this.plan1).
+        thenThrow(new ModifiedListException()).
+        thenReturn(this.plan1, this.plan2, null);
+        
+        FinanceManager financeManager = new FinanceManager(objectHolder);
+        
+        assertEquals(PROPERTY_VALUE_2, financeManager.getFinanceStateProperty(USER_ID_2, PROVIDER_USER_2, PROPERTY_NAME_2));
 	}
 	
 	// test case: When calling the addUser method, it must add the 
@@ -212,6 +244,25 @@ public class FinanceManagerTest {
 		financeManager.addUser(user1);
 	}
 	
+	// TODO documentation
+	@Test
+	public void testAddUserModifiedListExceptionIsThrown() throws FogbowException, ModifiedListException {
+        setUpFinancePlugin();
+
+        Mockito.when(plugins.getNext(Mockito.anyInt())).
+        thenReturn(this.plan1).
+        thenThrow(new ModifiedListException()).
+        thenReturn(this.plan1, this.plan2, null);
+        
+        FinanceManager financeManager = new FinanceManager(objectHolder);
+        Map<String, String> financeOptions = new HashMap<String, String>();
+        User user2 = new User(USER_ID_TO_ADD_2, PROVIDER_USER_TO_ADD_2, PLUGIN_2_NAME, financeOptions);
+
+        financeManager.addUser(user2);
+
+        Mockito.verify(this.plan2, Mockito.times(1)).registerUser(Mockito.any(SystemUser.class));
+	}
+	
 	// test case: When calling the removeUser method, it must remove 
 	// the user using the correct FinancePlugin.
 	@Test
@@ -236,6 +287,23 @@ public class FinanceManagerTest {
 		
 		financeManager.removeUser(USER_ID_1, PROVIDER_USER_1);
 	}
+	
+	// TODO documentation
+    @Test
+    public void testRemoveUserModifiedListExceptionIsThrown() throws FogbowException, ModifiedListException {
+        setUpFinancePlugin();
+
+        Mockito.when(plugins.getNext(Mockito.anyInt())).
+        thenReturn(this.plan1).
+        thenThrow(new ModifiedListException()).
+        thenReturn(this.plan1, this.plan2, null);
+        
+        FinanceManager financeManager = new FinanceManager(objectHolder);
+
+        financeManager.removeUser(USER_ID_2, PROVIDER_USER_2);
+
+        Mockito.verify(plan2, Mockito.times(1)).unregisterUser(Mockito.any(SystemUser.class));
+    }
 	
 	// test case: When calling the updateFinanceState method, it must
 	// change the user's finance state using the correct FinancePlugin.
@@ -263,11 +331,32 @@ public class FinanceManagerTest {
 		financeManager.updateFinanceState(USER_ID_1, PROVIDER_USER_1, newFinanceState);
 	}
 	
+	// TODO documentation
+	@Test
+	public void testUpdateFinanceStateModifiedListExceptionIsThrown() throws FogbowException, ModifiedListException {
+        setUpFinancePlugin();
+        
+        Mockito.when(plugins.getNext(Mockito.anyInt())).
+        thenReturn(this.plan1).
+        thenThrow(new ModifiedListException()).
+        thenReturn(this.plan1, this.plan2, null);
+        
+        Map<String, String> newFinanceState = new HashMap<String, String>();
+
+        FinanceManager financeManager = new FinanceManager(objectHolder);
+        financeManager.updateFinanceState(USER_ID_2, PROVIDER_USER_2, newFinanceState);
+
+        Mockito.verify(plan2, Mockito.times(1)).updateUserFinanceState(Mockito.any(SystemUser.class), Mockito.any());
+	}
+	
 	// test case: When calling the startPlugins method, it must call the startThreads
 	// method of all the known finance plugins.
 	@Test
 	public void testStartThreads() throws FogbowException, ModifiedListException {
 		setUpFinancePlugin();
+		
+		Mockito.when(plan1.isStarted()).thenReturn(false);
+		Mockito.when(plan2.isStarted()).thenReturn(false);
 		
 		FinanceManager financeManager = new FinanceManager(objectHolder);
 		
@@ -276,16 +365,61 @@ public class FinanceManagerTest {
 		Mockito.verify(plan1, Mockito.times(1)).startThreads();
 		Mockito.verify(plan2, Mockito.times(1)).startThreads();
 	}
+	
+	// TODO documentation
+	@Test
+	public void testStartThreadsModifiedListException() throws FogbowException, ModifiedListException {
+        setUpFinancePlugin();
+
+        Mockito.when(plan1.isStarted()).thenReturn(false, true);
+        Mockito.when(plan2.isStarted()).thenReturn(false);
+        
+        Mockito.when(plugins.getNext(Mockito.anyInt())).
+        thenReturn(this.plan1).
+        thenThrow(new ModifiedListException()).
+        thenReturn(this.plan1, this.plan2, null);
+        
+        FinanceManager financeManager = new FinanceManager(objectHolder);
+
+        financeManager.startPlugins();
+
+        Mockito.verify(plan1, Mockito.times(1)).startThreads();
+        Mockito.verify(plan2, Mockito.times(1)).startThreads();
+	}
 
 	// test case: When calling the stopPlugins method, it must call the stopThreads
 	// method of all the known finance plugins.
 	@Test
 	public void testStopThreads() throws FogbowException, ModifiedListException {
 		setUpFinancePlugin();
+		
+        Mockito.when(plan1.isStarted()).thenReturn(true);
+        Mockito.when(plan2.isStarted()).thenReturn(true);
 
 		FinanceManager financeManager = new FinanceManager(objectHolder);
 
 		financeManager.stopPlugins();
+
+        Mockito.verify(plan1, Mockito.times(1)).startThreads();
+        Mockito.verify(plan2, Mockito.times(1)).startThreads();
+	}
+	
+	// TODO documentation
+	@Test
+	public void testStopThreadsModifiedListException() throws FogbowException, ModifiedListException {
+        setUpFinancePlugin();
+
+        Mockito.when(plan1.isStarted()).thenReturn(true, false);
+        Mockito.when(plan2.isStarted()).thenReturn(true);
+        
+        Mockito.when(plugins.getNext(Mockito.anyInt())).
+        thenReturn(this.plan1).
+        thenThrow(new ModifiedListException()).
+        thenReturn(this.plan1, this.plan2, null);
+        
+        FinanceManager financeManager = new FinanceManager(objectHolder);
+
+        financeManager.stopPlugins();
 
         Mockito.verify(plan1, Mockito.times(1)).startThreads();
         Mockito.verify(plan2, Mockito.times(1)).startThreads();
@@ -336,7 +470,7 @@ public class FinanceManagerTest {
 		operation2 = Mockito.mock(RasOperation.class);
 		operation3 = Mockito.mock(RasOperation.class);
 
-        MultiConsumerSynchronizedList<PlanPlugin> plugins = Mockito.mock(MultiConsumerSynchronizedList.class);
+        plugins = Mockito.mock(MultiConsumerSynchronizedList.class);
         this.plan1 = Mockito.mock(PlanPlugin.class);
         Mockito.when(this.plan1.isRegisteredUser(systemUser1)).thenReturn(true);
         Mockito.when(this.plan1.isRegisteredUser(systemUser2)).thenReturn(false);

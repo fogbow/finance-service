@@ -75,7 +75,6 @@ public class MultiConsumerSynchronizedList<T> {
         }
     }
     
-    // TODO test
     public boolean isEmpty() {
         synchronized(internalList) {
             return internalList.isEmpty();

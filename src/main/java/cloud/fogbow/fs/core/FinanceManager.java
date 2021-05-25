@@ -3,8 +3,6 @@ package cloud.fogbow.fs.core;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
-
 import com.google.common.annotations.VisibleForTesting;
 
 import cloud.fogbow.as.core.util.AuthenticationUtil;
@@ -24,9 +22,7 @@ import cloud.fogbow.fs.core.util.ModifiedListException;
 import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedList;
 import cloud.fogbow.ras.core.models.RasOperation;
 
-// TODO test ModifiedListException
 public class FinanceManager {
-    private static Logger LOGGER = Logger.getLogger(FinanceManager.class);
     @VisibleForTesting
     static final String FINANCE_PLUGINS_CLASS_NAMES_SEPARATOR = ",";
     private InMemoryFinanceObjectsHolder objectHolder;
@@ -124,9 +120,10 @@ public class FinanceManager {
         PlanPlugin plugin = planPlugins.getNext(consumerId);
         
         while (plugin != null) {
-            // FIXME possible multiple start on the same plugin 
-            // in the case of failure in the iteration?
-            plugin.startThreads();
+            if (!plugin.isStarted()) {
+                plugin.startThreads();
+            }
+
             plugin = planPlugins.getNext(consumerId);
         }   
     }
@@ -153,9 +150,10 @@ public class FinanceManager {
         PlanPlugin plugin = planPlugins.getNext(consumerId);
         
         while (plugin != null) {
-            // FIXME possible multiple start on the same plugin 
-            // in the case of failure in the iteration?
-            plugin.startThreads();
+            if (plugin.isStarted()) {
+                plugin.startThreads();
+            }
+
             plugin = planPlugins.getNext(consumerId);
         }  
     }

@@ -28,7 +28,10 @@ public abstract class PlanPlugin {
     public abstract void unregisterUser(SystemUser user) throws InvalidParameterException, InternalServerErrorException;
     public abstract Map<String, String> getOptions();
     public abstract void setOptions(Map<String, String> financeOptions) throws InvalidParameterException;
+    // can be used on an already started plugin
     public abstract void startThreads();
+    public abstract boolean isStarted();
+    // can be used on an already stopped plugin
     public abstract void stopThreads();
     public abstract String getUserFinanceState(SystemUser user, String property) throws InvalidParameterException, InternalServerErrorException;
     public abstract void updateUserFinanceState(SystemUser user, Map<String, String> financeState) throws InternalServerErrorException, InvalidParameterException;

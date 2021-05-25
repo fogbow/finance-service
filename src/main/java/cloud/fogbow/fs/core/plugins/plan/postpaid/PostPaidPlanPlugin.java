@@ -228,6 +228,11 @@ public class PostPaidPlanPlugin extends PlanPlugin {
     }
 
     @Override
+    public boolean isStarted() {
+        return this.threadsAreRunning;
+    }
+
+    @Override
     public void setName(String name) {
         // FIXME should exist?
     }

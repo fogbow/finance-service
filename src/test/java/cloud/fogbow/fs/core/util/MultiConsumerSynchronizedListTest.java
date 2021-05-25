@@ -1,7 +1,9 @@
 package cloud.fogbow.fs.core.util;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -205,5 +207,24 @@ public class MultiConsumerSynchronizedListTest {
         
         assertEquals(ITEM_1, firstItem);
         assertEquals(ITEM_2, secondItem);
+    }
+    
+    // test case: When calling the isEmpty method, it must
+    // return a boolean stating whether or not the internal 
+    // list used by the MultiConsumerSynchronizedList instance
+    // is empty.
+    @Test
+    public void testIsEmpty() {
+        MultiConsumerSynchronizedList<String> list = new MultiConsumerSynchronizedList<String>();
+        
+        assertTrue(list.isEmpty());
+        
+        list.addItem(ITEM_1);
+        
+        assertFalse(list.isEmpty());
+        
+        list.removeItem(ITEM_1);
+        
+        assertTrue(list.isEmpty());
     }
 }
