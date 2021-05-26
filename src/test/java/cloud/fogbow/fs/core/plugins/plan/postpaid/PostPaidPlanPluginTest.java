@@ -56,7 +56,7 @@ public class PostPaidPlanPluginTest {
     private static final String PLAN_NAME = "planName";
     private static final String RULES_JSON = "rulesjson";
     private static final String NEW_RULES_JSON = "newRulesJson";
-    private static final String FINANCE_PLAN_FILE_PATH = null;
+    private static final String FINANCE_PLAN_FILE_PATH = "financeplanfilepath";
     private AccountingServiceClient accountingServiceClient;
     private RasClient rasClient;
     private InvoiceManager paymentManager;
