@@ -51,6 +51,7 @@ public class PaymentRunnerTest {
     
     private MultiConsumerSynchronizedList<FinanceUser> users;
     
+    // TODO rewrite this test without the use of spy
     // test case: When calling the doRun method, it must get the
     // list of users from the DatabaseManager. For each user 
     // it must get the user records, set the records in the database and 
@@ -93,6 +94,7 @@ public class PaymentRunnerTest {
                 INITIAL_USER_2_LAST_BILLING_TIME, timeValues.get(1), userRecords);
     }
     
+    // TODO rewrite this test without the use of spy
     // test case: When calling the doRun method and an exception
     // is thrown when acquiring user records, it must handle the
     // exception and continue checking the remaining users.
@@ -133,6 +135,7 @@ public class PaymentRunnerTest {
                 INITIAL_USER_2_LAST_BILLING_TIME, timeValues.get(1), userRecords);
     }
     
+    // TODO rewrite this test without the use of spy
     // test case: When calling the doRun method and a ModifiedListException
     // is thrown when acquiring a user, it must handle the 
     // exception and stop the user iteration.
@@ -178,6 +181,7 @@ public class PaymentRunnerTest {
                 INITIAL_USER_2_LAST_BILLING_TIME, timeValues.get(1), userRecords);
     }
     
+    // TODO rewrite this test without the use of spy
     // test case: When calling the doRun method and an InternalServerErrorException
     // is thrown when acquiring a user, it must handle the 
     // exception and stop the user iteration.

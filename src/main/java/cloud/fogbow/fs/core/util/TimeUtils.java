@@ -2,15 +2,40 @@ package cloud.fogbow.fs.core.util;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.TimeZone;
+
+import cloud.fogbow.as.core.PropertiesHolder;
+import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
 
 public class TimeUtils {
+    private static final String DEFAULT_TIME_ZONE = "GMT0:00";
+    
+    private String timeZone;
+    
+    public TimeUtils() {
+        
+    }
+    
+    public TimeUtils(String timeZone) {
+        this.timeZone = timeZone;
+    }
+    
 	public long getCurrentTimeMillis() {
 		return System.currentTimeMillis();
 	}
 	
-	// TODO test
-	public String toDate(String dateFormat, long lastBillingTime) {
-		Date date = new Date(lastBillingTime); 
-		return new SimpleDateFormat(dateFormat).format(date);
+	public String toDate(String dateFormat, long timeInMilliseconds) {
+	    loadTimeZone();
+		Date date = new Date(timeInMilliseconds); 
+		SimpleDateFormat simpleDateFormat = new SimpleDateFormat(dateFormat);
+		simpleDateFormat.setTimeZone(TimeZone.getTimeZone(this.timeZone));
+		return simpleDateFormat.format(date);
 	}
+
+    private void loadTimeZone() {
+        if (this.timeZone == null) {
+		    this.timeZone = PropertiesHolder.getInstance().
+	                getProperty(ConfigurationPropertyKeys.TIME_ZONE, DEFAULT_TIME_ZONE);
+		}
+    }
 }

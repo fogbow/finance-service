@@ -1,8 +1,12 @@
 package cloud.fogbow.fs.core.models;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.junit.Test;
 
@@ -345,6 +349,66 @@ public class FinancePlanTest {
     @Test(expected = InvalidParameterException.class)
     public void testConstructorDataSourceFileDoesNotExist() throws InvalidParameterException {
         new FinancePlan(PLAN_NAME, "unknown_file.txt");
+    }
+    
+    // test case: When calling the getRulesAsMap method, it must return a Map containing representations 
+    // of the resource items considered in the FinancePlan. Each representation of resource item must
+    // be mapped to the correct resource item value.
+    @Test
+    public void testGetRulesAsMap() throws InvalidParameterException {
+        setUpPlanInfo();
+        
+        ResourceItem computeItem1 = new ComputeItem(COMPUTE_1_VCPU, COMPUTE_1_RAM);
+        ResourceItem computeItem2 = new ComputeItem(COMPUTE_2_VCPU, COMPUTE_2_RAM);
+        ResourceItem volumeItem1 = new VolumeItem(VOLUME_1_SIZE);
+        ResourceItem volumeItem2 = new VolumeItem(VOLUME_2_SIZE);
+        
+        FinancePlan plan = new FinancePlan(PLAN_NAME, planInfo);
+        
+        
+        Map<String, String> returnedMap = plan.getRulesAsMap();
+
+        assertEquals(4, returnedMap.size());
+        
+        assertTrue(returnedMap.containsKey(computeItem1.toString()));
+        assertEquals(String.valueOf(COMPUTE_1_VALUE), returnedMap.get(computeItem1.toString()));
+        
+        assertTrue(returnedMap.containsKey(computeItem2.toString()));
+        assertEquals(String.valueOf(COMPUTE_2_VALUE), returnedMap.get(computeItem2.toString()));
+        
+        assertTrue(returnedMap.containsKey(volumeItem1.toString()));
+        assertEquals(String.valueOf(VOLUME_1_VALUE), returnedMap.get(volumeItem1.toString()));
+        
+        assertTrue(returnedMap.containsKey(volumeItem2.toString()));
+        assertEquals(String.valueOf(VOLUME_2_VALUE), returnedMap.get(volumeItem2.toString()));
+    }
+    
+    // test case: When calling the getPlanFromDatabaseItems, it must return a Map of 
+    // resource item specification to resource item value. The map must contain a 
+    // mapping for each element contained in the list passed as argument.
+    @Test
+    public void testGetPlanFromDatabaseItems() throws InvalidParameterException {
+        FinancePlan plan = new FinancePlan();
+        
+        ResourceItem computeItem1 = new ComputeItem(COMPUTE_1_VCPU, COMPUTE_1_RAM);
+        ResourceItem computeItem2 = new ComputeItem(COMPUTE_2_VCPU, COMPUTE_2_RAM);
+        ResourceItem volumeItem1 = new VolumeItem(VOLUME_1_SIZE);
+        ResourceItem volumeItem2 = new VolumeItem(VOLUME_2_SIZE);
+        
+        List<FinancePlanItem> items = new ArrayList<FinancePlanItem>();
+        items.add(new FinancePlanItem(computeItem1, COMPUTE_1_VALUE));
+        items.add(new FinancePlanItem(computeItem2, COMPUTE_2_VALUE));
+        items.add(new FinancePlanItem(volumeItem1, VOLUME_1_VALUE));
+        items.add(new FinancePlanItem(volumeItem2, VOLUME_2_VALUE));
+        
+        Map<ResourceItem, Double> returnedPlan = plan.getPlanFromDatabaseItems(items);
+        
+        assertEquals(4, returnedPlan.size());
+        
+        assertEquals(COMPUTE_1_VALUE, returnedPlan.get(computeItem1));
+        assertEquals(COMPUTE_2_VALUE, returnedPlan.get(computeItem2));
+        assertEquals(VOLUME_1_VALUE, returnedPlan.get(volumeItem1));
+        assertEquals(VOLUME_2_VALUE, returnedPlan.get(volumeItem2));
     }
 
 	private void setUpPlanInfo() {

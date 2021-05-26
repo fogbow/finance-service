@@ -25,4 +25,5 @@ public class ConfigurationPropertyKeys {
     public static final String DEFAULT_PLAN_PLUGIN_TYPE = "default_plan_plugin_type";
     public static final String POLICY_CLASS_KEY = "policy_class";
     public static final String POLICY_FILE_KEY = "policy_file";
+    public static final String TIME_ZONE = "time_zone";
 }

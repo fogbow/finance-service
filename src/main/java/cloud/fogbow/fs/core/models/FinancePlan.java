@@ -19,6 +19,8 @@ import javax.persistence.PostLoad;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.constants.Messages;
 
@@ -40,21 +42,48 @@ public class FinancePlan {
 	private static final String FINANCE_PLAN_ID_COLUMN_NAME = "finance_plan_id";
     private static final String FINANCE_PLAN_ITEMS_COLUMN_NAME = "finance_plan_items";
 	
+    // FIXME in the current design, this attribute 
+    // is not useful.
     @Column(name = FINANCE_PLAN_ID_COLUMN_NAME)
 	@Id
 	private String name;
 	
-	@Transient
-	private Map<ResourceItem, Double> plan;
-	
+    // Persisting a Map with complex keys tends
+    // to lead to some problems. Thus, we keep the
+    // plan data stored as a list of entries.
     @Column(name = FINANCE_PLAN_ITEMS_COLUMN_NAME)
     @ElementCollection(fetch = FetchType.EAGER)
     @OneToMany(cascade={CascadeType.ALL})
-	private List<FinancePlanItem> items;
+    private List<FinancePlanItem> items;
+    
+    // Since accessing a resource item value in a Map 
+    // is expected to be faster than accessing the value
+    // in a List, we keep this copy of the plan data for 
+    // access operations.
+	@Transient
+	private Map<ResourceItem, Double> plan;
 	
 	public FinancePlan() {
 	    
 	}
+	
+	// This method is used to repopulate the FinancePlan internal map
+	// with the data loaded from the database.
+    @PostLoad
+    private void startUp() {
+        plan = getPlanFromDatabaseItems(items);
+    }
+    
+    @VisibleForTesting
+    Map<ResourceItem, Double> getPlanFromDatabaseItems(List<FinancePlanItem> databaseItems) {
+        Map<ResourceItem, Double> plan = new HashMap<ResourceItem, Double>();
+        
+        for (FinancePlanItem item : databaseItems) {
+            plan.put(item.getItem(), item.getValue());
+        }
+        
+        return plan;
+    }
 	
     public FinancePlan(String planName, String planPath) throws InvalidParameterException {
     	Map<String, String> planInfo = getPlanFromFile(planPath);
@@ -65,52 +94,19 @@ public class FinancePlan {
 		this.plan = plan;
     }
     
-    // TODO test
-    @PostLoad
-    private void startUp() {
-        plan = getPlanFromDatabaseItems(items);
-    }
-	
-	private List<FinancePlanItem> getDatabaseItems(Map<ResourceItem, Double> inMemoryPlan) {
-	    List<FinancePlanItem> databasePlanItems = new ArrayList<FinancePlanItem>();
-	    
-	    for (ResourceItem item : inMemoryPlan.keySet()) {
-	        databasePlanItems.add(new FinancePlanItem(item, inMemoryPlan.get(item)));
-	    }
-	    
-        return databasePlanItems;
-    }
-	
-	private Map<ResourceItem, Double> getPlanFromDatabaseItems(List<FinancePlanItem> databaseItems) {
-        Map<ResourceItem, Double> plan = new HashMap<ResourceItem, Double>();
-        
-        for (FinancePlanItem item : databaseItems) {
-            plan.put(item.getItem(), item.getValue());
-        }
-        
-        return plan;
-    }
-
-    public FinancePlan(String planName, Map<String, String> planInfo) throws InvalidParameterException {
-		Map<ResourceItem, Double> plan = validatePlanInfo(planInfo);
-		this.name = planName;
-		this.plan = plan;
-		this.items = getDatabaseItems(plan);
-	}
-	
     private Map<String, String> getPlanFromFile(String planPath) throws InvalidParameterException {
         try {
-        	Map<String, String> planInfo = new HashMap<String, String>();
-        	File file = new File(planPath);
-        	Scanner input = new Scanner(file);
+            Map<String, String> planInfo = new HashMap<String, String>();
+            File file = new File(planPath);
+            Scanner input = new Scanner(file);
             
             while (input.hasNextLine()) {
                 String nextLine = input.nextLine().trim();
                 if (!nextLine.isEmpty()) {
-                	String[] planFields = nextLine.split(PLAN_FIELDS_SEPARATOR);
-                	String itemName = planFields[0];
-                	String itemInfo = planFields[1]; 
-                	
+                    String[] planFields = nextLine.split(PLAN_FIELDS_SEPARATOR);
+                    String itemName = planFields[0];
+                    String itemInfo = planFields[1]; 
+                    
                     planInfo.put(itemName, itemInfo);
                 }
             }
@@ -123,7 +119,24 @@ public class FinancePlan {
                     Messages.Exception.UNABLE_TO_READ_CONFIGURATION_FILE_S, planPath));
         }
     }
-
+    
+	private List<FinancePlanItem> getDatabaseItems(Map<ResourceItem, Double> inMemoryPlan) {
+	    List<FinancePlanItem> databasePlanItems = new ArrayList<FinancePlanItem>();
+	    
+	    for (ResourceItem item : inMemoryPlan.keySet()) {
+	        databasePlanItems.add(new FinancePlanItem(item, inMemoryPlan.get(item)));
+	    }
+	    
+        return databasePlanItems;
+    }
+	
+    public FinancePlan(String planName, Map<String, String> planInfo) throws InvalidParameterException {
+		Map<ResourceItem, Double> plan = validatePlanInfo(planInfo);
+		this.name = planName;
+		this.plan = plan;
+		this.items = getDatabaseItems(plan);
+	}
+	
 	public String getName() {
 		return name;
 	}
@@ -199,7 +212,6 @@ public class FinancePlan {
 		}
 	}
 	
-	// TODO test
 	public Map<String, String> getRulesAsMap() {
 	    return generateRulesRepr();
 	}

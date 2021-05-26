@@ -129,7 +129,6 @@ public class InMemoryFinanceObjectsHolderTest {
         
         objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, usersHolder, listFactory, planSynchronizedList);
         
-        // FIXME fix method name
         assertEquals(plan2, objectHolder.getPlanPlugin(PLAN_NAME_2));
         
         Mockito.verify(planSynchronizedList).stopIterating(Mockito.anyInt());
