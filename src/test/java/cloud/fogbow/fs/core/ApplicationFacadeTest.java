@@ -63,6 +63,7 @@ public class ApplicationFacadeTest {
 	private String propertyValue = "propertyValue";
 	
 	private String newPlanName = "newPlanName";
+	private String newPlanPlugin = "newPlanPlugin";
 	private Map<String, String> newPlanInfo = new HashMap<String, String>();
 	
 	private String planToUpdate = "planToUpdate";
@@ -416,10 +417,10 @@ public class ApplicationFacadeTest {
         setUpApplicationFacade();
         
         
-        ApplicationFacade.getInstance().createFinancePlan(adminToken, newPlanName, newPlanInfo);
+        ApplicationFacade.getInstance().createFinancePlan(adminToken, newPlanPlugin, newPlanName, newPlanInfo);
         
         
-        Mockito.verify(financeManager, Mockito.times(1)).createFinancePlan(newPlanName, newPlanInfo);
+        Mockito.verify(financeManager, Mockito.times(1)).createFinancePlan(newPlanPlugin, newPlanName, newPlanInfo);
         Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
         Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
         Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
@@ -435,15 +436,15 @@ public class ApplicationFacadeTest {
         setUpAuthorization(OperationType.CREATE_FINANCE_PLAN);
         setUpApplicationFacade();
         
-        Mockito.doThrow(InvalidParameterException.class).when(financeManager).createFinancePlan(newPlanName, newPlanInfo);
+        Mockito.doThrow(InvalidParameterException.class).when(financeManager).createFinancePlan(newPlanPlugin, newPlanName, newPlanInfo);
         
         try {
-            ApplicationFacade.getInstance().createFinancePlan(adminToken, newPlanName, newPlanInfo);
+            ApplicationFacade.getInstance().createFinancePlan(adminToken, newPlanPlugin, newPlanName, newPlanInfo);
             Assert.fail("createFinancePlan is expected to throw exception.");
         } catch (InvalidParameterException e) {
         }
         
-        Mockito.verify(financeManager, Mockito.times(1)).createFinancePlan(newPlanName, newPlanInfo);
+        Mockito.verify(financeManager, Mockito.times(1)).createFinancePlan(newPlanPlugin, newPlanName, newPlanInfo);
         Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
         Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
         Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);

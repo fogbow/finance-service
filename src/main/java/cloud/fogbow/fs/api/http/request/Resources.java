@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import cloud.fogbow.common.exceptions.FogbowException;
+import cloud.fogbow.fs.api.http.response.ResponseFinancePlan;
 import cloud.fogbow.fs.api.parameters.RequestFinancePlan;
 import cloud.fogbow.fs.constants.SystemConstants;
 import cloud.fogbow.fs.core.ApplicationFacade;
@@ -55,18 +56,19 @@ public class Resources {
 	public ResponseEntity<Boolean> createFinancePlan(
 			@RequestHeader(value = SystemConstants.SYSTEM_USER_TOKEN_HEADER_KEY) String systemUserToken,
 			@RequestBody RequestFinancePlan financePlan) throws FogbowException {
-		ApplicationFacade.getInstance().createFinancePlan(systemUserToken, financePlan.getPluginClassName(), financePlan.getPlanInfo());
+		ApplicationFacade.getInstance().createFinancePlan(systemUserToken, financePlan.getPluginClassName(), 
+		        financePlan.getFinancePlanName(), financePlan.getPlanInfo());
 		return new ResponseEntity<Boolean>(HttpStatus.OK);
 	}
 	
 	// TODO documentation
 	// FIXME constant
 	@RequestMapping(value = "/plan/{planName}", method = RequestMethod.GET)
-	public ResponseEntity<RequestFinancePlan> getFinancePlan(
+	public ResponseEntity<ResponseFinancePlan> getFinancePlan(
 			@PathVariable String planName,
 			@RequestHeader(value = SystemConstants.SYSTEM_USER_TOKEN_HEADER_KEY) String systemUserToken) throws FogbowException {
 		Map<String, String> planInfo = ApplicationFacade.getInstance().getFinancePlan(systemUserToken, planName);
-		return new ResponseEntity<RequestFinancePlan>(new RequestFinancePlan(planName, planInfo), HttpStatus.OK);
+		return new ResponseEntity<ResponseFinancePlan>(new ResponseFinancePlan(planName, planInfo), HttpStatus.OK);
 	}
 	
 	// TODO documentation

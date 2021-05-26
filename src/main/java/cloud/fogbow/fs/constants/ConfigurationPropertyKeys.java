@@ -1,5 +1,6 @@
 package cloud.fogbow.fs.constants;
 
+// TODO check for unused keys
 public class ConfigurationPropertyKeys {
 	public static final String ACCS_PORT_KEY = "accs_port";
 	public static final String ACCS_URL_KEY = "accs_url";
@@ -19,8 +20,9 @@ public class ConfigurationPropertyKeys {
     public static final String ADMIN_ROLE = "admin_role";
     public static final String ADMINS_IDS = "admins_ids";
     public static final String AUTHORIZATION_PLUGIN_CLASS_KEY = "authorization_plugin_class";
+    public static final String DEFAULT_PLAN_NAME = "plan_plugin_name";
     public static final String DEFAULT_PLAN_PLUGIN_NAME = "default_plan_plugin_name";
+    public static final String DEFAULT_PLAN_PLUGIN_TYPE = "default_plan_plugin_type";
     public static final String POLICY_CLASS_KEY = "policy_class";
     public static final String POLICY_FILE_KEY = "policy_file";
-    public static final String DEFAULT_PLAN_PLUGIN_TYPE = "default_plan_plugin_type";
 }

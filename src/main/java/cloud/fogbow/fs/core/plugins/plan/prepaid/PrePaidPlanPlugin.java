@@ -42,7 +42,6 @@ public class PrePaidPlanPlugin extends PlanPlugin {
     public static final String CREDITS_TO_ADD = "CREDITS_TO_ADD";
     // TODO documentation
     public static final String FINANCE_PLAN_RULES_FILE_PATH = "finance_plan_file_path";
-    public static final String PLAN_PLUGIN_NAME = "plan_plugin_name";
     public static final String FINANCE_PLAN_RULES = "financeplan";
     public static final String CREDITS_DEDUCTION_WAIT_TIME_COLUMN_NAME = "credits_deduction_wait_time";
 
@@ -84,8 +83,9 @@ public class PrePaidPlanPlugin extends PlanPlugin {
     }
     
     // TODO test
-    public PrePaidPlanPlugin(InMemoryUsersHolder usersHolder) 
+    public PrePaidPlanPlugin(String planName, InMemoryUsersHolder usersHolder) 
             throws ConfigurationErrorException, InvalidParameterException {
+        this.name = planName;
         this.usersHolder = usersHolder;
         this.accountingServiceClient = new AccountingServiceClient();
         this.rasClient = new RasClient();
@@ -98,8 +98,9 @@ public class PrePaidPlanPlugin extends PlanPlugin {
     }
     
     // TODO test
-    public PrePaidPlanPlugin(InMemoryUsersHolder usersHolder, Map<String, String> financeOptions) 
+    public PrePaidPlanPlugin(String planName, InMemoryUsersHolder usersHolder, Map<String, String> financeOptions) 
             throws ConfigurationErrorException, InvalidParameterException {
+        this.name = planName;
         this.usersHolder = usersHolder;
         this.accountingServiceClient = new AccountingServiceClient();
         this.rasClient = new RasClient();
@@ -111,8 +112,9 @@ public class PrePaidPlanPlugin extends PlanPlugin {
     }
     
     // TODO test
-    public PrePaidPlanPlugin(InMemoryUsersHolder usersHolder, AccountingServiceClient accountingServiceClient,
+    public PrePaidPlanPlugin(String planName, InMemoryUsersHolder usersHolder, AccountingServiceClient accountingServiceClient,
             RasClient rasClient, CreditsManager paymentManager, Map<String, String> financeOptions) throws InvalidParameterException {
+        this.name = planName;
         this.accountingServiceClient = accountingServiceClient;
         this.rasClient = rasClient;
         this.paymentManager = paymentManager;
@@ -127,7 +129,6 @@ public class PrePaidPlanPlugin extends PlanPlugin {
         Map<String, String> options = new HashMap<String, String>();
 
         options.put(FINANCE_PLAN_RULES_FILE_PATH, PropertiesHolder.getInstance().getProperty(FINANCE_PLAN_RULES_FILE_PATH));
-        options.put(PLAN_PLUGIN_NAME, PropertiesHolder.getInstance().getProperty(PLAN_PLUGIN_NAME));
         options.put(CREDITS_DEDUCTION_WAIT_TIME, PropertiesHolder.getInstance().getProperty(CREDITS_DEDUCTION_WAIT_TIME));
         
         return options;
@@ -138,7 +139,6 @@ public class PrePaidPlanPlugin extends PlanPlugin {
     public void setOptions(Map<String, String> financeOptions) throws InvalidParameterException {
         validateFinanceOptions(financeOptions);
         
-        this.name = financeOptions.get(PLAN_PLUGIN_NAME);
         this.creditsDeductionWaitTime = Long.valueOf(financeOptions.get(CREDITS_DEDUCTION_WAIT_TIME));
         
         JsonUtils jsonUtils = new JsonUtils();
@@ -161,7 +161,6 @@ public class PrePaidPlanPlugin extends PlanPlugin {
     }
     
     private void validateFinanceOptions(Map<String, String> financeOptions) throws InvalidParameterException {
-        checkContainsProperty(financeOptions, PLAN_PLUGIN_NAME);
         checkContainsProperty(financeOptions, CREDITS_DEDUCTION_WAIT_TIME);
         
         checkPropertyIsParsable(financeOptions.get(CREDITS_DEDUCTION_WAIT_TIME), CREDITS_DEDUCTION_WAIT_TIME);
@@ -231,11 +230,6 @@ public class PrePaidPlanPlugin extends PlanPlugin {
         }
         
         return true;
-    }
-
-    @Override
-    public void setName(String name) {
-        // FIXME should exist?
     }
 
     @Override

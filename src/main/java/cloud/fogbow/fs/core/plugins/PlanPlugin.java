@@ -22,7 +22,6 @@ public abstract class PlanPlugin {
     protected String name;
     
     public abstract String getName();
-    public abstract void setName(String name);
     public abstract boolean isRegisteredUser(SystemUser user) throws InternalServerErrorException, InvalidParameterException;
     public abstract void registerUser(SystemUser user) throws InternalServerErrorException, InvalidParameterException;
     public abstract void unregisterUser(SystemUser user) throws InvalidParameterException, InternalServerErrorException;

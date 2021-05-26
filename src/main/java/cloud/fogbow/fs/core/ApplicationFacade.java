@@ -129,14 +129,15 @@ public class ApplicationFacade {
 		}
 	}
 	
-	public void createFinancePlan(String userToken, String pluginClassName, Map<String, String> planInfo) throws FogbowException {
+	public void createFinancePlan(String userToken, String pluginClassName, String planName, Map<String, String> planInfo) 
+	        throws FogbowException {
 		LOGGER.info(String.format(Messages.Log.CREATING_FINANCE_PLAN, pluginClassName));
 		
 		authenticateAndAuthorize(userToken, new FsOperation(OperationType.CREATE_FINANCE_PLAN));
 		synchronizationManager.startOperation();
 
 		try {
-		    this.financeManager.createFinancePlan(pluginClassName, planInfo);
+		    this.financeManager.createFinancePlan(pluginClassName, planName, planInfo);
 		} finally {
 			synchronizationManager.finishOperation();
 		}
@@ -155,7 +156,8 @@ public class ApplicationFacade {
 		}
 	}
 
-   public void changePlanOptions(String userToken, String planName, HashMap<String, String> financeOptions) throws UnauthenticatedUserException, UnauthorizedRequestException, FogbowException {
+   public void changePlanOptions(String userToken, String planName, HashMap<String, String> financeOptions) 
+           throws UnauthenticatedUserException, UnauthorizedRequestException, FogbowException {
         LOGGER.info(String.format(Messages.Log.CHANGING_OPTIONS, planName));
         
         authenticateAndAuthorize(userToken, new FsOperation(OperationType.CHANGE_OPTIONS));

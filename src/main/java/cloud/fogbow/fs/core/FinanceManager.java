@@ -48,7 +48,10 @@ public class FinanceManager {
     private void tryToCreateDefaultPlanPlugin() throws ConfigurationErrorException, InvalidParameterException, InternalServerErrorException {
         String defaultPlanPluginType = PropertiesHolder.getInstance()
                 .getProperty(ConfigurationPropertyKeys.DEFAULT_PLAN_PLUGIN_TYPE);
-        PlanPlugin plugin = PlanPluginInstantiator.getPlanPlugin(defaultPlanPluginType, objectHolder.getInMemoryUsersHolder());
+        String defaultPlanName = PropertiesHolder.getInstance()
+                .getProperty(ConfigurationPropertyKeys.DEFAULT_PLAN_NAME);
+        
+        PlanPlugin plugin = PlanPluginInstantiator.getPlanPlugin(defaultPlanPluginType, defaultPlanName, objectHolder.getInMemoryUsersHolder());
         objectHolder.registerPlanPlugin(plugin);
     }
 
@@ -267,8 +270,8 @@ public class FinanceManager {
      * Plan management
      */
 
-    public void createFinancePlan(String pluginClassName, Map<String, String> pluginOptions) throws InternalServerErrorException, InvalidParameterException {
-        PlanPlugin plugin = PlanPluginInstantiator.getPlanPlugin(pluginClassName, pluginOptions, objectHolder.getInMemoryUsersHolder());
+    public void createFinancePlan(String pluginClassName, String planName, Map<String, String> pluginOptions) throws InternalServerErrorException, InvalidParameterException {
+        PlanPlugin plugin = PlanPluginInstantiator.getPlanPlugin(pluginClassName, planName, pluginOptions, objectHolder.getInMemoryUsersHolder());
         this.objectHolder.registerPlanPlugin(plugin);
     }
     

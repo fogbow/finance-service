@@ -182,8 +182,10 @@ public class InMemoryFinanceObjectsHolder {
         PlanPlugin planPlugin = getPlanPlugin(pluginName);
         
         synchronized(planPlugin) {
+            planPlugin.stopThreads();
             planPlugin.setOptions(pluginOptions);
             this.databaseManager.savePlanPlugin(planPlugin);
+            planPlugin.startThreads();
         }
     }
 

@@ -119,4 +119,8 @@ public class InvoiceManager {
         
         return propertyValue;
     }
+    
+    public void setPlan(FinancePlan financePlan) {
+        this.financePlan = financePlan;
+    }
 }

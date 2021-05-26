@@ -45,7 +45,6 @@ public class PostPaidPlanPlugin extends PlanPlugin {
     public static final String USER_BILLING_TIME_COLUMN_NAME = "user_billing_time";
     public static final String INVOICE_WAIT_TIME_COLUMN_NAME = "invoice_wait_time";
     public static final String FINANCE_PLAN_RULES_FILE_PATH = "finance_plan_file_path";
-    public static final String PLAN_PLUGIN_NAME = "plan_plugin_name";
 
     @Transient
     private Thread paymentThread;
@@ -93,22 +92,23 @@ public class PostPaidPlanPlugin extends PlanPlugin {
         
     }
     
-    public PostPaidPlanPlugin(InMemoryUsersHolder usersHolder) throws ConfigurationErrorException, 
+    public PostPaidPlanPlugin(String planName, InMemoryUsersHolder usersHolder) throws ConfigurationErrorException, 
                     InvalidParameterException, InternalServerErrorException { 
-        this(usersHolder, new PostPaidPluginOptionsLoader().load());
+        this(planName, usersHolder, new PostPaidPluginOptionsLoader().load());
     }
 
-    public PostPaidPlanPlugin(InMemoryUsersHolder usersHolder, Map<String, String> financeOptions)
+    public PostPaidPlanPlugin(String planName, InMemoryUsersHolder usersHolder, Map<String, String> financeOptions)
             throws ConfigurationErrorException, InvalidParameterException, InternalServerErrorException {
-        this(usersHolder, new AccountingServiceClient(), new RasClient(),
+        this(planName, usersHolder, new AccountingServiceClient(), new RasClient(),
                 new FinancePlanFactory(), new JsonUtils(), financeOptions);
         
         this.paymentManager = new InvoiceManager(this.usersHolder, plan);
     }
     
-    PostPaidPlanPlugin(InMemoryUsersHolder usersHolder, AccountingServiceClient accountingServiceClient,
+    PostPaidPlanPlugin(String planName, InMemoryUsersHolder usersHolder, AccountingServiceClient accountingServiceClient,
             RasClient rasClient, FinancePlanFactory planFactory, JsonUtils jsonUtils, Map<String, String> financeOptions) 
                     throws InvalidParameterException, InternalServerErrorException {
+        this.name = planName;
         this.usersHolder = usersHolder;
         this.accountingServiceClient = accountingServiceClient;
         this.rasClient = rasClient;
@@ -149,20 +149,14 @@ public class PostPaidPlanPlugin extends PlanPlugin {
     public void setOptions(Map<String, String> financeOptions) throws InvalidParameterException {
         validateFinanceOptions(financeOptions);
         
-        String oldPluginName = this.name;
-        this.name = financeOptions.get(PLAN_PLUGIN_NAME);
         this.userBillingTime = Long.valueOf(financeOptions.get(PaymentRunner.USER_BILLING_INTERVAL));
         this.invoiceWaitTime = Long.valueOf(financeOptions.get(INVOICE_WAIT_TIME));
         
         setUpPlanFromOptions(financeOptions, this.planFactory);
-        
-        // FIXME
-        // this.usersHolder.moveUsersFromPlugin(oldPluginName, this.name);
     }
     
     private void validateFinanceOptions(Map<String, String> financeOptions) throws InvalidParameterException {
         checkContainsProperty(financeOptions, PaymentRunner.USER_BILLING_INTERVAL);
-        checkContainsProperty(financeOptions, PLAN_PLUGIN_NAME);
         checkContainsProperty(financeOptions, INVOICE_WAIT_TIME);
         
         checkPropertyIsParsable(financeOptions.get(PaymentRunner.USER_BILLING_INTERVAL), PaymentRunner.USER_BILLING_INTERVAL);
@@ -201,7 +195,6 @@ public class PostPaidPlanPlugin extends PlanPlugin {
             this.plan = planFactory.createFinancePlan(this.name, planInfo);
         } else {
             synchronized(this.plan) {
-                // FIXME should also set the plan name
                 this.plan.update(planInfo);
             }
         }
@@ -261,11 +254,6 @@ public class PostPaidPlanPlugin extends PlanPlugin {
     @Override
     public boolean isStarted() {
         return this.threadsAreRunning;
-    }
-
-    @Override
-    public void setName(String name) {
-        // FIXME should exist?
     }
 
     @Override
@@ -341,7 +329,6 @@ public class PostPaidPlanPlugin extends PlanPlugin {
             
             setOptionIfNotNull(options, PaymentRunner.USER_BILLING_INTERVAL);
             setOptionIfNotNull(options, FINANCE_PLAN_RULES_FILE_PATH);
-            setOptionIfNotNull(options, PLAN_PLUGIN_NAME);
             setOptionIfNotNull(options, INVOICE_WAIT_TIME);
 
             return options;

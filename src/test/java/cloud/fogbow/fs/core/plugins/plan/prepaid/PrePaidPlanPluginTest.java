@@ -31,7 +31,7 @@ public class PrePaidPlanPluginTest {
     private static final String PROVIDER_USER_1 = "providerUser1";
     private static final String PROVIDER_USER_2 = "providerUser2";
     private static final String PROVIDER_USER_NOT_MANAGED = "providerUserNotManaged";
-    private static final String PLUGIN_NAME = "pluginName";
+    private static final String PLAN_NAME = "pluginName";
     private InMemoryUsersHolder objectHolder;
     private AccountingServiceClient accountingServiceClient;
     private RasClient rasClient;
@@ -46,15 +46,14 @@ public class PrePaidPlanPluginTest {
     public void testManagesUser() throws InvalidParameterException, ModifiedListException, InternalServerErrorException {
         Map<String, String> financeOptions = new HashMap<String, String>();
         financeOptions.put(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME, String.valueOf(creditsDeductionWaitTime));
-        financeOptions.put(PrePaidPlanPlugin.PLAN_PLUGIN_NAME, PLUGIN_NAME);
         
         FinanceUser financeUser1 = new FinanceUser();
         financeUser1.setUserId(USER_ID_1, PROVIDER_USER_1);
-        financeUser1.setFinancePluginName(PLUGIN_NAME);
+        financeUser1.setFinancePluginName(PLAN_NAME);
 
         FinanceUser financeUser2 = new FinanceUser();
         financeUser2.setUserId(USER_ID_2, PROVIDER_USER_2);
-        financeUser2.setFinancePluginName(PLUGIN_NAME);
+        financeUser2.setFinancePluginName(PLAN_NAME);
 
         FinanceUser financeUser3 = new FinanceUser();
         financeUser3.setUserId(USER_NOT_MANAGED, PROVIDER_USER_NOT_MANAGED);
@@ -65,7 +64,7 @@ public class PrePaidPlanPluginTest {
         Mockito.when(objectHolder.getUserById(USER_ID_2, PROVIDER_USER_2)).thenReturn(financeUser2);
         Mockito.when(objectHolder.getUserById(USER_NOT_MANAGED, PROVIDER_USER_NOT_MANAGED)).thenReturn(financeUser3);
 
-        PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(objectHolder, accountingServiceClient,
+        PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(PLAN_NAME, objectHolder, accountingServiceClient,
                 rasClient, paymentManager, financeOptions);
 
         assertTrue(prePaidFinancePlugin.isRegisteredUser(new SystemUser(USER_ID_1, USER_NAME_1, PROVIDER_USER_1)));
@@ -80,12 +79,11 @@ public class PrePaidPlanPluginTest {
     public void testIsAuthorizedCreateOperationUserStateIsGoodFinancially() throws InvalidParameterException, InternalServerErrorException {
         Map<String, String> financeOptions = new HashMap<String, String>();
         financeOptions.put(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME, String.valueOf(creditsDeductionWaitTime));
-        financeOptions.put(PrePaidPlanPlugin.PLAN_PLUGIN_NAME, PLUGIN_NAME);
         
         this.paymentManager = Mockito.mock(CreditsManager.class);
         Mockito.when(this.paymentManager.hasPaid(USER_ID_1, PROVIDER_USER_1)).thenReturn(true);
         
-        PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(objectHolder, accountingServiceClient,
+        PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(PLAN_NAME, objectHolder, accountingServiceClient,
                 rasClient, paymentManager, financeOptions);
         
         SystemUser user = new SystemUser(USER_ID_1, USER_NAME_1, PROVIDER_USER_1);
@@ -101,12 +99,11 @@ public class PrePaidPlanPluginTest {
     public void testIsAuthorizedNonCreationOperationUserStateIsNotGoodFinancially() throws InvalidParameterException, InternalServerErrorException {
         Map<String, String> financeOptions = new HashMap<String, String>();
         financeOptions.put(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME, String.valueOf(creditsDeductionWaitTime));
-        financeOptions.put(PrePaidPlanPlugin.PLAN_PLUGIN_NAME, PLUGIN_NAME);
         
         this.paymentManager = Mockito.mock(CreditsManager.class);
         Mockito.when(this.paymentManager.hasPaid(USER_ID_1, PROVIDER_USER_1)).thenReturn(false);
         
-        PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(objectHolder, accountingServiceClient,
+        PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(PLAN_NAME, objectHolder, accountingServiceClient,
                 rasClient, paymentManager, financeOptions);
         
         SystemUser user = new SystemUser(USER_ID_1, USER_NAME_1, PROVIDER_USER_1);
@@ -122,12 +119,11 @@ public class PrePaidPlanPluginTest {
     public void testIsAuthorizedCreationOperationUserStateIsNotGoodFinancially() throws InvalidParameterException, InternalServerErrorException {
         Map<String, String> financeOptions = new HashMap<String, String>();
         financeOptions.put(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME, String.valueOf(creditsDeductionWaitTime));
-        financeOptions.put(PrePaidPlanPlugin.PLAN_PLUGIN_NAME, PLUGIN_NAME);
         
         this.paymentManager = Mockito.mock(CreditsManager.class);
         Mockito.when(this.paymentManager.hasPaid(USER_ID_1, PROVIDER_USER_1)).thenReturn(false);
         
-        PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(objectHolder, accountingServiceClient,
+        PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(PLAN_NAME, objectHolder, accountingServiceClient,
                 rasClient, paymentManager, financeOptions);
         
         SystemUser user = new SystemUser(USER_ID_1, USER_NAME_1, PROVIDER_USER_1);
@@ -143,18 +139,17 @@ public class PrePaidPlanPluginTest {
     public void testAddUser() throws InternalServerErrorException, InvalidParameterException {
         Map<String, String> financeOptions = new HashMap<String, String>();
         financeOptions.put(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME, String.valueOf(creditsDeductionWaitTime));
-        financeOptions.put(PrePaidPlanPlugin.PLAN_PLUGIN_NAME, PLUGIN_NAME);
         
         this.userCredits = Mockito.mock(UserCredits.class);
         this.objectHolder = Mockito.mock(InMemoryUsersHolder.class);
         
-        PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(objectHolder, accountingServiceClient,
+        PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(PLAN_NAME, objectHolder, accountingServiceClient,
                 rasClient, paymentManager, financeOptions);
         
         prePaidFinancePlugin.registerUser(new SystemUser(USER_ID_1, USER_NAME_1, PROVIDER_USER_1));
         
         
-        Mockito.verify(objectHolder).registerUser(USER_ID_1, PROVIDER_USER_1, PLUGIN_NAME);
+        Mockito.verify(objectHolder).registerUser(USER_ID_1, PROVIDER_USER_1, PLAN_NAME);
     }
     
     // test case: When calling the updateFinanceState method, it must get 
@@ -163,7 +158,6 @@ public class PrePaidPlanPluginTest {
     public void testUpdateFinanceState() throws InvalidParameterException, InternalServerErrorException {
         Map<String, String> financeOptions = new HashMap<String, String>();
         financeOptions.put(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME, String.valueOf(creditsDeductionWaitTime));
-        financeOptions.put(PrePaidPlanPlugin.PLAN_PLUGIN_NAME, PLUGIN_NAME);
         
         this.userCredits = Mockito.mock(UserCredits.class);
         this.objectHolder = Mockito.mock(InMemoryUsersHolder.class);
@@ -174,7 +168,7 @@ public class PrePaidPlanPluginTest {
         Map<String, String> financeState = new HashMap<String, String>();
         financeState.put(PrePaidPlanPlugin.CREDITS_TO_ADD, "10.5");
         
-        PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(objectHolder, accountingServiceClient,
+        PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(PLAN_NAME, objectHolder, accountingServiceClient,
                 rasClient, paymentManager, financeOptions);
 
         
@@ -191,14 +185,13 @@ public class PrePaidPlanPluginTest {
     public void testUpdateFinanceStateMissingFinanceStateProperty() throws InvalidParameterException, InternalServerErrorException {
         Map<String, String> financeOptions = new HashMap<String, String>();
         financeOptions.put(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME, String.valueOf(creditsDeductionWaitTime));
-        financeOptions.put(PrePaidPlanPlugin.PLAN_PLUGIN_NAME, PLUGIN_NAME);
         
         this.userCredits = Mockito.mock(UserCredits.class);
         this.objectHolder = Mockito.mock(InMemoryUsersHolder.class);
         
         Map<String, String> financeState = new HashMap<String, String>();
         
-        PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(objectHolder, accountingServiceClient,
+        PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(PLAN_NAME, objectHolder, accountingServiceClient,
                 rasClient, paymentManager, financeOptions);
 
         
@@ -212,7 +205,6 @@ public class PrePaidPlanPluginTest {
     public void testUpdateFinanceStateInvalidFinanceStateProperty() throws InvalidParameterException, InternalServerErrorException {
         Map<String, String> financeOptions = new HashMap<String, String>();
         financeOptions.put(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME, String.valueOf(creditsDeductionWaitTime));
-        financeOptions.put(PrePaidPlanPlugin.PLAN_PLUGIN_NAME, PLUGIN_NAME);
         
         this.userCredits = Mockito.mock(UserCredits.class);
         this.objectHolder = Mockito.mock(InMemoryUsersHolder.class);
@@ -220,7 +212,7 @@ public class PrePaidPlanPluginTest {
         Map<String, String> financeState = new HashMap<String, String>();
         financeState.put(PrePaidPlanPlugin.CREDITS_TO_ADD, "invalidproperty");
         
-        PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(objectHolder, accountingServiceClient,
+        PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(PLAN_NAME, objectHolder, accountingServiceClient,
                 rasClient, paymentManager, financeOptions);
     
         

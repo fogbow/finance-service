@@ -65,6 +65,7 @@ public class FinanceManagerTest {
 	private static final String PLUGIN_2_NAME = "plugin2";
 	private static final String UNKNOWN_PLUGIN_NAME = "unknownplugin";
     private static final String PLUGIN_CLASS_NAME = "pluginClassName";
+    private static final String PLAN_NAME = "planName";
 	private InMemoryFinanceObjectsHolder objectHolder;
 	private AuthorizableUser user1;
 	private AuthorizableUser user2;
@@ -104,10 +105,12 @@ public class FinanceManagerTest {
         PropertiesHolder propertiesHolder = Mockito.mock(PropertiesHolder.class);
         Mockito.when(propertiesHolder.getProperty(
                 ConfigurationPropertyKeys.DEFAULT_PLAN_PLUGIN_TYPE)).thenReturn(PLUGIN_CLASS_NAME);
+        Mockito.when(propertiesHolder.getProperty(
+                ConfigurationPropertyKeys.DEFAULT_PLAN_NAME)).thenReturn(PLAN_NAME);
         BDDMockito.given(PropertiesHolder.getInstance()).willReturn(propertiesHolder);
         
         PowerMockito.mockStatic(PlanPluginInstantiator.class);
-        BDDMockito.given(PlanPluginInstantiator.getPlanPlugin(PLUGIN_CLASS_NAME, usersHolder)).willReturn(plan1);
+        BDDMockito.given(PlanPluginInstantiator.getPlanPlugin(PLUGIN_CLASS_NAME, PLAN_NAME, usersHolder)).willReturn(plan1);
         
         MultiConsumerSynchronizedList<PlanPlugin> emptyPluginList = Mockito.mock(MultiConsumerSynchronizedList.class);
         Mockito.when(emptyPluginList.isEmpty()).thenReturn(true);
@@ -122,7 +125,7 @@ public class FinanceManagerTest {
         Mockito.verify(propertiesHolder).getProperty(ConfigurationPropertyKeys.DEFAULT_PLAN_PLUGIN_TYPE);
         
         PowerMockito.verifyStatic(PlanPluginInstantiator.class);
-        PlanPluginInstantiator.getPlanPlugin(PLUGIN_CLASS_NAME, usersHolder);
+        PlanPluginInstantiator.getPlanPlugin(PLUGIN_CLASS_NAME, PLAN_NAME, usersHolder);
 	}
 	
 	// test case: When calling the isAuthorized method passing an AuthorizableUser,
@@ -450,12 +453,12 @@ public class FinanceManagerTest {
 	    Map<String, String> planInfo = new HashMap<String, String>();
 
 	    PowerMockito.mockStatic(PlanPluginInstantiator.class);
-	    BDDMockito.given(PlanPluginInstantiator.getPlanPlugin(PLUGIN_CLASS_NAME, planInfo, usersHolder)).willReturn(plan1);
+	    BDDMockito.given(PlanPluginInstantiator.getPlanPlugin(PLUGIN_CLASS_NAME, PLAN_NAME, planInfo, usersHolder)).willReturn(plan1);
 	    
 	    FinanceManager financeManager = new FinanceManager(objectHolder);
 	    
 	    
-        financeManager.createFinancePlan(PLUGIN_CLASS_NAME, planInfo);
+        financeManager.createFinancePlan(PLUGIN_CLASS_NAME, PLAN_NAME, planInfo);
         
        
         Mockito.verify(objectHolder).registerPlanPlugin(plan1);
