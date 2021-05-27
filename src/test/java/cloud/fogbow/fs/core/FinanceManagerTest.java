@@ -23,10 +23,8 @@ import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.common.models.SystemUser;
 import cloud.fogbow.fs.api.parameters.AuthorizableUser;
-import cloud.fogbow.fs.api.parameters.User;
 import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
 import cloud.fogbow.fs.core.plugins.PlanPlugin;
-import cloud.fogbow.fs.core.plugins.FinancePluginInstantiator;
 import cloud.fogbow.fs.core.plugins.PlanPluginInstantiator;
 import cloud.fogbow.fs.core.util.ModifiedListException;
 import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedList;
@@ -34,9 +32,8 @@ import cloud.fogbow.ras.core.models.RasOperation;
 
 // TODO update documentation
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({PropertiesHolder.class, FinancePluginInstantiator.class, 
-	FsPublicKeysHolder.class, AuthenticationUtil.class, 
-	PlanPluginInstantiator.class})
+@PrepareForTest({PropertiesHolder.class, FsPublicKeysHolder.class,
+    AuthenticationUtil.class, PlanPluginInstantiator.class})
 public class FinanceManagerTest {
 
 	private static final String USER_ID_1 = "userId1";
@@ -223,12 +220,9 @@ public class FinanceManagerTest {
 		setUpFinancePlugin();
 		
 		FinanceManager financeManager = new FinanceManager(objectHolder);
-		Map<String, String> financeOptions = new HashMap<String, String>();
-		User user1 = new User(USER_ID_TO_ADD_1, PROVIDER_USER_TO_ADD_1, PLUGIN_1_NAME, financeOptions);
-		User user2 = new User(USER_ID_TO_ADD_2, PROVIDER_USER_TO_ADD_2, PLUGIN_2_NAME, financeOptions);
-		
-		financeManager.addUser(user1);
-		financeManager.addUser(user2);
+
+		financeManager.addUser(new SystemUser(USER_ID_TO_ADD_1, USER_ID_TO_ADD_1, PROVIDER_USER_TO_ADD_1), PLUGIN_1_NAME);
+		financeManager.addUser(new SystemUser(USER_ID_TO_ADD_2, USER_ID_TO_ADD_2, PROVIDER_USER_TO_ADD_2), PLUGIN_2_NAME);
 
 		Mockito.verify(this.plan1, Mockito.times(1)).registerUser(Mockito.any(SystemUser.class));
 		Mockito.verify(this.plan2, Mockito.times(1)).registerUser(Mockito.any(SystemUser.class));
@@ -241,10 +235,8 @@ public class FinanceManagerTest {
 		setUpFinancePlugin();
 		
 		FinanceManager financeManager = new FinanceManager(objectHolder);
-		Map<String, String> financeOptions = new HashMap<String, String>();
-		User user1 = new User(USER_ID_TO_ADD_1, PROVIDER_USER_TO_ADD_1, UNKNOWN_PLUGIN_NAME, financeOptions);
 		
-		financeManager.addUser(user1);
+		financeManager.addUser(new SystemUser(USER_ID_TO_ADD_1, USER_ID_TO_ADD_1, PROVIDER_USER_TO_ADD_1), UNKNOWN_PLUGIN_NAME);
 	}
 	
 	// TODO documentation
@@ -258,10 +250,8 @@ public class FinanceManagerTest {
         thenReturn(this.plan1, this.plan2, null);
         
         FinanceManager financeManager = new FinanceManager(objectHolder);
-        Map<String, String> financeOptions = new HashMap<String, String>();
-        User user2 = new User(USER_ID_TO_ADD_2, PROVIDER_USER_TO_ADD_2, PLUGIN_2_NAME, financeOptions);
 
-        financeManager.addUser(user2);
+        financeManager.addUser(new SystemUser(USER_ID_TO_ADD_2, USER_ID_TO_ADD_2, PROVIDER_USER_TO_ADD_2), PLUGIN_2_NAME);
 
         Mockito.verify(this.plan2, Mockito.times(1)).registerUser(Mockito.any(SystemUser.class));
 	}

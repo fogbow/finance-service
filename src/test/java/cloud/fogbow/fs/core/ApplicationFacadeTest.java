@@ -29,7 +29,6 @@ import cloud.fogbow.common.plugins.authorization.AuthorizationPlugin;
 import cloud.fogbow.common.util.CryptoUtil;
 import cloud.fogbow.common.util.ServiceAsymmetricKeysHolder;
 import cloud.fogbow.fs.api.parameters.AuthorizableUser;
-import cloud.fogbow.fs.api.parameters.User;
 import cloud.fogbow.fs.core.models.OperationType;
 import cloud.fogbow.fs.core.plugins.authorization.FsOperation;
 import cloud.fogbow.fs.core.util.SynchronizationManager;
@@ -45,12 +44,12 @@ public class ApplicationFacadeTest {
     private String adminId = "adminId";
 	private String adminUserName = "adminUserName";
 	private String adminProvider = "adminProvider";
-	private String adminToken = "token";
+	private String adminToken = "adminToken";
+	private String userToken = "userToken";
 	
 	private String userIdToAdd = "userIdToAdd";
 	private String userProviderToAdd = "userProviderToAdd";
 	private String financePluginUserToAdd = "financePluginUserToAdd";
-	private Map<String, String> userFinanceOptionsToAdd = new HashMap<String, String>();
 
 	private String userIdToRemove = "userIdToRemove";
 	private String userProviderToRemove = "userProviderToRemove";
@@ -67,15 +66,12 @@ public class ApplicationFacadeTest {
 	private Map<String, String> newPlanInfo = new HashMap<String, String>();
 	
 	private String planToUpdate = "planToUpdate";
-	private Map<String, String> updatedPlanInfo = new HashMap<String, String>();
-	
 	private String planToRemove = "planToRemove";
 	
 	private String newPolicy = "newPolicy";
 	
 	private FsPublicKeysHolder keysHolder;
 	private RSAPublicKey asPublicKey;
-	private User user;
 	private FinanceManager financeManager;
 	private SynchronizationManager synchronizationManager;
 	private SystemUser systemUser;
@@ -92,14 +88,13 @@ public class ApplicationFacadeTest {
         setUpAuthorization(OperationType.ADD_USER);
         setUpApplicationFacade();
         
-        this.user = new User(userIdToAdd, userProviderToAdd, financePluginUserToAdd, userFinanceOptionsToAdd);
-        
-        ApplicationFacade.getInstance().addUser(adminToken, user);
+        ApplicationFacade.getInstance().addUser(adminToken, userIdToAdd, userProviderToAdd, financePluginUserToAdd);
         
         Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
         Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
         Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
-        Mockito.verify(financeManager, Mockito.times(1)).addUser(user);
+        Mockito.verify(financeManager, Mockito.times(1)).addUser(
+                new SystemUser(userIdToAdd, userIdToAdd, userProviderToAdd), financePluginUserToAdd);
 	}
 	
 	// test case: When calling the addUser method, if the call to 
@@ -118,11 +113,11 @@ public class ApplicationFacadeTest {
         ApplicationFacade.getInstance().setFinanceManager(financeManager);
         ApplicationFacade.getInstance().setSynchronizationManager(synchronizationManager);
         
-        this.user = new User(userIdToAdd, userProviderToAdd, financePluginUserToAdd, userFinanceOptionsToAdd);
-        Mockito.doThrow(FogbowException.class).when(this.financeManager).addUser(user);
+        Mockito.doThrow(FogbowException.class).when(this.financeManager).addUser(
+                new SystemUser(userIdToAdd, userIdToAdd, userProviderToAdd), financePluginUserToAdd);
         
         try {
-			ApplicationFacade.getInstance().addUser(adminToken, user);
+			ApplicationFacade.getInstance().addUser(adminToken, userIdToAdd, userProviderToAdd, financePluginUserToAdd);
 			Assert.fail("addUser is expected to throw exception.");
 		} catch (FogbowException e) {
 		}
@@ -131,6 +126,57 @@ public class ApplicationFacadeTest {
         Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
         Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
 	}
+	
+	// test case: When calling the addSelf method, it must call the FinanceManager. 
+	// Also, it must start and finish operations correctly using the SynchronizationManager.
+	@Test
+	public void testAddSelf() throws FogbowException {
+        setUpPublicKeysHolder();
+        
+        PowerMockito.mockStatic(AuthenticationUtil.class);
+        this.systemUser = new SystemUser(userIdToAdd, userIdToAdd, userProviderToAdd);
+        BDDMockito.given(AuthenticationUtil.authenticate(asPublicKey, userToken)).willReturn(systemUser);
+        
+        setUpApplicationFacade();
+
+        ApplicationFacade.getInstance().addSelf(userToken, financePluginUserToAdd);
+
+        Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
+        Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
+        Mockito.verify(financeManager, Mockito.times(1))
+                .addUser(new SystemUser(userIdToAdd, userIdToAdd, userProviderToAdd), financePluginUserToAdd);
+	}
+	
+	// test case: When calling the addSelf method, if the call to 
+    // FinanceManager.addUser throws an exception, the method
+    // must rethrow the exception and finish the operation correctly.
+    @Test
+    public void testAddSelfFinishesOperationIfOperationFails() throws FogbowException {
+        setUpPublicKeysHolder();
+        
+        PowerMockito.mockStatic(AuthenticationUtil.class);
+        this.systemUser = new SystemUser(userIdToAdd, userIdToAdd, userProviderToAdd);
+        BDDMockito.given(AuthenticationUtil.authenticate(asPublicKey, userToken)).willReturn(systemUser);
+        
+        this.financeManager = Mockito.mock(FinanceManager.class);
+        this.synchronizationManager = Mockito.mock(SynchronizationManager.class);
+        
+        ApplicationFacade.getInstance().setAuthorizationPlugin(authorizationPlugin);
+        ApplicationFacade.getInstance().setFinanceManager(financeManager);
+        ApplicationFacade.getInstance().setSynchronizationManager(synchronizationManager);
+        
+        Mockito.doThrow(FogbowException.class).when(this.financeManager).addUser(
+                new SystemUser(userIdToAdd, userIdToAdd, userProviderToAdd), financePluginUserToAdd);
+        
+        try {
+            ApplicationFacade.getInstance().addSelf(userToken, financePluginUserToAdd);
+            Assert.fail("addUser is expected to throw exception.");
+        } catch (FogbowException e) {
+        }
+        
+        Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
+        Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
+    }
 	
 	// test case: When calling the removeUser method, it must authorize the
 	// operation and call the FinanceManager. Also, it must start and finish

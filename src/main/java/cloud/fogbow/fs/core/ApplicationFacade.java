@@ -18,7 +18,6 @@ import cloud.fogbow.common.plugins.authorization.AuthorizationPlugin;
 import cloud.fogbow.common.util.CryptoUtil;
 import cloud.fogbow.common.util.ServiceAsymmetricKeysHolder;
 import cloud.fogbow.fs.api.parameters.AuthorizableUser;
-import cloud.fogbow.fs.api.parameters.User;
 import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.models.OperationType;
 import cloud.fogbow.fs.core.plugins.authorization.FsOperation;
@@ -77,20 +76,33 @@ public class ApplicationFacade {
 		}
 	}
 
-	// FIXME should not receive the User object. Instead, should receive user id 
-	// and the other parameters.
-	public void addUser(String userToken, User user) throws FogbowException {
-		LOGGER.info(String.format(Messages.Log.ADDING_USER, user.getUserId()));
-		
-		authenticateAndAuthorize(userToken, new FsOperation(OperationType.ADD_USER));
-		synchronizationManager.startOperation();
-		
-		try {
-			this.financeManager.addUser(user);
-		} finally {
-			synchronizationManager.finishOperation();
-		}
-	}
+    public void addUser(String userToken, String userId, String provider, String financePlan) 
+            throws UnauthenticatedUserException, UnauthorizedRequestException, FogbowException {
+        LOGGER.info(String.format(Messages.Log.ADDING_USER, userId));
+        
+        authenticateAndAuthorize(userToken, new FsOperation(OperationType.ADD_USER));
+        
+        synchronizationManager.startOperation();
+        
+        try {
+            this.financeManager.addUser(new SystemUser(userId, userId, provider), financePlan);
+        } finally {
+            synchronizationManager.finishOperation();
+        }
+    }
+	
+    public void addSelf(String userToken, String planName) throws FogbowException {
+        RSAPublicKey asPublicKey = FsPublicKeysHolder.getInstance().getAsPublicKey();
+        SystemUser user = AuthenticationUtil.authenticate(asPublicKey, userToken);
+        
+        synchronizationManager.startOperation();
+        
+        try {
+            this.financeManager.addUser(user, planName);
+        } finally {
+            synchronizationManager.finishOperation();
+        }
+    }
 
 	public void removeUser(String userToken, String userId, String provider) 
 	        throws UnauthorizedRequestException, FogbowException {

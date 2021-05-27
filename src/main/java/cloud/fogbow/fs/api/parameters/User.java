@@ -1,24 +1,18 @@
 package cloud.fogbow.fs.api.parameters;
 
-import java.util.Map;
-
 public class User {
 	private String userId;
 	private String provider;
-	// FIXME update
-	private String financePluginName;
-	private Map<String, String> financeOptions;
+	private String financePlanName;
 	
 	public User() {
 		
 	}
 	
-	// FIXME should not receive finance options
-	public User(String userId, String provider, String financePluginName, Map<String, String> financeOptions) {
+    public User(String userId, String provider, String financePlanName) {
 		this.userId = userId;
 		this.provider = provider;
-		this.financePluginName = financePluginName;
-		this.financeOptions = financeOptions;
+		this.financePlanName = financePlanName;
 	}
 
 	public String getUserId() {
@@ -29,11 +23,7 @@ public class User {
 		return provider;
 	}
 	
-	public String getFinancePluginName() {
-		return financePluginName;
-	}
-	
-	public Map<String, String> getFinanceOptions() {
-		return financeOptions;
+	public String getFinancePlanName() {
+		return financePlanName;
 	}
 }

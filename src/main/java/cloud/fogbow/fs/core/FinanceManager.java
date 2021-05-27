@@ -10,7 +10,6 @@ import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.common.models.SystemUser;
 import cloud.fogbow.fs.api.parameters.AuthorizableUser;
-import cloud.fogbow.fs.api.parameters.User;
 import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
 import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.plugins.PlanPlugin;
@@ -154,14 +153,14 @@ public class FinanceManager {
     /*
      * User Management
      */
-
-    public void addUser(User user) throws InvalidParameterException, InternalServerErrorException {
+  
+    public void addUser(SystemUser user, String financePlan) throws InvalidParameterException, InternalServerErrorException {
         while (true) {
             MultiConsumerSynchronizedList<PlanPlugin> planPlugins = this.objectHolder.getPlanPlugins();
             Integer consumerId = planPlugins.startIterating();
             
             try {
-                tryToAdd(planPlugins, new SystemUser(user.getUserId(), user.getUserId(), user.getProvider()), user.getFinancePluginName(), consumerId);
+                tryToAdd(planPlugins, user, financePlan, consumerId);
                 planPlugins.stopIterating(consumerId);
                 break;
             } catch (ModifiedListException e) {
@@ -170,7 +169,7 @@ public class FinanceManager {
                 planPlugins.stopIterating(consumerId);
                 throw e;
             }
-        }
+        } 
     }
 
     private void tryToAdd(MultiConsumerSynchronizedList<PlanPlugin> planPlugins, SystemUser user, String pluginName, Integer consumerId) 

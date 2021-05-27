@@ -21,13 +21,21 @@ import cloud.fogbow.fs.core.ApplicationFacade;
 public class User {
 	public static final String USER_ENDPOINT = SystemConstants.SERVICE_BASE_ENDPOINT + "user";
 
-	// FIXME move these operations to Admin
 	// TODO documentation
 	@RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<Boolean> addUser(
     		@RequestHeader(value = SystemConstants.SYSTEM_USER_TOKEN_HEADER_KEY) String systemUserToken,
     		@RequestBody cloud.fogbow.fs.api.parameters.User user) throws FogbowException {
-        ApplicationFacade.getInstance().addUser(systemUserToken, user);
+        ApplicationFacade.getInstance().addUser(systemUserToken, user.getUserId(), user.getProvider(), user.getFinancePlanName());
+        return new ResponseEntity<Boolean>(HttpStatus.OK);
+    }
+	
+	// TODO documentation
+	@RequestMapping(value = "/{planName}", method = RequestMethod.POST)
+    public ResponseEntity<Boolean> addSelf(
+            @PathVariable String planName,
+            @RequestHeader(value = SystemConstants.SYSTEM_USER_TOKEN_HEADER_KEY) String systemUserToken) throws FogbowException {
+        ApplicationFacade.getInstance().addSelf(systemUserToken, planName);
         return new ResponseEntity<Boolean>(HttpStatus.OK);
     }
 	
