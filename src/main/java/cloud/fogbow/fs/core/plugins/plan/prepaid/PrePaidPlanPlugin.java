@@ -20,7 +20,7 @@ import cloud.fogbow.fs.core.PropertiesHolder;
 import cloud.fogbow.fs.core.models.FinancePlan;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.models.UserCredits;
-import cloud.fogbow.fs.core.plugins.PlanPlugin;
+import cloud.fogbow.fs.core.plugins.PersistablePlanPlugin;
 import cloud.fogbow.fs.core.util.AccountingServiceClient;
 import cloud.fogbow.fs.core.util.FinancePlanFactory;
 import cloud.fogbow.fs.core.util.JsonUtils;
@@ -30,7 +30,7 @@ import cloud.fogbow.ras.core.models.RasOperation;
 
 @Entity
 @Table(name = "pre_paid_plugin_table")
-public class PrePaidPlanPlugin extends PlanPlugin {
+public class PrePaidPlanPlugin extends PersistablePlanPlugin {
     /**
      * The key to use in the configuration property which
      * indicates the delay between credits deduction attempts.

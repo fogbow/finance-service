@@ -42,7 +42,7 @@ public class FinancePlan {
 	private static final String FINANCE_PLAN_ID_COLUMN_NAME = "finance_plan_id";
     private static final String FINANCE_PLAN_ITEMS_COLUMN_NAME = "finance_plan_items";
 	
-    // FIXME in the current design, this attribute 
+    // TODO in the current design, this attribute 
     // is not useful.
     @Column(name = FINANCE_PLAN_ID_COLUMN_NAME)
 	@Id

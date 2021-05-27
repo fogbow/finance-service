@@ -17,7 +17,7 @@ import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.models.Invoice;
 import cloud.fogbow.fs.core.models.UserCredits;
-import cloud.fogbow.fs.core.plugins.PlanPlugin;
+import cloud.fogbow.fs.core.plugins.PersistablePlanPlugin;
 import cloud.fogbow.fs.core.plugins.plan.prepaid.UserCreditsFactory;
 import cloud.fogbow.fs.core.util.ModifiedListException;
 import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedList;
@@ -38,7 +38,7 @@ public class InMemoryUsersHolderTest {
     private static final String PLAN_NAME_2 = "plan2";
     private InMemoryUsersHolder objectHolder;
     private DatabaseManager databaseManager;
-    private ArrayList<PlanPlugin> plansList;
+    private ArrayList<PersistablePlanPlugin> plansList;
     private UserCreditsFactory userCreditsFactory;
     private UserCredits userCredits1;
     private ArrayList<UserCredits> creditsList;

@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.models.UserId;
-import cloud.fogbow.fs.core.plugins.PlanPlugin;
+import cloud.fogbow.fs.core.plugins.PersistablePlanPlugin;
 
 @Component
 public class DatabaseManager {
@@ -35,15 +35,15 @@ public class DatabaseManager {
 	    return userRepository.findAll();
 	}
 
-    public List<PlanPlugin> getRegisteredPlanPlugins() {
+    public List<PersistablePlanPlugin> getRegisteredPlanPlugins() {
         return planPluginRepository.findAll();
     }
 
-    public void savePlanPlugin(PlanPlugin plugin) {
+    public void savePlanPlugin(PersistablePlanPlugin plugin) {
         planPluginRepository.save(plugin);
     }
 
-    public void removePlanPlugin(PlanPlugin plugin) {
+    public void removePlanPlugin(PersistablePlanPlugin plugin) {
         planPluginRepository.delete(plugin);
     }
 }

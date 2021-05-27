@@ -24,7 +24,7 @@ import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.common.models.SystemUser;
 import cloud.fogbow.fs.api.parameters.AuthorizableUser;
 import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
-import cloud.fogbow.fs.core.plugins.PlanPlugin;
+import cloud.fogbow.fs.core.plugins.PersistablePlanPlugin;
 import cloud.fogbow.fs.core.plugins.PlanPluginInstantiator;
 import cloud.fogbow.fs.core.util.ModifiedListException;
 import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedList;
@@ -74,9 +74,9 @@ public class FinanceManagerTest {
 	private RasOperation operation2;
 	private RasOperation operation3;
     private InMemoryUsersHolder usersHolder;
-    private PlanPlugin plan1;
-    private PlanPlugin plan2;
-    private MultiConsumerSynchronizedList<PlanPlugin> plugins;
+    private PersistablePlanPlugin plan1;
+    private PersistablePlanPlugin plan2;
+    private MultiConsumerSynchronizedList<PersistablePlanPlugin> plugins;
 
 	// test case: When calling the constructor, it must get
 	// the names of the finance plugins from a PropertiesHolder
@@ -109,7 +109,7 @@ public class FinanceManagerTest {
         PowerMockito.mockStatic(PlanPluginInstantiator.class);
         BDDMockito.given(PlanPluginInstantiator.getPlanPlugin(PLUGIN_CLASS_NAME, PLAN_NAME, usersHolder)).willReturn(plan1);
         
-        MultiConsumerSynchronizedList<PlanPlugin> emptyPluginList = Mockito.mock(MultiConsumerSynchronizedList.class);
+        MultiConsumerSynchronizedList<PersistablePlanPlugin> emptyPluginList = Mockito.mock(MultiConsumerSynchronizedList.class);
         Mockito.when(emptyPluginList.isEmpty()).thenReturn(true);
         
         objectHolder = Mockito.mock(InMemoryFinanceObjectsHolder.class);
@@ -464,7 +464,7 @@ public class FinanceManagerTest {
 		operation3 = Mockito.mock(RasOperation.class);
 
         plugins = Mockito.mock(MultiConsumerSynchronizedList.class);
-        this.plan1 = Mockito.mock(PlanPlugin.class);
+        this.plan1 = Mockito.mock(PersistablePlanPlugin.class);
         Mockito.when(this.plan1.isRegisteredUser(systemUser1)).thenReturn(true);
         Mockito.when(this.plan1.isRegisteredUser(systemUser2)).thenReturn(false);
         Mockito.when(this.plan1.isRegisteredUser(systemUser3)).thenReturn(true);
@@ -474,7 +474,7 @@ public class FinanceManagerTest {
         Mockito.when(this.plan1.getUserFinanceState(systemUser3, PROPERTY_NAME_3)).thenReturn(PROPERTY_VALUE_3);
         Mockito.when(this.plan1.getName()).thenReturn(PLUGIN_1_NAME);
         
-        this.plan2 = Mockito.mock(PlanPlugin.class);
+        this.plan2 = Mockito.mock(PersistablePlanPlugin.class);
         Mockito.when(this.plan2.isRegisteredUser(systemUser1)).thenReturn(false);
         Mockito.when(this.plan2.isRegisteredUser(systemUser2)).thenReturn(true);
         Mockito.when(this.plan2.isRegisteredUser(systemUser3)).thenReturn(false);
@@ -512,11 +512,11 @@ public class FinanceManagerTest {
 		systemUser1 = new SystemUser(USER_ID_1, USER_NAME_1, PROVIDER_USER_1);
 		operation1 = Mockito.mock(RasOperation.class);
 		
-        MultiConsumerSynchronizedList<PlanPlugin> plugins = Mockito.mock(MultiConsumerSynchronizedList.class);
-        this.plan1 = Mockito.mock(PlanPlugin.class);
+        MultiConsumerSynchronizedList<PersistablePlanPlugin> plugins = Mockito.mock(MultiConsumerSynchronizedList.class);
+        this.plan1 = Mockito.mock(PersistablePlanPlugin.class);
         Mockito.when(this.plan1.isRegisteredUser(systemUser1)).thenReturn(false);
         
-        this.plan2 = Mockito.mock(PlanPlugin.class);
+        this.plan2 = Mockito.mock(PersistablePlanPlugin.class);
         Mockito.when(this.plan2.isRegisteredUser(systemUser1)).thenReturn(false);
         
         this.usersHolder = Mockito.mock(InMemoryUsersHolder.class);

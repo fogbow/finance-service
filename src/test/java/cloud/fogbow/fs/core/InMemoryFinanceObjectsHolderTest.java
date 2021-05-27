@@ -18,7 +18,7 @@ import cloud.fogbow.common.exceptions.ConfigurationErrorException;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
-import cloud.fogbow.fs.core.plugins.PlanPlugin;
+import cloud.fogbow.fs.core.plugins.PersistablePlanPlugin;
 import cloud.fogbow.fs.core.util.ModifiedListException;
 import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedList;
 import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedListFactory;
@@ -34,11 +34,11 @@ public class InMemoryFinanceObjectsHolderTest {
     
     private DatabaseManager databaseManager;
     private MultiConsumerSynchronizedListFactory listFactory;
-    private MultiConsumerSynchronizedList<PlanPlugin> planSynchronizedList;
+    private MultiConsumerSynchronizedList<PersistablePlanPlugin> planSynchronizedList;
 
-    private List<PlanPlugin> plansList;
-    private PlanPlugin plan1;
-    private PlanPlugin plan2;
+    private List<PersistablePlanPlugin> plansList;
+    private PersistablePlanPlugin plan1;
+    private PersistablePlanPlugin plan2;
     private Map<String, String> rulesPlan1;
     private InMemoryUsersHolder usersHolder;
     private InMemoryFinanceObjectsHolder objectHolder;
@@ -81,7 +81,7 @@ public class InMemoryFinanceObjectsHolderTest {
     // the DatabaseManager.
     @Test
     public void testRegisterFinancePlan() throws InvalidParameterException, InternalServerErrorException, ConfigurationErrorException {
-        PlanPlugin planPlugin1 = Mockito.mock(PlanPlugin.class);
+        PersistablePlanPlugin planPlugin1 = Mockito.mock(PersistablePlanPlugin.class);
         Mockito.when(planPlugin1.getName()).thenReturn(NEW_PLAN_NAME_1);
         
         objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, usersHolder, listFactory, planSynchronizedList);
@@ -97,7 +97,7 @@ public class InMemoryFinanceObjectsHolderTest {
     // it must throw an InvalidParameterException.
     @Test(expected = InvalidParameterException.class)
     public void testCannotRegisterFinancePlanWithAlreadyUsedName() throws InternalServerErrorException, InvalidParameterException {
-        PlanPlugin planPlugin1 = Mockito.mock(PlanPlugin.class);
+        PersistablePlanPlugin planPlugin1 = Mockito.mock(PersistablePlanPlugin.class);
         Mockito.when(planPlugin1.getName()).thenReturn(PLAN_NAME_1);
         
         objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, usersHolder, listFactory, planSynchronizedList);
@@ -245,13 +245,13 @@ public class InMemoryFinanceObjectsHolderTest {
     }
 
     private void setUpPlans() {
-        plan1 = Mockito.mock(PlanPlugin.class);
+        plan1 = Mockito.mock(PersistablePlanPlugin.class);
         Mockito.when(plan1.getName()).thenReturn(PLAN_NAME_1);
         
-        plan2 = Mockito.mock(PlanPlugin.class);
+        plan2 = Mockito.mock(PersistablePlanPlugin.class);
         Mockito.when(plan2.getName()).thenReturn(PLAN_NAME_2);
         
-        plansList = new ArrayList<PlanPlugin>();
+        plansList = new ArrayList<PersistablePlanPlugin>();
         plansList.add(plan1);
         plansList.add(plan2);
     }

@@ -9,14 +9,14 @@ import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.models.FinanceUser;
-import cloud.fogbow.fs.core.plugins.PlanPlugin;
+import cloud.fogbow.fs.core.plugins.PersistablePlanPlugin;
 import cloud.fogbow.fs.core.util.ModifiedListException;
 import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedList;
 import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedListFactory;
 
 public class InMemoryFinanceObjectsHolder {
     private DatabaseManager databaseManager;
-    private MultiConsumerSynchronizedList<PlanPlugin> planPlugins;
+    private MultiConsumerSynchronizedList<PersistablePlanPlugin> planPlugins;
     private InMemoryUsersHolder usersHolder;
     private MultiConsumerSynchronizedListFactory listFactory;
 
@@ -35,7 +35,7 @@ public class InMemoryFinanceObjectsHolder {
     }
     
     public InMemoryFinanceObjectsHolder(DatabaseManager databaseManager, InMemoryUsersHolder usersHolder,
-            MultiConsumerSynchronizedListFactory listFactory, MultiConsumerSynchronizedList<PlanPlugin> planPlugins) {
+            MultiConsumerSynchronizedListFactory listFactory, MultiConsumerSynchronizedList<PersistablePlanPlugin> planPlugins) {
         this.databaseManager = databaseManager;
         this.usersHolder = usersHolder;
         this.listFactory = listFactory;
@@ -43,10 +43,10 @@ public class InMemoryFinanceObjectsHolder {
     }
 
     private void loadData() throws InternalServerErrorException, ConfigurationErrorException {
-        List<PlanPlugin> databasePlanPlugins = this.databaseManager.getRegisteredPlanPlugins();
+        List<PersistablePlanPlugin> databasePlanPlugins = this.databaseManager.getRegisteredPlanPlugins();
         planPlugins = listFactory.getList();
         
-        for (PlanPlugin plugin : databasePlanPlugins) {
+        for (PersistablePlanPlugin plugin : databasePlanPlugins) {
             plugin.setUp(this.usersHolder);
             planPlugins.addItem(plugin);
         }
@@ -60,7 +60,7 @@ public class InMemoryFinanceObjectsHolder {
         return this.usersHolder;
     }
     
-    public MultiConsumerSynchronizedList<PlanPlugin> getPlanPlugins() {
+    public MultiConsumerSynchronizedList<PersistablePlanPlugin> getPlanPlugins() {
         return this.planPlugins;
     }
     
@@ -110,15 +110,15 @@ public class InMemoryFinanceObjectsHolder {
      * 
      */
 
-    public void registerPlanPlugin(PlanPlugin plugin) throws InternalServerErrorException, InvalidParameterException {
+    public void registerPlanPlugin(PersistablePlanPlugin plugin) throws InternalServerErrorException, InvalidParameterException {
         checkIfPluginExists(plugin.getName());
         this.planPlugins.addItem(plugin);
         this.databaseManager.savePlanPlugin(plugin);
     }
 
-    public PlanPlugin getPlanPlugin(String pluginName) throws InternalServerErrorException, InvalidParameterException {
+    public PersistablePlanPlugin getPlanPlugin(String pluginName) throws InternalServerErrorException, InvalidParameterException {
         Integer consumerId = planPlugins.startIterating();
-        PlanPlugin planToReturn = null;
+        PersistablePlanPlugin planToReturn = null;
 
         while (true) {
             try {
@@ -140,10 +140,10 @@ public class InMemoryFinanceObjectsHolder {
         throw new InvalidParameterException(String.format(Messages.Exception.UNABLE_TO_FIND_PLAN, pluginName));
     }
 
-    private PlanPlugin tryToGetPluginFromList(String pluginName, Integer consumerId)
+    private PersistablePlanPlugin tryToGetPluginFromList(String pluginName, Integer consumerId)
             throws ModifiedListException, InternalServerErrorException {
-        PlanPlugin item = planPlugins.getNext(consumerId);
-        PlanPlugin planToReturn = null;
+        PersistablePlanPlugin item = planPlugins.getNext(consumerId);
+        PersistablePlanPlugin planToReturn = null;
 
         while (item != null) {
             if (item.getName().equals(pluginName)) {
@@ -169,7 +169,7 @@ public class InMemoryFinanceObjectsHolder {
 
     public void removePlanPlugin(String pluginName) throws InternalServerErrorException, InvalidParameterException {
         // TODO how should we treat the users who use this plan?
-        PlanPlugin planPlugin = getPlanPlugin(pluginName);
+        PersistablePlanPlugin planPlugin = getPlanPlugin(pluginName);
         
         synchronized(planPlugin) {
             planPlugins.removeItem(planPlugin);
@@ -179,7 +179,7 @@ public class InMemoryFinanceObjectsHolder {
 
     public void updatePlanPlugin(String pluginName, Map<String, String> pluginOptions) 
             throws InternalServerErrorException, InvalidParameterException {
-        PlanPlugin planPlugin = getPlanPlugin(pluginName);
+        PersistablePlanPlugin planPlugin = getPlanPlugin(pluginName);
         
         synchronized(planPlugin) {
             planPlugin.stopThreads();
@@ -191,7 +191,7 @@ public class InMemoryFinanceObjectsHolder {
 
     public Map<String, String> getPlanPluginOptions(String pluginName) 
             throws InternalServerErrorException, InvalidParameterException {
-        PlanPlugin planPlugin = getPlanPlugin(pluginName);
+        PersistablePlanPlugin planPlugin = getPlanPlugin(pluginName);
         
         synchronized(planPlugin) {
             return planPlugin.getOptions();
