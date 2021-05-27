@@ -19,17 +19,16 @@ import cloud.fogbow.fs.api.parameters.RequestFinancePlan;
 import cloud.fogbow.fs.constants.SystemConstants;
 import cloud.fogbow.fs.core.ApplicationFacade;
 
-// FIXME rename this class and its endpoints to Plan
 //TODO documentation
 @CrossOrigin
 @RestController
-@RequestMapping(value = Resources.RESOURCES_ENDPOINT)
-public class Resources {
-	public static final String RESOURCES_ENDPOINT = SystemConstants.SERVICE_BASE_ENDPOINT + "resources";
+@RequestMapping(value = Plan.PLAN_ENDPOINT)
+public class Plan {
+	public static final String PLAN_ENDPOINT = SystemConstants.SERVICE_BASE_ENDPOINT + "plan";
+	public static final String PLAN_USER_SUFFIX = "/user";
 	
 	// TODO documentation
-	// FIXME constant
-	@RequestMapping(value = "/user/{provider}/{userId}", method = RequestMethod.PUT)
+	@RequestMapping(value = PLAN_USER_SUFFIX + "/{provider}/{userId}", method = RequestMethod.PUT)
 	public ResponseEntity<Boolean> updateFinanceState(
 			@PathVariable String userId,
 			@PathVariable String provider,
@@ -40,8 +39,7 @@ public class Resources {
 	}
 	
 	// TODO documentation
-	// FIXME constant
-	@RequestMapping(value = "/user/{provider}/{userId}/{property}", method = RequestMethod.GET)
+	@RequestMapping(value = PLAN_USER_SUFFIX + "/{provider}/{userId}/{property}", method = RequestMethod.GET)
 	public ResponseEntity<String> getFinanceStateProperty(
 			@PathVariable String userId,
 			@PathVariable String provider,
@@ -52,8 +50,7 @@ public class Resources {
 	}
 	
 	// TODO documentation
-	// FIXME constant
-	@RequestMapping(value = "/plan", method = RequestMethod.POST)
+	@RequestMapping(method = RequestMethod.POST)
 	public ResponseEntity<Boolean> createFinancePlan(
 			@RequestHeader(value = SystemConstants.SYSTEM_USER_TOKEN_HEADER_KEY) String systemUserToken,
 			@RequestBody RequestFinancePlan financePlan) throws FogbowException {
@@ -63,8 +60,7 @@ public class Resources {
 	}
 	
 	// TODO documentation
-	// FIXME constant
-	@RequestMapping(value = "/plan/{planName}", method = RequestMethod.GET)
+	@RequestMapping(value = "/{planName}", method = RequestMethod.GET)
 	public ResponseEntity<ResponseFinancePlan> getFinancePlan(
 			@PathVariable String planName,
 			@RequestHeader(value = SystemConstants.SYSTEM_USER_TOKEN_HEADER_KEY) String systemUserToken) throws FogbowException {
@@ -73,8 +69,7 @@ public class Resources {
 	}
 	
 	// TODO documentation
-	// FIXME constant
-    @RequestMapping(value = "/plan/{planName}", method = RequestMethod.PUT)
+    @RequestMapping(value = "/{planName}", method = RequestMethod.PUT)
     public ResponseEntity<Boolean> changeFinancePlanOptions(
             @PathVariable String planName,
             @RequestHeader(value = SystemConstants.SYSTEM_USER_TOKEN_HEADER_KEY) String systemUserToken,
@@ -84,8 +79,7 @@ public class Resources {
     }
 
 	// TODO documentation
-	// FIXME constant
-	@RequestMapping(value = "/plan/{planName}", method = RequestMethod.DELETE)
+	@RequestMapping(value = "/{planName}", method = RequestMethod.DELETE)
 	public ResponseEntity<Boolean> removeFinancePlan(
 			@PathVariable String planName,
 			@RequestHeader(value = SystemConstants.SYSTEM_USER_TOKEN_HEADER_KEY) String systemUserToken) throws FogbowException {
