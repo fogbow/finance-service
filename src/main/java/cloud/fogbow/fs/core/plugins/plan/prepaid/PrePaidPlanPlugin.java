@@ -53,8 +53,7 @@ public class PrePaidPlanPlugin extends PlanPlugin {
     private Thread stopServiceThread;
     
     @Transient
-    // FIXME
-    private CreditsManager paymentManager;
+    private CreditsManager creditsManager;
     
     @Transient
     private AccountingServiceClient accountingServiceClient;
@@ -100,7 +99,7 @@ public class PrePaidPlanPlugin extends PlanPlugin {
         this(planName, usersHolder, new AccountingServiceClient(), new RasClient(),
                 new FinancePlanFactory(), new JsonUtils(), financeOptions);
         
-        this.paymentManager = new CreditsManager(this.usersHolder, plan);
+        this.creditsManager = new CreditsManager(this.usersHolder, plan);
     }
     
     public PrePaidPlanPlugin(String planName, InMemoryUsersHolder usersHolder,
@@ -138,7 +137,7 @@ public class PrePaidPlanPlugin extends PlanPlugin {
         this.accountingServiceClient = accountingServiceClient;
         this.rasClient = rasClient;
         this.planFactory = planFactory;
-        this.paymentManager = invoiceManager;
+        this.creditsManager = invoiceManager;
         this.jsonUtils = jsonUtils;
         this.plan = financePlan;
         this.threadsAreRunning = false;
@@ -221,11 +220,11 @@ public class PrePaidPlanPlugin extends PlanPlugin {
     public void startThreads() {
         if (!this.threadsAreRunning) {
             this.paymentRunner = new PaymentRunner(this.name, creditsDeductionWaitTime, usersHolder, 
-                    accountingServiceClient, paymentManager);
+                    accountingServiceClient, creditsManager);
             this.paymentThread = new Thread(paymentRunner);
             
             this.stopServiceRunner = new StopServiceRunner(this.name, creditsDeductionWaitTime, usersHolder, 
-                    paymentManager, rasClient);
+                    creditsManager, rasClient);
             this.stopServiceThread = new Thread(stopServiceRunner);
             
             this.paymentThread.start();
@@ -256,7 +255,7 @@ public class PrePaidPlanPlugin extends PlanPlugin {
     @Override
     public boolean isAuthorized(SystemUser user, RasOperation operation) throws InvalidParameterException, InternalServerErrorException {
         if (operation.getOperationType().equals(Operation.CREATE)) {
-            return this.paymentManager.hasPaid(user.getId(), user.getIdentityProviderId());
+            return this.creditsManager.hasPaid(user.getId(), user.getIdentityProviderId());
         }
         
         return true;
@@ -284,7 +283,7 @@ public class PrePaidPlanPlugin extends PlanPlugin {
     @Override
     public String getUserFinanceState(SystemUser user, String property)
             throws InvalidParameterException, InternalServerErrorException {
-        return this.paymentManager.getUserFinanceState(user.getId(), user.getIdentityProviderId(), property);
+        return this.creditsManager.getUserFinanceState(user.getId(), user.getIdentityProviderId(), property);
     }
 
     @Override
@@ -323,7 +322,7 @@ public class PrePaidPlanPlugin extends PlanPlugin {
         this.rasClient = new RasClient();
         this.threadsAreRunning = false;
         
-        this.paymentManager = new CreditsManager(this.usersHolder, plan);
+        this.creditsManager = new CreditsManager(this.usersHolder, plan);
     }
     
     static class PrePaidPluginOptionsLoader {

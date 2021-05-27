@@ -53,8 +53,7 @@ public class PostPaidPlanPlugin extends PlanPlugin {
     private Thread stopServiceThread;
     
     @Transient
-    // FIXME
-    private InvoiceManager paymentManager;
+    private InvoiceManager invoiceManager;
     
     @Transient
     private AccountingServiceClient accountingServiceClient;
@@ -103,7 +102,7 @@ public class PostPaidPlanPlugin extends PlanPlugin {
         this(planName, usersHolder, new AccountingServiceClient(), new RasClient(),
                 new FinancePlanFactory(), new JsonUtils(), financeOptions);
         
-        this.paymentManager = new InvoiceManager(this.usersHolder, plan);
+        this.invoiceManager = new InvoiceManager(this.usersHolder, plan);
     }
     
     PostPaidPlanPlugin(String planName, InMemoryUsersHolder usersHolder, AccountingServiceClient accountingServiceClient,
@@ -140,7 +139,7 @@ public class PostPaidPlanPlugin extends PlanPlugin {
         this.accountingServiceClient = accountingServiceClient;
         this.rasClient = rasClient;
         this.planFactory = planFactory;
-        this.paymentManager = invoiceManager;
+        this.invoiceManager = invoiceManager;
         this.jsonUtils = jsonUtils;
         this.plan = financePlan;
         this.threadsAreRunning = false;
@@ -226,10 +225,10 @@ public class PostPaidPlanPlugin extends PlanPlugin {
     @Override
     public void startThreads() {
         if (!this.threadsAreRunning) {
-            this.paymentRunner = new PaymentRunner(this.name, invoiceWaitTime, userBillingTime, usersHolder, accountingServiceClient, paymentManager);
+            this.paymentRunner = new PaymentRunner(this.name, invoiceWaitTime, userBillingTime, usersHolder, accountingServiceClient, invoiceManager);
             this.paymentThread = new Thread(paymentRunner);
             
-            this.stopServiceRunner = new StopServiceRunner(this.name, invoiceWaitTime, usersHolder, paymentManager, rasClient);
+            this.stopServiceRunner = new StopServiceRunner(this.name, invoiceWaitTime, usersHolder, invoiceManager, rasClient);
             this.stopServiceThread = new Thread(stopServiceRunner);
             
             this.paymentThread.start();
@@ -278,7 +277,7 @@ public class PostPaidPlanPlugin extends PlanPlugin {
 
     @Override
     public String getUserFinanceState(SystemUser user, String property) throws InvalidParameterException, InternalServerErrorException {
-        return this.paymentManager.getUserFinanceState(user.getId(), user.getIdentityProviderId(), property);
+        return this.invoiceManager.getUserFinanceState(user.getId(), user.getIdentityProviderId(), property);
     }
 
     @Override
@@ -305,7 +304,7 @@ public class PostPaidPlanPlugin extends PlanPlugin {
     public boolean isAuthorized(SystemUser user, RasOperation operation) 
             throws InvalidParameterException, InternalServerErrorException {
         if (operation.getOperationType().equals(Operation.CREATE)) {
-            return this.paymentManager.hasPaid(user.getId(), user.getIdentityProviderId());
+            return this.invoiceManager.hasPaid(user.getId(), user.getIdentityProviderId());
         }
 
         return true;
@@ -321,7 +320,7 @@ public class PostPaidPlanPlugin extends PlanPlugin {
         this.rasClient = new RasClient();
         this.threadsAreRunning = false;
         
-        this.paymentManager = new InvoiceManager(this.usersHolder, plan);
+        this.invoiceManager = new InvoiceManager(this.usersHolder, plan);
     }
     
     static class PostPaidPluginOptionsLoader {
