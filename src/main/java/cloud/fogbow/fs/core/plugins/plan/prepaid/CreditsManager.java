@@ -32,7 +32,6 @@ public class CreditsManager {
         this.recordUtils = recordUtils;
     }
     
-    // FIXME should be something like isDefaulting
     public boolean hasPaid(String userId, String provider) throws InvalidParameterException, InternalServerErrorException {
         FinanceUser user = this.usersHolder.getUserById(userId, provider);
         

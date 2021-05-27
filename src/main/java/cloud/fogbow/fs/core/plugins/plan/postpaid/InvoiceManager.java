@@ -42,7 +42,6 @@ public class InvoiceManager {
         this.financePlan = financePlan;
     }
     
-    // FIXME should be something like isDefaulting
     public boolean hasPaid(String userId, String provider) throws InvalidParameterException, InternalServerErrorException {
         LOGGER.info(this.userHolder);
         FinanceUser user = this.userHolder.getUserById(userId, provider);
