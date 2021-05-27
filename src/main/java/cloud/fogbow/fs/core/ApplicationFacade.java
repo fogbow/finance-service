@@ -36,10 +36,6 @@ public class ApplicationFacade {
 		
 	}
 
-	public void setAuthorizationPlugin(AuthorizationPlugin<FsOperation> authorizationPlugin) {
-		this.authorizationPlugin = authorizationPlugin;
-	}
-	
 	public static ApplicationFacade getInstance() {
 		if (instance == null) {
 			instance = new ApplicationFacade();
@@ -55,6 +51,10 @@ public class ApplicationFacade {
 		this.synchronizationManager = synchronizationManager;
 	}
 	
+    public void setAuthorizationPlugin(AuthorizationPlugin<FsOperation> authorizationPlugin) {
+        this.authorizationPlugin = authorizationPlugin;
+    }
+
 	public String getPublicKey() throws InternalServerErrorException {
 		synchronizationManager.startOperation();
         // There is no need to authenticate the user or authorize this operation
@@ -77,6 +77,8 @@ public class ApplicationFacade {
 		}
 	}
 
+	// FIXME should not receive the User object. Instead, should receive user id 
+	// and the other parameters.
 	public void addUser(String userToken, User user) throws FogbowException {
 		LOGGER.info(String.format(Messages.Log.ADDING_USER, user.getUserId()));
 		
@@ -90,7 +92,8 @@ public class ApplicationFacade {
 		}
 	}
 
-	public void removeUser(String userToken, String userId, String provider) throws UnauthorizedRequestException, FogbowException {
+	public void removeUser(String userToken, String userId, String provider) 
+	        throws UnauthorizedRequestException, FogbowException {
 		LOGGER.info(String.format(Messages.Log.REMOVING_USER, userId));
 		
 		authenticateAndAuthorize(userToken, new FsOperation(OperationType.REMOVE_USER));
@@ -103,7 +106,8 @@ public class ApplicationFacade {
 		}
 	}
 
-	public void updateFinanceState(String userToken, String userId, String provider, HashMap<String, String> financeState) throws UnauthenticatedUserException, UnauthorizedRequestException, FogbowException {
+	public void updateFinanceState(String userToken, String userId, String provider, HashMap<String, String> financeState) 
+	        throws UnauthenticatedUserException, UnauthorizedRequestException, FogbowException {
 		LOGGER.info(String.format(Messages.Log.UPDATING_FINANCE_STATE, userId));
 		
 		authenticateAndAuthorize(userToken, new FsOperation(OperationType.UPDATE_FINANCE_STATE));

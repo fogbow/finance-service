@@ -13,6 +13,7 @@ public class User {
 		
 	}
 	
+	// FIXME should not receive finance options
 	public User(String userId, String provider, String financePluginName, Map<String, String> financeOptions) {
 		this.userId = userId;
 		this.provider = provider;

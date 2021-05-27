@@ -2,6 +2,7 @@ package cloud.fogbow.fs.api.http.response;
 
 import java.util.Map;
 
+// FIXME change name to FinancePlan
 public class ResponseFinancePlan {
     private String planName;
     private Map<String, String> planInfo;

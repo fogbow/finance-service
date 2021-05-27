@@ -16,6 +16,9 @@ import cloud.fogbow.ras.core.models.RasOperation;
 // TODO documentation
 @Entity
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+// TODO maybe create an interface PlanPlugin and move the methods to 
+// the interface, and rename this abstract class to StorablePlanPlugin, 
+// which will hold only the name.
 public abstract class PlanPlugin {
 
     @Id

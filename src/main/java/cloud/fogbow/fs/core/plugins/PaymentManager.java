@@ -12,6 +12,7 @@ import cloud.fogbow.fs.core.util.accounting.Record;
  * interface also contains methods for providing information
  * on the users financial state.
  */
+@Deprecated
 public interface PaymentManager {
 	
 	/**

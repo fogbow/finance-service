@@ -3,8 +3,6 @@ package cloud.fogbow.fs.core;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Map;
 
-import com.google.common.annotations.VisibleForTesting;
-
 import cloud.fogbow.as.core.util.AuthenticationUtil;
 import cloud.fogbow.common.exceptions.ConfigurationErrorException;
 import cloud.fogbow.common.exceptions.FogbowException;
@@ -17,24 +15,12 @@ import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
 import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.plugins.PlanPlugin;
 import cloud.fogbow.fs.core.plugins.PlanPluginInstantiator;
-import cloud.fogbow.fs.core.util.FinancePlanFactory;
 import cloud.fogbow.fs.core.util.ModifiedListException;
 import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedList;
 import cloud.fogbow.ras.core.models.RasOperation;
 
 public class FinanceManager {
-    @VisibleForTesting
-    static final String FINANCE_PLUGINS_CLASS_NAMES_SEPARATOR = ",";
     private InMemoryFinanceObjectsHolder objectHolder;
-
-    public FinanceManager(InMemoryFinanceObjectsHolder objectHolder, FinancePlanFactory financePlanFactory)
-            throws ConfigurationErrorException, InternalServerErrorException, InvalidParameterException {
-        this.objectHolder = objectHolder;
-
-        if (objectHolder.getPlanPlugins().isEmpty()) {
-            tryToCreateDefaultPlanPlugin();
-        }
-    }
     
     public FinanceManager(InMemoryFinanceObjectsHolder objectHolder)
             throws ConfigurationErrorException, InternalServerErrorException, InvalidParameterException {

@@ -21,6 +21,7 @@ import cloud.fogbow.fs.core.ApplicationFacade;
 public class User {
 	public static final String USER_ENDPOINT = SystemConstants.SERVICE_BASE_ENDPOINT + "user";
 
+	// FIXME move these operations to Admin
 	// TODO documentation
 	@RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<Boolean> addUser(

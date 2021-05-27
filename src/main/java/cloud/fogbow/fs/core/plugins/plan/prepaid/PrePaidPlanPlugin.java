@@ -53,6 +53,7 @@ public class PrePaidPlanPlugin extends PlanPlugin {
     private Thread stopServiceThread;
     
     @Transient
+    // FIXME
     private CreditsManager paymentManager;
     
     @Transient

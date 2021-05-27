@@ -53,6 +53,7 @@ public class PostPaidPlanPlugin extends PlanPlugin {
     private Thread stopServiceThread;
     
     @Transient
+    // FIXME
     private InvoiceManager paymentManager;
     
     @Transient

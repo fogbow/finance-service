@@ -19,6 +19,7 @@ import cloud.fogbow.fs.api.parameters.RequestFinancePlan;
 import cloud.fogbow.fs.constants.SystemConstants;
 import cloud.fogbow.fs.core.ApplicationFacade;
 
+// FIXME rename this class and its endpoints to Plan
 //TODO documentation
 @CrossOrigin
 @RestController

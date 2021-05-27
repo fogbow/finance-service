@@ -14,6 +14,7 @@ import cloud.fogbow.ras.core.models.RasOperation;
  * also works as a thread manager, this abstraction provides methods for 
  * starting and stopping the internal threads.
  */
+@Deprecated
 public interface FinancePlugin {
 	/**
 	 * Starts all the internal threads related to this plugin's
