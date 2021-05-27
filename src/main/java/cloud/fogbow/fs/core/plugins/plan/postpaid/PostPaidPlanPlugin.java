@@ -112,6 +112,7 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
         this.usersHolder = usersHolder;
         this.accountingServiceClient = accountingServiceClient;
         this.rasClient = rasClient;
+        this.jsonUtils = jsonUtils;
         this.planFactory = planFactory;
         this.threadsAreRunning = false;
 

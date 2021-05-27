@@ -4,7 +4,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
-import cloud.fogbow.as.core.PropertiesHolder;
+import cloud.fogbow.fs.core.PropertiesHolder;
 import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
 
 public class TimeUtils {

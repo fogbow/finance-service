@@ -3,8 +3,6 @@ package cloud.fogbow.fs.core.plugins.plan.postpaid;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.log4j.Logger;
-
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.constants.Messages;
@@ -18,7 +16,6 @@ import cloud.fogbow.fs.core.util.accounting.Record;
 import cloud.fogbow.fs.core.util.accounting.RecordUtils;
 
 public class InvoiceManager {
-    private static Logger LOGGER = Logger.getLogger(InvoiceManager.class);
     public static final String PROPERTY_VALUES_SEPARATOR = ",";
     public static final String ALL_USER_INVOICES_PROPERTY_NAME = "ALL_USER_INVOICES";
     
@@ -43,7 +40,6 @@ public class InvoiceManager {
     }
     
     public boolean hasPaid(String userId, String provider) throws InvalidParameterException, InternalServerErrorException {
-        LOGGER.info(this.userHolder);
         FinanceUser user = this.userHolder.getUserById(userId, provider);
 
         synchronized(user) {
