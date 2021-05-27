@@ -2,17 +2,16 @@ package cloud.fogbow.fs.api.parameters;
 
 import java.util.Map;
 
-// FIXME change class name to FinancePlan
-public class RequestFinancePlan {
+public class FinancePlan {
 	private String pluginClassName;
 	private String financePlanName;
 	private Map<String, String> planInfo;
 	
-	public RequestFinancePlan() {
+	public FinancePlan() {
 		
 	}
 	
-	public RequestFinancePlan(String pluginClassName, String financePlanName, 
+	public FinancePlan(String pluginClassName, String financePlanName, 
 	        Map<String, String> planInfo) {
 		this.pluginClassName = pluginClassName;
 		this.planInfo = planInfo;
