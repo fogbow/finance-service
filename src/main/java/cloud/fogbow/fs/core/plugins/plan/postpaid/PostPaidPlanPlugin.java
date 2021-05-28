@@ -88,6 +88,9 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
     @OneToOne(cascade={CascadeType.ALL})
     private FinancePlan plan;
 
+    @Column(name = "name")
+    private String name;
+    
     public PostPaidPlanPlugin() {
         
     }
@@ -125,8 +128,6 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
                     throws InvalidParameterException, InternalServerErrorException {
         this(name, userBillingInterval, invoiceWaitTime, usersHolder, accountingServiceClient, rasClient, invoiceManager, 
                 planFactory, jsonUtils, financePlan);
-        
-        setOptions(financeOptions);
     }
     
     PostPaidPlanPlugin(String name, long userBillingInterval, long invoiceWaitTime, InMemoryUsersHolder usersHolder, 
@@ -185,6 +186,8 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
             setUpPlanFromRulesString(financeOptions.get(FINANCE_PLAN_RULES), planFactory);
         } else if (financeOptions.containsKey(FINANCE_PLAN_RULES_FILE_PATH))  {
             setUpPlanFromRulesFile(financeOptions.get(FINANCE_PLAN_RULES_FILE_PATH), planFactory);
+        } else {
+            throw new InvalidParameterException(Messages.Exception.NO_FINANCE_PLAN_CREATION_METHOD_PROVIDED);
         }
     }
 

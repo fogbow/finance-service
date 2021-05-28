@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import cloud.fogbow.common.exceptions.FogbowException;
+import cloud.fogbow.fs.api.parameters.FinanceOptions;
 import cloud.fogbow.fs.constants.SystemConstants;
 import cloud.fogbow.fs.core.ApplicationFacade;
 
@@ -72,8 +73,8 @@ public class Plan {
     public ResponseEntity<Boolean> changeFinancePlanOptions(
             @PathVariable String planName,
             @RequestHeader(value = SystemConstants.SYSTEM_USER_TOKEN_HEADER_KEY) String systemUserToken,
-            @RequestBody HashMap<String, String> financeOptions) throws FogbowException {
-        ApplicationFacade.getInstance().changePlanOptions(systemUserToken, planName, financeOptions);
+            @RequestBody FinanceOptions financeOptions) throws FogbowException {
+        ApplicationFacade.getInstance().changePlanOptions(systemUserToken, planName, financeOptions.getFinanceOptions());
         return new ResponseEntity<Boolean>(HttpStatus.OK);
     }
 

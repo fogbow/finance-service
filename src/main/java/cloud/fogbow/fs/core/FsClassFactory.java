@@ -1,11 +1,13 @@
 package cloud.fogbow.fs.core;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
+import java.util.Map;
+
 import cloud.fogbow.common.exceptions.FatalErrorException;
 import cloud.fogbow.common.util.ClassFactory;
 import cloud.fogbow.fs.constants.Messages;
-
-import java.lang.reflect.Constructor;
-import java.util.Arrays;
 
 // Each package has to have its own ClassFactory
 
@@ -59,6 +61,42 @@ public class FsClassFactory implements ClassFactory {
             pluginInstance = constructor.newInstance(params);
         } catch (ClassNotFoundException e) {
             throw new FatalErrorException(String.format(Messages.Exception.UNABLE_TO_FIND_CLASS_S, pluginClassName));
+        } catch (Exception e) {
+            throw new FatalErrorException(e.getMessage(), e);
+        }
+        return pluginInstance;
+    }
+
+    public Object createPlanPluginInstance(String pluginClassName, String planName, InMemoryUsersHolder usersHolder, 
+            Map<String, String> pluginOptions, Object ... params) throws FatalErrorException {
+
+        Object pluginInstance;
+        Constructor<?> constructor;
+
+        try {
+            Class<?> classpath = Class.forName(pluginClassName);
+            Class<?>[] constructorArgTypes = new Class[3 + params.length];
+
+            constructorArgTypes[0] = String.class;
+            constructorArgTypes[1] = InMemoryUsersHolder.class;
+            constructorArgTypes[2] = Map.class;
+            
+            for (int i = 0; i < params.length; i++) {
+                constructorArgTypes[3 + i] = params[3 + i].getClass();
+            }
+            
+            constructor = classpath.getConstructor(constructorArgTypes);
+            
+            if (params.length > 0) {
+                pluginInstance = constructor.newInstance(planName, usersHolder, pluginOptions, params);
+            } else {
+                pluginInstance = constructor.newInstance(planName, usersHolder, pluginOptions);
+            }
+            
+        } catch (ClassNotFoundException e) {
+            throw new FatalErrorException(String.format(Messages.Exception.UNABLE_TO_FIND_CLASS_S, pluginClassName));
+        } catch (InvocationTargetException e) {
+            throw new FatalErrorException(e.getCause().getMessage(), e);
         } catch (Exception e) {
             throw new FatalErrorException(e.getMessage(), e);
         }

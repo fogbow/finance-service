@@ -84,6 +84,9 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
 
     @OneToOne(cascade={CascadeType.ALL})
     private FinancePlan plan;
+    
+    @Column(name = "name")
+    private String name;
 
     public PrePaidPlanPlugin() {
         

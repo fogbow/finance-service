@@ -258,6 +258,8 @@ public class FinanceManager {
     public void createFinancePlan(String pluginClassName, String planName, Map<String, String> pluginOptions) throws InternalServerErrorException, InvalidParameterException {
         PersistablePlanPlugin plugin = PlanPluginInstantiator.getPlanPlugin(pluginClassName, planName, pluginOptions, objectHolder.getInMemoryUsersHolder());
         this.objectHolder.registerPlanPlugin(plugin);
+        // TODO update test
+        plugin.startThreads();
     }
     
     public void removeFinancePlan(String pluginName) throws InternalServerErrorException, InvalidParameterException {

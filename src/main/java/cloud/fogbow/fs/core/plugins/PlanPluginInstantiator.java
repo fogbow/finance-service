@@ -14,6 +14,6 @@ public class PlanPluginInstantiator {
 
     public static PersistablePlanPlugin getPlanPlugin(String className, String planName, Map<String, String> pluginOptions,
             InMemoryUsersHolder usersHolder) {
-        return (PersistablePlanPlugin) classFactory.createPluginInstance(className, planName, pluginOptions, usersHolder);
+        return (PersistablePlanPlugin) classFactory.createPlanPluginInstance(className, planName, usersHolder, pluginOptions);
     }
 }
