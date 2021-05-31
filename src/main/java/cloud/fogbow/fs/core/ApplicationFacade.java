@@ -92,6 +92,8 @@ public class ApplicationFacade {
     }
 	
     public void addSelf(String userToken, String planName) throws FogbowException {
+        // TODO add logging
+        
         RSAPublicKey asPublicKey = FsPublicKeysHolder.getInstance().getAsPublicKey();
         SystemUser user = AuthenticationUtil.authenticate(asPublicKey, userToken);
         
@@ -117,6 +119,52 @@ public class ApplicationFacade {
 			synchronizationManager.finishOperation();
 		}
 	}
+	
+	public void removeSelf(String userToken) throws FogbowException {
+	    // TODO add logging 
+	    
+        RSAPublicKey asPublicKey = FsPublicKeysHolder.getInstance().getAsPublicKey();
+        SystemUser user = AuthenticationUtil.authenticate(asPublicKey, userToken);
+        
+        synchronizationManager.startOperation();
+        
+        try {
+            // FIXME should unregister
+            this.financeManager.removeUser(user.getId(), user.getIdentityProviderId());
+        } finally {
+            synchronizationManager.finishOperation();
+        }
+    }
+	
+    public void changeUserPlan(String userToken, String userId, String provider, String financePlan) 
+            throws UnauthenticatedUserException, UnauthorizedRequestException, FogbowException {
+        LOGGER.info(String.format(Messages.Log.CHANGING_USER_PLAN, userId));
+        
+        authenticateAndAuthorize(userToken, new FsOperation(OperationType.CHANGE_USER_PLAN));
+        
+        synchronizationManager.startOperation();
+        
+        try {
+            this.financeManager.changePlan(userId, provider, financePlan);
+        } finally {
+            synchronizationManager.finishOperation();
+        }
+    }
+
+    public void changeSelfPlan(String userToken, String newPlanName) throws FogbowException {
+        // TODO add logging 
+        
+        RSAPublicKey asPublicKey = FsPublicKeysHolder.getInstance().getAsPublicKey();
+        SystemUser user = AuthenticationUtil.authenticate(asPublicKey, userToken);
+        
+        synchronizationManager.startOperation();
+        
+        try {
+            this.financeManager.changePlan(user.getId(), user.getIdentityProviderId(), newPlanName);
+        } finally {
+            synchronizationManager.finishOperation();
+        }
+    }
 
 	public void updateFinanceState(String userToken, String userId, String provider, HashMap<String, String> financeState) 
 	        throws UnauthenticatedUserException, UnauthorizedRequestException, FogbowException {

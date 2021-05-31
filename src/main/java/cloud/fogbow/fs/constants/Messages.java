@@ -52,6 +52,7 @@ public class Messages {
 	public static class Log {
 		public static final String ADDING_USER = "Adding user: %s.";
 		public static final String CHANGING_OPTIONS = "Changing finance options for plan: %s.";
+		public static final String CHANGING_USER_PLAN = "Changing user plan: %s.";
 		public static final String CREATING_FINANCE_PLAN = "Creating finance plan: %s.";
 		public static final String FAILED_TO_GENERATE_INVOICE = "Failed to generate invoice. Error message: %s.";
 		public static final String FAILED_TO_GENERATE_INVOICE_FOR_USER = "Failed to generate invoice for user %s. Error message: %s.";

@@ -3,6 +3,7 @@ package cloud.fogbow.fs.api.http.request;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -49,5 +50,44 @@ public class Admin {
             @RequestBody Policy policy) throws FogbowException {
         ApplicationFacade.getInstance().updatePolicy(systemUserToken, policy.getPolicy());
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+    
+    // TODO documentation
+    @RequestMapping(value = "/user", method = RequestMethod.POST)
+    public ResponseEntity<Boolean> registerUser(
+            @RequestHeader(value = SystemConstants.SYSTEM_USER_TOKEN_HEADER_KEY) String systemUserToken,
+            @RequestBody cloud.fogbow.fs.api.parameters.User user) throws FogbowException {
+        ApplicationFacade.getInstance().addUser(systemUserToken, user.getUserId(), user.getProvider(), user.getFinancePlanName());
+        return new ResponseEntity<Boolean>(HttpStatus.OK);
+    }
+    
+    // TODO documentation
+    @RequestMapping(value = "/user", method = RequestMethod.PUT)
+    public ResponseEntity<Boolean> changeUserPlan(
+            @RequestHeader(value = SystemConstants.SYSTEM_USER_TOKEN_HEADER_KEY) String systemUserToken, 
+            @RequestBody cloud.fogbow.fs.api.parameters.User user) throws FogbowException {
+        ApplicationFacade.getInstance().changeUserPlan(systemUserToken, 
+                user.getUserId(), user.getProvider(), user.getFinancePlanName());
+        return new ResponseEntity<Boolean>(HttpStatus.OK);
+    }
+    
+    // TODO documentation
+    // TODO think about how this endpoint should be implemented
+    @RequestMapping(value = "/user/{provider}/{userId}", method = RequestMethod.PUT)
+    public ResponseEntity<Boolean> unregisterUser(
+            @RequestHeader(value = SystemConstants.SYSTEM_USER_TOKEN_HEADER_KEY) String systemUserToken,
+            @RequestBody cloud.fogbow.fs.api.parameters.User user) throws FogbowException {
+        // TODO implement
+        return null;
+    }
+    
+    // TODO documentation
+    @RequestMapping(value = "/user/{provider}/{userId}", method = RequestMethod.DELETE)
+    public ResponseEntity<Boolean> removeUser(
+            @PathVariable String userId,
+            @PathVariable String provider,
+            @RequestHeader(value = SystemConstants.SYSTEM_USER_TOKEN_HEADER_KEY) String systemUserToken) throws FogbowException {
+        ApplicationFacade.getInstance().removeUser(systemUserToken, userId, provider);
+        return new ResponseEntity<Boolean>(HttpStatus.OK);
     }
 }

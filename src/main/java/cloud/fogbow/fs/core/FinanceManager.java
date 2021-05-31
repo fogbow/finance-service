@@ -198,6 +198,13 @@ public class FinanceManager {
         }
     }
 
+    public void changePlan(String userId, String provider, String newPlanName) throws InvalidParameterException, InternalServerErrorException {
+        PersistablePlanPlugin plugin = getUserPlugin(userId, provider);
+        synchronized(plugin) {
+            plugin.changePlan(new SystemUser(userId, userId, provider), newPlanName);
+        }
+    }
+
     public void updateFinanceState(String userId, String provider, Map<String, String> financeState)
             throws InvalidParameterException, InternalServerErrorException {
         PersistablePlanPlugin plugin = getUserPlugin(userId, provider);

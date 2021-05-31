@@ -280,6 +280,11 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
     }
 
     @Override
+    public void changePlan(SystemUser user, String newPlanName) {
+        this.usersHolder.changePlan(user.getId(), user.getIdentityProviderId(), newPlanName);
+    }
+    
+    @Override
     public String getUserFinanceState(SystemUser user, String property) throws InvalidParameterException, InternalServerErrorException {
         return this.invoiceManager.getUserFinanceState(user.getId(), user.getIdentityProviderId(), property);
     }

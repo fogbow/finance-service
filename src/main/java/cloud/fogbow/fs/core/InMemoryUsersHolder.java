@@ -153,6 +153,10 @@ public class InMemoryUsersHolder {
         pluginUsers.removeItem(user);
     }
 
+    public void changePlan(String id, String identityProviderId, String newPlanName) {
+        // TODO implement
+    }
+    
     public FinanceUser getUserById(String id, String provider)
             throws InternalServerErrorException, InvalidParameterException {
         FinanceUser userToReturn = null;

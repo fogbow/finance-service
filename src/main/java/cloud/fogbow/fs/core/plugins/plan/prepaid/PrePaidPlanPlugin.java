@@ -284,6 +284,11 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
     }
 
     @Override
+    public void changePlan(SystemUser systemUser, String newPlanName) {
+        // TODO implement
+    }
+
+    @Override
     public String getUserFinanceState(SystemUser user, String property)
             throws InvalidParameterException, InternalServerErrorException {
         return this.creditsManager.getUserFinanceState(user.getId(), user.getIdentityProviderId(), property);

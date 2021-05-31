@@ -7,6 +7,7 @@ public enum OperationType {
     RELOAD("reload"),
     ADD_USER("addUser"),
     REMOVE_USER("removeUser"),
+    CHANGE_USER_PLAN("changeUserPlan"),
     CHANGE_OPTIONS("changeOptions"),
     UPDATE_FINANCE_STATE("updateFinanceState"),
     GET_FINANCE_STATE("getFinanceState"),
