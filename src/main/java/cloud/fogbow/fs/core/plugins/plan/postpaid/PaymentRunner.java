@@ -84,6 +84,7 @@ public class PaymentRunner extends StoppableRunner {
 
     private void tryToRunPaymentForUser(FinanceUser user) {
         synchronized(user) {
+            // TODO concurrency check: check if the user is still subscribed to the plan or was removed
             long billingTime = this.timeUtils.getCurrentTimeMillis();
             long lastBillingTime = getUserLastBillingTime(user);
             

@@ -25,6 +25,7 @@ public class InMemoryUsersHolder {
     private MultiConsumerSynchronizedListFactory listFactory;
     
     private Map<String, MultiConsumerSynchronizedList<FinanceUser>> usersByPlugin;
+    private MultiConsumerSynchronizedList<FinanceUser> inactiveUsers;
     
     public InMemoryUsersHolder(DatabaseManager databaseManager) throws InternalServerErrorException, ConfigurationErrorException {
         this(databaseManager, new MultiConsumerSynchronizedListFactory(), new UserCreditsFactory());
@@ -40,7 +41,8 @@ public class InMemoryUsersHolder {
 
         List<FinanceUser> databaseUsers = this.databaseManager.getRegisteredUsers();
         usersByPlugin = new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
-
+        inactiveUsers = this.listFactory.getList();
+        
         for (FinanceUser user : databaseUsers) {
             addUserByPlugin(user);
         }
@@ -57,41 +59,63 @@ public class InMemoryUsersHolder {
         this.usersByPlugin = usersByPlugin;
     }
     
+    // TODO Improve tests
     public void registerUser(String userId, String provider, String pluginName)
             throws InternalServerErrorException, InvalidParameterException {
-        checkIfUserExists(userId, provider);
-
-        FinanceUser user = new FinanceUser(new HashMap<String, String>());
-        user.setUserId(userId, provider);
-        user.setFinancePluginName(pluginName);
-        user.setCredits(userCreditsFactory.getUserCredits(userId, provider));
-        user.setInvoices(new ArrayList<Invoice>());
-
-        addUserByPlugin(user);
+        FinanceUser user = null;
+        
+        try {
+            user = getUserById(userId, provider);
+        } catch (InvalidParameterException e) {
+            
+        }
+        
+        if (user != null) {
+            tryToSubscribeUserToPlan(userId, provider, pluginName, user);
+        } else {
+            user = createUserAndSubscribe(userId, provider, pluginName);
+        }
         
         this.databaseManager.saveUser(user);
     }
 
-    private void checkIfUserExists(String userId, String provider) throws InternalServerErrorException, 
-            InvalidParameterException {
-        try {
-            getUserById(userId, provider);
-        } catch (InvalidParameterException e) {
-            return;
+    private void tryToSubscribeUserToPlan(String userId, String provider, String pluginName, FinanceUser user)
+            throws InvalidParameterException, InternalServerErrorException {
+        if (user.isSubscribed()) {
+            throw new InvalidParameterException(String.format(Messages.Exception.USER_ALREADY_EXISTS, provider, userId));
+        } else {
+            this.inactiveUsers.removeItem(user);
+            user.subscribeToPlan(pluginName);
+            addUserByPlugin(user);
         }
-        
-        throw new InvalidParameterException(String.format(Messages.Exception.USER_ALREADY_EXISTS, provider, userId));
+    }
+    
+    private FinanceUser createUserAndSubscribe(String userId, String provider, String pluginName)
+            throws InternalServerErrorException, InvalidParameterException {
+        FinanceUser user;
+        user = new FinanceUser(new HashMap<String, String>());
+        user.setUserId(userId, provider);
+        user.setCredits(userCreditsFactory.getUserCredits(userId, provider));
+        user.setInvoices(new ArrayList<Invoice>());
+        user.subscribeToPlan(pluginName);
+
+        addUserByPlugin(user);
+        return user;
     }
 
     private void addUserByPlugin(FinanceUser user) throws InternalServerErrorException {
-        String pluginName = user.getFinancePluginName();
+        if (user.isSubscribed()) {
+            String pluginName = user.getFinancePluginName();
 
-        if (!usersByPlugin.containsKey(pluginName)) {
-            usersByPlugin.put(pluginName, this.listFactory.getList());
+            if (!usersByPlugin.containsKey(pluginName)) {
+                usersByPlugin.put(pluginName, this.listFactory.getList());
+            }
+            
+            MultiConsumerSynchronizedList<FinanceUser> pluginUsers = usersByPlugin.get(pluginName);
+            pluginUsers.addItem(user);
+        } else {
+            inactiveUsers.addItem(user);
         }
-        
-        MultiConsumerSynchronizedList<FinanceUser> pluginUsers = usersByPlugin.get(pluginName);
-        pluginUsers.addItem(user);
     }
 
     public void saveUser(FinanceUser user) throws InvalidParameterException, InternalServerErrorException {
@@ -102,6 +126,18 @@ public class InMemoryUsersHolder {
         }
     }
 
+    public void unregisterUser(String userId, String provider) 
+            throws InternalServerErrorException, InvalidParameterException {
+        FinanceUser userToUnregister = getUserById(userId, provider);
+        
+        synchronized (userToUnregister) {
+            userToUnregister.unsubscribe();
+            removeUserByPlugin(userToUnregister);
+            this.inactiveUsers.addItem(userToUnregister);
+            this.databaseManager.saveUser(userToUnregister);
+        }
+    }
+    
     public void removeUser(String userId, String provider)
             throws InvalidParameterException, InternalServerErrorException {
         FinanceUser userToRemove = getUserById(userId, provider);

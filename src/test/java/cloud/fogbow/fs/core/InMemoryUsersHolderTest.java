@@ -50,6 +50,7 @@ public class InMemoryUsersHolderTest {
     private FinanceUser user1;
     private FinanceUser user2;
     private ArrayList<FinanceUser> usersList;
+    private MultiConsumerSynchronizedList<FinanceUser> inactiveUsersSynchronizedList;
     private MultiConsumerSynchronizedList<FinanceUser> userSynchronizedList1;
     private MultiConsumerSynchronizedList<FinanceUser> userSynchronizedList2;
     private MultiConsumerSynchronizedListFactory listFactory;
@@ -69,7 +70,7 @@ public class InMemoryUsersHolderTest {
         new InMemoryUsersHolder(databaseManager, listFactory, userCreditsFactory);
         
         Mockito.verify(databaseManager).getRegisteredUsers();
-        Mockito.verify(listFactory, Mockito.times(2)).getList();
+        Mockito.verify(listFactory, Mockito.times(3)).getList();
         Mockito.verify(userSynchronizedList1).addItem(user1);
         Mockito.verify(userSynchronizedList2).addItem(user2);
     }
@@ -82,7 +83,7 @@ public class InMemoryUsersHolderTest {
         new InMemoryUsersHolder(databaseManager, listFactory, userCreditsFactory);
         
         Mockito.verify(databaseManager).getRegisteredUsers();
-        Mockito.verify(listFactory, Mockito.never()).getList();
+        Mockito.verify(listFactory, Mockito.times(1)).getList();
     }
     
     // test case: When calling the method registerUser, it must add a new FinanceUser instance
@@ -104,7 +105,7 @@ public class InMemoryUsersHolderTest {
     // test case: When calling the method registerUser passing UserId and ProviderId
     // used by an already registered user, it must throw an InvalidParameterException.
     @Test(expected = InvalidParameterException.class)
-    public void cannotRegisterUserWithAlreadyUsedUserIdAndProvider() throws InternalServerErrorException, 
+    public void cannotRegisterAlreadyRegisteredUser() throws InternalServerErrorException, 
             InvalidParameterException, ConfigurationErrorException {
         Map<String, MultiConsumerSynchronizedList<FinanceUser>> usersByPlugin = 
                 new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
@@ -302,11 +303,12 @@ public class InMemoryUsersHolderTest {
     private void setUpLists() throws InvalidParameterException, ModifiedListException, InternalServerErrorException {
         userSynchronizedList1 = Mockito.mock(MultiConsumerSynchronizedList.class);
         userSynchronizedList2 = Mockito.mock(MultiConsumerSynchronizedList.class);
+        inactiveUsersSynchronizedList = Mockito.mock(MultiConsumerSynchronizedList.class);
         Mockito.when(userSynchronizedList1.getNext(Mockito.anyInt())).thenReturn(user1, null);
         Mockito.when(userSynchronizedList2.getNext(Mockito.anyInt())).thenReturn(user2, null);
         
         listFactory = Mockito.mock(MultiConsumerSynchronizedListFactory.class);
-        Mockito.doReturn(userSynchronizedList1).doReturn(userSynchronizedList2).when(listFactory).getList();
+        Mockito.doReturn(inactiveUsersSynchronizedList).doReturn(userSynchronizedList1).doReturn(userSynchronizedList2).when(listFactory).getList();
     }
 
     private void setUpDatabase() {
@@ -358,10 +360,12 @@ public class InMemoryUsersHolderTest {
         Mockito.when(user1.getFinancePluginName()).thenReturn(PLAN_NAME_1);
         Mockito.when(user1.getId()).thenReturn(USER_ID_1);
         Mockito.when(user1.getProvider()).thenReturn(PROVIDER_ID_1);
+        Mockito.when(user1.isSubscribed()).thenReturn(true);
         user2 = Mockito.mock(FinanceUser.class);
         Mockito.when(user2.getFinancePluginName()).thenReturn(PLAN_NAME_2);
         Mockito.when(user2.getId()).thenReturn(USER_ID_2);
         Mockito.when(user2.getProvider()).thenReturn(PROVIDER_ID_2);
+        Mockito.when(user2.isSubscribed()).thenReturn(true);
         
         usersList = new ArrayList<FinanceUser>();
         usersList.add(user1);
