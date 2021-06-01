@@ -9,6 +9,7 @@ public enum OperationType {
     REMOVE_USER("removeUser"),
     CHANGE_USER_PLAN("changeUserPlan"),
     CHANGE_OPTIONS("changeOptions"),
+    UNREGISTER_USER("unregisterUser"),
     UPDATE_FINANCE_STATE("updateFinanceState"),
     GET_FINANCE_STATE("getFinanceState"),
     CREATE_FINANCE_PLAN("createFinancePlan"),

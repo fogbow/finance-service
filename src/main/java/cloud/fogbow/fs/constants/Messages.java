@@ -75,6 +75,7 @@ public class Messages {
 		public static final String SETTING_POLICY = "Setting policy.";
 		public static final String STOPPING_FINANCE_PLUGINS = "Stopping finance plugins.";
 		public static final String UNABLE_TO_FIND_USER = "Unable to find user %s, provider %s.";
+		public static final String UNREGISTERING_USER = "Unregistering user '%s'.";
 		public static final String UPDATING_FINANCE_STATE = "Updating finance state of user: %s.";
 		public static final String UPDATING_FINANCE_PLAN = "Updating finance plan: %s.";
 		public static final String UPDATING_POLICY = "Updating policy.";

@@ -52,11 +52,13 @@ public class InMemoryUsersHolder {
     InMemoryUsersHolder(DatabaseManager databaseManager, 
             UserCreditsFactory userCreditsFactory, 
             MultiConsumerSynchronizedListFactory listFactory, 
-            Map<String, MultiConsumerSynchronizedList<FinanceUser>> usersByPlugin) {
+            Map<String, MultiConsumerSynchronizedList<FinanceUser>> usersByPlugin, 
+            MultiConsumerSynchronizedList<FinanceUser> inactiveUsers) {
         this.databaseManager = databaseManager;
         this.userCreditsFactory = userCreditsFactory;
         this.listFactory = listFactory;
         this.usersByPlugin = usersByPlugin;
+        this.inactiveUsers = inactiveUsers;
     }
     
     // TODO Improve tests
@@ -131,8 +133,8 @@ public class InMemoryUsersHolder {
         FinanceUser userToUnregister = getUserById(userId, provider);
         
         synchronized (userToUnregister) {
-            userToUnregister.unsubscribe();
             removeUserByPlugin(userToUnregister);
+            userToUnregister.unsubscribe();
             this.inactiveUsers.addItem(userToUnregister);
             this.databaseManager.saveUser(userToUnregister);
         }
@@ -153,8 +155,19 @@ public class InMemoryUsersHolder {
         pluginUsers.removeItem(user);
     }
 
-    public void changePlan(String id, String identityProviderId, String newPlanName) {
-        // TODO implement
+    public void changePlan(String userId, String provider, String newPlanName)
+            throws InternalServerErrorException, InvalidParameterException {
+        FinanceUser userToChangePlan = getUserById(userId, provider);
+        
+        synchronized (userToChangePlan) {
+            removeUserByPlugin(userToChangePlan);
+            userToChangePlan.unsubscribe();
+            
+            userToChangePlan.subscribeToPlan(newPlanName);
+            addUserByPlugin(userToChangePlan);
+            
+            this.databaseManager.saveUser(userToChangePlan);    
+        }
     }
     
     public FinanceUser getUserById(String id, String provider)
@@ -168,8 +181,35 @@ public class InMemoryUsersHolder {
                 return userToReturn;
             }
         }
+        
+        userToReturn = getUnregisteredUser(id, provider);
+        
+        if (userToReturn != null) {
+            return userToReturn;
+        }
 
         throw new InvalidParameterException(String.format(Messages.Exception.UNABLE_TO_FIND_USER, id, provider));
+    }
+
+    private FinanceUser getUnregisteredUser(String id, String provider) 
+            throws InternalServerErrorException, InvalidParameterException {
+        Integer consumerId = this.inactiveUsers.startIterating();
+        FinanceUser userToReturn = null;
+
+        while (true) {
+            try {
+                userToReturn = getUserFromList(id, provider, this.inactiveUsers, consumerId);
+                this.inactiveUsers.stopIterating(consumerId);
+                break;
+            } catch (ModifiedListException e) {
+                consumerId = this.inactiveUsers.startIterating();
+            } catch (Exception e) {
+                this.inactiveUsers.stopIterating(consumerId);
+                throw e;
+            }
+        }
+
+        return userToReturn;
     }
 
     private FinanceUser getUserByIdAndPlugin(String id, String provider, String pluginName)

@@ -105,6 +105,20 @@ public class ApplicationFacade {
             synchronizationManager.finishOperation();
         }
     }
+    
+    public void unregisterUser(String userToken, String userId, String provider) 
+            throws UnauthenticatedUserException, UnauthorizedRequestException, FogbowException {
+        LOGGER.info(String.format(Messages.Log.UNREGISTERING_USER, userId));
+        
+        authenticateAndAuthorize(userToken, new FsOperation(OperationType.UNREGISTER_USER));
+        synchronizationManager.startOperation();
+        
+        try {
+            this.financeManager.unregisterUser(userId, provider);
+        } finally {
+            synchronizationManager.finishOperation();
+        }
+    }
 
 	public void removeUser(String userToken, String userId, String provider) 
 	        throws UnauthorizedRequestException, FogbowException {
@@ -129,8 +143,7 @@ public class ApplicationFacade {
         synchronizationManager.startOperation();
         
         try {
-            // FIXME should unregister
-            this.financeManager.removeUser(user.getId(), user.getIdentityProviderId());
+            this.financeManager.unregisterUser(user.getId(), user.getIdentityProviderId());
         } finally {
             synchronizationManager.finishOperation();
         }

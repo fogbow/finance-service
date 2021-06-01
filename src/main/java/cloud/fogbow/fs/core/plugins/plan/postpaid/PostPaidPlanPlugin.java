@@ -275,13 +275,18 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
     }
 
     @Override
-    public void unregisterUser(SystemUser user) throws InvalidParameterException, InternalServerErrorException {
+    public void purgeUser(SystemUser user) throws InvalidParameterException, InternalServerErrorException {
         this.usersHolder.removeUser(user.getId(), user.getIdentityProviderId()); 
     }
 
     @Override
-    public void changePlan(SystemUser user, String newPlanName) {
+    public void changePlan(SystemUser user, String newPlanName) throws InternalServerErrorException, InvalidParameterException {
         this.usersHolder.changePlan(user.getId(), user.getIdentityProviderId(), newPlanName);
+    }
+
+    @Override
+    public void unregisterUser(SystemUser user) throws InternalServerErrorException, InvalidParameterException {
+        this.usersHolder.unregisterUser(user.getId(), user.getIdentityProviderId());
     }
     
     @Override

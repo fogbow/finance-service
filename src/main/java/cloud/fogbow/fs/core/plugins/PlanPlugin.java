@@ -20,10 +20,13 @@ public interface PlanPlugin {
     public void registerUser(SystemUser user) throws InternalServerErrorException, InvalidParameterException;
     
     // TODO documentation
-    public void changePlan(SystemUser systemUser, String newPlanName);
+    public void changePlan(SystemUser systemUser, String newPlanName) throws InternalServerErrorException, InvalidParameterException;
     
     // TODO documentation
-    public void unregisterUser(SystemUser user) throws InvalidParameterException, InternalServerErrorException;
+    public void purgeUser(SystemUser user) throws InvalidParameterException, InternalServerErrorException;
+    
+    // TODO documentation
+    public void unregisterUser(SystemUser systemUser) throws InternalServerErrorException, InvalidParameterException;
     
     // TODO documentation
     public Map<String, String> getOptions();

@@ -266,7 +266,7 @@ public class FinanceManagerTest {
 		
 		financeManager.removeUser(USER_ID_1, PROVIDER_USER_1);
 		
-		Mockito.verify(plan1, Mockito.times(1)).unregisterUser(Mockito.any(SystemUser.class));
+		Mockito.verify(plan1, Mockito.times(1)).purgeUser(Mockito.any(SystemUser.class));
 	}
 	
 	// test case: When calling the removeUser method and the user
@@ -295,7 +295,7 @@ public class FinanceManagerTest {
 
         financeManager.removeUser(USER_ID_2, PROVIDER_USER_2);
 
-        Mockito.verify(plan2, Mockito.times(1)).unregisterUser(Mockito.any(SystemUser.class));
+        Mockito.verify(plan2, Mockito.times(1)).purgeUser(Mockito.any(SystemUser.class));
     }
 	
 	// test case: When calling the updateFinanceState method, it must

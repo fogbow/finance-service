@@ -94,7 +94,7 @@ public class InMemoryUsersHolderTest {
                 new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
         usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, usersByPlugin);
+        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, usersByPlugin, inactiveUsersSynchronizedList);
         
         objectHolder.registerUser(USER_ID_TO_ADD, PROVIDER_ID_TO_ADD, PLAN_NAME_1);
         
@@ -111,7 +111,7 @@ public class InMemoryUsersHolderTest {
                 new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
         usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, usersByPlugin);
+        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, usersByPlugin, inactiveUsersSynchronizedList);
 
         objectHolder.registerUser(USER_ID_1, PROVIDER_ID_1, PLAN_NAME_1);
     }
@@ -125,7 +125,7 @@ public class InMemoryUsersHolderTest {
                 new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
         usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, usersByPlugin);        
+        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, usersByPlugin, inactiveUsersSynchronizedList);        
         objectHolder.removeUser(USER_ID_1, PROVIDER_ID_1);
         
         Mockito.verify(userSynchronizedList1).removeItem(Mockito.any(FinanceUser.class));
@@ -140,7 +140,7 @@ public class InMemoryUsersHolderTest {
                 new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
         usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, usersByPlugin);
+        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, usersByPlugin, inactiveUsersSynchronizedList);
         
         objectHolder.removeUser("unknownuser", "unknownprovider");
     }
@@ -154,7 +154,7 @@ public class InMemoryUsersHolderTest {
         usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
         usersByPlugin.put(PLAN_NAME_2, userSynchronizedList2);
         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, usersByPlugin);
+        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, usersByPlugin, inactiveUsersSynchronizedList);
         
         assertEquals(user1, objectHolder.getUserById(USER_ID_1, PROVIDER_ID_1));
         assertEquals(user2, objectHolder.getUserById(USER_ID_2, PROVIDER_ID_2));
@@ -177,7 +177,7 @@ public class InMemoryUsersHolderTest {
                 new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
         usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, usersByPlugin);
+        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, usersByPlugin, inactiveUsersSynchronizedList);
         
         assertEquals(user2, objectHolder.getUserById(USER_ID_2, PROVIDER_ID_2));
         
@@ -196,7 +196,7 @@ public class InMemoryUsersHolderTest {
                 new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
         usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, usersByPlugin);
+        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, usersByPlugin, inactiveUsersSynchronizedList);
         
         objectHolder.getUserById(USER_ID_2, PROVIDER_ID_2);
     }
@@ -209,7 +209,7 @@ public class InMemoryUsersHolderTest {
                 new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
         usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, usersByPlugin);
+        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, usersByPlugin, inactiveUsersSynchronizedList);
         
         objectHolder.getUserById("unknownuser", PROVIDER_ID_1);
     }
@@ -222,7 +222,7 @@ public class InMemoryUsersHolderTest {
                 new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
         usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, usersByPlugin);
+        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, usersByPlugin, inactiveUsersSynchronizedList);
         
         
         objectHolder.getUserById(USER_ID_1, "unknownprovider");
@@ -241,7 +241,7 @@ public class InMemoryUsersHolderTest {
         newOptions.put("option1", "optionvalue1");
         newOptions.put("option2", "optionvalue2");
          
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, usersByPlugin);
+        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, usersByPlugin, inactiveUsersSynchronizedList);
         
         objectHolder.changeOptions(USER_ID_1, PROVIDER_ID_1, newOptions);
         
@@ -258,7 +258,7 @@ public class InMemoryUsersHolderTest {
                 new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
         usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, usersByPlugin);
+        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, usersByPlugin, inactiveUsersSynchronizedList);
         
         objectHolder.saveUser(user1);
         
@@ -277,7 +277,7 @@ public class InMemoryUsersHolderTest {
         Mockito.when(unknownUser.getId()).thenReturn("unknownuser");
         Mockito.when(unknownUser.getProvider()).thenReturn("unknownprovider");
         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, usersByPlugin);
+        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, usersByPlugin, inactiveUsersSynchronizedList);
         
         objectHolder.saveUser(unknownUser);
     }
@@ -293,7 +293,7 @@ public class InMemoryUsersHolderTest {
         MultiConsumerSynchronizedList<FinanceUser> emptySynchronizedList = Mockito.mock(MultiConsumerSynchronizedList.class);
         Mockito.doReturn(emptySynchronizedList).when(listFactory).getList();
         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, usersByPlugin);
+        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, usersByPlugin, inactiveUsersSynchronizedList);
         
         assertEquals(userSynchronizedList1, objectHolder.getRegisteredUsersByPlan(PLAN_NAME_1));
         assertEquals(userSynchronizedList2, objectHolder.getRegisteredUsersByPlan(PLAN_NAME_2));
@@ -306,6 +306,7 @@ public class InMemoryUsersHolderTest {
         inactiveUsersSynchronizedList = Mockito.mock(MultiConsumerSynchronizedList.class);
         Mockito.when(userSynchronizedList1.getNext(Mockito.anyInt())).thenReturn(user1, null);
         Mockito.when(userSynchronizedList2.getNext(Mockito.anyInt())).thenReturn(user2, null);
+        Mockito.when(inactiveUsersSynchronizedList.getNext(Mockito.anyInt())).thenReturn(null);
         
         listFactory = Mockito.mock(MultiConsumerSynchronizedListFactory.class);
         Mockito.doReturn(inactiveUsersSynchronizedList).doReturn(userSynchronizedList1).doReturn(userSynchronizedList2).when(listFactory).getList();

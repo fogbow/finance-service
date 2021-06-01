@@ -59,7 +59,6 @@ public class FinanceUser implements Serializable {
     @OneToOne(cascade={CascadeType.ALL})
 	private UserCredits credits;
 
-    @Column(name = ACTIVE_SUBSCRIPTION_COLUMN_NAME)
     @OneToOne(cascade={CascadeType.ALL})
     private Subscription activeSubscription;
     

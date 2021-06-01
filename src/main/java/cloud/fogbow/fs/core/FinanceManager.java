@@ -194,6 +194,13 @@ public class FinanceManager {
             throws InvalidParameterException, InternalServerErrorException {
         PersistablePlanPlugin plugin = getUserPlugin(userId, provider);
         synchronized(plugin) {
+            plugin.purgeUser(new SystemUser(userId, userId, provider));
+        }
+    }
+
+    public void unregisterUser(String userId, String provider) throws InvalidParameterException, InternalServerErrorException {
+        PersistablePlanPlugin plugin = getUserPlugin(userId, provider);
+        synchronized(plugin) {
             plugin.unregisterUser(new SystemUser(userId, userId, provider));
         }
     }

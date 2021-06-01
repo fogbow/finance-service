@@ -72,13 +72,13 @@ public class Admin {
     }
     
     // TODO documentation
-    // TODO think about how this endpoint should be implemented
-    @RequestMapping(value = "/user/{provider}/{userId}", method = RequestMethod.PUT)
+    @RequestMapping(value = "/user/unregister/{provider}/{userId}", method = RequestMethod.DELETE)
     public ResponseEntity<Boolean> unregisterUser(
-            @RequestHeader(value = SystemConstants.SYSTEM_USER_TOKEN_HEADER_KEY) String systemUserToken,
-            @RequestBody cloud.fogbow.fs.api.parameters.User user) throws FogbowException {
-        // TODO implement
-        return null;
+            @PathVariable String userId,
+            @PathVariable String provider,
+            @RequestHeader(value = SystemConstants.SYSTEM_USER_TOKEN_HEADER_KEY) String systemUserToken) throws FogbowException {
+        ApplicationFacade.getInstance().unregisterUser(systemUserToken, userId, provider);
+        return new ResponseEntity<Boolean>(HttpStatus.OK);
     }
     
     // TODO documentation
