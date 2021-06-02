@@ -5,6 +5,7 @@ public class ConfigurationPropertyKeys {
 	public static final String ACCS_URL_KEY = "accs_url";
 	public static final String AS_PORT_KEY = "as_port";
 	public static final String AS_URL_KEY = "as_url";
+	public static final String BUILD_NUMBER_KEY = "build_number";
 	public static final String DEFAULT_PLAN_NAME = "plan_plugin_name";
 	public static final String DEFAULT_PLAN_PLUGIN_TYPE = "default_plan_plugin_type";
 	public static final String MANAGER_USERNAME_KEY = "manager_username";

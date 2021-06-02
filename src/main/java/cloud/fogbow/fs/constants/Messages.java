@@ -64,6 +64,8 @@ public class Messages {
 		public static final String GETTING_FINANCE_STATE = "Getting finance state: user '%s' and property '%s'";
 		public static final String GETTING_FINANCE_PLAN = "Getting finance plan: %s.";
 		public static final String GET_PUBLIC_KEY = "Get public key received.";
+		public static final String PROPERTY_FILE_S_NOT_FOUND = "Property file '%s' not found.";
+		public static final String RECEIVING_GET_VERSION = "Receiving get version.";
 		public static final String RELOADING_AUTHORIZATION_PLUGIN = "Reloading authorization plugin.";
 		public static final String RELOADING_CONFIGURATION = "Reloading service configuration.";
 		public static final String RELOADING_FINANCE_PLUGINS = "Reloading finance plugins.";
@@ -74,6 +76,7 @@ public class Messages {
 		public static final String REMOVING_USER = "Removing user: %s.";
 		public static final String SETTING_POLICY = "Setting policy.";
 		public static final String STOPPING_FINANCE_PLUGINS = "Stopping finance plugins.";
+		public static final String UNABLE_TO_CLOSE_FILE_S = "Unable to close file '%s'.";
 		public static final String UNABLE_TO_FIND_USER = "Unable to find user %s, provider %s.";
 		public static final String UNREGISTERING_USER = "Unregistering user '%s'.";
 		public static final String UPDATING_FINANCE_STATE = "Updating finance state of user: %s.";
