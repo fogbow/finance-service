@@ -38,6 +38,7 @@ public class RasClient {
 	private String managerPassword;
 	private String rasAddress;
 	private String rasPort;
+    private String token;
 	
 	public RasClient() throws ConfigurationErrorException {
 		this(new AuthenticationServiceClient(),
@@ -66,26 +67,39 @@ public class RasClient {
 	
 	public void pauseResourcesByUser(String userId) throws FogbowException {
 		try {
-			// TODO We should not need to get this token in all the calls to pauseUserComputes.
-			// I think we should keep the value and reacquire the token after a certain time.
-			String token = authenticationServiceClient.getToken(publicKey, managerUsername, managerPassword);
-			Key keyToDecrypt = ServiceAsymmetricKeysHolder.getInstance().getPrivateKey();
-			Key keyToEncrypt = FsPublicKeysHolder.getInstance().getRasPublicKey(); 
-			
-			String newToken = TokenProtector.rewrap(keyToDecrypt, keyToEncrypt, token, FogbowConstants.TOKEN_STRING_SEPARATOR);
-			pauseComputesForUser(userId, newToken);
+		    if (this.token == null) {
+		        this.token = getToken();
+		    }
+
+			pauseComputesForUser(userId);
 		} catch (URISyntaxException e) {
 			throw new InvalidParameterException(e.getMessage());
 		}
 	}
 	
-	private void pauseComputesForUser(String userId, String token) throws URISyntaxException, FogbowException {
-		doPauseRequestAndCheckStatus(userId, token);
+    private String getToken() throws FogbowException {
+        String token = authenticationServiceClient.getToken(publicKey, managerUsername, managerPassword);
+        Key keyToDecrypt = ServiceAsymmetricKeysHolder.getInstance().getPrivateKey();
+        Key keyToEncrypt = FsPublicKeysHolder.getInstance().getRasPublicKey(); 
+        
+        String newToken = TokenProtector.rewrap(keyToDecrypt, keyToEncrypt, token, FogbowConstants.TOKEN_STRING_SEPARATOR);
+        return newToken;
+    }
+	
+	private void pauseComputesForUser(String userId) throws URISyntaxException, FogbowException {
+		doPauseRequestAndCheckStatus(userId);
 	}
 
-	private void doPauseRequestAndCheckStatus(String userId, String token) throws URISyntaxException, FogbowException {
+	private void doPauseRequestAndCheckStatus(String userId) throws URISyntaxException, FogbowException {
 		String endpoint = getPauseEndpoint(cloud.fogbow.ras.api.http.request.Compute.PAUSE_COMPUTE_ENDPOINT, userId);
-		HttpResponse response = doPauseRequest(token, endpoint);
+		HttpResponse response = doPauseRequest(this.token, endpoint);
+		
+		// If the token expired, authenticate and try again
+		if (response.getHttpCode() == HttpStatus.SC_UNAUTHORIZED) {
+		    this.token = getToken();
+		    response = doPauseRequest(this.token, endpoint);
+		}
+		
 		if (response.getHttpCode() > HttpStatus.SC_OK) {
 			Throwable e = new HttpResponseException(response.getHttpCode(), response.getContent());
 			throw new UnavailableProviderException(e.getMessage());
@@ -113,26 +127,30 @@ public class RasClient {
 
 	public void resumeResourcesByUser(String userId) throws FogbowException {
 		try {
-			// TODO We should not need to get this token in all the calls to resumeUserComputes.
-			// I think we should keep the value and reacquire the token after a certain time.
-			String token = authenticationServiceClient.getToken(publicKey, managerUsername, managerPassword);
-			Key keyToDecrypt = ServiceAsymmetricKeysHolder.getInstance().getPrivateKey();
-			Key keyToEncrypt = FsPublicKeysHolder.getInstance().getRasPublicKey(); 
-			
-			String newToken = TokenProtector.rewrap(keyToDecrypt, keyToEncrypt, token, FogbowConstants.TOKEN_STRING_SEPARATOR);
-			resumeComputesForUser(userId, newToken);
+            if (this.token == null) {
+                this.token = getToken();
+            }
+            
+			resumeComputesForUser(userId);
 		} catch (URISyntaxException e) {
 			throw new InvalidParameterException(e.getMessage());
 		}
 	}
 
-	private void resumeComputesForUser(String userId, String token) throws URISyntaxException, FogbowException {
-		doResumeRequestAndCheckStatus(userId, token);
+	private void resumeComputesForUser(String userId) throws URISyntaxException, FogbowException {
+		doResumeRequestAndCheckStatus(userId);
 	}
 	
-	private void doResumeRequestAndCheckStatus(String userId, String token) throws URISyntaxException, FogbowException {
+	private void doResumeRequestAndCheckStatus(String userId) throws URISyntaxException, FogbowException {
 		String endpoint = getResumeEndpoint(cloud.fogbow.ras.api.http.request.Compute.RESUME_COMPUTE_ENDPOINT, userId);
-		HttpResponse response = doResumeRequest(token, endpoint);
+		HttpResponse response = doResumeRequest(this.token, endpoint);
+		
+		// If the token expired, authenticate and try again
+		if (response.getHttpCode() == HttpStatus.SC_UNAUTHORIZED) {
+		    this.token = getToken();
+		    response = doResumeRequest(this.token, endpoint);
+		}
+		
 		if (response.getHttpCode() > HttpStatus.SC_OK) {
 			Throwable e = new HttpResponseException(response.getHttpCode(), response.getContent());
 			throw new UnavailableProviderException(e.getMessage());

@@ -49,8 +49,10 @@ public class AccountingServiceClientTest {
 	private String managerPassword = "managerPassword";
 	private String accountingServiceAddress = "http://localhost";
 	private String accountingServicePort = "5001";
-	private String adminToken = "adminToken";
-	private String rewrapAdminToken = "rewrapAdminToken";
+	private String adminToken1 = "adminToken1";
+	private String adminToken2 = "adminToken2";
+	private String rewrapAdminToken1 = "rewrapAdminToken1";
+	private String rewrapAdminToken2 = "rewrapAdminToken2";
 
 	// records fields
 	private long startTime = 100;
@@ -65,7 +67,8 @@ public class AccountingServiceClientTest {
 	// request / response fields
 	private HttpResponse responseCompute;
 	private HttpResponse responseVolume;
-	private Map<String, String> headers;
+	private Map<String, String> headers1;
+	private Map<String, String> headers2;
 	private Map<String, String> body;
 	private String urlCompute;
 	private String urlVolume;
@@ -79,6 +82,7 @@ public class AccountingServiceClientTest {
 	private String responseVolumeContent = "responseVolumeContent";
 	private int successCode = 200;
 	private int errorCode = 500;
+	private int expiredTokenCode = 401;
     private TimeUtils timeUtils;
 
 	// test case: When calling the method getUserRecords, it must set up 
@@ -137,7 +141,32 @@ public class AccountingServiceClientTest {
 
 		accsClient.getUserRecords(userId, requester, startTime, endTime);
 	}
-
+	
+	// test case: When calling the method getUserRecords and the return code
+	// for any request is 401, it must reacquire the token and perform the request again.
+	@Test
+	public void testGetUserRecordsTokenExpired()
+	        throws InternalServerErrorException, UnauthenticatedUserException, FogbowException, GeneralSecurityException {
+        setUpKeys();
+        setUpAuthentication();
+        setUpRecords();
+        setUpResponse(successCode, successCode);
+        setUpRequest();
+        
+        Mockito.when(responseCompute.getHttpCode()).thenReturn(expiredTokenCode, successCode);
+        
+        AccountingServiceClient accsClient = new AccountingServiceClient(authenticationServiceClient, 
+                localProvider, managerUserName, managerPassword, 
+                accountingServiceAddress, accountingServicePort, recordUtils, timeUtils);
+        
+        accsClient.getUserRecords(userId, requester, startTime, endTime);
+        
+        PowerMockito.verifyStatic(HttpRequestClient.class, Mockito.times(1));
+        HttpRequestClient.doGenericRequest(HttpMethod.GET, urlCompute, headers1, body);
+        HttpRequestClient.doGenericRequest(HttpMethod.GET, urlCompute, headers2, body);
+        HttpRequestClient.doGenericRequest(HttpMethod.GET, urlVolume, headers2, body);
+	}
+	
 	private void setUpKeys() throws InternalServerErrorException, FogbowException, UnauthenticatedUserException,
 			GeneralSecurityException {
 		RSAPublicKey fsPublicKey = Mockito.mock(RSAPublicKey.class);
@@ -160,8 +189,10 @@ public class AccountingServiceClientTest {
 		
 		
 		PowerMockito.mockStatic(TokenProtector.class);
-		BDDMockito.when(TokenProtector.rewrap(fsPrivateKey, accsPublicKey, adminToken, 
-				FogbowConstants.TOKEN_STRING_SEPARATOR)).thenReturn(rewrapAdminToken);
+		BDDMockito.when(TokenProtector.rewrap(fsPrivateKey, accsPublicKey, adminToken1, 
+				FogbowConstants.TOKEN_STRING_SEPARATOR)).thenReturn(rewrapAdminToken1);
+	      BDDMockito.when(TokenProtector.rewrap(fsPrivateKey, accsPublicKey, adminToken2, 
+	                FogbowConstants.TOKEN_STRING_SEPARATOR)).thenReturn(rewrapAdminToken2);
 		
 		PowerMockito.mockStatic(CryptoUtil.class);
 		BDDMockito.when(CryptoUtil.toBase64(fsPublicKey)).thenReturn(publicKey);
@@ -170,7 +201,7 @@ public class AccountingServiceClientTest {
 	private void setUpAuthentication() throws FogbowException {
 		authenticationServiceClient = Mockito.mock(AuthenticationServiceClient.class);
 		Mockito.when(authenticationServiceClient.getToken(publicKey, managerUserName, 
-				managerPassword)).thenReturn(adminToken);
+				managerPassword)).thenReturn(adminToken1, adminToken2);
 	}
 	
 	private void setUpRecords() {
@@ -217,13 +248,20 @@ public class AccountingServiceClientTest {
 				cloud.fogbow.accs.api.http.request.ResourceUsage.USAGE_ENDPOINT, userId, requester, localProvider,
 				resourceTypeVolume, requestStartDate, requestEndDate);
 		
-		headers = new HashMap<String, String>();
-		headers.put(CommonKeys.CONTENT_TYPE_KEY, AccountingServiceClient.RECORDS_REQUEST_CONTENT_TYPE);
-		headers.put(CommonKeys.SYSTEM_USER_TOKEN_HEADER_KEY, rewrapAdminToken);
+		headers1 = new HashMap<String, String>();
+		headers1.put(CommonKeys.CONTENT_TYPE_KEY, AccountingServiceClient.RECORDS_REQUEST_CONTENT_TYPE);
+		headers1.put(CommonKeys.SYSTEM_USER_TOKEN_HEADER_KEY, rewrapAdminToken1);
+		
+		headers2 = new HashMap<String, String>();
+        headers2.put(CommonKeys.CONTENT_TYPE_KEY, AccountingServiceClient.RECORDS_REQUEST_CONTENT_TYPE);
+        headers2.put(CommonKeys.SYSTEM_USER_TOKEN_HEADER_KEY, rewrapAdminToken2);
+		
 		body = new HashMap<String, String>();
 		
 		PowerMockito.mockStatic(HttpRequestClient.class);
-		BDDMockito.given(HttpRequestClient.doGenericRequest(HttpMethod.GET, urlCompute, headers, body)).willReturn(responseCompute);
-		BDDMockito.given(HttpRequestClient.doGenericRequest(HttpMethod.GET, urlVolume, headers, body)).willReturn(responseVolume);
+		BDDMockito.given(HttpRequestClient.doGenericRequest(HttpMethod.GET, urlCompute, headers1, body)).willReturn(responseCompute);
+		BDDMockito.given(HttpRequestClient.doGenericRequest(HttpMethod.GET, urlCompute, headers2, body)).willReturn(responseCompute);
+		BDDMockito.given(HttpRequestClient.doGenericRequest(HttpMethod.GET, urlVolume, headers1, body)).willReturn(responseVolume);
+		BDDMockito.given(HttpRequestClient.doGenericRequest(HttpMethod.GET, urlVolume, headers2, body)).willReturn(responseVolume);
 	}
 }

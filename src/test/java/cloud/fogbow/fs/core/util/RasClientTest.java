@@ -37,13 +37,16 @@ public class RasClientTest {
 	private String rasPort = "5001";
 	private String managerUserName = "managerUsername";
 	private String managerPassword = "managerPassword";
-	private String adminToken = "adminToken";
-	private String rewrapAdminToken = "rewrapAdminToken";
+	private String adminToken1 = "adminToken1";
+	private String adminToken2 = "adminToken2";
+	private String rewrapAdminToken1 = "rewrapAdminToken1";
+	private String rewrapAdminToken2 = "rewrapAdminToken2";
 	private String publicKey = "publicKey";
 	private String rasPauseEndpoint;
 	private String rasResumeEndpoint;
 	private String userId = "userId";
-	private HashMap<String, String> headers;
+	private HashMap<String, String> headers1;
+	private HashMap<String, String> headers2;
 	private HashMap<String, String> body;
 	private HttpResponse responsePause;
 	private HttpResponse responseResume;
@@ -62,7 +65,7 @@ public class RasClientTest {
 		rasClient.pauseResourcesByUser(userId);
 		
 		PowerMockito.verifyStatic(HttpRequestClient.class);
-		HttpRequestClient.doGenericRequest(HttpMethod.POST, rasPauseEndpoint, headers, body);
+		HttpRequestClient.doGenericRequest(HttpMethod.POST, rasPauseEndpoint, headers1, body);
 	}
 	
 	// test case: When calling the method pauseResourcesByUser and the return code
@@ -93,7 +96,7 @@ public class RasClientTest {
 		rasClient.resumeResourcesByUser(userId);
 		
 		PowerMockito.verifyStatic(HttpRequestClient.class);
-		HttpRequestClient.doGenericRequest(HttpMethod.POST, rasResumeEndpoint, headers, body);
+		HttpRequestClient.doGenericRequest(HttpMethod.POST, rasResumeEndpoint, headers1, body);
 	}
 	
 	// test case: When calling the method resumeResourcesByUser and the return code
@@ -109,6 +112,48 @@ public class RasClientTest {
 		
 		rasClient.resumeResourcesByUser(userId);
 	}
+	
+	// test case: When calling the method pauseResourcesByUser, if the token expired, 
+	// the method must reacquire the token and perform the request again.
+    @Test
+    public void testPauseResourcesTokenExpired()
+            throws InternalServerErrorException, UnauthenticatedUserException, FogbowException, GeneralSecurityException {
+        setUpKeys();
+        setUpAuthentication();
+        setUpRequestAndOkResponse();
+        
+        Mockito.when(responsePause.getHttpCode()).thenReturn(401, 200);
+        
+        RasClient rasClient = new RasClient(authenticationServiceClient, managerUserName, 
+                managerPassword, rasAddress, rasPort);
+        
+        rasClient.pauseResourcesByUser(userId);
+        
+        PowerMockito.verifyStatic(HttpRequestClient.class, Mockito.times(1));
+        HttpRequestClient.doGenericRequest(HttpMethod.POST, rasPauseEndpoint, headers1, body);
+        HttpRequestClient.doGenericRequest(HttpMethod.POST, rasPauseEndpoint, headers2, body);
+    }
+    
+    // test case: When calling the method resumeResourcesByUser, if the token expired, 
+    // the method must reacquire the token and perform the request again.
+    @Test
+    public void testResumeResourcesTokenExpired()
+            throws InternalServerErrorException, UnauthenticatedUserException, FogbowException, GeneralSecurityException {
+        setUpKeys();
+        setUpAuthentication();
+        setUpRequestAndOkResponse();
+        
+        Mockito.when(responseResume.getHttpCode()).thenReturn(401, 200);
+        
+        RasClient rasClient = new RasClient(authenticationServiceClient, managerUserName, 
+                managerPassword, rasAddress, rasPort);
+        
+        rasClient.resumeResourcesByUser(userId);
+        
+        PowerMockito.verifyStatic(HttpRequestClient.class, Mockito.times(1));
+        HttpRequestClient.doGenericRequest(HttpMethod.POST, rasResumeEndpoint, headers1, body);
+        HttpRequestClient.doGenericRequest(HttpMethod.POST, rasResumeEndpoint, headers2, body);
+    }
 	
 	private void setUpKeys() throws InternalServerErrorException, FogbowException, UnauthenticatedUserException,
 			GeneralSecurityException {
@@ -130,9 +175,12 @@ public class RasClientTest {
 
 		PowerMockito.mockStatic(TokenProtector.class);
 		BDDMockito.when(
-				TokenProtector.rewrap(fsPrivateKey, rasPublicKey, adminToken, FogbowConstants.TOKEN_STRING_SEPARATOR))
-				.thenReturn(rewrapAdminToken);
-
+				TokenProtector.rewrap(fsPrivateKey, rasPublicKey, adminToken1, FogbowConstants.TOKEN_STRING_SEPARATOR))
+				.thenReturn(rewrapAdminToken1);
+		BDDMockito.when(
+                TokenProtector.rewrap(fsPrivateKey, rasPublicKey, adminToken2, FogbowConstants.TOKEN_STRING_SEPARATOR))
+                .thenReturn(rewrapAdminToken2);
+		
 		PowerMockito.mockStatic(CryptoUtil.class);
 		BDDMockito.when(CryptoUtil.toBase64(fsPublicKey)).thenReturn(publicKey);
 	}
@@ -140,13 +188,18 @@ public class RasClientTest {
 	private void setUpAuthentication() throws FogbowException {
 		authenticationServiceClient = Mockito.mock(AuthenticationServiceClient.class);
 		Mockito.when(authenticationServiceClient.getToken(publicKey, managerUserName, 
-				managerPassword)).thenReturn(adminToken);
+				managerPassword)).thenReturn(adminToken1, adminToken2);
 	}
 	
 	private void setUpRequestAndResponse(int returnCode) throws FogbowException {
-		headers = new HashMap<String, String>();
-		headers.put(CommonKeys.CONTENT_TYPE_KEY, AccountingServiceClient.RECORDS_REQUEST_CONTENT_TYPE);
-		headers.put(CommonKeys.SYSTEM_USER_TOKEN_HEADER_KEY, rewrapAdminToken);
+		headers1 = new HashMap<String, String>();
+		headers1.put(CommonKeys.CONTENT_TYPE_KEY, AccountingServiceClient.RECORDS_REQUEST_CONTENT_TYPE);
+		headers1.put(CommonKeys.SYSTEM_USER_TOKEN_HEADER_KEY, rewrapAdminToken1);
+		
+		headers2 = new HashMap<String, String>();
+        headers2.put(CommonKeys.CONTENT_TYPE_KEY, AccountingServiceClient.RECORDS_REQUEST_CONTENT_TYPE);
+        headers2.put(CommonKeys.SYSTEM_USER_TOKEN_HEADER_KEY, rewrapAdminToken2);
+        
 		body = new HashMap<String, String>();
 		
 		rasPauseEndpoint = String.format("%s:%s/%s/%s", rasAddress, rasPort,
@@ -162,8 +215,10 @@ public class RasClientTest {
 
 		PowerMockito.mockStatic(HttpRequestClient.class);
 		
-		BDDMockito.when(HttpRequestClient.doGenericRequest(HttpMethod.POST, rasPauseEndpoint, headers, body)).thenReturn(responsePause);
-		BDDMockito.when(HttpRequestClient.doGenericRequest(HttpMethod.POST, rasResumeEndpoint, headers, body)).thenReturn(responseResume);
+		BDDMockito.when(HttpRequestClient.doGenericRequest(HttpMethod.POST, rasPauseEndpoint, headers1, body)).thenReturn(responsePause);
+		BDDMockito.when(HttpRequestClient.doGenericRequest(HttpMethod.POST, rasPauseEndpoint, headers2, body)).thenReturn(responsePause);
+		BDDMockito.when(HttpRequestClient.doGenericRequest(HttpMethod.POST, rasResumeEndpoint, headers1, body)).thenReturn(responseResume);
+		BDDMockito.when(HttpRequestClient.doGenericRequest(HttpMethod.POST, rasResumeEndpoint, headers2, body)).thenReturn(responseResume);
 	}
 
 	private void setUpRequestAndOkResponse() throws FogbowException {

@@ -58,6 +58,7 @@ public class AccountingServiceClient {
 	private String publicKeyString;
 	private RecordUtils recordUtil;
 	private TimeUtils timeUtils;
+	private String token;
 	
 	public AccountingServiceClient() throws ConfigurationErrorException {
 		this(new AuthenticationServiceClient(),
@@ -99,19 +100,15 @@ public class AccountingServiceClient {
             String requestStartDate = this.timeUtils.toDate(SIMPLE_DATE_FORMAT, startTime);
             String requestEndDate = this.timeUtils.toDate(SIMPLE_DATE_FORMAT, endTime);
             
-            // TODO We should not need to get this token in all the calls to getUserRecords
-            // I think we should keep the value and reacquire the token after a certain time
-            String token = authenticationServiceClient.getToken(publicKeyString, managerUserName, managerPassword);
-            Key keyToDecrypt = ServiceAsymmetricKeysHolder.getInstance().getPrivateKey();
-            Key keyToEncrypt = FsPublicKeysHolder.getInstance().getAccsPublicKey(); 
-            
-            String newToken = TokenProtector.rewrap(keyToDecrypt, keyToEncrypt, token, FogbowConstants.TOKEN_STRING_SEPARATOR);
+            if (this.token == null) {
+                this.token = getToken();
+            }
 
             // TODO This implementation does not look very efficient. We should
             // try to find another solution, maybe adding a more powerful 
             // API method to ACCS
             for (String resourceType : RESOURCE_TYPES) {
-                HttpResponse response = doRequestAndCheckStatus(newToken, userId, requester, localProvider, resourceType, 
+                HttpResponse response = doRequestAndCheckStatus(userId, requester, localProvider, resourceType, 
                         requestStartDate, requestEndDate);
                 userRecords.addAll(getRecordsFromResponse(response));
             }
@@ -122,11 +119,27 @@ public class AccountingServiceClient {
         return userRecords;
     }
 
-    private HttpResponse doRequestAndCheckStatus(String token, String userId, String requester, 
+    private String getToken() throws FogbowException {
+        String token = authenticationServiceClient.getToken(publicKeyString, managerUserName, managerPassword);
+        Key keyToDecrypt = ServiceAsymmetricKeysHolder.getInstance().getPrivateKey();
+        Key keyToEncrypt = FsPublicKeysHolder.getInstance().getAccsPublicKey(); 
+        
+        String newToken = TokenProtector.rewrap(keyToDecrypt, keyToEncrypt, token, FogbowConstants.TOKEN_STRING_SEPARATOR);
+        return newToken;
+    }
+
+    private HttpResponse doRequestAndCheckStatus(String userId, String requester, 
     		String localProvider, String resourceType, String startDate, String endDate) throws URISyntaxException, FogbowException {
         String endpoint = getAccountingEndpoint(cloud.fogbow.accs.api.http.request.ResourceUsage.USAGE_ENDPOINT, 
         		userId, requester, localProvider, resourceType, startDate, endDate);
-        HttpResponse response = doRequest(token, endpoint);
+        HttpResponse response = doRequest(this.token, endpoint);
+        
+        // If the token expired, authenticate and try again
+        if (response.getHttpCode() == HttpStatus.SC_UNAUTHORIZED) {
+            this.token = getToken();
+            response = doRequest(this.token, endpoint);
+        }
+        
         if (response.getHttpCode() > HttpStatus.SC_OK) {
             Throwable e = new HttpResponseException(response.getHttpCode(), response.getContent());
             throw new UnavailableProviderException(e.getMessage());
