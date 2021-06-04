@@ -1,4 +1,4 @@
-package cloud.fogbow.fs.core.util;
+package cloud.fogbow.fs.core.util.list;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

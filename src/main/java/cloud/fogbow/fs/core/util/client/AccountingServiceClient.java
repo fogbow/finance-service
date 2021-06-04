@@ -1,4 +1,4 @@
-package cloud.fogbow.fs.core.util;
+package cloud.fogbow.fs.core.util.client;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -32,6 +32,7 @@ import cloud.fogbow.fs.api.http.CommonKeys;
 import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
 import cloud.fogbow.fs.core.FsPublicKeysHolder;
 import cloud.fogbow.fs.core.PropertiesHolder;
+import cloud.fogbow.fs.core.util.TimeUtils;
 import cloud.fogbow.fs.core.util.accounting.Record;
 import cloud.fogbow.fs.core.util.accounting.RecordUtils;
 
@@ -43,6 +44,7 @@ public class AccountingServiceClient {
     // I think should be made public to possible
     // clients of ACCS' API.
     static final String SIMPLE_DATE_FORMAT = "yyyy-MM-dd";
+    // TODO documentation
 	private static final String COMPUTE_RESOURCE = "compute";
 	private static final String VOLUME_RESOURCE = "volume";
 	private static final List<String> RESOURCE_TYPES = Arrays.asList(COMPUTE_RESOURCE, VOLUME_RESOURCE);

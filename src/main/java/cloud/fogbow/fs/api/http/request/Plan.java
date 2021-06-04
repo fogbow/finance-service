@@ -19,6 +19,7 @@ import cloud.fogbow.fs.constants.SystemConstants;
 import cloud.fogbow.fs.core.ApplicationFacade;
 
 //TODO documentation
+//TODO change positions of provider and userId parameters
 @CrossOrigin
 @RestController
 @RequestMapping(value = Plan.PLAN_ENDPOINT)

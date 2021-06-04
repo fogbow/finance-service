@@ -1,4 +1,4 @@
-package cloud.fogbow.fs.core.util;
+package cloud.fogbow.fs.core.util.client;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -30,6 +30,7 @@ import cloud.fogbow.fs.core.PropertiesHolder;
 
 public class RasClient {
 	
+    // TODO documentation
 	private static final String RECORDS_REQUEST_CONTENT_TYPE = "application/json";
 	
 	private AuthenticationServiceClient authenticationServiceClient;

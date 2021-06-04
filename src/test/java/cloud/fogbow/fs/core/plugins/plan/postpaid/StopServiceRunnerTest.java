@@ -13,9 +13,9 @@ import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.core.InMemoryUsersHolder;
 import cloud.fogbow.fs.core.models.FinanceUser;
-import cloud.fogbow.fs.core.util.ModifiedListException;
-import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedList;
-import cloud.fogbow.fs.core.util.RasClient;
+import cloud.fogbow.fs.core.util.client.RasClient;
+import cloud.fogbow.fs.core.util.list.ModifiedListException;
+import cloud.fogbow.fs.core.util.list.MultiConsumerSynchronizedList;
 
 public class StopServiceRunnerTest {
     private static final String ID_USER_1 = "userId1";

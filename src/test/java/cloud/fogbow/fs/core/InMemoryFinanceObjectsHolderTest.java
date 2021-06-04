@@ -19,9 +19,9 @@ import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.plugins.PersistablePlanPlugin;
-import cloud.fogbow.fs.core.util.ModifiedListException;
-import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedList;
-import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedListFactory;
+import cloud.fogbow.fs.core.util.list.ModifiedListException;
+import cloud.fogbow.fs.core.util.list.MultiConsumerSynchronizedList;
+import cloud.fogbow.fs.core.util.list.MultiConsumerSynchronizedListFactory;
 
 // TODO review documentation
 @RunWith(PowerMockRunner.class)

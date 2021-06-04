@@ -23,10 +23,10 @@ import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.models.Invoice;
 import cloud.fogbow.fs.core.models.InvoiceState;
 import cloud.fogbow.fs.core.plugins.PersistablePlanPlugin;
-import cloud.fogbow.fs.core.util.AccountingServiceClient;
 import cloud.fogbow.fs.core.util.FinancePlanFactory;
 import cloud.fogbow.fs.core.util.JsonUtils;
-import cloud.fogbow.fs.core.util.RasClient;
+import cloud.fogbow.fs.core.util.client.AccountingServiceClient;
+import cloud.fogbow.fs.core.util.client.RasClient;
 import cloud.fogbow.ras.core.models.Operation;
 import cloud.fogbow.ras.core.models.RasOperation;
 

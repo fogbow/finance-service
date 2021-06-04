@@ -14,6 +14,7 @@ import cloud.fogbow.fs.core.util.accounting.Record;
 import cloud.fogbow.fs.core.util.accounting.RecordUtils;
 
 public class CreditsManager {
+    // TODO documentation
     public static final String USER_CREDITS = "USER_CREDITS";
     
     private RecordUtils recordUtils;

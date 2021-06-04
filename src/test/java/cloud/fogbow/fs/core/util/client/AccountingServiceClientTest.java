@@ -1,4 +1,4 @@
-package cloud.fogbow.fs.core.util;
+package cloud.fogbow.fs.core.util.client;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -33,6 +33,7 @@ import cloud.fogbow.common.util.connectivity.HttpRequestClient;
 import cloud.fogbow.common.util.connectivity.HttpResponse;
 import cloud.fogbow.fs.api.http.CommonKeys;
 import cloud.fogbow.fs.core.FsPublicKeysHolder;
+import cloud.fogbow.fs.core.util.TimeUtils;
 import cloud.fogbow.fs.core.util.accounting.Record;
 import cloud.fogbow.fs.core.util.accounting.RecordUtils;
 

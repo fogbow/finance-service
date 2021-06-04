@@ -11,11 +11,11 @@ import cloud.fogbow.fs.core.InMemoryFinanceObjectsHolder;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
 import cloud.fogbow.fs.core.plugins.finance.StoppableRunner;
-import cloud.fogbow.fs.core.util.AccountingServiceClient;
-import cloud.fogbow.fs.core.util.ModifiedListException;
-import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedList;
 import cloud.fogbow.fs.core.util.TimeUtils;
 import cloud.fogbow.fs.core.util.accounting.Record;
+import cloud.fogbow.fs.core.util.client.AccountingServiceClient;
+import cloud.fogbow.fs.core.util.list.ModifiedListException;
+import cloud.fogbow.fs.core.util.list.MultiConsumerSynchronizedList;
 
 @Deprecated
 public class PaymentRunner extends StoppableRunner {

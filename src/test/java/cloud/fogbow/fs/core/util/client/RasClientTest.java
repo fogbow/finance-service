@@ -1,4 +1,4 @@
-package cloud.fogbow.fs.core.util;
+package cloud.fogbow.fs.core.util.client;
 
 import java.security.GeneralSecurityException;
 import java.security.interfaces.RSAPrivateKey;

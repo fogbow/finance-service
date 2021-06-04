@@ -15,9 +15,9 @@ import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.models.Invoice;
 import cloud.fogbow.fs.core.plugins.plan.prepaid.UserCreditsFactory;
-import cloud.fogbow.fs.core.util.ModifiedListException;
-import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedList;
-import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedListFactory;
+import cloud.fogbow.fs.core.util.list.ModifiedListException;
+import cloud.fogbow.fs.core.util.list.MultiConsumerSynchronizedList;
+import cloud.fogbow.fs.core.util.list.MultiConsumerSynchronizedListFactory;
 
 public class InMemoryUsersHolder {
     private DatabaseManager databaseManager;

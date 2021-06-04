@@ -14,8 +14,8 @@ import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
 import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.plugins.PersistablePlanPlugin;
 import cloud.fogbow.fs.core.plugins.PlanPluginInstantiator;
-import cloud.fogbow.fs.core.util.ModifiedListException;
-import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedList;
+import cloud.fogbow.fs.core.util.list.ModifiedListException;
+import cloud.fogbow.fs.core.util.list.MultiConsumerSynchronizedList;
 import cloud.fogbow.ras.core.models.RasOperation;
 
 public class FinanceManager {

@@ -16,8 +16,8 @@ import cloud.fogbow.fs.core.models.InvoiceState;
 import cloud.fogbow.fs.core.plugins.FinancePlugin;
 import cloud.fogbow.fs.core.plugins.PaymentManager;
 import cloud.fogbow.fs.core.plugins.PaymentManagerInstantiator;
-import cloud.fogbow.fs.core.util.AccountingServiceClient;
-import cloud.fogbow.fs.core.util.RasClient;
+import cloud.fogbow.fs.core.util.client.AccountingServiceClient;
+import cloud.fogbow.fs.core.util.client.RasClient;
 import cloud.fogbow.ras.core.models.Operation;
 import cloud.fogbow.ras.core.models.RasOperation;
 

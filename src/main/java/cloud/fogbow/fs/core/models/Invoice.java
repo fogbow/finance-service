@@ -50,6 +50,8 @@ public class Invoice {
     @Column(name = INVOICE_TOTAL_COLUMN_NAME)
 	private Double invoiceTotal;
 	
+    // TODO add start and end times to invoice
+    
     public Invoice() {
         
     }

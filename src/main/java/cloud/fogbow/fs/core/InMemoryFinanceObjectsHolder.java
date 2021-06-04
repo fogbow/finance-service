@@ -10,9 +10,9 @@ import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.plugins.PersistablePlanPlugin;
-import cloud.fogbow.fs.core.util.ModifiedListException;
-import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedList;
-import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedListFactory;
+import cloud.fogbow.fs.core.util.list.ModifiedListException;
+import cloud.fogbow.fs.core.util.list.MultiConsumerSynchronizedList;
+import cloud.fogbow.fs.core.util.list.MultiConsumerSynchronizedListFactory;
 
 public class InMemoryFinanceObjectsHolder {
     private DatabaseManager databaseManager;

@@ -1,4 +1,4 @@
-package cloud.fogbow.fs.core.util;
+package cloud.fogbow.fs.core.util.list;
 
 public class MultiConsumerSynchronizedListFactory {
     public <T> MultiConsumerSynchronizedList<T> getList() {

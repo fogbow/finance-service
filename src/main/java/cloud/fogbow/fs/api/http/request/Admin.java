@@ -18,6 +18,7 @@ import cloud.fogbow.fs.core.ApplicationFacade;
 import io.swagger.annotations.ApiParam;
 
 // TODO documentation
+// TODO change positions of provider and userId parameters
 @CrossOrigin
 @RestController
 @RequestMapping(value = Admin.ADMIN_ENDPOINT)

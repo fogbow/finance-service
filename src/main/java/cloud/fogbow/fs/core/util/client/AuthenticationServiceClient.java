@@ -1,4 +1,4 @@
-package cloud.fogbow.fs.core.util;
+package cloud.fogbow.fs.core.util.client;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -25,6 +25,7 @@ import cloud.fogbow.fs.core.PropertiesHolder;
 
 public class AuthenticationServiceClient {
 
+    // TODO documentation
 	@VisibleForTesting
 	static final String AUTHENTICATION_REQUEST_CONTENT_TYPE = "application/json";
 	@VisibleForTesting

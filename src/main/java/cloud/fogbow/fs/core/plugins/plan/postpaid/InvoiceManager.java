@@ -16,6 +16,7 @@ import cloud.fogbow.fs.core.util.accounting.Record;
 import cloud.fogbow.fs.core.util.accounting.RecordUtils;
 
 public class InvoiceManager {
+    // TODO documentation
     public static final String PROPERTY_VALUES_SEPARATOR = ",";
     public static final String ALL_USER_INVOICES_PROPERTY_NAME = "ALL_USER_INVOICES";
     

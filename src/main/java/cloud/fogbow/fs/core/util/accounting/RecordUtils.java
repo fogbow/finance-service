@@ -15,7 +15,7 @@ import cloud.fogbow.fs.core.util.JsonUtils;
 
 
 public class RecordUtils {
-
+    // TODO documentation
 	private static final String RESOURCE_TYPE_KEY = "resourceType";
 	private static final String COMPUTE_RESOURCE = "compute";
 	private static final String VOLUME_RESOURCE = "volume";

@@ -8,10 +8,10 @@ import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.InMemoryUsersHolder;
 import cloud.fogbow.fs.core.models.FinanceUser;
-import cloud.fogbow.fs.core.util.ModifiedListException;
-import cloud.fogbow.fs.core.util.MultiConsumerSynchronizedList;
-import cloud.fogbow.fs.core.util.RasClient;
 import cloud.fogbow.fs.core.util.StoppableRunner;
+import cloud.fogbow.fs.core.util.client.RasClient;
+import cloud.fogbow.fs.core.util.list.ModifiedListException;
+import cloud.fogbow.fs.core.util.list.MultiConsumerSynchronizedList;
 
 public class StopServiceRunner extends StoppableRunner {
 	private static Logger LOGGER = Logger.getLogger(StopServiceRunner.class);
