@@ -43,7 +43,7 @@ public class Messages {
 		public static final String USER_DOES_NOT_HAVE_ENOUGH_PERMISSION = "User does not have permission to perform operation.";
 		public static final String USER_IS_ALREADY_SUBSCRIBED_TO_A_PLAN = "User '%s' is already subscribed to plan '%s'.";
 		public static final String USER_IS_NOT_ADMIN = "Not-admin user trying to perform admin-only operation.";
-		public static final String USER_IS_NOT_SUBSCRIBE_TO_ANY_PLAN = "User '%s' is not subscribed to any plan.";
+		public static final String USER_IS_NOT_SUBSCRIBED_TO_ANY_PLAN = "User '%s' is not subscribed to any plan.";
         public static final String WRONG_POLICY_TYPE = "Wrong policy type. Type should be '%s' but is '%s'.";
         public static final String POLICY_CLASS_NOT_SPECIFIED = "Policy class is not specified in the configuration file.";
         public static final String POLICY_FILE_NAME_NOT_SPECIFIED = "Policy file name is not specified in the configuration file.";
@@ -51,7 +51,9 @@ public class Messages {
 	
 	public static class Log {
 		public static final String ADDING_USER = "Adding user: %s.";
+		public static final String ADDING_SELF = "Adding user '%s', provider '%s', plan '%s'.";
 		public static final String CHANGING_OPTIONS = "Changing finance options for plan: %s.";
+		public static final String CHANGING_SELF_PLAN = "Changing user '%s', provider '%s', to plan '%s'.";
 		public static final String CHANGING_USER_PLAN = "Changing user plan: %s.";
 		public static final String CREATING_FINANCE_PLAN = "Creating finance plan: %s.";
 		public static final String FAILED_TO_GENERATE_INVOICE = "Failed to generate invoice. Error message: %s.";
@@ -66,6 +68,9 @@ public class Messages {
 		public static final String GET_PUBLIC_KEY = "Get public key received.";
 		public static final String PROPERTY_FILE_S_NOT_FOUND = "Property file '%s' not found.";
 		public static final String RECEIVING_GET_VERSION = "Receiving get version.";
+		public static final String RECEIVED_ADD_SELF = "Received addSelf.";
+		public static final String RECEIVED_CHANGE_SELF_PLAN = "Received changeSelfPlan.";
+		public static final String RECEIVED_REMOVE_SELF = "Received removeSelf.";
 		public static final String RELOADING_AUTHORIZATION_PLUGIN = "Reloading authorization plugin.";
 		public static final String RELOADING_CONFIGURATION = "Reloading service configuration.";
 		public static final String RELOADING_FINANCE_PLUGINS = "Reloading finance plugins.";
@@ -73,6 +78,7 @@ public class Messages {
 		public static final String RELOADING_PROPERTIES_HOLDER = "Reloading properties holder.";
 		public static final String RELOADING_PUBLIC_KEYS_HOLDER = "Reloading public keys holder.";
 		public static final String REMOVING_FINANCE_PLAN = "Removing finance plan: %s.";
+		public static final String REMOVING_SELF = "Removing user '%s', provider '%s'.";
 		public static final String REMOVING_USER = "Removing user: %s.";
 		public static final String SETTING_POLICY = "Setting policy.";
 		public static final String STOPPING_FINANCE_PLUGINS = "Stopping finance plugins.";

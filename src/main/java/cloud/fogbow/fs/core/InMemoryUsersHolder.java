@@ -86,6 +86,7 @@ public class InMemoryUsersHolder {
         if (user.isSubscribed()) {
             throw new InvalidParameterException(String.format(Messages.Exception.USER_ALREADY_EXISTS, provider, userId));
         } else {
+            // TODO test
             this.inactiveUsers.removeItem(user);
             user.subscribeToPlan(pluginName);
             addUserByPlugin(user);
@@ -116,6 +117,7 @@ public class InMemoryUsersHolder {
             MultiConsumerSynchronizedList<FinanceUser> pluginUsers = usersByPlugin.get(pluginName);
             pluginUsers.addItem(user);
         } else {
+            // TODO test
             inactiveUsers.addItem(user);
         }
     }
@@ -128,6 +130,7 @@ public class InMemoryUsersHolder {
         }
     }
 
+    // TODO test
     public void unregisterUser(String userId, String provider) 
             throws InternalServerErrorException, InvalidParameterException {
         FinanceUser userToUnregister = getUserById(userId, provider);
@@ -145,7 +148,11 @@ public class InMemoryUsersHolder {
         FinanceUser userToRemove = getUserById(userId, provider);
 
         synchronized (userToRemove) {
-            removeUserByPlugin(userToRemove);
+            if (userToRemove.isSubscribed()) {
+                removeUserByPlugin(userToRemove);
+            } else {
+                this.inactiveUsers.removeItem(userToRemove);
+            }
             this.databaseManager.removeUser(userId, provider);
         }
     }
@@ -155,6 +162,7 @@ public class InMemoryUsersHolder {
         pluginUsers.removeItem(user);
     }
 
+    // TODO test
     public void changePlan(String userId, String provider, String newPlanName)
             throws InternalServerErrorException, InvalidParameterException {
         FinanceUser userToChangePlan = getUserById(userId, provider);

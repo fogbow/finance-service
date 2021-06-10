@@ -24,6 +24,7 @@ import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.common.models.SystemUser;
 import cloud.fogbow.fs.api.parameters.AuthorizableUser;
 import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
+import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.plugins.PersistablePlanPlugin;
 import cloud.fogbow.fs.core.plugins.PlanPluginInstantiator;
 import cloud.fogbow.fs.core.util.list.ModifiedListException;
@@ -77,6 +78,9 @@ public class FinanceManagerTest {
     private PersistablePlanPlugin plan1;
     private PersistablePlanPlugin plan2;
     private MultiConsumerSynchronizedList<PersistablePlanPlugin> plugins;
+    private FinanceUser financeUser1;
+    private FinanceUser financeUser2;
+    private FinanceUser financeUser3;
 
 	// test case: When calling the constructor, it must get
 	// the names of the finance plugins from a PropertiesHolder
@@ -151,13 +155,13 @@ public class FinanceManagerTest {
 
 	// test case: When calling the isAuthorized method passing an AuthorizableUser which
 	// is not managed by any finance plugin, it must throw an InvalidParameterException.
-	@Test(expected = InvalidParameterException.class)
+	@Test
 	public void testIsAuthorizedUserIsNotManaged() throws FogbowException, ModifiedListException {
 		setUpFinancePluginUnmanagedUser();
 		setUpAuthentication();
 		
 		FinanceManager financeManager = new FinanceManager(objectHolder);
-		financeManager.isAuthorized(user1);
+		assertFalse(financeManager.isAuthorized(user1));
 	}
 	
 	// TODO documentation
@@ -255,20 +259,7 @@ public class FinanceManagerTest {
 
         Mockito.verify(this.plan2, Mockito.times(1)).registerUser(Mockito.any(SystemUser.class));
 	}
-	
-	// test case: When calling the removeUser method, it must remove 
-	// the user using the correct FinancePlugin.
-	@Test
-	public void testRemoveUser() throws FogbowException, ModifiedListException {
-		setUpFinancePlugin();
-		
-		FinanceManager financeManager = new FinanceManager(objectHolder);
-		
-		financeManager.removeUser(USER_ID_1, PROVIDER_USER_1);
-		
-		Mockito.verify(plan1, Mockito.times(1)).purgeUser(Mockito.any(SystemUser.class));
-	}
-	
+
 	// test case: When calling the removeUser method and the user
 	// to be removed is not managed by any finance plugin, it must 
 	// throw an InvalidParameterException.
@@ -281,23 +272,6 @@ public class FinanceManagerTest {
 		financeManager.removeUser(USER_ID_1, PROVIDER_USER_1);
 	}
 	
-	// TODO documentation
-    @Test
-    public void testRemoveUserModifiedListExceptionIsThrown() throws FogbowException, ModifiedListException {
-        setUpFinancePlugin();
-
-        Mockito.when(plugins.getNext(Mockito.anyInt())).
-        thenReturn(this.plan1).
-        thenThrow(new ModifiedListException()).
-        thenReturn(this.plan1, this.plan2, null);
-        
-        FinanceManager financeManager = new FinanceManager(objectHolder);
-
-        financeManager.removeUser(USER_ID_2, PROVIDER_USER_2);
-
-        Mockito.verify(plan2, Mockito.times(1)).purgeUser(Mockito.any(SystemUser.class));
-    }
-	
 	// test case: When calling the updateFinanceState method, it must
 	// change the user's finance state using the correct FinancePlugin.
 	@Test
@@ -308,7 +282,8 @@ public class FinanceManagerTest {
 		FinanceManager financeManager = new FinanceManager(objectHolder);
 		financeManager.updateFinanceState(USER_ID_1, PROVIDER_USER_1, newFinanceState);
 		
-		Mockito.verify(plan1, Mockito.times(1)).updateUserFinanceState(Mockito.any(SystemUser.class), Mockito.any());
+		Mockito.verify(financeUser1).updateFinanceState(newFinanceState);
+		Mockito.verify(this.usersHolder).saveUser(financeUser1);
 	}
 	
 	// test case: When calling the updateFinanceState method and the user
@@ -322,24 +297,6 @@ public class FinanceManagerTest {
 		
 		FinanceManager financeManager = new FinanceManager(objectHolder);
 		financeManager.updateFinanceState(USER_ID_1, PROVIDER_USER_1, newFinanceState);
-	}
-	
-	// TODO documentation
-	@Test
-	public void testUpdateFinanceStateModifiedListExceptionIsThrown() throws FogbowException, ModifiedListException {
-        setUpFinancePlugin();
-        
-        Mockito.when(plugins.getNext(Mockito.anyInt())).
-        thenReturn(this.plan1).
-        thenThrow(new ModifiedListException()).
-        thenReturn(this.plan1, this.plan2, null);
-        
-        Map<String, String> newFinanceState = new HashMap<String, String>();
-
-        FinanceManager financeManager = new FinanceManager(objectHolder);
-        financeManager.updateFinanceState(USER_ID_2, PROVIDER_USER_2, newFinanceState);
-
-        Mockito.verify(plan2, Mockito.times(1)).updateUserFinanceState(Mockito.any(SystemUser.class), Mockito.any());
 	}
 	
 	// test case: When calling the startPlugins method, it must call the startThreads
@@ -470,8 +427,6 @@ public class FinanceManagerTest {
         Mockito.when(this.plan1.isRegisteredUser(systemUser3)).thenReturn(true);
         Mockito.when(this.plan1.isAuthorized(systemUser1, operation1)).thenReturn(true);
         Mockito.when(this.plan1.isAuthorized(systemUser3, operation3)).thenReturn(false);
-        Mockito.when(this.plan1.getUserFinanceState(systemUser1, PROPERTY_NAME_1)).thenReturn(PROPERTY_VALUE_1);
-        Mockito.when(this.plan1.getUserFinanceState(systemUser3, PROPERTY_NAME_3)).thenReturn(PROPERTY_VALUE_3);
         Mockito.when(this.plan1.getName()).thenReturn(PLUGIN_1_NAME);
         
         this.plan2 = Mockito.mock(PersistablePlanPlugin.class);
@@ -479,10 +434,20 @@ public class FinanceManagerTest {
         Mockito.when(this.plan2.isRegisteredUser(systemUser2)).thenReturn(true);
         Mockito.when(this.plan2.isRegisteredUser(systemUser3)).thenReturn(false);
         Mockito.when(this.plan2.isAuthorized(systemUser2, operation2)).thenReturn(true);
-        Mockito.when(this.plan2.getUserFinanceState(systemUser2, PROPERTY_NAME_2)).thenReturn(PROPERTY_VALUE_2);
         Mockito.when(this.plan2.getName()).thenReturn(PLUGIN_2_NAME);
         
+        this.financeUser1 = Mockito.mock(FinanceUser.class);
+        this.financeUser2 = Mockito.mock(FinanceUser.class);
+        this.financeUser3 = Mockito.mock(FinanceUser.class);
+        Mockito.when(this.financeUser1.getFinanceState(PROPERTY_NAME_1)).thenReturn(PROPERTY_VALUE_1);
+        Mockito.when(this.financeUser2.getFinanceState(PROPERTY_NAME_2)).thenReturn(PROPERTY_VALUE_2);
+        Mockito.when(this.financeUser1.getFinanceState(PROPERTY_NAME_3)).thenReturn(PROPERTY_VALUE_3);
+        
         this.usersHolder = Mockito.mock(InMemoryUsersHolder.class);
+        Mockito.when(this.usersHolder.getUserById(USER_ID_1, PROVIDER_USER_1)).thenReturn(this.financeUser1);
+        Mockito.when(this.usersHolder.getUserById(USER_ID_2, PROVIDER_USER_2)).thenReturn(this.financeUser2);
+        Mockito.when(this.usersHolder.getUserById(USER_ID_3, PROVIDER_USER_3)).thenReturn(this.financeUser3);
+        
         this.objectHolder = Mockito.mock(InMemoryFinanceObjectsHolder.class);
         
         Mockito.when(this.objectHolder.getInMemoryUsersHolder()).thenReturn(this.usersHolder);
@@ -520,6 +485,8 @@ public class FinanceManagerTest {
         Mockito.when(this.plan2.isRegisteredUser(systemUser1)).thenReturn(false);
         
         this.usersHolder = Mockito.mock(InMemoryUsersHolder.class);
+        Mockito.when(this.usersHolder.getUserById(USER_ID_1, PROVIDER_USER_1)).thenThrow(new InvalidParameterException());
+        
         this.objectHolder = Mockito.mock(InMemoryFinanceObjectsHolder.class);
         
         Mockito.when(this.objectHolder.getInMemoryUsersHolder()).thenReturn(this.usersHolder);

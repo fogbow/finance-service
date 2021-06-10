@@ -58,6 +58,10 @@ public class ApplicationFacadeTest {
 	private String userProviderToChange = "userProviderToChange";
 	private HashMap<String, String> newOptions = new HashMap<String, String>();
 	private HashMap<String, String> newState = new HashMap<String, String>();
+	
+	private String userIdToUnregister = "userIdToUnregister";
+	private String userProviderToUnregister = "userProviderToUnregister";
+	
 	private String property = "property";
 	private String propertyValue = "propertyValue";
 	
@@ -177,7 +181,55 @@ public class ApplicationFacadeTest {
         Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
         Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
     }
+    
+    // test case: When calling the unregisterUser method, it must authorize the 
+    // operation and call the FinanceManager. Also, it must start and finish 
+    // operations correctly using the SynchronizationManager.
+    @Test
+    public void testUnregisterUser() throws FogbowException {
+        setUpPublicKeysHolder();
+        setUpAuthentication();
+        setUpAuthorization(OperationType.UNREGISTER_USER);
+        setUpApplicationFacade();
+        
+        ApplicationFacade.getInstance().unregisterUser(adminToken, userIdToUnregister, userProviderToUnregister);
+        
+        Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
+        Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
+        Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
+        Mockito.verify(financeManager, Mockito.times(1)).unregisterUser(userIdToUnregister, userProviderToUnregister);
+    }
 	
+    // test case: When calling the unregisterUser method, if the call to 
+    // FinanceManager.unregisterUser throws an exception, the method
+    // must rethrow the exception and finish the operation correctly.
+    @Test
+    public void testUnregisterUserFinishesOperationIfOperationFails() throws FogbowException  {
+        setUpPublicKeysHolder();
+        setUpAuthentication();
+        setUpAuthorization(OperationType.UNREGISTER_USER);
+        
+        this.financeManager = Mockito.mock(FinanceManager.class);
+        this.synchronizationManager = Mockito.mock(SynchronizationManager.class);
+        
+        ApplicationFacade.getInstance().setAuthorizationPlugin(authorizationPlugin);
+        ApplicationFacade.getInstance().setFinanceManager(financeManager);
+        ApplicationFacade.getInstance().setSynchronizationManager(synchronizationManager);
+        
+        Mockito.doThrow(FogbowException.class).when(this.financeManager).unregisterUser(userIdToUnregister, 
+                userProviderToUnregister);
+        
+        try {
+            ApplicationFacade.getInstance().unregisterUser(adminToken, userIdToUnregister, userProviderToUnregister);
+            Assert.fail("unregisterUser is expected to throw exception.");
+        } catch (FogbowException e) {
+        }
+        
+        Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
+        Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
+        Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
+    }
+    
 	// test case: When calling the removeUser method, it must authorize the
 	// operation and call the FinanceManager. Also, it must start and finish
 	// operations correctly using the SynchronizationManager.
@@ -226,8 +278,155 @@ public class ApplicationFacadeTest {
 		Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
 	}
 
+	// test case: When calling the removeSelf method, it must call the FinanceManager. 
+    // Also, it must start and finish operations correctly using the SynchronizationManager.
+    @Test
+    public void testRemoveSelf() throws FogbowException {
+        setUpPublicKeysHolder();
+        
+        PowerMockito.mockStatic(AuthenticationUtil.class);
+        this.systemUser = new SystemUser(userIdToRemove, userIdToRemove, userProviderToRemove);
+        BDDMockito.given(AuthenticationUtil.authenticate(asPublicKey, userToken)).willReturn(systemUser);
+        
+        setUpApplicationFacade();
 
-	
+        ApplicationFacade.getInstance().removeSelf(userToken);
+
+        Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
+        Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
+        Mockito.verify(financeManager, Mockito.times(1)).unregisterUser(userIdToRemove, userProviderToRemove);
+    }
+    
+    // test case: When calling the removeSelf method, if the call to 
+    // FinanceManager.unregisterUser throws an exception, the method
+    // must rethrow the exception and finish the operation correctly.
+    @Test
+    public void testRemoveSelfFinishesOperationIfOperationFails() throws FogbowException {
+        setUpPublicKeysHolder();
+        
+        PowerMockito.mockStatic(AuthenticationUtil.class);
+        this.systemUser = new SystemUser(userIdToRemove, userIdToRemove, userProviderToRemove);
+        BDDMockito.given(AuthenticationUtil.authenticate(asPublicKey, userToken)).willReturn(systemUser);
+        
+        this.financeManager = Mockito.mock(FinanceManager.class);
+        this.synchronizationManager = Mockito.mock(SynchronizationManager.class);
+        
+        ApplicationFacade.getInstance().setAuthorizationPlugin(authorizationPlugin);
+        ApplicationFacade.getInstance().setFinanceManager(financeManager);
+        ApplicationFacade.getInstance().setSynchronizationManager(synchronizationManager);
+        
+        Mockito.doThrow(FogbowException.class).when(this.financeManager).
+            unregisterUser(userIdToRemove, userProviderToRemove);
+        
+        try {
+            ApplicationFacade.getInstance().removeSelf(userToken);
+            Assert.fail("removeSelf is expected to throw exception.");
+        } catch (FogbowException e) {
+        }
+        
+        Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
+        Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
+    }
+    
+    // test case: When calling the changeUserPlan method, it must authorize the
+    // operation and call the FinanceManager. Also, it must start and finish
+    // operations correctly using the SynchronizationManager.
+    @Test
+    public void testChangeUserPlan() throws FogbowException {
+        setUpPublicKeysHolder();
+        setUpAuthentication();
+        setUpAuthorization(OperationType.CHANGE_USER_PLAN);
+        setUpApplicationFacade();
+
+        ApplicationFacade.getInstance().changeUserPlan(adminToken, userIdToChange, userProviderToChange, newPlanName);
+
+        Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
+        Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
+        Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
+        Mockito.verify(financeManager, Mockito.times(1)).changePlan(userIdToChange, userProviderToChange, newPlanName);
+    }
+    
+    // test case: When calling the changeUserPlan method, if the call to
+    // FinanceManager.changePlan throws an exception, the method
+    // must rethrow the exception and finish the operation correctly.
+    @Test
+    public void testChangeUserPlanFinishesOperationIfOperationFails() throws FogbowException {
+        setUpPublicKeysHolder();
+        setUpAuthentication();
+        setUpAuthorization(OperationType.CHANGE_USER_PLAN);
+
+        this.financeManager = Mockito.mock(FinanceManager.class);
+        this.synchronizationManager = Mockito.mock(SynchronizationManager.class);
+
+        ApplicationFacade.getInstance().setAuthorizationPlugin(authorizationPlugin);
+        ApplicationFacade.getInstance().setFinanceManager(financeManager);
+        ApplicationFacade.getInstance().setSynchronizationManager(synchronizationManager);
+
+        Mockito.doThrow(FogbowException.class).when(this.financeManager).changePlan(
+                userIdToChange, userProviderToChange, newPlanName);
+
+        try {
+            ApplicationFacade.getInstance().changeUserPlan(adminToken, userIdToChange, userProviderToChange, newPlanName);
+            Assert.fail("changeUserPlan is expected to throw exception.");
+        } catch (FogbowException e) {
+        }
+
+        Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
+        Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
+        Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
+    }
+    
+    // test case: When calling the changeSelfPlan method, it must call the FinanceManager. 
+    // Also, it must start and finish operations correctly using the SynchronizationManager.
+    @Test
+    public void testChangeSelfPlan() throws FogbowException {
+        setUpPublicKeysHolder();
+        
+        PowerMockito.mockStatic(AuthenticationUtil.class);
+        this.systemUser = new SystemUser(userIdToChange, userIdToChange, userProviderToChange);
+        BDDMockito.given(AuthenticationUtil.authenticate(asPublicKey, userToken)).willReturn(systemUser);
+        
+        setUpApplicationFacade();
+
+        ApplicationFacade.getInstance().changeSelfPlan(userToken, newPlanName);
+
+        Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
+        Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
+        Mockito.verify(financeManager, Mockito.times(1)).changePlan(
+                userIdToChange, userProviderToChange, newPlanName);
+    }
+    
+    // test case: When calling the changeSelfPlan method, if the call to 
+    // FinanceManager.changePlan throws an exception, the method
+    // must rethrow the exception and finish the operation correctly.
+    @Test
+    public void testChangeSelfPlanFinishesOperationIfOperationFails() throws FogbowException {
+        setUpPublicKeysHolder();
+        
+        PowerMockito.mockStatic(AuthenticationUtil.class);
+        this.systemUser = new SystemUser(userIdToChange, userIdToChange, userProviderToChange);
+        BDDMockito.given(AuthenticationUtil.authenticate(asPublicKey, userToken)).willReturn(systemUser);
+        
+        this.financeManager = Mockito.mock(FinanceManager.class);
+        this.synchronizationManager = Mockito.mock(SynchronizationManager.class);
+        
+        ApplicationFacade.getInstance().setAuthorizationPlugin(authorizationPlugin);
+        ApplicationFacade.getInstance().setFinanceManager(financeManager);
+        ApplicationFacade.getInstance().setSynchronizationManager(synchronizationManager);
+        
+        Mockito.doThrow(FogbowException.class).when(this.financeManager).
+            changePlan(userIdToChange, userProviderToChange, newPlanName);
+        
+        try {
+            ApplicationFacade.getInstance().changeSelfPlan(userToken, newPlanName);
+            Assert.fail("changeSelfPlan is expected to throw exception.");
+        } catch (FogbowException e) {
+        }
+        
+        Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
+        Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
+    }
+    
 	// test case: When calling the updateFinanceState method, it must authorize the
 	// operation and call the FinanceManager. Also, it must start and finish
 	// operations correctly using the SynchronizationManager.

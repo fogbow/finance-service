@@ -19,7 +19,7 @@ import cloud.fogbow.fs.core.InMemoryUsersHolder;
 import cloud.fogbow.fs.core.PropertiesHolder;
 import cloud.fogbow.fs.core.models.FinancePlan;
 import cloud.fogbow.fs.core.models.FinanceUser;
-import cloud.fogbow.fs.core.models.UserCredits;
+import cloud.fogbow.fs.core.plugins.DebtsPaymentChecker;
 import cloud.fogbow.fs.core.plugins.PersistablePlanPlugin;
 import cloud.fogbow.fs.core.util.FinancePlanFactory;
 import cloud.fogbow.fs.core.util.JsonUtils;
@@ -79,6 +79,9 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
     @Transient
     private JsonUtils jsonUtils;
     
+    @Transient
+    private DebtsPaymentChecker debtsChecker;
+    
     @Column(name = CREDITS_DEDUCTION_WAIT_TIME_COLUMN_NAME)
     private long creditsDeductionWaitTime;
 
@@ -101,21 +104,22 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
     public PrePaidPlanPlugin(String planName, InMemoryUsersHolder usersHolder, 
             Map<String, String> financeOptions) throws InvalidParameterException, ConfigurationErrorException {
         this(planName, usersHolder, new AccountingServiceClient(), new RasClient(),
-                new FinancePlanFactory(), new JsonUtils(), financeOptions);
+                new FinancePlanFactory(), new JsonUtils(), new DebtsPaymentChecker(usersHolder), financeOptions);
         
         this.creditsManager = new CreditsManager(this.usersHolder, plan);
     }
     
     public PrePaidPlanPlugin(String planName, InMemoryUsersHolder usersHolder,
             AccountingServiceClient accountingServiceClient, RasClient rasClient,
-            FinancePlanFactory financePlanFactory, JsonUtils jsonUtils, Map<String, String> financeOptions)
-                    throws InvalidParameterException {
+            FinancePlanFactory financePlanFactory, JsonUtils jsonUtils, DebtsPaymentChecker debtsChecker, 
+            Map<String, String> financeOptions) throws InvalidParameterException {
         this.name = planName;
         this.usersHolder = usersHolder;
         this.accountingServiceClient = accountingServiceClient;
         this.rasClient = rasClient;
         this.planFactory = financePlanFactory;
         this.jsonUtils = jsonUtils;
+        this.debtsChecker = debtsChecker;
         this.threadsAreRunning = false;
         
         setOptions(financeOptions);
@@ -123,18 +127,19 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
 
     PrePaidPlanPlugin(String name, long creditsDeductionWaitTime, InMemoryUsersHolder usersHolder, 
             AccountingServiceClient accountingServiceClient, RasClient rasClient, CreditsManager invoiceManager, 
-            FinancePlanFactory planFactory, JsonUtils jsonUtils, FinancePlan financePlan, Map<String, String> financeOptions) 
+            FinancePlanFactory planFactory, JsonUtils jsonUtils, DebtsPaymentChecker debtsChecker, 
+            StopServiceRunner stopServiceRunner, FinancePlan financePlan, Map<String, String> financeOptions) 
                     throws InvalidParameterException, InternalServerErrorException {
         this(name, creditsDeductionWaitTime, usersHolder, accountingServiceClient, rasClient, invoiceManager, 
-                planFactory, jsonUtils, financePlan);
+                planFactory, jsonUtils, debtsChecker, stopServiceRunner, financePlan);
         
         setOptions(financeOptions);
     }
     
     PrePaidPlanPlugin(String name, long creditsDeductionWaitTime, InMemoryUsersHolder usersHolder, 
             AccountingServiceClient accountingServiceClient, RasClient rasClient, CreditsManager invoiceManager, 
-            FinancePlanFactory planFactory, JsonUtils jsonUtils, FinancePlan financePlan) 
-                    throws InvalidParameterException, InternalServerErrorException {
+            FinancePlanFactory planFactory, JsonUtils jsonUtils, DebtsPaymentChecker debtsChecker, StopServiceRunner stopServiceRunner, 
+            FinancePlan financePlan) throws InvalidParameterException, InternalServerErrorException {
         this.name = name;
         this.creditsDeductionWaitTime = creditsDeductionWaitTime;
         this.usersHolder = usersHolder;
@@ -143,6 +148,8 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
         this.planFactory = planFactory;
         this.creditsManager = invoiceManager;
         this.jsonUtils = jsonUtils;
+        this.debtsChecker = debtsChecker;
+        this.stopServiceRunner = stopServiceRunner;
         this.plan = financePlan;
         this.threadsAreRunning = false;
     }
@@ -228,7 +235,7 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
             this.paymentThread = new Thread(paymentRunner);
             
             this.stopServiceRunner = new StopServiceRunner(this.name, creditsDeductionWaitTime, usersHolder, 
-                    creditsManager, rasClient);
+                    creditsManager, rasClient, this.debtsChecker);
             this.stopServiceThread = new Thread(stopServiceRunner);
             
             this.paymentThread.start();
@@ -256,10 +263,14 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
         return threadsAreRunning;
     }
 
+    // TODO update test
     @Override
     public boolean isAuthorized(SystemUser user, RasOperation operation) throws InvalidParameterException, InternalServerErrorException {
         if (operation.getOperationType().equals(Operation.CREATE)) {
-            return this.creditsManager.hasPaid(user.getId(), user.getIdentityProviderId());
+            boolean pastDebtsArePaid = this.debtsChecker.hasPaid(user.getId(), user.getIdentityProviderId());
+            boolean currentStateIsGood = this.creditsManager.hasPaid(user.getId(), user.getIdentityProviderId()); 
+            
+            return pastDebtsArePaid && currentStateIsGood;
         }
         
         return true;
@@ -270,59 +281,49 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
         FinanceUser user = this.usersHolder.getUserById(systemUser.getId(), systemUser.getIdentityProviderId());
         
         synchronized(user) {
-            return user.getFinancePluginName().equals(this.name);
+            if (user.isSubscribed()) {
+                return user.getFinancePluginName().equals(this.name);
+            } else {
+                return false;
+            }
         }
     }
 
     @Override
-    public void registerUser(SystemUser user) throws InternalServerErrorException, InvalidParameterException {
-        this.usersHolder.registerUser(user.getId(), user.getIdentityProviderId(), this.name);
+    public void registerUser(SystemUser systemUser) throws InternalServerErrorException, InvalidParameterException {
+        this.usersHolder.registerUser(systemUser.getId(), systemUser.getIdentityProviderId(), this.name);
+        
+        FinanceUser user = this.usersHolder.getUserById(systemUser.getId(), systemUser.getIdentityProviderId());
+        
+        synchronized (user) {
+            this.stopServiceRunner.resumeResourcesForUser(user);
+        }
     }
 
+    // TODO test
     @Override
-    public void purgeUser(SystemUser user) throws InvalidParameterException, InternalServerErrorException {
-        this.usersHolder.removeUser(user.getId(), user.getIdentityProviderId());
+    public void purgeUser(SystemUser systemUser) throws InvalidParameterException, InternalServerErrorException {
+        FinanceUser user = this.usersHolder.getUserById(systemUser.getId(), systemUser.getIdentityProviderId());
+        // TODO must delete user resources
+        this.stopServiceRunner.pauseResourcesForUser(user);
+        this.usersHolder.removeUser(systemUser.getId(), systemUser.getIdentityProviderId());
     }
 
+    // TODO test
     @Override
     public void changePlan(SystemUser user, String newPlanName) throws InternalServerErrorException, InvalidParameterException {
         this.usersHolder.changePlan(user.getId(), user.getIdentityProviderId(), newPlanName);
     }
 
+    // TODO test
     @Override
-    public void unregisterUser(SystemUser user) throws InternalServerErrorException, InvalidParameterException {
-        this.usersHolder.unregisterUser(user.getId(), user.getIdentityProviderId());
-    }
-
-    @Override
-    public String getUserFinanceState(SystemUser user, String property)
-            throws InvalidParameterException, InternalServerErrorException {
-        return this.creditsManager.getUserFinanceState(user.getId(), user.getIdentityProviderId(), property);
-    }
-
-    @Override
-    public void updateUserFinanceState(SystemUser systemUser, Map<String, String> financeState)
-            throws InternalServerErrorException, InvalidParameterException {
-        if (!financeState.containsKey(CREDITS_TO_ADD)) {
-            throw new InvalidParameterException(String.format(Messages.Exception.MISSING_FINANCE_STATE_PROPERTY, CREDITS_TO_ADD));
-        }
-        
-        Double valueToAdd = 0.0;
-        String propertyValue = "";
-        
-        try {
-            propertyValue = financeState.get(CREDITS_TO_ADD);
-            valueToAdd = Double.valueOf(propertyValue);
-        } catch (NumberFormatException e) {
-            throw new InvalidParameterException(String.format(Messages.Exception.INVALID_FINANCE_STATE_PROPERTY, propertyValue, CREDITS_TO_ADD));
-        }
-        
+    public void unregisterUser(SystemUser systemUser) throws InternalServerErrorException, InvalidParameterException {
         FinanceUser user = this.usersHolder.getUserById(systemUser.getId(), systemUser.getIdentityProviderId());
         
-        synchronized(user) {
-            UserCredits userCredits = user.getCredits();
-            userCredits.addCredits(valueToAdd);
-            this.usersHolder.saveUser(user);
+        synchronized (user) {
+            // TODO must delete user resources
+            this.stopServiceRunner.pauseResourcesForUser(user);
+            this.usersHolder.unregisterUser(systemUser.getId(), systemUser.getIdentityProviderId());
         }
     }
     

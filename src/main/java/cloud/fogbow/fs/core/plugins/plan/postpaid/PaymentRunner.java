@@ -6,6 +6,7 @@ import org.apache.log4j.Logger;
 
 import cloud.fogbow.common.exceptions.FogbowException;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
+import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.InMemoryUsersHolder;
 import cloud.fogbow.fs.core.models.FinanceUser;
@@ -80,6 +81,26 @@ public class PaymentRunner extends StoppableRunner {
         }
 
         checkIfMustStop();
+    }
+    
+    // TODO test
+    public void runLastPaymentForUser(String userId, String provider) throws InternalServerErrorException, InvalidParameterException {
+        FinanceUser user = userHolder.getUserById(userId, provider);
+        
+        synchronized(user) {
+            // TODO concurrency check: check if the user is still subscribed to the plan or was removed
+            long billingTime = this.timeUtils.getCurrentTimeMillis();
+            long lastBillingTime = getUserLastBillingTime(user);
+
+            // run payment regardless of time
+            try {
+                List<Record> records = acquireUsageData(user, billingTime, lastBillingTime);
+                this.invoiceGenerator.generateLastInvoiceForUser(user.getId(), user.getProvider(),
+                        lastBillingTime, billingTime, records);
+            } catch (FogbowException e) {
+                LOGGER.error(String.format(Messages.Log.FAILED_TO_GENERATE_INVOICE_FOR_USER, user.getId(), e.getMessage()));
+            }
+        }
     }
 
     private void tryToRunPaymentForUser(FinanceUser user) {

@@ -22,6 +22,9 @@ public abstract class StoppableRunner implements Runnable {
         this.mustStop = false;
     }
     
+	// I believe this method should be called
+	// after the doRun call, instead of being 
+	// called by the doRun implementation
     protected void checkIfMustStop() { 
         if (this.mustStop) {
             this.isActive = false;

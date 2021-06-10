@@ -13,6 +13,7 @@ import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.core.InMemoryUsersHolder;
 import cloud.fogbow.fs.core.models.FinanceUser;
+import cloud.fogbow.fs.core.plugins.DebtsPaymentChecker;
 import cloud.fogbow.fs.core.util.client.RasClient;
 import cloud.fogbow.fs.core.util.list.ModifiedListException;
 import cloud.fogbow.fs.core.util.list.MultiConsumerSynchronizedList;
@@ -32,6 +33,7 @@ public class StopServiceRunnerTest {
     private FinanceUser user1;
     private FinanceUser user2;
     private MultiConsumerSynchronizedList<FinanceUser> users;
+    private DebtsPaymentChecker debtsChecker;
     
     // test case: When calling the method doRun, it must get the
     // list of users from the DatabaseManager. For each user, 
@@ -46,13 +48,17 @@ public class StopServiceRunnerTest {
         setUpDatabase();
         
         paymentManager = Mockito.mock(CreditsManager.class);
-        
         Mockito.doReturn(false).when(paymentManager).hasPaid(ID_USER_1, PROVIDER_USER_1);
         Mockito.doReturn(true).when(paymentManager).hasPaid(ID_USER_2, PROVIDER_USER_2);
         
+        debtsChecker = Mockito.mock(DebtsPaymentChecker.class);
+        Mockito.doReturn(false).when(debtsChecker).hasPaid(ID_USER_1, PROVIDER_USER_1);
+        Mockito.doReturn(true).when(debtsChecker).hasPaid(ID_USER_2, PROVIDER_USER_2);
+        
         rasClient = Mockito.mock(RasClient.class);
         
-        stopServiceRunner = new StopServiceRunner(PLAN_NAME, stopServiceWaitTime ,objectHolder, paymentManager, rasClient);
+        stopServiceRunner = new StopServiceRunner(PLAN_NAME, stopServiceWaitTime ,objectHolder, 
+                paymentManager, rasClient, debtsChecker);
         
         
         
@@ -88,10 +94,15 @@ public class StopServiceRunnerTest {
         Mockito.doReturn(false).when(paymentManager).hasPaid(ID_USER_1, PROVIDER_USER_1);
         Mockito.doReturn(false).when(paymentManager).hasPaid(ID_USER_2, PROVIDER_USER_2);
         
+        debtsChecker = Mockito.mock(DebtsPaymentChecker.class);
+        Mockito.doReturn(false).when(debtsChecker).hasPaid(ID_USER_1, PROVIDER_USER_1);
+        Mockito.doReturn(false).when(debtsChecker).hasPaid(ID_USER_2, PROVIDER_USER_2);
+        
         rasClient = Mockito.mock(RasClient.class);
         Mockito.doThrow(new FogbowException("message")).when(rasClient).pauseResourcesByUser(ID_USER_1);
         
-        stopServiceRunner = new StopServiceRunner(PLAN_NAME, stopServiceWaitTime ,objectHolder, paymentManager, rasClient);
+        stopServiceRunner = new StopServiceRunner(PLAN_NAME, stopServiceWaitTime ,objectHolder, 
+                paymentManager, rasClient, debtsChecker);
         
         
         
@@ -120,13 +131,17 @@ public class StopServiceRunnerTest {
         setUpDatabaseResumeResources();
         
         paymentManager = Mockito.mock(CreditsManager.class);
-        
         Mockito.doReturn(false).when(paymentManager).hasPaid(ID_USER_1, PROVIDER_USER_1);
         Mockito.doReturn(true).when(paymentManager).hasPaid(ID_USER_2, PROVIDER_USER_2);
         
+        debtsChecker = Mockito.mock(DebtsPaymentChecker.class);
+        Mockito.doReturn(false).when(debtsChecker).hasPaid(ID_USER_1, PROVIDER_USER_1);
+        Mockito.doReturn(true).when(debtsChecker).hasPaid(ID_USER_2, PROVIDER_USER_2);
+        
         rasClient = Mockito.mock(RasClient.class);
         
-        stopServiceRunner = new StopServiceRunner(PLAN_NAME, stopServiceWaitTime ,objectHolder, paymentManager, rasClient);
+        stopServiceRunner = new StopServiceRunner(PLAN_NAME, stopServiceWaitTime ,objectHolder, 
+                paymentManager, rasClient, debtsChecker);
 
         
         
@@ -160,10 +175,15 @@ public class StopServiceRunnerTest {
         Mockito.doReturn(true).when(paymentManager).hasPaid(ID_USER_1, PROVIDER_USER_1);
         Mockito.doReturn(true).when(paymentManager).hasPaid(ID_USER_2, PROVIDER_USER_2);
         
+        debtsChecker = Mockito.mock(DebtsPaymentChecker.class);
+        Mockito.doReturn(true).when(debtsChecker).hasPaid(ID_USER_1, PROVIDER_USER_1);
+        Mockito.doReturn(true).when(debtsChecker).hasPaid(ID_USER_2, PROVIDER_USER_2);
+        
         rasClient = Mockito.mock(RasClient.class);
         Mockito.doThrow(new FogbowException("message")).when(rasClient).resumeResourcesByUser(ID_USER_1);
         
-        stopServiceRunner = new StopServiceRunner(PLAN_NAME, stopServiceWaitTime, objectHolder, paymentManager, rasClient);
+        stopServiceRunner = new StopServiceRunner(PLAN_NAME, stopServiceWaitTime, objectHolder, 
+                paymentManager, rasClient, debtsChecker);
 
         
         
@@ -195,9 +215,13 @@ public class StopServiceRunnerTest {
         Mockito.doThrow(InvalidParameterException.class).when(paymentManager).hasPaid(ID_USER_1, PROVIDER_USER_1);
         Mockito.doReturn(false).when(paymentManager).hasPaid(ID_USER_2, PROVIDER_USER_2);
         
+        debtsChecker = Mockito.mock(DebtsPaymentChecker.class);
+        Mockito.doReturn(false).when(debtsChecker).hasPaid(ID_USER_2, PROVIDER_USER_2);
+        
         rasClient = Mockito.mock(RasClient.class);
         
-        stopServiceRunner = new StopServiceRunner(PLAN_NAME, stopServiceWaitTime, objectHolder, paymentManager, rasClient);
+        stopServiceRunner = new StopServiceRunner(PLAN_NAME, stopServiceWaitTime, objectHolder, 
+                paymentManager, rasClient, debtsChecker);
         
         
         
@@ -226,12 +250,15 @@ public class StopServiceRunnerTest {
         setUpDatabaseUserListChanges();
         
         paymentManager = Mockito.mock(CreditsManager.class);
-        
         Mockito.doReturn(false).when(paymentManager).hasPaid(ID_USER_1, PROVIDER_USER_1);
+        
+        debtsChecker = Mockito.mock(DebtsPaymentChecker.class);
+        Mockito.doReturn(false).when(debtsChecker).hasPaid(ID_USER_1, PROVIDER_USER_1);
         
         rasClient = Mockito.mock(RasClient.class);
         
-        stopServiceRunner = new StopServiceRunner(PLAN_NAME, stopServiceWaitTime, objectHolder, paymentManager, rasClient);
+        stopServiceRunner = new StopServiceRunner(PLAN_NAME, stopServiceWaitTime, objectHolder, 
+                paymentManager, rasClient, debtsChecker);
         
         
         stopServiceRunner.doRun();
@@ -257,12 +284,15 @@ public class StopServiceRunnerTest {
         setUpDatabaseFailToGetUser();
         
         paymentManager = Mockito.mock(CreditsManager.class);
-        
         Mockito.doReturn(false).when(paymentManager).hasPaid(ID_USER_1, PROVIDER_USER_1);
+        
+        debtsChecker = Mockito.mock(DebtsPaymentChecker.class);
+        Mockito.doReturn(false).when(debtsChecker).hasPaid(ID_USER_1, PROVIDER_USER_1);
         
         rasClient = Mockito.mock(RasClient.class);
         
-        stopServiceRunner = new StopServiceRunner(PLAN_NAME, stopServiceWaitTime, objectHolder, paymentManager, rasClient);
+        stopServiceRunner = new StopServiceRunner(PLAN_NAME, stopServiceWaitTime, objectHolder, 
+                paymentManager, rasClient, debtsChecker);
         
         
         stopServiceRunner.doRun();

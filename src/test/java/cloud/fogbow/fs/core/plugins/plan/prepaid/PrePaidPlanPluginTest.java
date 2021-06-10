@@ -23,7 +23,7 @@ import cloud.fogbow.fs.core.InMemoryUsersHolder;
 import cloud.fogbow.fs.core.PropertiesHolder;
 import cloud.fogbow.fs.core.models.FinancePlan;
 import cloud.fogbow.fs.core.models.FinanceUser;
-import cloud.fogbow.fs.core.models.UserCredits;
+import cloud.fogbow.fs.core.plugins.DebtsPaymentChecker;
 import cloud.fogbow.fs.core.plugins.plan.prepaid.PrePaidPlanPlugin.PrePaidPluginOptionsLoader;
 import cloud.fogbow.fs.core.util.FinancePlanFactory;
 import cloud.fogbow.fs.core.util.JsonUtils;
@@ -56,13 +56,14 @@ public class PrePaidPlanPluginTest {
     private RasClient rasClient;
     private CreditsManager paymentManager;
     private long creditsDeductionWaitTime = 1L;
-    private UserCredits userCredits;
     private FinancePlanFactory planFactory;
     private JsonUtils jsonUtils;
     private FinancePlan plan;
     private Map<String, String> rulesMap = new HashMap<String, String>();
     private Map<String, String> newRulesMap = new HashMap<String, String>();
     private long newCreditsDeductionWaitTime = 2L;
+    private DebtsPaymentChecker debtsChecker;
+    private StopServiceRunner stopServiceRunner;
     
     // test case: When calling the managesUser method, it must
     // get the user from the objects holder and check if the user
@@ -72,17 +73,17 @@ public class PrePaidPlanPluginTest {
         Map<String, String> financeOptions = new HashMap<String, String>();
         financeOptions.put(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME, String.valueOf(creditsDeductionWaitTime));
         
-        FinanceUser financeUser1 = new FinanceUser();
-        financeUser1.setUserId(USER_ID_1, PROVIDER_USER_1);
-        financeUser1.subscribeToPlan(PLAN_NAME);
-
-        FinanceUser financeUser2 = new FinanceUser();
-        financeUser2.setUserId(USER_ID_2, PROVIDER_USER_2);
-        financeUser2.subscribeToPlan(PLAN_NAME);
-
-        FinanceUser financeUser3 = new FinanceUser();
-        financeUser3.setUserId(USER_NOT_MANAGED, PROVIDER_USER_NOT_MANAGED);
-        financeUser3.subscribeToPlan("otherplugin");
+        FinanceUser financeUser1 = Mockito.mock(FinanceUser.class);
+        Mockito.when(financeUser1.isSubscribed()).thenReturn(true);
+        Mockito.when(financeUser1.getFinancePluginName()).thenReturn(PLAN_NAME);
+        
+        FinanceUser financeUser2 = Mockito.mock(FinanceUser.class);
+        Mockito.when(financeUser2.isSubscribed()).thenReturn(true);
+        Mockito.when(financeUser2.getFinancePluginName()).thenReturn(PLAN_NAME);
+        
+        FinanceUser financeUser3 = Mockito.mock(FinanceUser.class);
+        Mockito.when(financeUser3.isSubscribed()).thenReturn(true);
+        Mockito.when(financeUser3.getFinancePluginName()).thenReturn("otherplugin");
 
         this.objectHolder = Mockito.mock(InMemoryUsersHolder.class);
         Mockito.when(objectHolder.getUserById(USER_ID_1, PROVIDER_USER_1)).thenReturn(financeUser1);
@@ -90,7 +91,7 @@ public class PrePaidPlanPluginTest {
         Mockito.when(objectHolder.getUserById(USER_NOT_MANAGED, PROVIDER_USER_NOT_MANAGED)).thenReturn(financeUser3);
 
         PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(PLAN_NAME, creditsDeductionWaitTime, objectHolder, accountingServiceClient,
-                rasClient, paymentManager, planFactory, jsonUtils, plan, financeOptions);
+                rasClient, paymentManager, planFactory, jsonUtils, debtsChecker, stopServiceRunner, plan, financeOptions);
 
         assertTrue(prePaidFinancePlugin.isRegisteredUser(new SystemUser(USER_ID_1, USER_NAME_1, PROVIDER_USER_1)));
         assertTrue(prePaidFinancePlugin.isRegisteredUser(new SystemUser(USER_ID_2, USER_NAME_2, PROVIDER_USER_2)));
@@ -108,8 +109,11 @@ public class PrePaidPlanPluginTest {
         this.paymentManager = Mockito.mock(CreditsManager.class);
         Mockito.when(this.paymentManager.hasPaid(USER_ID_1, PROVIDER_USER_1)).thenReturn(true);
         
+        this.debtsChecker = Mockito.mock(DebtsPaymentChecker.class);
+        Mockito.when(this.debtsChecker.hasPaid(USER_ID_1, PROVIDER_USER_1)).thenReturn(true);
+        
         PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(PLAN_NAME, creditsDeductionWaitTime, objectHolder, accountingServiceClient,
-                rasClient, paymentManager, planFactory, jsonUtils, plan, financeOptions);
+                rasClient, paymentManager, planFactory, jsonUtils, debtsChecker, stopServiceRunner, plan, financeOptions);
         
         SystemUser user = new SystemUser(USER_ID_1, USER_NAME_1, PROVIDER_USER_1);
         RasOperation operation = new RasOperation(Operation.CREATE, ResourceType.COMPUTE, USER_ID_1, PROVIDER_USER_1);
@@ -128,8 +132,11 @@ public class PrePaidPlanPluginTest {
         this.paymentManager = Mockito.mock(CreditsManager.class);
         Mockito.when(this.paymentManager.hasPaid(USER_ID_1, PROVIDER_USER_1)).thenReturn(false);
         
+        this.debtsChecker = Mockito.mock(DebtsPaymentChecker.class);
+        Mockito.when(this.debtsChecker.hasPaid(USER_ID_1, PROVIDER_USER_1)).thenReturn(false);
+        
         PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(PLAN_NAME, creditsDeductionWaitTime, objectHolder, accountingServiceClient,
-                rasClient, paymentManager, planFactory, jsonUtils, plan, financeOptions);
+                rasClient, paymentManager, planFactory, jsonUtils, debtsChecker, stopServiceRunner, plan, financeOptions);
         
         SystemUser user = new SystemUser(USER_ID_1, USER_NAME_1, PROVIDER_USER_1);
         RasOperation operation = new RasOperation(Operation.GET, ResourceType.COMPUTE, USER_ID_1, PROVIDER_USER_1);
@@ -148,8 +155,11 @@ public class PrePaidPlanPluginTest {
         this.paymentManager = Mockito.mock(CreditsManager.class);
         Mockito.when(this.paymentManager.hasPaid(USER_ID_1, PROVIDER_USER_1)).thenReturn(false);
         
+        this.debtsChecker = Mockito.mock(DebtsPaymentChecker.class);
+        Mockito.when(this.debtsChecker.hasPaid(USER_ID_1, PROVIDER_USER_1)).thenReturn(false);
+        
         PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(PLAN_NAME, creditsDeductionWaitTime, objectHolder, accountingServiceClient,
-                rasClient, paymentManager, planFactory, jsonUtils, plan, financeOptions);
+                rasClient, paymentManager, planFactory, jsonUtils, debtsChecker, stopServiceRunner, plan, financeOptions);
         
         SystemUser user = new SystemUser(USER_ID_1, USER_NAME_1, PROVIDER_USER_1);
         RasOperation operation = new RasOperation(Operation.CREATE, ResourceType.COMPUTE, USER_ID_1, PROVIDER_USER_1);
@@ -165,11 +175,14 @@ public class PrePaidPlanPluginTest {
         Map<String, String> financeOptions = new HashMap<String, String>();
         financeOptions.put(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME, String.valueOf(creditsDeductionWaitTime));
         
-        this.userCredits = Mockito.mock(UserCredits.class);
-        this.objectHolder = Mockito.mock(InMemoryUsersHolder.class);
+        FinanceUser user = Mockito.mock(FinanceUser.class);
+        this.stopServiceRunner = Mockito.mock(StopServiceRunner.class);
+        
+        objectHolder = Mockito.mock(InMemoryUsersHolder.class);
+        Mockito.when(objectHolder.getUserById(USER_ID_1, PROVIDER_USER_1)).thenReturn(user);
         
         PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(PLAN_NAME, creditsDeductionWaitTime, objectHolder, accountingServiceClient,
-                rasClient, paymentManager, planFactory, jsonUtils, plan, financeOptions);
+                rasClient, paymentManager, planFactory, jsonUtils, debtsChecker, stopServiceRunner, plan, financeOptions);
         
         prePaidFinancePlugin.registerUser(new SystemUser(USER_ID_1, USER_NAME_1, PROVIDER_USER_1));
         
@@ -177,73 +190,6 @@ public class PrePaidPlanPluginTest {
         Mockito.verify(objectHolder).registerUser(USER_ID_1, PROVIDER_USER_1, PLAN_NAME);
     }
     
-    // test case: When calling the updateFinanceState method, it must get 
-    // the UserCredits for the given user, then update and save the credits state.
-    @Test
-    public void testUpdateFinanceState() throws InvalidParameterException, InternalServerErrorException {
-        Map<String, String> financeOptions = new HashMap<String, String>();
-        financeOptions.put(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME, String.valueOf(creditsDeductionWaitTime));
-        
-        this.userCredits = Mockito.mock(UserCredits.class);
-        this.objectHolder = Mockito.mock(InMemoryUsersHolder.class);
-        FinanceUser user = Mockito.mock(FinanceUser.class);
-        Mockito.when(user.getCredits()).thenReturn(userCredits);
-        
-        Mockito.when(objectHolder.getUserById(USER_ID_1, PROVIDER_USER_1)).thenReturn(user);
-        Map<String, String> financeState = new HashMap<String, String>();
-        financeState.put(PrePaidPlanPlugin.CREDITS_TO_ADD, "10.5");
-        
-        PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(PLAN_NAME, creditsDeductionWaitTime, objectHolder, accountingServiceClient,
-                rasClient, paymentManager, planFactory, jsonUtils, plan, financeOptions);
-
-        
-        prePaidFinancePlugin.updateUserFinanceState(new SystemUser(USER_ID_1, USER_NAME_1, PROVIDER_USER_1), financeState);
-
-        
-        Mockito.verify(userCredits).addCredits(10.5);
-    }
-    
-    // test case: When calling the updateFinanceState method and 
-    // a required state property is missing, it must throw an 
-    // InvalidParameterException.
-    @Test(expected = InvalidParameterException.class)
-    public void testUpdateFinanceStateMissingFinanceStateProperty() throws InvalidParameterException, InternalServerErrorException {
-        Map<String, String> financeOptions = new HashMap<String, String>();
-        financeOptions.put(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME, String.valueOf(creditsDeductionWaitTime));
-        
-        this.userCredits = Mockito.mock(UserCredits.class);
-        this.objectHolder = Mockito.mock(InMemoryUsersHolder.class);
-        
-        Map<String, String> financeState = new HashMap<String, String>();
-        
-        PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(PLAN_NAME, creditsDeductionWaitTime, objectHolder, accountingServiceClient,
-                rasClient, paymentManager, planFactory, jsonUtils, plan, financeOptions);
-
-        
-        prePaidFinancePlugin.updateUserFinanceState(new SystemUser(USER_ID_1, USER_NAME_1, PROVIDER_USER_1), financeState);
-    }
-    
-    // test case: When calling the updateFinanceState method and
-    // a required state property has an invalid value, it must throw an
-    // InvalidParameterException.
-    @Test(expected = InvalidParameterException.class)
-    public void testUpdateFinanceStateInvalidFinanceStateProperty() throws InvalidParameterException, InternalServerErrorException {
-        Map<String, String> financeOptions = new HashMap<String, String>();
-        financeOptions.put(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME, String.valueOf(creditsDeductionWaitTime));
-        
-        this.userCredits = Mockito.mock(UserCredits.class);
-        this.objectHolder = Mockito.mock(InMemoryUsersHolder.class);
-        
-        Map<String, String> financeState = new HashMap<String, String>();
-        financeState.put(PrePaidPlanPlugin.CREDITS_TO_ADD, "invalidproperty");
-        
-        PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(PLAN_NAME, creditsDeductionWaitTime, objectHolder, accountingServiceClient,
-                rasClient, paymentManager, planFactory, jsonUtils, plan, financeOptions);
-    
-        
-        prePaidFinancePlugin.updateUserFinanceState(new SystemUser(USER_ID_1, USER_NAME_1, PROVIDER_USER_1), financeState);
-    }
-
     // TODO documentation
     @Test
     public void testSetOptions() throws InvalidParameterException, InternalServerErrorException {
@@ -255,7 +201,7 @@ public class PrePaidPlanPluginTest {
         
         PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(PLAN_NAME, creditsDeductionWaitTime, 
                 objectHolder, accountingServiceClient, rasClient, paymentManager, planFactory, 
-                this.jsonUtils, this.plan);
+                this.jsonUtils, debtsChecker, stopServiceRunner, this.plan);
         
         Map<String, String> optionsBefore = prePaidFinancePlugin.getOptions();
         
@@ -288,7 +234,7 @@ public class PrePaidPlanPluginTest {
         
         PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(PLAN_NAME, creditsDeductionWaitTime, 
                 objectHolder, accountingServiceClient, rasClient, paymentManager, planFactory, 
-                this.jsonUtils, this.plan);
+                this.jsonUtils, debtsChecker, stopServiceRunner, this.plan);
         
         Map<String, String> optionsBefore = prePaidFinancePlugin.getOptions();
         
@@ -324,7 +270,7 @@ public class PrePaidPlanPluginTest {
         
         PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(PLAN_NAME, creditsDeductionWaitTime, 
                 objectHolder, accountingServiceClient, rasClient, paymentManager, planFactory, 
-                this.jsonUtils, null);
+                this.jsonUtils, debtsChecker, stopServiceRunner, null);
         
         // new options
         Map<String, String> financeOptions = new HashMap<String, String>();
@@ -357,7 +303,7 @@ public class PrePaidPlanPluginTest {
         
         PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(PLAN_NAME, creditsDeductionWaitTime, 
                 objectHolder, accountingServiceClient, rasClient, paymentManager, planFactory, 
-                this.jsonUtils, this.plan);
+                this.jsonUtils, debtsChecker, stopServiceRunner, this.plan);
         
         // new options
         Map<String, String> financeOptions = new HashMap<String, String>();
@@ -386,7 +332,7 @@ public class PrePaidPlanPluginTest {
 
         PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(PLAN_NAME, creditsDeductionWaitTime, 
                 objectHolder, accountingServiceClient, rasClient, paymentManager, planFactory, 
-                this.jsonUtils, this.plan);
+                this.jsonUtils, debtsChecker, stopServiceRunner, this.plan);
 
         Map<String, String> options = prePaidFinancePlugin.getOptions();
         

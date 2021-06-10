@@ -12,6 +12,7 @@ import cloud.fogbow.common.models.SystemUser;
 import cloud.fogbow.fs.api.parameters.AuthorizableUser;
 import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
 import cloud.fogbow.fs.constants.Messages;
+import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.plugins.PersistablePlanPlugin;
 import cloud.fogbow.fs.core.plugins.PlanPluginInstantiator;
 import cloud.fogbow.fs.core.util.list.ModifiedListException;
@@ -40,6 +41,7 @@ public class FinanceManager {
         objectHolder.registerPlanPlugin(plugin);
     }
 
+    // TODO this method should receive SystemUser and operation
     public boolean isAuthorized(AuthorizableUser user) throws FogbowException {
         String userToken = user.getUserToken();
         RSAPublicKey rasPublicKey = FsPublicKeysHolder.getInstance().getRasPublicKey();
@@ -57,6 +59,7 @@ public class FinanceManager {
                 break;
             } catch (ModifiedListException e) {
                 consumerId = planPlugins.startIterating();
+                // TODO test
             } catch (Exception e) {
                 planPlugins.stopIterating(consumerId);
                 throw e;
@@ -66,7 +69,8 @@ public class FinanceManager {
         return authorized;
     }
 
-    private boolean tryToAuthorize(MultiConsumerSynchronizedList<PersistablePlanPlugin> planPlugins, SystemUser authenticatedUser, RasOperation operation, Integer consumerId) 
+    private boolean tryToAuthorize(MultiConsumerSynchronizedList<PersistablePlanPlugin> planPlugins, 
+            SystemUser authenticatedUser, RasOperation operation, Integer consumerId) 
             throws InvalidParameterException, InternalServerErrorException, ModifiedListException {
         PersistablePlanPlugin plugin = planPlugins.getNext(consumerId);
         boolean authorized = false;
@@ -82,8 +86,7 @@ public class FinanceManager {
             plugin = planPlugins.getNext(consumerId);
         }
         
-        throw new InvalidParameterException(
-                String.format(Messages.Exception.UNMANAGED_USER, authenticatedUser.getId()));
+        return false;
     }
 
     public void startPlugins() throws InternalServerErrorException {
@@ -97,6 +100,7 @@ public class FinanceManager {
                 break;
             } catch (ModifiedListException e) {
                 consumerId = planPlugins.startIterating();
+                // TODO test
             } catch (Exception e) {
                 planPlugins.stopIterating(consumerId);
                 throw e;
@@ -125,6 +129,7 @@ public class FinanceManager {
                 tryToStop(planPlugins, consumerId);
                 planPlugins.stopIterating(consumerId);
                 break;
+                // TODO test
             } catch (ModifiedListException e) {
                 consumerId = planPlugins.startIterating();
             } catch (Exception e) {
@@ -190,14 +195,26 @@ public class FinanceManager {
         throw new InvalidParameterException(String.format(Messages.Exception.UNMANAGED_USER, user.getId()));
     }
 
+    // TODO we need to decide a standard for these methods signatures
+    // some receive userid + provider id, others receive systemuser
+    // TODO test
     public void removeUser(String userId, String provider)
             throws InvalidParameterException, InternalServerErrorException {
-        PersistablePlanPlugin plugin = getUserPlugin(userId, provider);
-        synchronized(plugin) {
-            plugin.purgeUser(new SystemUser(userId, userId, provider));
+        try {
+            getUserPlugin(userId, provider);
+            // TODO add message: user is still registered in a plan
+            throw new InternalServerErrorException();
+        } catch (InvalidParameterException e) {
+            InMemoryUsersHolder usersHolder = this.objectHolder.getInMemoryUsersHolder();
+            FinanceUser user = usersHolder.getUserById(userId, provider);
+            
+            synchronized(user) {
+                usersHolder.removeUser(userId, provider);
+            }
         }
     }
 
+    // TODO test
     public void unregisterUser(String userId, String provider) throws InvalidParameterException, InternalServerErrorException {
         PersistablePlanPlugin plugin = getUserPlugin(userId, provider);
         synchronized(plugin) {
@@ -205,6 +222,7 @@ public class FinanceManager {
         }
     }
 
+    // TODO test
     public void changePlan(String userId, String provider, String newPlanName) throws InvalidParameterException, InternalServerErrorException {
         PersistablePlanPlugin plugin = getUserPlugin(userId, provider);
         synchronized(plugin) {
@@ -214,16 +232,21 @@ public class FinanceManager {
 
     public void updateFinanceState(String userId, String provider, Map<String, String> financeState)
             throws InvalidParameterException, InternalServerErrorException {
-        PersistablePlanPlugin plugin = getUserPlugin(userId, provider);
-        synchronized(plugin) {
-            plugin.updateUserFinanceState(new SystemUser(userId, userId, provider), financeState);
+        InMemoryUsersHolder usersHolder = this.objectHolder.getInMemoryUsersHolder();
+        FinanceUser user = usersHolder.getUserById(userId, provider);
+        
+        synchronized(user) {
+            user.updateFinanceState(financeState);
+            usersHolder.saveUser(user);
         }
     }
 
     public String getFinanceStateProperty(String userId, String provider, String property) throws FogbowException {
-        PersistablePlanPlugin plugin = getUserPlugin(userId, provider);
-        synchronized(plugin) {
-            return plugin.getUserFinanceState(new SystemUser(userId, userId, provider), property);
+        InMemoryUsersHolder usersHolder = this.objectHolder.getInMemoryUsersHolder();
+        FinanceUser user = usersHolder.getUserById(userId, provider);
+        
+        synchronized(user) {
+            return user.getFinanceState(property);
         }
     }
 

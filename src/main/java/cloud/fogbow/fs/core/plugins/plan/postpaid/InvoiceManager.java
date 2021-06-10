@@ -55,7 +55,8 @@ public class InvoiceManager {
     }
 
     public void generateInvoiceForUser(String userId, String provider, 
-            Long paymentStartTime, Long paymentEndTime, List<Record> records) throws InternalServerErrorException, InvalidParameterException {
+            Long paymentStartTime, Long paymentEndTime, List<Record> records) 
+                    throws InternalServerErrorException, InvalidParameterException {
         FinanceUser user = this.userHolder.getUserById(userId, provider);
         
         synchronized(user) {
@@ -77,6 +78,33 @@ public class InvoiceManager {
                 this.userHolder.saveUser(user);
             }
         }
+    }
+    
+    // TODO test
+    public void generateLastInvoiceForUser(String userId, String provider, Long paymentStartTime, 
+            Long paymentEndTime, List<Record> records) 
+            throws InternalServerErrorException, InvalidParameterException {
+        FinanceUser user = this.userHolder.getUserById(userId, provider);
+        
+        synchronized(user) {
+            synchronized(financePlan) {
+                this.invoiceBuilder.setUserId(userId);
+                this.invoiceBuilder.setProviderId(provider);
+                
+                // TODO What is the expected behavior for the empty records list case? 
+                for (Record record : records) {
+                    addRecordToInvoice(record, financePlan, paymentStartTime, paymentEndTime);
+                }
+                
+                Invoice invoice = invoiceBuilder.buildInvoice();
+                invoiceBuilder.reset();
+                
+                user.addInvoiceAsDebt(invoice);                
+                user.setProperty(FinanceUser.USER_LAST_BILLING_TIME, String.valueOf(paymentEndTime));
+
+                this.userHolder.saveUser(user);
+            }
+        }        
     }
     
     private void addRecordToInvoice(Record record, FinancePlan plan, 

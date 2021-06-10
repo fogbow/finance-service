@@ -23,6 +23,7 @@ import cloud.fogbow.fs.core.models.OperationType;
 import cloud.fogbow.fs.core.plugins.authorization.FsOperation;
 import cloud.fogbow.fs.core.util.SynchronizationManager;
 
+// TODO refactor logs to include provider id
 public class ApplicationFacade {
 	
 	private static Logger LOGGER = Logger.getLogger(ApplicationFacade.class);
@@ -92,10 +93,13 @@ public class ApplicationFacade {
     }
 	
     public void addSelf(String userToken, String planName) throws FogbowException {
-        // TODO add logging
+        LOGGER.info(Messages.Log.RECEIVED_ADD_SELF);
         
         RSAPublicKey asPublicKey = FsPublicKeysHolder.getInstance().getAsPublicKey();
         SystemUser user = AuthenticationUtil.authenticate(asPublicKey, userToken);
+        
+        LOGGER.info(String.format(Messages.Log.ADDING_SELF, user.getId(), 
+                user.getIdentityProviderId(), planName));
         
         synchronizationManager.startOperation();
         
@@ -134,11 +138,15 @@ public class ApplicationFacade {
 		}
 	}
 	
+	// TODO maybe change name to unregisterSelf
 	public void removeSelf(String userToken) throws FogbowException {
-	    // TODO add logging 
+	    LOGGER.info(Messages.Log.RECEIVED_REMOVE_SELF);
 	    
         RSAPublicKey asPublicKey = FsPublicKeysHolder.getInstance().getAsPublicKey();
         SystemUser user = AuthenticationUtil.authenticate(asPublicKey, userToken);
+        
+        LOGGER.info(String.format(Messages.Log.REMOVING_SELF, user.getId(), 
+                user.getIdentityProviderId()));
         
         synchronizationManager.startOperation();
         
@@ -154,7 +162,6 @@ public class ApplicationFacade {
         LOGGER.info(String.format(Messages.Log.CHANGING_USER_PLAN, userId));
         
         authenticateAndAuthorize(userToken, new FsOperation(OperationType.CHANGE_USER_PLAN));
-        
         synchronizationManager.startOperation();
         
         try {
@@ -165,10 +172,13 @@ public class ApplicationFacade {
     }
 
     public void changeSelfPlan(String userToken, String newPlanName) throws FogbowException {
-        // TODO add logging 
+        LOGGER.info(Messages.Log.RECEIVED_CHANGE_SELF_PLAN);
         
         RSAPublicKey asPublicKey = FsPublicKeysHolder.getInstance().getAsPublicKey();
         SystemUser user = AuthenticationUtil.authenticate(asPublicKey, userToken);
+        
+        LOGGER.info(String.format(Messages.Log.CHANGING_SELF_PLAN, user.getId(), 
+                user.getIdentityProviderId(), newPlanName));
         
         synchronizationManager.startOperation();
         

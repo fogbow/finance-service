@@ -46,12 +46,6 @@ public interface PlanPlugin {
     public void stopThreads();
     
     // TODO documentation
-    public String getUserFinanceState(SystemUser user, String property) throws InvalidParameterException, InternalServerErrorException;
-    
-    // TODO documentation
-    public void updateUserFinanceState(SystemUser user, Map<String, String> financeState) throws InternalServerErrorException, InvalidParameterException;
-    
-    // TODO documentation
     public boolean isAuthorized(SystemUser user, RasOperation operation) throws InvalidParameterException, InternalServerErrorException;
     
     // TODO documentation
