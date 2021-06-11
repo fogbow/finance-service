@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.HashMap;
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -118,6 +119,52 @@ public class StopServiceRunnerTest {
         Mockito.verify(rasClient, Mockito.times(1)).pauseResourcesByUser(ID_USER_2);
     }
     
+    // test case: When calling the method pauseResourcesForUser, it must
+    // call the RasClient to pause the resources and update the user state.
+    @Test
+    public void testPauseResourcesForUser() 
+            throws ModifiedListException, FogbowException {
+        setUpDatabase();
+        
+        rasClient = Mockito.mock(RasClient.class);
+        
+        stopServiceRunner = new StopServiceRunner(PLAN_NAME, stopServiceWaitTime ,objectHolder, 
+                paymentManager, rasClient, debtsChecker);
+        
+        stopServiceRunner.pauseResourcesForUser(user1);
+        
+        assertTrue(this.user1.stoppedResources());
+        Mockito.verify(rasClient).pauseResourcesByUser(ID_USER_1);
+        Mockito.verify(objectHolder).saveUser(user1);
+    }
+    
+    // test case: When calling the method pauseResourcesForUser and
+    // the RasClient throws a FogbowException, it must catch the exception
+    // and throw an InternalServerErrorException. Also, the user state
+    // must remain unchanged.
+    @Test
+    public void testPauseResourcesForUserRasClientThrowsException() 
+            throws ModifiedListException, FogbowException {
+        setUpDatabase();
+        
+        rasClient = Mockito.mock(RasClient.class);
+        Mockito.doThrow(new FogbowException("message")).when(rasClient).pauseResourcesByUser(ID_USER_1);
+        
+        stopServiceRunner = new StopServiceRunner(PLAN_NAME, stopServiceWaitTime ,objectHolder, 
+                paymentManager, rasClient, debtsChecker);
+        
+        try {
+            stopServiceRunner.pauseResourcesForUser(user1);
+            Assert.fail("pauseResourcesForUser is expected to throw InternalServerErrorException.");
+        } catch (InternalServerErrorException e) {
+            
+        }
+        
+        assertFalse(this.user1.stoppedResources());
+        Mockito.verify(rasClient).pauseResourcesByUser(ID_USER_1);
+        Mockito.verify(objectHolder, Mockito.never()).saveUser(user1);
+    }
+    
     // test case: When calling the method doRun, it must get the
     // list of users from the DatabaseManager. For each user,
     // if the user has paid and its resources have not been resumed yet,
@@ -199,7 +246,52 @@ public class StopServiceRunnerTest {
         Mockito.verify(rasClient, Mockito.times(1)).resumeResourcesByUser(ID_USER_2);
     }
     
-
+    // test case: When calling the method resumeResourcesForUser, it must
+    // call the RasClient to resume the resources and update the user state.
+    @Test
+    public void testResumeResourcesForUser() 
+            throws ModifiedListException, FogbowException {
+        setUpDatabaseResumeResources();
+        
+        rasClient = Mockito.mock(RasClient.class);
+        
+        stopServiceRunner = new StopServiceRunner(PLAN_NAME, stopServiceWaitTime, objectHolder, 
+                paymentManager, rasClient, debtsChecker);
+        
+        stopServiceRunner.resumeResourcesForUser(user1);
+        
+        assertFalse(this.user1.stoppedResources());
+        Mockito.verify(rasClient).resumeResourcesByUser(ID_USER_1);
+        Mockito.verify(objectHolder).saveUser(user1);
+    }
+    
+    // test case: When calling the method resumeResourcesForUser and
+    // the RasClient throws a FogbowException, it must catch the exception
+    // and throw an InternalServerErrorException. Also, the user state
+    // must remain unchanged.
+    @Test
+    public void testResumeResourcesForUserRasClientThrowsException() 
+            throws ModifiedListException, FogbowException {
+        setUpDatabaseResumeResources();
+        
+        rasClient = Mockito.mock(RasClient.class);
+        Mockito.doThrow(new FogbowException("message")).when(rasClient).resumeResourcesByUser(ID_USER_1);
+        
+        stopServiceRunner = new StopServiceRunner(PLAN_NAME, stopServiceWaitTime, objectHolder, 
+                paymentManager, rasClient, debtsChecker);
+        
+        try {
+            stopServiceRunner.resumeResourcesForUser(user1);
+            Assert.fail("resumeResourcesForUser is expected to throw InternalServerErrorException.");
+        } catch (InternalServerErrorException e) {
+            
+        }
+        
+        assertTrue(this.user1.stoppedResources());
+        Mockito.verify(rasClient).resumeResourcesByUser(ID_USER_1);
+        Mockito.verify(objectHolder, Mockito.never()).saveUser(user1);
+    }
+    
     // test case: When calling the method doRun and the user payment
     // state check fails, it must skip the process for the current user and 
     // continue checking the other users' states.

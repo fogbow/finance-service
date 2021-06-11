@@ -93,9 +93,7 @@ public class StopServiceRunner extends StoppableRunner {
         }
     }
 
-    // TODO test
     public void pauseResourcesForUser(FinanceUser user) throws InvalidParameterException, InternalServerErrorException {
-        // TODO refactor
         try {
             this.rasClient.pauseResourcesByUser(user.getId());
         } catch (FogbowException e) {
@@ -116,9 +114,7 @@ public class StopServiceRunner extends StoppableRunner {
         }
     }
 
-    // TODO test
     public void resumeResourcesForUser(FinanceUser user) throws InternalServerErrorException, InvalidParameterException {
-        // TODO refactor
         try {
             this.rasClient.resumeResourcesByUser(user.getId());
         } catch (FogbowException e) {
