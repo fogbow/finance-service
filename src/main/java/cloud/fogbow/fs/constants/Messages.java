@@ -41,6 +41,7 @@ public class Messages {
 		public static final String UNMANAGED_USER = "The user %s is not managed by any finance plugin.";
 		public static final String USER_ALREADY_EXISTS = "User %s.%s already exists.";
 		public static final String USER_DOES_NOT_HAVE_ENOUGH_PERMISSION = "User does not have permission to perform operation.";
+		public static final String USER_HAS_NOT_PAID_ALL_INVOICES = "User '%s', provider '%s', has not paid all invoices.";
 		public static final String USER_IS_ALREADY_SUBSCRIBED_TO_A_PLAN = "User '%s' is already subscribed to plan '%s'.";
 		public static final String USER_IS_NOT_ADMIN = "Not-admin user trying to perform admin-only operation.";
 		public static final String USER_IS_NOT_SUBSCRIBED_TO_ANY_PLAN = "User '%s' is not subscribed to any plan.";

@@ -44,6 +44,7 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
     // TODO documentation
     public static final String FINANCE_PLAN_RULES_FILE_PATH = "finance_plan_file_path";
     public static final String FINANCE_PLAN_RULES = "financeplan";
+    public static final String PLAN_NAME_COLUMN_NAME = "name";
     public static final String CREDITS_DEDUCTION_WAIT_TIME_COLUMN_NAME = "credits_deduction_wait_time";
 
     @Transient
@@ -88,8 +89,7 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
     @OneToOne(cascade={CascadeType.ALL})
     private FinancePlan plan;
     
-    // TODO constant
-    @Column(name = "name")
+    @Column(name = PLAN_NAME_COLUMN_NAME)
     private String name;
 
     public PrePaidPlanPlugin() {
@@ -128,18 +128,19 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
     PrePaidPlanPlugin(String name, long creditsDeductionWaitTime, InMemoryUsersHolder usersHolder, 
             AccountingServiceClient accountingServiceClient, RasClient rasClient, CreditsManager invoiceManager, 
             FinancePlanFactory planFactory, JsonUtils jsonUtils, DebtsPaymentChecker debtsChecker, 
-            StopServiceRunner stopServiceRunner, FinancePlan financePlan, Map<String, String> financeOptions) 
-                    throws InvalidParameterException, InternalServerErrorException {
+            PaymentRunner paymentRunner, StopServiceRunner stopServiceRunner, FinancePlan financePlan, 
+            Map<String, String> financeOptions) throws InvalidParameterException, InternalServerErrorException {
         this(name, creditsDeductionWaitTime, usersHolder, accountingServiceClient, rasClient, invoiceManager, 
-                planFactory, jsonUtils, debtsChecker, stopServiceRunner, financePlan);
+                planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, financePlan);
         
         setOptions(financeOptions);
     }
     
     PrePaidPlanPlugin(String name, long creditsDeductionWaitTime, InMemoryUsersHolder usersHolder, 
             AccountingServiceClient accountingServiceClient, RasClient rasClient, CreditsManager invoiceManager, 
-            FinancePlanFactory planFactory, JsonUtils jsonUtils, DebtsPaymentChecker debtsChecker, StopServiceRunner stopServiceRunner, 
-            FinancePlan financePlan) throws InvalidParameterException, InternalServerErrorException {
+            FinancePlanFactory planFactory, JsonUtils jsonUtils, DebtsPaymentChecker debtsChecker, 
+            PaymentRunner paymentRunner, StopServiceRunner stopServiceRunner, FinancePlan financePlan) 
+                    throws InvalidParameterException, InternalServerErrorException {
         this.name = name;
         this.creditsDeductionWaitTime = creditsDeductionWaitTime;
         this.usersHolder = usersHolder;
@@ -149,6 +150,7 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
         this.creditsManager = invoiceManager;
         this.jsonUtils = jsonUtils;
         this.debtsChecker = debtsChecker;
+        this.paymentRunner = paymentRunner;
         this.stopServiceRunner = stopServiceRunner;
         this.plan = financePlan;
         this.threadsAreRunning = false;
@@ -263,7 +265,6 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
         return threadsAreRunning;
     }
 
-    // TODO update test
     @Override
     public boolean isAuthorized(SystemUser user, RasOperation operation) throws InvalidParameterException, InternalServerErrorException {
         if (operation.getOperationType().equals(Operation.CREATE)) {
@@ -309,7 +310,6 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
         this.usersHolder.removeUser(systemUser.getId(), systemUser.getIdentityProviderId());
     }
 
-    // TODO test
     @Override
     public void changePlan(SystemUser user, String newPlanName) throws InternalServerErrorException, InvalidParameterException {
         this.usersHolder.changePlan(user.getId(), user.getIdentityProviderId(), newPlanName);
@@ -327,7 +327,6 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
         }
     }
     
-    // TODO test
     @Override
     public void setUp(Object... params) throws ConfigurationErrorException {
         InMemoryUsersHolder usersHolder = (InMemoryUsersHolder) params[0];

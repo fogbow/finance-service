@@ -42,6 +42,7 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
     public static final String FINANCE_PLAN_RULES = "financeplan";
     public static final String USER_BILLING_TIME_COLUMN_NAME = "user_billing_time";
     public static final String INVOICE_WAIT_TIME_COLUMN_NAME = "invoice_wait_time";
+    public static final String PLAN_NAME_COLUMN_NAME = "name";
     public static final String FINANCE_PLAN_RULES_FILE_PATH = "finance_plan_file_path";
 
     @Transient
@@ -89,7 +90,7 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
     @OneToOne(cascade={CascadeType.ALL})
     private FinancePlan plan;
 
-    @Column(name = "name")
+    @Column(name = PLAN_NAME_COLUMN_NAME)
     private String name;
     
     public PostPaidPlanPlugin() {
@@ -126,16 +127,17 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
     
     PostPaidPlanPlugin(String name, long userBillingInterval, long invoiceWaitTime, InMemoryUsersHolder usersHolder, 
             AccountingServiceClient accountingServiceClient, RasClient rasClient, InvoiceManager invoiceManager, 
-            FinancePlanFactory planFactory, JsonUtils jsonUtils, DebtsPaymentChecker debtsChecker, StopServiceRunner stopServiceRunner, 
-            FinancePlan financePlan, Map<String, String> financeOptions) throws InvalidParameterException, InternalServerErrorException {
+            FinancePlanFactory planFactory, JsonUtils jsonUtils, DebtsPaymentChecker debtsChecker, PaymentRunner paymentRunner,
+            StopServiceRunner stopServiceRunner, FinancePlan financePlan, Map<String, String> financeOptions) 
+                    throws InvalidParameterException, InternalServerErrorException {
         this(name, userBillingInterval, invoiceWaitTime, usersHolder, accountingServiceClient, rasClient, invoiceManager, 
-                planFactory, jsonUtils, debtsChecker, stopServiceRunner, financePlan);
+                planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, financePlan);
     }
     
     PostPaidPlanPlugin(String name, long userBillingInterval, long invoiceWaitTime, InMemoryUsersHolder usersHolder, 
             AccountingServiceClient accountingServiceClient, RasClient rasClient, InvoiceManager invoiceManager, 
-            FinancePlanFactory planFactory, JsonUtils jsonUtils, DebtsPaymentChecker debtsChecker, StopServiceRunner stopServiceRunner, 
-            FinancePlan financePlan) 
+            FinancePlanFactory planFactory, JsonUtils jsonUtils, DebtsPaymentChecker debtsChecker, PaymentRunner paymentRunner, 
+            StopServiceRunner stopServiceRunner, FinancePlan financePlan) 
                     throws InvalidParameterException, InternalServerErrorException {
         this.name = name;
         this.userBillingTime = userBillingInterval;
@@ -148,6 +150,7 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
         this.jsonUtils = jsonUtils;
         this.plan = financePlan;
         this.debtsChecker = debtsChecker;
+        this.paymentRunner = paymentRunner;
         this.stopServiceRunner = stopServiceRunner;
         this.threadsAreRunning = false;
     }
@@ -280,7 +283,6 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
         }
     }
 
-    // TODO test
     @Override
     public void registerUser(SystemUser systemUser) throws InternalServerErrorException, InvalidParameterException {
         this.usersHolder.registerUser(systemUser.getId(), systemUser.getIdentityProviderId(), this.name);
@@ -301,7 +303,6 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
         this.usersHolder.removeUser(systemUser.getId(), systemUser.getIdentityProviderId()); 
     }
 
-    // TODO test
     @Override
     public void changePlan(SystemUser systemUser, String newPlanName) throws InternalServerErrorException, InvalidParameterException {
         FinanceUser user = this.usersHolder.getUserById(systemUser.getId(), systemUser.getIdentityProviderId());
@@ -311,7 +312,8 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
                 this.paymentRunner.runLastPaymentForUser(systemUser.getId(), systemUser.getIdentityProviderId());
                 this.usersHolder.changePlan(systemUser.getId(), systemUser.getIdentityProviderId(), newPlanName);
             } else {
-                // FIXME error
+                throw new InvalidParameterException(
+                        String.format(Messages.Exception.USER_HAS_NOT_PAID_ALL_INVOICES, user.getId(), user.getProvider()));
             }
         }
     }
@@ -333,7 +335,6 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
         }
     }
     
-    // TODO update test
     @Override
     public boolean isAuthorized(SystemUser user, RasOperation operation) 
             throws InvalidParameterException, InternalServerErrorException {
@@ -349,7 +350,6 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
         return true;
     }
 
-    // TODO test
     @Override
     public void setUp(Object... params) throws ConfigurationErrorException {
         InMemoryUsersHolder objectsHolder = (InMemoryUsersHolder) params[0];
