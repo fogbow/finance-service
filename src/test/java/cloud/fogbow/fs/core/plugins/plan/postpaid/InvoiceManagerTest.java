@@ -1,6 +1,5 @@
 package cloud.fogbow.fs.core.plugins.plan.postpaid;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -57,11 +56,11 @@ public class InvoiceManagerTest {
     private FinancePlan financePlan;
     private Invoice invoiceToAdd;
     
-    // test case: When calling the startPaymentProcess method, it must
+    // test case: When calling the generateInvoiceForUser method, it must
     // collect the user records and generate an Invoice using a 
     // InvoiceBuilder properly.
     @Test
-    public void testStartPaymentProcess() throws InternalServerErrorException, InvalidParameterException {
+    public void testGenerateInvoiceForUser() throws InternalServerErrorException, InvalidParameterException {
         setUpInvoiceData();
         
         InvoiceManager invoiceManager = new InvoiceManager(objectHolder, resourceItemFactory, 
@@ -79,12 +78,12 @@ public class InvoiceManagerTest {
         Mockito.verify(this.objectHolder).saveUser(user1);
     }
     
-    // test case: When calling the startPaymentProcess method, 
+    // test case: When calling the generateInvoiceForUser method, 
     // if the ResourceItemFactory throws an exception when generating
     // a ResourceItem from a Record, the method must throw an
     // InternalServerErrorException.
     @Test(expected = InternalServerErrorException.class)
-    public void testStartPaymentProcessErrorOnGettingItemFromRecord() throws InvalidParameterException, 
+    public void testGenerateInvoiceForUserErrorOnGettingItemFromRecord() throws InvalidParameterException, 
     InternalServerErrorException {
         setUpDataStructures();
         setUpErrorResourceItemFactory();
@@ -94,12 +93,12 @@ public class InvoiceManagerTest {
         invoiceManager.generateInvoiceForUser(USER_ID_1, PROVIDER_ID_1, invoiceStartTime, invoiceEndTime, this.records);
     }
     
-    // test case: When calling the startPaymentProcess method, 
+    // test case: When calling the generateInvoiceForUser method, 
     // if the FinancePlan throws an exception when getting the 
     // financial value for an item, the method must throw an
     // InternalServerErrorException.
     @Test(expected = InternalServerErrorException.class)
-    public void testStartPaymentProcessErrorOnGettingValueFromPlan() throws InvalidParameterException, 
+    public void testGenerateInvoiceForUserErrorOnGettingValueFromPlan() throws InvalidParameterException, 
     InternalServerErrorException {
         setUpDataStructures();
         setUpErrorFinancePlan();
@@ -107,6 +106,58 @@ public class InvoiceManagerTest {
         InvoiceManager invoiceManager = new InvoiceManager(objectHolder, resourceItemFactory, invoiceBuilder, financePlan);
         
         invoiceManager.generateInvoiceForUser(USER_ID_1, PROVIDER_ID_1, invoiceStartTime, invoiceEndTime, this.records);
+    }
+    
+    // test case: When calling the generateLastInvoiceForUser method, it must
+    // collect the user records and generate an Invoice using a 
+    // InvoiceBuilder properly.
+    @Test
+    public void testGenerateLastInvoiceForUser() throws InternalServerErrorException, InvalidParameterException {
+        setUpInvoiceData();
+        
+        InvoiceManager invoiceManager = new InvoiceManager(objectHolder, resourceItemFactory, 
+                invoiceBuilder, financePlan);
+        
+        invoiceManager.generateLastInvoiceForUser(USER_ID_1, PROVIDER_ID_1, invoiceStartTime, invoiceEndTime, this.records);
+        
+        Mockito.verify(this.invoiceBuilder).setUserId(USER_ID_1);
+        Mockito.verify(this.invoiceBuilder).setProviderId(PROVIDER_ID_1);
+        Mockito.verify(this.invoiceBuilder).addItem(item1, ITEM_1_VALUE, ITEM_1_TIME);
+        Mockito.verify(this.invoiceBuilder).addItem(item2, ITEM_2_VALUE, ITEM_2_TIME);
+        Mockito.verify(this.objectHolder).getUserById(USER_ID_1, PROVIDER_ID_1);
+        Mockito.verify(this.user1).addInvoiceAsDebt(invoiceToAdd);
+        Mockito.verify(this.user1).setProperty(FinanceUser.USER_LAST_BILLING_TIME, String.valueOf(invoiceEndTime));
+        Mockito.verify(this.objectHolder).saveUser(user1);
+    }
+    
+    // test case: When calling the generateLastInvoiceForUser method, 
+    // if the ResourceItemFactory throws an exception when generating
+    // a ResourceItem from a Record, the method must throw an
+    // InternalServerErrorException.
+    @Test(expected = InternalServerErrorException.class)
+    public void testGenerateLastInvoiceForUserErrorOnGettingItemFromRecord() throws InvalidParameterException, 
+    InternalServerErrorException {
+        setUpDataStructures();
+        setUpErrorResourceItemFactory();
+        
+        InvoiceManager invoiceManager = new InvoiceManager(objectHolder, resourceItemFactory, invoiceBuilder, financePlan);
+        
+        invoiceManager.generateLastInvoiceForUser(USER_ID_1, PROVIDER_ID_1, invoiceStartTime, invoiceEndTime, this.records);
+    }
+    
+    // test case: When calling the generateLastInvoiceForUser method, 
+    // if the FinancePlan throws an exception when getting the 
+    // financial value for an item, the method must throw an
+    // InternalServerErrorException.
+    @Test(expected = InternalServerErrorException.class)
+    public void testGenerateLastInvoiceForUserErrorOnGettingValueFromPlan() throws InvalidParameterException, 
+    InternalServerErrorException {
+        setUpDataStructures();
+        setUpErrorFinancePlan();
+        
+        InvoiceManager invoiceManager = new InvoiceManager(objectHolder, resourceItemFactory, invoiceBuilder, financePlan);
+        
+        invoiceManager.generateLastInvoiceForUser(USER_ID_1, PROVIDER_ID_1, invoiceStartTime, invoiceEndTime, this.records);
     }
 
     // test case: When calling the hasPaid method, it must check 
@@ -124,41 +175,6 @@ public class InvoiceManagerTest {
         assertTrue(invoiceManager.hasPaid(USER_ID_1, PROVIDER_ID_1));
         assertFalse(invoiceManager.hasPaid(USER_ID_2, PROVIDER_ID_2));
         assertTrue(invoiceManager.hasPaid(USER_ID_3, PROVIDER_ID_3));
-    }
-    
-    // test case: When calling the getUserFinanceState method using the 
-    // property ALL_USER_INVOICES, it must get all the user's invoices and,
-    // for each invoice, generate a representing string. Then, return a 
-    // concatenation of the strings.
-    @Test
-    public void testGetUserFinanceStateAllInvoices() throws InvalidParameterException, InternalServerErrorException {
-        setUpInvoiceData();
-        
-        InvoiceManager invoiceManager = new InvoiceManager(objectHolder, resourceItemFactory, invoiceBuilder, financePlan);
-        
-        String user1State = invoiceManager.getUserFinanceState(USER_ID_1, PROVIDER_ID_1, 
-                InvoiceManager.ALL_USER_INVOICES_PROPERTY_NAME);
-        String user2State = invoiceManager.getUserFinanceState(USER_ID_2, PROVIDER_ID_2, 
-                InvoiceManager.ALL_USER_INVOICES_PROPERTY_NAME);
-        String user3State = invoiceManager.getUserFinanceState(USER_ID_3, PROVIDER_ID_3, 
-                InvoiceManager.ALL_USER_INVOICES_PROPERTY_NAME);
-        
-        assertEquals("[" + String.join(InvoiceManager.PROPERTY_VALUES_SEPARATOR, 
-                INVOICE_1_JSON_REPR, INVOICE_2_JSON_REPR) + "]", user1State);
-        assertEquals("[" + String.join(InvoiceManager.PROPERTY_VALUES_SEPARATOR, 
-                INVOICE_3_JSON_REPR, INVOICE_4_JSON_REPR)+ "]", user2State);
-        assertEquals("[]", user3State);
-    }
-    
-    // test case: When calling the getUserFinanceState method using an
-    // unknown property, it must throw an InvalidParameterException.
-    @Test(expected = InvalidParameterException.class)
-    public void testGetUserFinanceStateUnknownProperty() throws InvalidParameterException, InternalServerErrorException {
-        setUpInvoiceData();
-        
-        InvoiceManager invoiceManager = new InvoiceManager(objectHolder, resourceItemFactory, invoiceBuilder, financePlan);
-        
-        invoiceManager.getUserFinanceState(USER_ID_1, PROVIDER_ID_1, "unknownProperty");
     }
     
     private void setUpInvoiceData() throws InvalidParameterException, InternalServerErrorException {

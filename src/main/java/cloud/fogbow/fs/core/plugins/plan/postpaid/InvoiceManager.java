@@ -1,11 +1,9 @@
 package cloud.fogbow.fs.core.plugins.plan.postpaid;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
-import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.InMemoryUsersHolder;
 import cloud.fogbow.fs.core.models.FinancePlan;
 import cloud.fogbow.fs.core.models.FinanceUser;
@@ -16,10 +14,6 @@ import cloud.fogbow.fs.core.util.accounting.Record;
 import cloud.fogbow.fs.core.util.accounting.RecordUtils;
 
 public class InvoiceManager {
-    // TODO documentation
-    public static final String PROPERTY_VALUES_SEPARATOR = ",";
-    public static final String ALL_USER_INVOICES_PROPERTY_NAME = "ALL_USER_INVOICES";
-    
     private InMemoryUsersHolder userHolder;
     private RecordUtils resourceItemFactory;
     private InvoiceBuilder invoiceBuilder;
@@ -61,26 +55,12 @@ public class InvoiceManager {
         
         synchronized(user) {
             synchronized(financePlan) {
-                this.invoiceBuilder.setUserId(userId);
-                this.invoiceBuilder.setProviderId(provider);
-                
-                // TODO What is the expected behavior for the empty records list case? 
-                for (Record record : records) {
-                    addRecordToInvoice(record, financePlan, paymentStartTime, paymentEndTime);
-                }
-                
-                Invoice invoice = invoiceBuilder.buildInvoice();
-                invoiceBuilder.reset();
-                
-                user.addInvoice(invoice);
-                user.setProperty(FinanceUser.USER_LAST_BILLING_TIME, String.valueOf(paymentEndTime));
-
-                this.userHolder.saveUser(user);
+                boolean lastInvoice = false;
+                generateInvoiceAndUpdateUser(userId, provider, paymentStartTime, paymentEndTime, records, user, lastInvoice);
             }
         }
     }
-    
-    // TODO test
+
     public void generateLastInvoiceForUser(String userId, String provider, Long paymentStartTime, 
             Long paymentEndTime, List<Record> records) 
             throws InternalServerErrorException, InvalidParameterException {
@@ -88,23 +68,40 @@ public class InvoiceManager {
         
         synchronized(user) {
             synchronized(financePlan) {
-                this.invoiceBuilder.setUserId(userId);
-                this.invoiceBuilder.setProviderId(provider);
-                
-                // TODO What is the expected behavior for the empty records list case? 
-                for (Record record : records) {
-                    addRecordToInvoice(record, financePlan, paymentStartTime, paymentEndTime);
-                }
-                
-                Invoice invoice = invoiceBuilder.buildInvoice();
-                invoiceBuilder.reset();
-                
-                user.addInvoiceAsDebt(invoice);                
-                user.setProperty(FinanceUser.USER_LAST_BILLING_TIME, String.valueOf(paymentEndTime));
-
-                this.userHolder.saveUser(user);
+                boolean lastInvoice = true;
+                generateInvoiceAndUpdateUser(userId, provider, paymentStartTime, paymentEndTime, records, user, lastInvoice);
             }
         }        
+    }
+
+    private void generateInvoiceAndUpdateUser(String userId, String provider, Long paymentStartTime,
+            Long paymentEndTime, List<Record> records, FinanceUser user, boolean lastInvoice)
+            throws InternalServerErrorException, InvalidParameterException {
+        Invoice invoice = generateInvoice(userId, provider, paymentStartTime, paymentEndTime, records);
+        
+        if (lastInvoice) {
+            user.addInvoiceAsDebt(invoice);                
+        } else { 
+            user.addInvoice(invoice);
+        }
+            
+        user.setProperty(FinanceUser.USER_LAST_BILLING_TIME, String.valueOf(paymentEndTime));
+        this.userHolder.saveUser(user);
+    }
+    
+    private Invoice generateInvoice(String userId, String provider, Long paymentStartTime, Long paymentEndTime,
+            List<Record> records) throws InternalServerErrorException {
+        this.invoiceBuilder.setUserId(userId);
+        this.invoiceBuilder.setProviderId(provider);
+        
+        // TODO What is the expected behavior for the empty records list case? 
+        for (Record record : records) {
+            addRecordToInvoice(record, financePlan, paymentStartTime, paymentEndTime);
+        }
+        
+        Invoice invoice = invoiceBuilder.buildInvoice();
+        invoiceBuilder.reset();
+        return invoice;
     }
     
     private void addRecordToInvoice(Record record, FinancePlan plan, 
@@ -118,30 +115,6 @@ public class InvoiceManager {
         } catch (InvalidParameterException e) {
             throw new InternalServerErrorException(e.getMessage());
         }
-    }
-
-    public String getUserFinanceState(String userId, String provider, String property) throws InvalidParameterException, InternalServerErrorException {
-        String propertyValue = "";
-        
-        if (property.equals(ALL_USER_INVOICES_PROPERTY_NAME)) {
-            List<String> invoiceJsonReps = new ArrayList<String>();
-            FinanceUser user = this.userHolder.getUserById(userId, provider);
-            
-            synchronized (user) {
-                List<Invoice> userInvoices = user.getInvoices();
-
-                for (Invoice invoice : userInvoices) {
-                    String invoiceJson = invoice.toString();
-                    invoiceJsonReps.add(invoiceJson);
-                }
-
-                propertyValue = "[" + String.join(PROPERTY_VALUES_SEPARATOR, invoiceJsonReps) + "]";
-            }
-        } else {
-            throw new InvalidParameterException(String.format(Messages.Exception.UNKNOWN_FINANCE_PROPERTY, property));
-        }
-        
-        return propertyValue;
     }
     
     public void setPlan(FinancePlan financePlan) {
