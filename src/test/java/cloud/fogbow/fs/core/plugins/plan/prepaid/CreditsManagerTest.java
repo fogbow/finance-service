@@ -1,6 +1,5 @@
 package cloud.fogbow.fs.core.plugins.plan.prepaid;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -72,49 +71,6 @@ public class CreditsManagerTest {
         assertTrue(creditsManager.hasPaid(USER_ID1, PROVIDER1));
         assertTrue(creditsManager.hasPaid(USER_ID2, PROVIDER2));
         assertFalse(creditsManager.hasPaid(USER_ID3, PROVIDER3));
-    }
-    
-    // test case: When calling the getUserFinanceState, if the given property
-    // is DefaultCreditsManager.USER_CREDITS, it must return a String representing
-    // the value of the given user credits.
-    @Test
-    public void testGetUserFinanceStateUserCreditsProperty() throws InvalidParameterException, InternalServerErrorException {
-        this.objectHolder = Mockito.mock(InMemoryUsersHolder.class);
-        this.userCredits1 = Mockito.mock(UserCredits.class);
-        this.userCredits2 = Mockito.mock(UserCredits.class);
-        this.userCredits3 = Mockito.mock(UserCredits.class);
-        
-        Mockito.when(userCredits1.getCreditsValue()).thenReturn(10.51);
-        Mockito.when(userCredits2.getCreditsValue()).thenReturn(0.0);
-        Mockito.when(userCredits3.getCreditsValue()).thenReturn(-1.113);
-        
-        setUpRecords();
-        setUpPlan();
-        setUpDatabase();
-        
-        CreditsManager creditsManager = new CreditsManager(objectHolder, financePlan, recordUtils);
-        
-        String returnedPropertyUser1 = creditsManager.getUserFinanceState(USER_ID1, PROVIDER1, 
-                CreditsManager.USER_CREDITS);
-        String returnedPropertyUser2 = creditsManager.getUserFinanceState(USER_ID2, PROVIDER2, 
-                CreditsManager.USER_CREDITS);
-        String returnedPropertyUser3 = creditsManager.getUserFinanceState(USER_ID3, PROVIDER3, 
-                CreditsManager.USER_CREDITS);
-        
-        assertEquals("10.51", returnedPropertyUser1);
-        assertEquals("0.0", returnedPropertyUser2);
-        assertEquals("-1.113", returnedPropertyUser3);
-    }
-    
-    // test case: When calling the getUserFinanceState, if the given property
-    // is unknown, it must throw an InvalidParameterException.
-    @Test(expected = InvalidParameterException.class)
-    public void testGetUserFinanceStateUnknownProperty() throws InvalidParameterException, InternalServerErrorException {
-        this.userCredits1 = Mockito.mock(UserCredits.class);
-        
-        CreditsManager creditsManager = new CreditsManager(objectHolder, financePlan, recordUtils);
-        
-        creditsManager.getUserFinanceState(USER_ID1, PROVIDER1, "unknown_property");
     }
     
     // test case: When calling the startPaymentProcess method, it must get

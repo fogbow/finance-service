@@ -4,7 +4,6 @@ import java.util.List;
 
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
-import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.InMemoryUsersHolder;
 import cloud.fogbow.fs.core.models.FinancePlan;
 import cloud.fogbow.fs.core.models.FinanceUser;
@@ -14,9 +13,6 @@ import cloud.fogbow.fs.core.util.accounting.Record;
 import cloud.fogbow.fs.core.util.accounting.RecordUtils;
 
 public class CreditsManager {
-    // TODO documentation
-    public static final String USER_CREDITS = "USER_CREDITS";
-    
     private RecordUtils recordUtils;
     private InMemoryUsersHolder usersHolder;
     private FinancePlan plan;
@@ -70,22 +66,5 @@ public class CreditsManager {
                 this.usersHolder.saveUser(user);
             }
         }
-    }
-
-    public String getUserFinanceState(String userId, String provider, String property) throws InvalidParameterException, InternalServerErrorException {
-       String propertyValue = "";
-        
-        if (property.equals(USER_CREDITS)) {
-            FinanceUser user = this.usersHolder.getUserById(userId, provider);
-            synchronized(user) {
-                UserCredits credits = user.getCredits();
-                propertyValue = String.valueOf(credits.getCreditsValue());
-            }
-        } else {
-            throw new InvalidParameterException(
-                    String.format(Messages.Exception.UNKNOWN_FINANCE_PROPERTY, property));
-        }
-        
-        return propertyValue;
     }
 }
