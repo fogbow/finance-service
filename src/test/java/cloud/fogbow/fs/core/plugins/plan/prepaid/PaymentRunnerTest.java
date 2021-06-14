@@ -2,7 +2,6 @@ package cloud.fogbow.fs.core.plugins.plan.prepaid;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 
 import org.junit.Test;
@@ -51,7 +50,6 @@ public class PaymentRunnerTest {
     
     private MultiConsumerSynchronizedList<FinanceUser> users;
     
-    // TODO rewrite this test without the use of spy
     // test case: When calling the doRun method, it must get the
     // list of users from the DatabaseManager. For each user 
     // it must get the user records, set the records in the database and 
@@ -61,7 +59,7 @@ public class PaymentRunnerTest {
         //
         // Setting up mocks
         //
-        this.timeUtils = Mockito.spy(TimeUtils.class);
+        this.timeUtils = Mockito.mock(TimeUtils.class);
         // Set time values used by the PaymentRunner
         // The first value is the billing time for the first user
         // The second value is the billing time for the second user
@@ -94,7 +92,6 @@ public class PaymentRunnerTest {
                 INITIAL_USER_2_LAST_BILLING_TIME, timeValues.get(1), userRecords);
     }
     
-    // TODO rewrite this test without the use of spy
     // test case: When calling the doRun method and an exception
     // is thrown when acquiring user records, it must handle the
     // exception and continue checking the remaining users.
@@ -103,7 +100,7 @@ public class PaymentRunnerTest {
         //
         // Setting up mocks
         //
-        this.timeUtils = Mockito.spy(TimeUtils.class);
+        this.timeUtils = Mockito.mock(TimeUtils.class);
         // Set time values used by the PaymentRunner
         // The first value is the billing time for the first user
         // The second value is the billing time for the second user
@@ -135,7 +132,6 @@ public class PaymentRunnerTest {
                 INITIAL_USER_2_LAST_BILLING_TIME, timeValues.get(1), userRecords);
     }
     
-    // TODO rewrite this test without the use of spy
     // test case: When calling the doRun method and a ModifiedListException
     // is thrown when acquiring a user, it must handle the 
     // exception and stop the user iteration.
@@ -144,7 +140,7 @@ public class PaymentRunnerTest {
         //
         // Setting up mocks
         //
-        this.timeUtils = Mockito.spy(TimeUtils.class);
+        this.timeUtils = Mockito.mock(TimeUtils.class);
         // Set time values used by the PaymentRunner
         // The first value is the billing time for the first user
         // The second value is the billing time for the second user
@@ -181,7 +177,6 @@ public class PaymentRunnerTest {
                 INITIAL_USER_2_LAST_BILLING_TIME, timeValues.get(1), userRecords);
     }
     
-    // TODO rewrite this test without the use of spy
     // test case: When calling the doRun method and an InternalServerErrorException
     // is thrown when acquiring a user, it must handle the 
     // exception and stop the user iteration.
@@ -190,7 +185,7 @@ public class PaymentRunnerTest {
         //
         // Setting up mocks
         //
-        this.timeUtils = Mockito.spy(TimeUtils.class);
+        this.timeUtils = Mockito.mock(TimeUtils.class);
         // Set time values used by the PaymentRunner
         // The first value is the billing time for the first user
         // The second value is the billing time for the second user
@@ -259,13 +254,17 @@ public class PaymentRunnerTest {
     }
 
     private void setUpUsers() {
-        this.user1 = new FinanceUser(new HashMap<String, String>());
-        user1.setUserId(ID_USER_1, PROVIDER_USER_1);
-        user1.setProperty(FinanceUser.USER_LAST_BILLING_TIME, String.valueOf(INITIAL_USER_1_LAST_BILLING_TIME));
+        this.user1 = Mockito.mock(FinanceUser.class);
+        Mockito.when(this.user1.getProperty(FinanceUser.USER_LAST_BILLING_TIME)).
+            thenReturn(String.valueOf(INITIAL_USER_1_LAST_BILLING_TIME));
+        Mockito.when(this.user1.getId()).thenReturn(ID_USER_1);
+        Mockito.when(this.user1.getProvider()).thenReturn(PROVIDER_USER_1);
 
-        this.user2 = new FinanceUser(new HashMap<String, String>());
-        user2.setUserId(ID_USER_2, PROVIDER_USER_2);
-        user2.setProperty(FinanceUser.USER_LAST_BILLING_TIME, String.valueOf(INITIAL_USER_2_LAST_BILLING_TIME));
+        this.user2 = Mockito.mock(FinanceUser.class);
+        Mockito.when(this.user2.getProperty(FinanceUser.USER_LAST_BILLING_TIME)).
+            thenReturn(String.valueOf(INITIAL_USER_2_LAST_BILLING_TIME));
+        Mockito.when(this.user2.getId()).thenReturn(ID_USER_2);
+        Mockito.when(this.user2.getProvider()).thenReturn(PROVIDER_USER_2);
     }
     
     private void setUpObjectHolder() {

@@ -104,6 +104,14 @@ public class FinanceUser implements Serializable {
         this.timeUtils = new TimeUtils();
 	}
 	
+	public FinanceUser(String id, String provider, UserCredits credits, List<Invoice> invoices, 
+	        Map<String, String> properties) {
+	    this(properties);
+	    this.userId = new UserId(id, provider);
+	    this.credits = credits;
+	    this.invoices = invoices;
+	}
+	
 	public FinanceUser(UserId userId, boolean stoppedResources, Map<String, String> properties, 
 	        List<Invoice> invoices, UserCredits credits, Subscription activeSubscription, 
 	        List<Subscription> inactiveSubscriptions, List<String> lastSubscriptionsDebts, 

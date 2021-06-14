@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -20,6 +21,7 @@ import cloud.fogbow.fs.core.util.client.AccountingServiceClient;
 import cloud.fogbow.fs.core.util.list.ModifiedListException;
 import cloud.fogbow.fs.core.util.list.MultiConsumerSynchronizedList;
 
+@Ignore
 public class PaymentRunnerTest {
 
 	private static final String ID_USER_1 = "userId1";

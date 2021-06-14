@@ -13,7 +13,8 @@ public class TimeUtils {
     private String timeZone;
     
     public TimeUtils() {
-        
+        this.timeZone = PropertiesHolder.getInstance().
+                getProperty(ConfigurationPropertyKeys.TIME_ZONE, DEFAULT_TIME_ZONE);
     }
     
     public TimeUtils(String timeZone) {
@@ -25,19 +26,9 @@ public class TimeUtils {
 	}
 	
 	public String toDate(String dateFormat, long timeInMilliseconds) {
-	    // FIXME should load timezone in the constructor
-	    loadTimeZone();
 		Date date = new Date(timeInMilliseconds); 
 		SimpleDateFormat simpleDateFormat = new SimpleDateFormat(dateFormat);
 		simpleDateFormat.setTimeZone(TimeZone.getTimeZone(this.timeZone));
 		return simpleDateFormat.format(date);
 	}
-
-    private void loadTimeZone() {
-        // TODO Test
-        if (this.timeZone == null) {
-		    this.timeZone = PropertiesHolder.getInstance().
-	                getProperty(ConfigurationPropertyKeys.TIME_ZONE, DEFAULT_TIME_ZONE);
-		}
-    }
 }

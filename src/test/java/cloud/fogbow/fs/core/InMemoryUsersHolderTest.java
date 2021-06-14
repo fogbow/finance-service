@@ -19,6 +19,7 @@ import cloud.fogbow.fs.core.models.Invoice;
 import cloud.fogbow.fs.core.models.UserCredits;
 import cloud.fogbow.fs.core.plugins.PersistablePlanPlugin;
 import cloud.fogbow.fs.core.plugins.plan.prepaid.UserCreditsFactory;
+import cloud.fogbow.fs.core.util.FinanceUserFactory;
 import cloud.fogbow.fs.core.util.list.ModifiedListException;
 import cloud.fogbow.fs.core.util.list.MultiConsumerSynchronizedList;
 import cloud.fogbow.fs.core.util.list.MultiConsumerSynchronizedListFactory;
@@ -58,11 +59,13 @@ public class InMemoryUsersHolderTest {
     private MultiConsumerSynchronizedList<FinanceUser> userSynchronizedList1;
     private MultiConsumerSynchronizedList<FinanceUser> userSynchronizedList2;
     private MultiConsumerSynchronizedListFactory listFactory;
+    private FinanceUserFactory userFactory;
     private FinanceUser user3;
     private FinanceUser user4;
 
     @Before
-    public void setUp() throws InvalidParameterException, ModifiedListException, InternalServerErrorException {
+    public void setUp() 
+            throws InvalidParameterException, ModifiedListException, InternalServerErrorException {
         setUpUsers();
         setUpInvoices();
         setUpCredits();
@@ -74,8 +77,9 @@ public class InMemoryUsersHolderTest {
     // registered in the database, the constructor must set up correctly the data structures 
     // that hold the users. 
     @Test
-    public void testConstructorLoadsUserDataCorrectlyManyUsers() throws InternalServerErrorException, ConfigurationErrorException {
-        new InMemoryUsersHolder(databaseManager, listFactory, userCreditsFactory);
+    public void testConstructorLoadsUserDataCorrectlyManyUsers() 
+            throws InternalServerErrorException, ConfigurationErrorException {
+        new InMemoryUsersHolder(databaseManager, listFactory, userCreditsFactory, userFactory);
         
         Mockito.verify(databaseManager).getRegisteredUsers();
         Mockito.verify(listFactory, Mockito.times(3)).getList();
@@ -86,10 +90,11 @@ public class InMemoryUsersHolderTest {
     // test case: When creating an InMemoryUsersHolder instance and no user is registered
     // in the database, the constructor must set up correctly the internal data structures.
     @Test
-    public void testConstructorLoadsUserDataCorrectlyNoUser() throws InternalServerErrorException, ConfigurationErrorException {
+    public void testConstructorLoadsUserDataCorrectlyNoUser() 
+            throws InternalServerErrorException, ConfigurationErrorException {
         Mockito.when(databaseManager.getRegisteredUsers()).thenReturn(new ArrayList<FinanceUser>());
         
-        new InMemoryUsersHolder(databaseManager, listFactory, userCreditsFactory);
+        new InMemoryUsersHolder(databaseManager, listFactory, userCreditsFactory, userFactory);
         
         Mockito.verify(databaseManager).getRegisteredUsers();
         Mockito.verify(listFactory, Mockito.times(1)).getList();
@@ -98,12 +103,14 @@ public class InMemoryUsersHolderTest {
     // test case: When calling the method registerUser, it must add a new FinanceUser instance
     // to the list of FinanceUsers and persist the new user by calling the DatabaseManager.
     @Test
-    public void testRegisterUser() throws InternalServerErrorException, InvalidParameterException, ConfigurationErrorException {
+    public void testRegisterUser() 
+            throws InternalServerErrorException, InvalidParameterException, ConfigurationErrorException {
         Map<String, MultiConsumerSynchronizedList<FinanceUser>> usersByPlugin = 
                 new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
         usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, usersByPlugin, inactiveUsersSynchronizedList);
+        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, 
+                userFactory, usersByPlugin, inactiveUsersSynchronizedList);
         
         objectHolder.registerUser(USER_ID_TO_ADD, PROVIDER_ID_TO_ADD, PLAN_NAME_1);
         
@@ -120,7 +127,8 @@ public class InMemoryUsersHolderTest {
                 new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
         usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, usersByPlugin, inactiveUsersSynchronizedList);
+        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, 
+                userFactory, usersByPlugin, inactiveUsersSynchronizedList);
 
         objectHolder.registerUser(USER_ID_1, PROVIDER_ID_1, PLAN_NAME_1);
     }
@@ -135,7 +143,8 @@ public class InMemoryUsersHolderTest {
                 new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
         usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, usersByPlugin, inactiveUsersSynchronizedList);
+        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, 
+                userFactory, usersByPlugin, inactiveUsersSynchronizedList);
 
         objectHolder.registerUser(USER_ID_3, PROVIDER_ID_3, PLAN_NAME_1);
         
@@ -154,7 +163,8 @@ public class InMemoryUsersHolderTest {
                 new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
         usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, usersByPlugin, inactiveUsersSynchronizedList);        
+        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, 
+                userFactory, usersByPlugin, inactiveUsersSynchronizedList);        
         objectHolder.removeUser(USER_ID_1, PROVIDER_ID_1);
         
         Mockito.verify(userSynchronizedList1).removeItem(Mockito.any(FinanceUser.class));
@@ -164,12 +174,14 @@ public class InMemoryUsersHolderTest {
     // test case: When calling the method removeUser passing unknown UserId and ProviderId, it 
     // must throw an InvalidParameterException.
     @Test(expected = InvalidParameterException.class)
-    public void testRemoveUnknownUser() throws InternalServerErrorException, InvalidParameterException, ConfigurationErrorException {
+    public void testRemoveUnknownUser() 
+            throws InternalServerErrorException, InvalidParameterException, ConfigurationErrorException {
         Map<String, MultiConsumerSynchronizedList<FinanceUser>> usersByPlugin = 
                 new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
         usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, usersByPlugin, inactiveUsersSynchronizedList);
+        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, 
+                userFactory, usersByPlugin, inactiveUsersSynchronizedList);
         
         objectHolder.removeUser("unknownuser", "unknownprovider");
     }
@@ -183,7 +195,8 @@ public class InMemoryUsersHolderTest {
         usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
         usersByPlugin.put(PLAN_NAME_2, userSynchronizedList2);
         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, usersByPlugin, inactiveUsersSynchronizedList);
+        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, 
+                userFactory, usersByPlugin, inactiveUsersSynchronizedList);
         
         objectHolder.changePlan(USER_ID_4, PROVIDER_ID_4, PLAN_NAME_2);
         
@@ -197,13 +210,15 @@ public class InMemoryUsersHolderTest {
     // test case: When calling the method getUserById, it must iterate over the correct list of 
     // users and return the correct user.
     @Test
-    public void testGetUserById() throws InvalidParameterException, InternalServerErrorException, ConfigurationErrorException {
+    public void testGetUserById()
+            throws InvalidParameterException, InternalServerErrorException, ConfigurationErrorException {
         Map<String, MultiConsumerSynchronizedList<FinanceUser>> usersByPlugin = 
                 new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
         usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
         usersByPlugin.put(PLAN_NAME_2, userSynchronizedList2);
         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, usersByPlugin, inactiveUsersSynchronizedList);
+        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, 
+                userFactory, usersByPlugin, inactiveUsersSynchronizedList);
         
         assertEquals(user1, objectHolder.getUserById(USER_ID_1, PROVIDER_ID_1));
         assertEquals(user2, objectHolder.getUserById(USER_ID_2, PROVIDER_ID_2));
@@ -216,7 +231,8 @@ public class InMemoryUsersHolderTest {
     // occurs while the method is iterating over it, it must restart the iteration and return 
     // the correct user.
     @Test
-    public void testGetUserByIdListChanges() throws InternalServerErrorException, ModifiedListException, InvalidParameterException, ConfigurationErrorException {
+    public void testGetUserByIdListChanges() 
+            throws InternalServerErrorException, ModifiedListException, InvalidParameterException, ConfigurationErrorException {
         Mockito.when(userSynchronizedList1.getNext(Mockito.anyInt())).
         thenReturn(user1).
         thenThrow(new ModifiedListException()).
@@ -226,7 +242,8 @@ public class InMemoryUsersHolderTest {
                 new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
         usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, usersByPlugin, inactiveUsersSynchronizedList);
+        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, 
+                userFactory, usersByPlugin, inactiveUsersSynchronizedList);
         
         assertEquals(user2, objectHolder.getUserById(USER_ID_2, PROVIDER_ID_2));
         
@@ -236,7 +253,8 @@ public class InMemoryUsersHolderTest {
     // test case: When calling the method getUserById and the internal user list throws an
     // InternalServerErrorException while iterating over it, it must rethrow the exception.
     @Test(expected = InternalServerErrorException.class)
-    public void testGetUserByIdListThrowsException() throws InternalServerErrorException, ModifiedListException, InvalidParameterException, ConfigurationErrorException {
+    public void testGetUserByIdListThrowsException() 
+            throws InternalServerErrorException, ModifiedListException, InvalidParameterException, ConfigurationErrorException {
         Mockito.when(userSynchronizedList1.getNext(Mockito.anyInt())).
         thenReturn(user1).
         thenThrow(new InternalServerErrorException());
@@ -245,7 +263,8 @@ public class InMemoryUsersHolderTest {
                 new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
         usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, usersByPlugin, inactiveUsersSynchronizedList);
+        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, 
+                userFactory, usersByPlugin, inactiveUsersSynchronizedList);
         
         objectHolder.getUserById(USER_ID_2, PROVIDER_ID_2);
     }
@@ -253,12 +272,14 @@ public class InMemoryUsersHolderTest {
     // test case: When calling the method getUserById and the UserId passed as parameter is 
     // not known, it must throw an InvalidParameterException.
     @Test(expected = InvalidParameterException.class)
-    public void testGetUserByIdUnknownUser() throws InternalServerErrorException, InvalidParameterException, ConfigurationErrorException {
+    public void testGetUserByIdUnknownUser() 
+            throws InternalServerErrorException, InvalidParameterException, ConfigurationErrorException {
         Map<String, MultiConsumerSynchronizedList<FinanceUser>> usersByPlugin = 
                 new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
         usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, usersByPlugin, inactiveUsersSynchronizedList);
+        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, 
+                userFactory, usersByPlugin, inactiveUsersSynchronizedList);
         
         objectHolder.getUserById("unknownuser", PROVIDER_ID_1);
     }
@@ -266,12 +287,14 @@ public class InMemoryUsersHolderTest {
     // test case: When calling the method getUserById and the ProviderId passed as parameter 
     // is not known, it must throw an InvalidParameterException.
     @Test(expected = InvalidParameterException.class)
-    public void testGetUserByIdUnknownProvider() throws InternalServerErrorException, InvalidParameterException, ConfigurationErrorException {
+    public void testGetUserByIdUnknownProvider() 
+            throws InternalServerErrorException, InvalidParameterException, ConfigurationErrorException {
         Map<String, MultiConsumerSynchronizedList<FinanceUser>> usersByPlugin = 
                 new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
         usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, usersByPlugin, inactiveUsersSynchronizedList);
+        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, 
+                userFactory, usersByPlugin, inactiveUsersSynchronizedList);
         
         
         objectHolder.getUserById(USER_ID_1, "unknownprovider");
@@ -281,7 +304,8 @@ public class InMemoryUsersHolderTest {
     // used by the given user using the data contained in the given options map and
     // then persist the changes using the DatabaseManager.
     @Test
-    public void testChangeOptions() throws InvalidParameterException, InternalServerErrorException, ConfigurationErrorException {
+    public void testChangeOptions() 
+            throws InvalidParameterException, InternalServerErrorException, ConfigurationErrorException {
         Map<String, MultiConsumerSynchronizedList<FinanceUser>> usersByPlugin = 
                 new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
         usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
@@ -290,7 +314,8 @@ public class InMemoryUsersHolderTest {
         newOptions.put("option1", "optionvalue1");
         newOptions.put("option2", "optionvalue2");
          
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, usersByPlugin, inactiveUsersSynchronizedList);
+        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, 
+                userFactory, usersByPlugin, inactiveUsersSynchronizedList);
         
         objectHolder.changeOptions(USER_ID_1, PROVIDER_ID_1, newOptions);
         
@@ -302,12 +327,14 @@ public class InMemoryUsersHolderTest {
     // test case: When calling the method saveUser, it must persist the user
     // data using the DatabaseManager.
     @Test
-    public void testSaveUser() throws InvalidParameterException, InternalServerErrorException, ConfigurationErrorException {
+    public void testSaveUser() 
+            throws InvalidParameterException, InternalServerErrorException, ConfigurationErrorException {
         Map<String, MultiConsumerSynchronizedList<FinanceUser>> usersByPlugin = 
                 new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
         usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, usersByPlugin, inactiveUsersSynchronizedList);
+        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, 
+                userFactory, usersByPlugin, inactiveUsersSynchronizedList);
         
         objectHolder.saveUser(user1);
         
@@ -317,7 +344,8 @@ public class InMemoryUsersHolderTest {
     // test case: When calling the method saveUser and the user is not known, 
     // it must throw an InvalidParameterException.
     @Test(expected = InvalidParameterException.class)
-    public void testSaveUserUnknownUser() throws InvalidParameterException, InternalServerErrorException, ConfigurationErrorException {
+    public void testSaveUserUnknownUser() 
+            throws InvalidParameterException, InternalServerErrorException, ConfigurationErrorException {
         Map<String, MultiConsumerSynchronizedList<FinanceUser>> usersByPlugin = 
                 new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
         usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
@@ -326,7 +354,8 @@ public class InMemoryUsersHolderTest {
         Mockito.when(unknownUser.getId()).thenReturn("unknownuser");
         Mockito.when(unknownUser.getProvider()).thenReturn("unknownprovider");
         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, usersByPlugin, inactiveUsersSynchronizedList);
+        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, 
+                userFactory, usersByPlugin, inactiveUsersSynchronizedList);
         
         objectHolder.saveUser(unknownUser);
     }
@@ -340,10 +369,12 @@ public class InMemoryUsersHolderTest {
         usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
         usersByPlugin.put(PLAN_NAME_2, userSynchronizedList2);
         
-        MultiConsumerSynchronizedList<FinanceUser> emptySynchronizedList = Mockito.mock(MultiConsumerSynchronizedList.class);
+        MultiConsumerSynchronizedList<FinanceUser> emptySynchronizedList = 
+                Mockito.mock(MultiConsumerSynchronizedList.class);
         Mockito.doReturn(emptySynchronizedList).when(listFactory).getList();
         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, usersByPlugin, inactiveUsersSynchronizedList);
+        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, 
+                userFactory, usersByPlugin, inactiveUsersSynchronizedList);
         
         assertEquals(userSynchronizedList1, objectHolder.getRegisteredUsersByPlan(PLAN_NAME_1));
         assertEquals(userSynchronizedList2, objectHolder.getRegisteredUsersByPlan(PLAN_NAME_2));
@@ -360,6 +391,9 @@ public class InMemoryUsersHolderTest {
         
         listFactory = Mockito.mock(MultiConsumerSynchronizedListFactory.class);
         Mockito.doReturn(inactiveUsersSynchronizedList).doReturn(userSynchronizedList1).doReturn(userSynchronizedList2).when(listFactory).getList();
+        
+        userFactory = Mockito.mock(FinanceUserFactory.class);
+        Mockito.when(userFactory.getUser(USER_ID_TO_ADD, PROVIDER_ID_TO_ADD)).thenReturn(user1);
     }
 
     private void setUpDatabase() {

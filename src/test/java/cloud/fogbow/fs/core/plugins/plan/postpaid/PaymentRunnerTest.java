@@ -2,7 +2,6 @@ package cloud.fogbow.fs.core.plugins.plan.postpaid;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 
 import org.junit.Test;
@@ -61,7 +60,7 @@ public class PaymentRunnerTest {
         //
         // Setting up mocks
         //
-        this.timeUtils = Mockito.spy(TimeUtils.class);
+        this.timeUtils = Mockito.mock(TimeUtils.class);
         // Set time values used by the PaymentRunner
         // The first value is the billing time for the first user
         // The second value is the billing time for the second user
@@ -103,7 +102,7 @@ public class PaymentRunnerTest {
         //
         // Setting up mocks
         //
-        this.timeUtils = Mockito.spy(TimeUtils.class);
+        this.timeUtils = Mockito.mock(TimeUtils.class);
         // Set time values used by the PaymentRunner
         // The first value is the billing time for the first user
         // The second value is the billing time for the second user
@@ -141,7 +140,7 @@ public class PaymentRunnerTest {
         //
         // Setting up mocks
         //
-        this.timeUtils = Mockito.spy(TimeUtils.class);
+        this.timeUtils = Mockito.mock(TimeUtils.class);
         // Set time values used by the PaymentRunner
         // The first value is the billing time for the first user
         // The second value is the billing time for the second user
@@ -181,7 +180,7 @@ public class PaymentRunnerTest {
         //
         // Setting up mocks
         //
-        this.timeUtils = Mockito.spy(TimeUtils.class);
+        this.timeUtils = Mockito.mock(TimeUtils.class);
         // Set time values used by the PaymentRunner
         // The first value is the billing time for the first user
         // The second value is the billing time for the second user
@@ -226,7 +225,7 @@ public class PaymentRunnerTest {
         //
         // Setting up mocks
         //
-        this.timeUtils = Mockito.spy(TimeUtils.class);
+        this.timeUtils = Mockito.mock(TimeUtils.class);
         // Set time values used by the PaymentRunner
         // The first value is the billing time for the first user
         // The second value is the billing time for the second user
@@ -295,15 +294,17 @@ public class PaymentRunnerTest {
     }
 
     private void setUpUsers() {
-        this.user1 = new FinanceUser(new HashMap<String, String>());
-        user1.setUserId(ID_USER_1, PROVIDER_USER_1);
-        user1.setProperty(PaymentRunner.USER_BILLING_INTERVAL, String.valueOf(BILLING_INTERVAL));
-        user1.setProperty(FinanceUser.USER_LAST_BILLING_TIME, String.valueOf(INITIAL_USER_1_LAST_BILLING_TIME));
-
-        this.user2 = new FinanceUser(new HashMap<String, String>());
-        user2.setUserId(ID_USER_2, PROVIDER_USER_2);
-        user2.setProperty(PaymentRunner.USER_BILLING_INTERVAL, String.valueOf(BILLING_INTERVAL));
-        user2.setProperty(FinanceUser.USER_LAST_BILLING_TIME, String.valueOf(INITIAL_USER_2_LAST_BILLING_TIME));
+        this.user1 = Mockito.mock(FinanceUser.class);
+        Mockito.when(user1.getId()).thenReturn(ID_USER_1);
+        Mockito.when(user1.getProvider()).thenReturn(PROVIDER_USER_1);
+        Mockito.when(user1.getProperty(PaymentRunner.USER_BILLING_INTERVAL)).thenReturn(String.valueOf(BILLING_INTERVAL));
+        Mockito.when(user1.getProperty(FinanceUser.USER_LAST_BILLING_TIME)).thenReturn(String.valueOf(INITIAL_USER_1_LAST_BILLING_TIME));
+        
+        this.user2 = Mockito.mock(FinanceUser.class);
+        Mockito.when(user2.getId()).thenReturn(ID_USER_2);
+        Mockito.when(user2.getProvider()).thenReturn(PROVIDER_USER_2);
+        Mockito.when(user2.getProperty(PaymentRunner.USER_BILLING_INTERVAL)).thenReturn(String.valueOf(BILLING_INTERVAL));
+        Mockito.when(user2.getProperty(FinanceUser.USER_LAST_BILLING_TIME)).thenReturn(String.valueOf(INITIAL_USER_2_LAST_BILLING_TIME));
     }
     
     private void setUpObjectHolder() {

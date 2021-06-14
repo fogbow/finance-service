@@ -1,6 +1,5 @@
 package cloud.fogbow.fs.core;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,8 +12,8 @@ import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.models.FinanceUser;
-import cloud.fogbow.fs.core.models.Invoice;
 import cloud.fogbow.fs.core.plugins.plan.prepaid.UserCreditsFactory;
+import cloud.fogbow.fs.core.util.FinanceUserFactory;
 import cloud.fogbow.fs.core.util.list.ModifiedListException;
 import cloud.fogbow.fs.core.util.list.MultiConsumerSynchronizedList;
 import cloud.fogbow.fs.core.util.list.MultiConsumerSynchronizedListFactory;
@@ -23,21 +22,25 @@ public class InMemoryUsersHolder {
     private DatabaseManager databaseManager;
     private UserCreditsFactory userCreditsFactory;
     private MultiConsumerSynchronizedListFactory listFactory;
+    private FinanceUserFactory userFactory;
     
     private Map<String, MultiConsumerSynchronizedList<FinanceUser>> usersByPlugin;
     private MultiConsumerSynchronizedList<FinanceUser> inactiveUsers;
     
     public InMemoryUsersHolder(DatabaseManager databaseManager) throws InternalServerErrorException, ConfigurationErrorException {
-        this(databaseManager, new MultiConsumerSynchronizedListFactory(), new UserCreditsFactory());
+        this(databaseManager, new MultiConsumerSynchronizedListFactory(), new UserCreditsFactory(), 
+                new FinanceUserFactory(new UserCreditsFactory()));
     }
 
     @VisibleForTesting
     InMemoryUsersHolder(DatabaseManager databaseManager,
-            MultiConsumerSynchronizedListFactory listFactory, UserCreditsFactory userCreditsFactory)
+            MultiConsumerSynchronizedListFactory listFactory, UserCreditsFactory userCreditsFactory, 
+            FinanceUserFactory userFactory)
             throws InternalServerErrorException, ConfigurationErrorException {
         this.userCreditsFactory = userCreditsFactory;
         this.databaseManager = databaseManager;
         this.listFactory = listFactory;
+        this.userFactory = userFactory;
 
         List<FinanceUser> databaseUsers = this.databaseManager.getRegisteredUsers();
         usersByPlugin = new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
@@ -49,14 +52,14 @@ public class InMemoryUsersHolder {
     }
     
     @VisibleForTesting
-    InMemoryUsersHolder(DatabaseManager databaseManager, 
-            UserCreditsFactory userCreditsFactory, 
-            MultiConsumerSynchronizedListFactory listFactory, 
+    InMemoryUsersHolder(DatabaseManager databaseManager, UserCreditsFactory userCreditsFactory, 
+            MultiConsumerSynchronizedListFactory listFactory, FinanceUserFactory userFactory,
             Map<String, MultiConsumerSynchronizedList<FinanceUser>> usersByPlugin, 
             MultiConsumerSynchronizedList<FinanceUser> inactiveUsers) {
         this.databaseManager = databaseManager;
         this.userCreditsFactory = userCreditsFactory;
         this.listFactory = listFactory;
+        this.userFactory = userFactory;
         this.usersByPlugin = usersByPlugin;
         this.inactiveUsers = inactiveUsers;
     }
@@ -93,11 +96,7 @@ public class InMemoryUsersHolder {
     
     private FinanceUser createUserAndSubscribe(String userId, String provider, String pluginName)
             throws InternalServerErrorException, InvalidParameterException {
-        FinanceUser user;
-        user = new FinanceUser(new HashMap<String, String>());
-        user.setUserId(userId, provider);
-        user.setCredits(userCreditsFactory.getUserCredits(userId, provider));
-        user.setInvoices(new ArrayList<Invoice>());
+        FinanceUser user = this.userFactory.getUser(userId, provider);
         user.subscribeToPlan(pluginName);
 
         addUserByPlugin(user);
