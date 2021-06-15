@@ -64,6 +64,7 @@ public class FinanceManagerTest {
 	private static final String UNKNOWN_PLUGIN_NAME = "unknownplugin";
     private static final String PLUGIN_CLASS_NAME = "pluginClassName";
     private static final String PLAN_NAME = "planName";
+    private static final String NEW_PLAN_NAME = null;
 	private InMemoryFinanceObjectsHolder objectHolder;
 	private AuthorizableUser user1;
 	private AuthorizableUser user2;
@@ -270,6 +271,55 @@ public class FinanceManagerTest {
 		FinanceManager financeManager = new FinanceManager(objectHolder);
 		
 		financeManager.removeUser(USER_ID_1, PROVIDER_USER_1);
+	}
+	
+	// TODO documentation
+	@Test
+	public void testRemoveUser() throws FogbowException, ModifiedListException {
+	    setUpFinancePlugin();
+	    
+	    Mockito.when(this.plan1.isRegisteredUser(systemUser1)).thenReturn(false);
+	    Mockito.when(this.plan2.isRegisteredUser(systemUser1)).thenReturn(false);
+	    
+	    FinanceManager financeManager = new FinanceManager(objectHolder);
+	    
+	    financeManager.removeUser(USER_ID_1, PROVIDER_USER_1);
+	    
+	    Mockito.verify(usersHolder).removeUser(USER_ID_1, PROVIDER_USER_1);
+	}
+	
+	// TODO documentation
+	@Test(expected = InvalidParameterException.class)
+	public void testRemoveUserStillManagedByPlan() throws FogbowException, ModifiedListException {
+        setUpFinancePlugin();
+
+        FinanceManager financeManager = new FinanceManager(objectHolder);
+
+        financeManager.removeUser(USER_ID_1, PROVIDER_USER_1);
+	}
+	
+	// TODO documentation
+	@Test
+	public void testUnregisterUser() throws FogbowException, ModifiedListException {
+        setUpFinancePlugin();
+
+        FinanceManager financeManager = new FinanceManager(objectHolder);
+
+        financeManager.unregisterUser(USER_ID_1, PROVIDER_USER_1);
+
+        Mockito.verify(this.plan1).unregisterUser(new SystemUser(USER_ID_1, USER_ID_1, PROVIDER_USER_1));// removeUser(USER_ID_1, PROVIDER_USER_1);
+	}
+	
+	// TODO documentation
+	@Test
+	public void testChangePlan() throws FogbowException, ModifiedListException {
+	    setUpFinancePlugin();
+	    
+	    FinanceManager financeManager = new FinanceManager(objectHolder);
+	    
+	    financeManager.changePlan(USER_ID_1, PROVIDER_USER_1, NEW_PLAN_NAME);
+	    
+	    Mockito.verify(this.plan1).changePlan(new SystemUser(USER_ID_1, USER_ID_1, PROVIDER_USER_1), NEW_PLAN_NAME);
 	}
 	
 	// test case: When calling the updateFinanceState method, it must

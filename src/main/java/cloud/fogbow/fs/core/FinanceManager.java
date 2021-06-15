@@ -197,24 +197,35 @@ public class FinanceManager {
 
     // TODO we need to decide a standard for these methods signatures
     // some receive userid + provider id, others receive systemuser
-    // TODO test
     public void removeUser(String userId, String provider)
             throws InvalidParameterException, InternalServerErrorException {
-        try {
-            getUserPlugin(userId, provider);
-            // TODO add message: user is still registered in a plan
-            throw new InternalServerErrorException();
-        } catch (InvalidParameterException e) {
-            InMemoryUsersHolder usersHolder = this.objectHolder.getInMemoryUsersHolder();
-            FinanceUser user = usersHolder.getUserById(userId, provider);
-            
-            synchronized(user) {
-                usersHolder.removeUser(userId, provider);
-            }
+        checkUserIsNotManaged(userId, provider);
+
+        InMemoryUsersHolder usersHolder = this.objectHolder.getInMemoryUsersHolder();
+        FinanceUser user = usersHolder.getUserById(userId, provider);
+
+        synchronized (user) {
+            usersHolder.removeUser(userId, provider);
         }
     }
 
-    // TODO test
+    private void checkUserIsNotManaged(String userId, String provider)
+            throws InternalServerErrorException, InvalidParameterException {
+        PersistablePlanPlugin plugin = null;
+        
+        try {
+            plugin = getUserPlugin(userId, provider);
+        } catch (InvalidParameterException e) {
+            
+        }
+        
+        if (plugin != null) {
+            throw new InvalidParameterException(
+                    String.format(Messages.Exception.USER_IS_MANAGED_BY_PLUGIN, 
+                    userId, provider, plugin.getName()));  
+        }
+    }
+
     public void unregisterUser(String userId, String provider) throws InvalidParameterException, InternalServerErrorException {
         PersistablePlanPlugin plugin = getUserPlugin(userId, provider);
         synchronized(plugin) {
@@ -222,7 +233,6 @@ public class FinanceManager {
         }
     }
 
-    // TODO test
     public void changePlan(String userId, String provider, String newPlanName) throws InvalidParameterException, InternalServerErrorException {
         PersistablePlanPlugin plugin = getUserPlugin(userId, provider);
         synchronized(plugin) {

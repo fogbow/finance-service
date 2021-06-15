@@ -341,6 +341,26 @@ public class InMemoryUsersHolderTest {
         Mockito.verify(databaseManager).saveUser(user1);
     }
     
+    // test case: When calling the method unregisterUser, it must remove the user from 
+    // the list of registered users for the plan, add the user to the list of inactive users,
+    // unsubscribe and save the user using the DatabaseManager.
+    @Test
+    public void testUnregisterUser() throws InternalServerErrorException, InvalidParameterException {
+        Map<String, MultiConsumerSynchronizedList<FinanceUser>> usersByPlugin = 
+                new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
+        usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
+        
+        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, 
+                userFactory, usersByPlugin, inactiveUsersSynchronizedList);
+        
+        objectHolder.unregisterUser(USER_ID_1, PROVIDER_ID_1);
+        
+        Mockito.verify(userSynchronizedList1).removeItem(user1);
+        Mockito.verify(inactiveUsersSynchronizedList).addItem(user1);
+        Mockito.verify(user1).unsubscribe();
+        Mockito.verify(databaseManager).saveUser(user1);
+    }
+    
     // test case: When calling the method saveUser and the user is not known, 
     // it must throw an InvalidParameterException.
     @Test(expected = InvalidParameterException.class)

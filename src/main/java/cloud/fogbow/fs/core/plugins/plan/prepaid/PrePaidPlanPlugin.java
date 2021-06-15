@@ -301,13 +301,14 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
         }
     }
 
-    // TODO test
     @Override
     public void purgeUser(SystemUser systemUser) throws InvalidParameterException, InternalServerErrorException {
         FinanceUser user = this.usersHolder.getUserById(systemUser.getId(), systemUser.getIdentityProviderId());
-        // TODO must delete user resources
-        this.stopServiceRunner.pauseResourcesForUser(user);
-        this.usersHolder.removeUser(systemUser.getId(), systemUser.getIdentityProviderId());
+        
+        synchronized (user) {
+            this.stopServiceRunner.purgeUserResources(user);
+            this.usersHolder.removeUser(systemUser.getId(), systemUser.getIdentityProviderId());
+        }
     }
 
     @Override
@@ -315,14 +316,12 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
         this.usersHolder.changePlan(user.getId(), user.getIdentityProviderId(), newPlanName);
     }
 
-    // TODO test
     @Override
     public void unregisterUser(SystemUser systemUser) throws InternalServerErrorException, InvalidParameterException {
         FinanceUser user = this.usersHolder.getUserById(systemUser.getId(), systemUser.getIdentityProviderId());
         
         synchronized (user) {
-            // TODO must delete user resources
-            this.stopServiceRunner.pauseResourcesForUser(user);
+            this.stopServiceRunner.purgeUserResources(user);
             this.usersHolder.unregisterUser(systemUser.getId(), systemUser.getIdentityProviderId());
         }
     }

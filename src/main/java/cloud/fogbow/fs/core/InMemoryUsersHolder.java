@@ -126,7 +126,6 @@ public class InMemoryUsersHolder {
         }
     }
 
-    // TODO test
     public void unregisterUser(String userId, String provider) 
             throws InternalServerErrorException, InvalidParameterException {
         FinanceUser userToUnregister = getUserById(userId, provider);

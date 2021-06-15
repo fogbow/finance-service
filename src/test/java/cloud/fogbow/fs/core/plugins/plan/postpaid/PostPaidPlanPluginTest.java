@@ -35,6 +35,8 @@ import cloud.fogbow.ras.core.models.Operation;
 import cloud.fogbow.ras.core.models.RasOperation;
 import cloud.fogbow.ras.core.models.ResourceType;
 
+// TODO refactor
+// TODO review documentation
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({PropertiesHolder.class})
 public class PostPaidPlanPluginTest {
@@ -255,7 +257,7 @@ public class PostPaidPlanPluginTest {
     // test case: When calling the addUser method, it must call the DatabaseManager
     // to register the user using given parameters.
     @Test
-    public void testAddUser() throws InvalidParameterException, InternalServerErrorException {
+    public void testRegisterUser() throws InvalidParameterException, InternalServerErrorException {
         Map<String, String> financeOptions = new HashMap<String, String>();
         financeOptions.put(PaymentRunner.USER_BILLING_INTERVAL, String.valueOf(userBillingInterval));
         financeOptions.put(PostPaidPlanPlugin.INVOICE_WAIT_TIME, String.valueOf(invoiceWaitTime));
@@ -275,6 +277,31 @@ public class PostPaidPlanPluginTest {
         
         Mockito.verify(this.objectHolder).registerUser(USER_ID_1, PROVIDER_USER_1, PLAN_NAME);
         Mockito.verify(this.stopServiceRunner).resumeResourcesForUser(user);
+    }
+    
+    // TODO documentation
+    @Test
+    public void testPurgeUser() throws InvalidParameterException, InternalServerErrorException {
+        Map<String, String> financeOptions = new HashMap<String, String>();
+        financeOptions.put(PaymentRunner.USER_BILLING_INTERVAL, String.valueOf(userBillingInterval));
+        financeOptions.put(PostPaidPlanPlugin.INVOICE_WAIT_TIME, String.valueOf(invoiceWaitTime));
+        
+        FinanceUser user = Mockito.mock(FinanceUser.class);
+        this.stopServiceRunner = Mockito.mock(StopServiceRunner.class);
+        
+        objectHolder = Mockito.mock(InMemoryUsersHolder.class);
+        Mockito.when(objectHolder.getUserById(USER_ID_1, PROVIDER_USER_1)).thenReturn(user);
+        
+        PostPaidPlanPlugin postPaidFinancePlugin = new PostPaidPlanPlugin(PLAN_NAME, userBillingInterval, 
+                invoiceWaitTime, objectHolder, accountingServiceClient, rasClient, paymentManager, 
+                planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, plan, financeOptions);
+        
+        
+        postPaidFinancePlugin.purgeUser(new SystemUser(USER_ID_1, USER_NAME_1, PROVIDER_USER_1));
+        
+        
+        Mockito.verify(this.objectHolder).removeUser(USER_ID_1, PROVIDER_USER_1);
+        Mockito.verify(this.stopServiceRunner).purgeUserResources(user);
     }
     
     // test case: When calling the changePlan method, it must check if the user has paid 
@@ -333,6 +360,67 @@ public class PostPaidPlanPluginTest {
         
         Mockito.verify(this.paymentRunner, Mockito.never()).runLastPaymentForUser(USER_ID_1, PROVIDER_USER_1); ;
         Mockito.verify(this.objectHolder, Mockito.never()).changePlan(USER_ID_1, PROVIDER_USER_1, NEW_PLAN_NAME);
+    }
+    
+    // TODO documentation
+    @Test
+    public void testUnregisterUser() throws InternalServerErrorException, InvalidParameterException {
+        Map<String, String> financeOptions = new HashMap<String, String>();
+        financeOptions.put(PaymentRunner.USER_BILLING_INTERVAL, String.valueOf(userBillingInterval));
+        financeOptions.put(PostPaidPlanPlugin.INVOICE_WAIT_TIME, String.valueOf(invoiceWaitTime));
+        
+        FinanceUser user = Mockito.mock(FinanceUser.class);
+        Mockito.when(user.invoicesArePaid()).thenReturn(true);
+        
+        this.stopServiceRunner = Mockito.mock(StopServiceRunner.class);
+        this.paymentRunner = Mockito.mock(PaymentRunner.class);
+        
+        objectHolder = Mockito.mock(InMemoryUsersHolder.class);
+        Mockito.when(objectHolder.getUserById(USER_ID_1, PROVIDER_USER_1)).thenReturn(user);
+        
+        PostPaidPlanPlugin postPaidFinancePlugin = new PostPaidPlanPlugin(PLAN_NAME, userBillingInterval, 
+                invoiceWaitTime, objectHolder, accountingServiceClient, rasClient, paymentManager, 
+                planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, plan, financeOptions);
+        
+        
+        postPaidFinancePlugin.unregisterUser(new SystemUser(USER_ID_1, USER_NAME_1, PROVIDER_USER_1));
+        
+        
+        Mockito.verify(this.objectHolder).unregisterUser(USER_ID_1, PROVIDER_USER_1);
+        Mockito.verify(this.paymentRunner).runLastPaymentForUser(USER_ID_1, PROVIDER_USER_1);
+        Mockito.verify(this.stopServiceRunner).purgeUserResources(user);
+    }
+    
+    // TODO documentation
+    @Test
+    public void testUnregisterUserUserHasNotPaidAllInvoices() throws InternalServerErrorException, InvalidParameterException {
+        Map<String, String> financeOptions = new HashMap<String, String>();
+        financeOptions.put(PaymentRunner.USER_BILLING_INTERVAL, String.valueOf(userBillingInterval));
+        financeOptions.put(PostPaidPlanPlugin.INVOICE_WAIT_TIME, String.valueOf(invoiceWaitTime));
+        
+        FinanceUser user = Mockito.mock(FinanceUser.class);
+        Mockito.when(user.invoicesArePaid()).thenReturn(false);
+        
+        this.stopServiceRunner = Mockito.mock(StopServiceRunner.class);
+        this.paymentRunner = Mockito.mock(PaymentRunner.class);
+        
+        objectHolder = Mockito.mock(InMemoryUsersHolder.class);
+        Mockito.when(objectHolder.getUserById(USER_ID_1, PROVIDER_USER_1)).thenReturn(user);
+        
+        PostPaidPlanPlugin postPaidFinancePlugin = new PostPaidPlanPlugin(PLAN_NAME, userBillingInterval, 
+                invoiceWaitTime, objectHolder, accountingServiceClient, rasClient, paymentManager, 
+                planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, plan, financeOptions);
+        
+        try {
+            postPaidFinancePlugin.unregisterUser(new SystemUser(USER_ID_1, USER_NAME_1, PROVIDER_USER_1));
+            Assert.fail("unregisterUser is expected to throw an InvalidParameterException.");
+        } catch (InvalidParameterException e) {
+            
+        }
+        
+        Mockito.verify(this.objectHolder, Mockito.never()).unregisterUser(USER_ID_1, PROVIDER_USER_1);
+        Mockito.verify(this.paymentRunner, Mockito.never()).runLastPaymentForUser(USER_ID_1, PROVIDER_USER_1);
+        Mockito.verify(this.stopServiceRunner, Mockito.never()).purgeUserResources(user);
     }
     
     // test case: When calling the changeOptions method and the finance options map 

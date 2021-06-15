@@ -113,50 +113,45 @@ public class StopServiceRunnerTest {
         Mockito.verify(rasClient, Mockito.times(1)).pauseResourcesByUser(ID_USER_2);
     }
     
-    // test case: When calling the method pauseResourcesForUser, it must
-    // call the RasClient to pause the resources and update the user state.
+    // test case: When calling the method purgeUserResources, it must
+    // call the RasClient to purge the resources.
     @Test
-    public void testPauseResourcesForUser() 
+    public void testPurgeUserResources() 
             throws ModifiedListException, FogbowException {
         setUpDatabase();
         
         rasClient = Mockito.mock(RasClient.class);
         
-        stopServiceRunner = new StopServiceRunner(PLAN_NAME, stopServiceWaitTime ,objectHolder, 
+        stopServiceRunner = new StopServiceRunner(PLAN_NAME, stopServiceWaitTime, objectHolder, 
                 paymentManager, rasClient, debtsChecker);
         
-        stopServiceRunner.pauseResourcesForUser(user1);
+        stopServiceRunner.purgeUserResources(user1);
         
-        Mockito.verify(this.user1).setStoppedResources(true);
-        Mockito.verify(rasClient).pauseResourcesByUser(ID_USER_1);
-        Mockito.verify(objectHolder).saveUser(user1);
+        Mockito.verify(rasClient).purgeUser(ID_USER_1, PROVIDER_USER_1);
     }
     
-    // test case: When calling the method pauseResourcesForUser and
+    // test case: When calling the method purgeUserResources and
     // the RasClient throws a FogbowException, it must catch the exception
-    // and throw an InternalServerErrorException. Also, the user state
-    // must remain unchanged.
+    // and throw an InternalServerErrorException.
     @Test
-    public void testPauseResourcesForUserRasClientThrowsException() 
+    public void testPurgeUserResourcesRasClientThrowsException() 
             throws ModifiedListException, FogbowException {
         setUpDatabase();
         
         rasClient = Mockito.mock(RasClient.class);
-        Mockito.doThrow(new FogbowException("message")).when(rasClient).pauseResourcesByUser(ID_USER_1);
+        Mockito.doThrow(new FogbowException("message")).when(rasClient).purgeUser(ID_USER_1, PROVIDER_USER_1);
         
-        stopServiceRunner = new StopServiceRunner(PLAN_NAME, stopServiceWaitTime ,objectHolder, 
+        stopServiceRunner = new StopServiceRunner(PLAN_NAME, stopServiceWaitTime, objectHolder, 
                 paymentManager, rasClient, debtsChecker);
-        
+
         try {
-            stopServiceRunner.pauseResourcesForUser(user1);
-            Assert.fail("pauseResourcesForUser is expected to throw InternalServerErrorException.");
+            stopServiceRunner.purgeUserResources(user1);
+            Assert.fail("purgeUserResources is expected to throw InternalServerErrorException.");
         } catch (InternalServerErrorException e) {
             
         }
         
-        Mockito.verify(this.user1, Mockito.never()).setStoppedResources(true);
-        Mockito.verify(rasClient).pauseResourcesByUser(ID_USER_1);
-        Mockito.verify(objectHolder, Mockito.never()).saveUser(user1);
+        Mockito.verify(rasClient).purgeUser(ID_USER_1, PROVIDER_USER_1);
     }
     
     // test case: When calling the method doRun, it must get the

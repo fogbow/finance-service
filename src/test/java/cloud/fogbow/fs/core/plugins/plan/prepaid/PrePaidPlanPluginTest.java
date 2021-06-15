@@ -16,6 +16,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import cloud.fogbow.common.exceptions.ConfigurationErrorException;
+import cloud.fogbow.common.exceptions.FogbowException;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.common.models.SystemUser;
@@ -34,6 +35,7 @@ import cloud.fogbow.ras.core.models.Operation;
 import cloud.fogbow.ras.core.models.RasOperation;
 import cloud.fogbow.ras.core.models.ResourceType;
 
+// TODO refactor
 // TODO review documentation
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({PropertiesHolder.class})
@@ -190,7 +192,6 @@ public class PrePaidPlanPluginTest {
         assertFalse(prePaidFinancePlugin.isAuthorized(user, operation));
     }
     
-
     // test case: When calling the isAuthorized method for an
     // operation other than creation and the user has not paid past invoices, 
     // the method must return true.
@@ -237,11 +238,11 @@ public class PrePaidPlanPluginTest {
         assertFalse(postPaidFinancePlugin.isAuthorized(user, operation));
     }
     
-    // test case: When calling the addUser method, it must call the DatabaseManager
+    // test case: When calling the registerUser method, it must call the DatabaseManager
     // to create the user, create a UserCredits instance for the new user and 
     // save the user credits using the DatabaseManager.
     @Test
-    public void testAddUser() throws InternalServerErrorException, InvalidParameterException {
+    public void testRegisterUser() throws InternalServerErrorException, InvalidParameterException {
         Map<String, String> financeOptions = new HashMap<String, String>();
         financeOptions.put(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME, String.valueOf(creditsDeductionWaitTime));
         
@@ -258,6 +259,30 @@ public class PrePaidPlanPluginTest {
         
         
         Mockito.verify(objectHolder).registerUser(USER_ID_1, PROVIDER_USER_1, PLAN_NAME);
+    }
+    
+    // TODO documentation
+    @Test
+    public void testPurgeUser() throws FogbowException {
+        Map<String, String> financeOptions = new HashMap<String, String>();
+        financeOptions.put(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME, String.valueOf(creditsDeductionWaitTime));
+        
+        FinanceUser user = Mockito.mock(FinanceUser.class);
+        this.stopServiceRunner = Mockito.mock(StopServiceRunner.class);
+        
+        objectHolder = Mockito.mock(InMemoryUsersHolder.class);
+        Mockito.when(objectHolder.getUserById(USER_ID_1, PROVIDER_USER_1)).thenReturn(user);
+        
+        PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(PLAN_NAME, creditsDeductionWaitTime, objectHolder, 
+                accountingServiceClient, rasClient, paymentManager, planFactory, jsonUtils, debtsChecker, paymentRunner, 
+                stopServiceRunner, plan, financeOptions);
+        
+        
+        prePaidFinancePlugin.purgeUser(new SystemUser(USER_ID_1, USER_NAME_1, PROVIDER_USER_1));
+        
+        
+        Mockito.verify(this.stopServiceRunner).purgeUserResources(user);        
+        Mockito.verify(objectHolder).removeUser(USER_ID_1, PROVIDER_USER_1);
     }
     
     // test case: When calling the changePlan method, it must call the 
@@ -281,6 +306,27 @@ public class PrePaidPlanPluginTest {
         prePaidFinancePlugin.changePlan(new SystemUser(USER_ID_1, USER_NAME_1, PROVIDER_USER_1), NEW_PLAN_NAME);
         
         Mockito.verify(this.objectHolder).changePlan(USER_ID_1, PROVIDER_USER_1, NEW_PLAN_NAME);
+    }
+
+    // TODO documentation
+    @Test
+    public void testUnregisterUser() throws InvalidParameterException, InternalServerErrorException {
+        Map<String, String> financeOptions = new HashMap<String, String>();
+        financeOptions.put(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME, String.valueOf(creditsDeductionWaitTime));
+        
+        this.stopServiceRunner = Mockito.mock(StopServiceRunner.class);
+        FinanceUser financeUser1 = Mockito.mock(FinanceUser.class);
+        
+        this.objectHolder = Mockito.mock(InMemoryUsersHolder.class);
+        Mockito.when(objectHolder.getUserById(USER_ID_1, PROVIDER_USER_1)).thenReturn(financeUser1);
+        
+        PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(PLAN_NAME, creditsDeductionWaitTime, objectHolder, accountingServiceClient,
+                rasClient, paymentManager, planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, plan, financeOptions);
+        
+        prePaidFinancePlugin.unregisterUser(new SystemUser(USER_ID_1, USER_NAME_1, PROVIDER_USER_1));
+        
+        Mockito.verify(this.stopServiceRunner).purgeUserResources(financeUser1);
+        Mockito.verify(this.objectHolder).unregisterUser(USER_ID_1, PROVIDER_USER_1);
     }
     
     // TODO documentation

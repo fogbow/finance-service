@@ -72,7 +72,7 @@ public class RasClient {
 		        this.token = getToken();
 		    }
 
-			pauseComputesForUser(userId);
+		    doPauseRequestAndCheckStatus(userId);
 		} catch (URISyntaxException e) {
 			throw new InvalidParameterException(e.getMessage());
 		}
@@ -86,10 +86,6 @@ public class RasClient {
         String newToken = TokenProtector.rewrap(keyToDecrypt, keyToEncrypt, token, FogbowConstants.TOKEN_STRING_SEPARATOR);
         return newToken;
     }
-	
-	private void pauseComputesForUser(String userId) throws URISyntaxException, FogbowException {
-		doPauseRequestAndCheckStatus(userId);
-	}
 
 	private void doPauseRequestAndCheckStatus(String userId) throws URISyntaxException, FogbowException {
 		String endpoint = getPauseEndpoint(cloud.fogbow.ras.api.http.request.Compute.PAUSE_COMPUTE_ENDPOINT, userId);
@@ -132,14 +128,10 @@ public class RasClient {
                 this.token = getToken();
             }
             
-			resumeComputesForUser(userId);
+            doResumeRequestAndCheckStatus(userId);
 		} catch (URISyntaxException e) {
 			throw new InvalidParameterException(e.getMessage());
 		}
-	}
-
-	private void resumeComputesForUser(String userId) throws URISyntaxException, FogbowException {
-		doResumeRequestAndCheckStatus(userId);
 	}
 	
 	private void doResumeRequestAndCheckStatus(String userId) throws URISyntaxException, FogbowException {
@@ -176,4 +168,53 @@ public class RasClient {
 
 		return HttpRequestClient.doGenericRequest(HttpMethod.POST, endpoint, headers, body);
 	}
+	
+	public void purgeUser(String userId, String provider) throws FogbowException {
+        try {
+            if (this.token == null) {
+                this.token = getToken();
+            }
+
+            purgeUserAndCheckStatus(userId, provider);
+        } catch (URISyntaxException e) {
+            throw new InvalidParameterException(e.getMessage());
+        }
+	}
+
+    private void purgeUserAndCheckStatus(String userId, String provider) throws URISyntaxException, FogbowException {
+        String endpoint = getPurgeUserEndpoint(cloud.fogbow.ras.api.http.request.Admin.PURGE_USER_ENDPOINT, 
+                userId, provider);
+        HttpResponse response = doPurgeUserRequest(this.token, endpoint);
+        
+        // If the token expired, authenticate and try again
+        if (response.getHttpCode() == HttpStatus.SC_UNAUTHORIZED) {
+            this.token = getToken();
+            response = doPurgeUserRequest(this.token, endpoint);
+        }
+        
+        if (response.getHttpCode() > HttpStatus.SC_OK) {
+            Throwable e = new HttpResponseException(response.getHttpCode(), response.getContent());
+            throw new UnavailableProviderException(e.getMessage());
+        }    
+    }
+    
+    private String getPurgeUserEndpoint(String purgeUserApiBaseEndpoint, String userId, String provider) 
+            throws URISyntaxException {
+        URI uri = new URI(rasAddress);
+        uri = UriComponentsBuilder.fromUri(uri).port(rasPort).path(purgeUserApiBaseEndpoint).path("/").
+                path(userId).path("/").path(provider).build(true).toUri();
+        return uri.toString();
+    }
+    
+    private HttpResponse doPurgeUserRequest(String token, String endpoint) throws FogbowException {
+        // header
+        HashMap<String, String> headers = new HashMap<String, String>();
+        headers.put(CommonKeys.CONTENT_TYPE_KEY, RECORDS_REQUEST_CONTENT_TYPE);
+        headers.put(CommonKeys.SYSTEM_USER_TOKEN_HEADER_KEY, token);
+        
+        // body
+        Map<String, String> body = new HashMap<String, String>();
+
+        return HttpRequestClient.doGenericRequest(HttpMethod.DELETE, endpoint, headers, body);
+    }
 }

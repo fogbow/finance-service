@@ -294,13 +294,14 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
         }
     }
 
-    // TODO test
     @Override
     public void purgeUser(SystemUser systemUser) throws InvalidParameterException, InternalServerErrorException {
         FinanceUser user = this.usersHolder.getUserById(systemUser.getId(), systemUser.getIdentityProviderId());
-        // TODO must delete user resources
-        this.stopServiceRunner.pauseResourcesForUser(user);
-        this.usersHolder.removeUser(systemUser.getId(), systemUser.getIdentityProviderId()); 
+        
+        synchronized(user) {
+            this.stopServiceRunner.purgeUserResources(user);
+            this.usersHolder.removeUser(systemUser.getId(), systemUser.getIdentityProviderId());
+        }
     }
 
     @Override
@@ -318,19 +319,18 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
         }
     }
 
-    // TODO test
     @Override
     public void unregisterUser(SystemUser systemUser) throws InternalServerErrorException, InvalidParameterException {
         FinanceUser user = this.usersHolder.getUserById(systemUser.getId(), systemUser.getIdentityProviderId());
         
         synchronized (user) {
             if (user.invoicesArePaid()) {
-                // TODO must delete user resources
-                this.stopServiceRunner.pauseResourcesForUser(user);
+                this.stopServiceRunner.purgeUserResources(user);
                 this.paymentRunner.runLastPaymentForUser(systemUser.getId(), systemUser.getIdentityProviderId());
                 this.usersHolder.unregisterUser(systemUser.getId(), systemUser.getIdentityProviderId());
             } else {
-                // FIXME error
+                throw new InvalidParameterException(
+                        String.format(Messages.Exception.USER_HAS_NOT_PAID_ALL_INVOICES, user.getId(), user.getProvider()));
             }
         }
     }
