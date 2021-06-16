@@ -1,5 +1,6 @@
 package cloud.fogbow.fs.api.http.response;
 
+// TODO change name to Version
 public class VersionResponse {
     // TODO documentation
     private String version;

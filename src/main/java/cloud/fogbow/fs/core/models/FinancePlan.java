@@ -212,6 +212,7 @@ public class FinancePlan {
 		}
 	}
 	
+	// TODO investigate getFinancePlan output format problem
 	public Map<String, String> getRulesAsMap() {
 	    return generateRulesRepr();
 	}

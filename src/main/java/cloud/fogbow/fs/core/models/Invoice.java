@@ -116,6 +116,8 @@ public class Invoice {
 		return state;
 	}
 	
+	// TODO we must validate the state change
+	
 	public void setState(InvoiceState state) {
 		this.state = state;
 	}

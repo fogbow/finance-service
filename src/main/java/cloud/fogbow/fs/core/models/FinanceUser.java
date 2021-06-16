@@ -30,6 +30,7 @@ public class FinanceUser implements Serializable {
     /*
      * Properties
      */
+    // TODO Change this property to be a class field
     public static final String USER_LAST_BILLING_TIME = "last_billing_time";
 
     /*
@@ -92,6 +93,8 @@ public class FinanceUser implements Serializable {
 
 	}
 	
+    // TODO Merge these two constructors and
+    // remove the sets methods used to set up the FinanceUser
 	public FinanceUser(Map<String, String> properties) {
 		this.stoppedResources = false;
 		this.properties = properties;
