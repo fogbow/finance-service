@@ -23,9 +23,7 @@ import cloud.fogbow.fs.core.models.OperationType;
 import cloud.fogbow.fs.core.plugins.authorization.FsOperation;
 import cloud.fogbow.fs.core.util.SynchronizationManager;
 
-// TODO refactor logs to include provider id
 public class ApplicationFacade {
-	
 	private static Logger LOGGER = Logger.getLogger(ApplicationFacade.class);
 	private static ApplicationFacade instance;
 	private FinanceManager financeManager;
@@ -79,7 +77,7 @@ public class ApplicationFacade {
 
     public void addUser(String userToken, String userId, String provider, String financePlan) 
             throws UnauthenticatedUserException, UnauthorizedRequestException, FogbowException {
-        LOGGER.info(String.format(Messages.Log.ADDING_USER, userId));
+        LOGGER.info(String.format(Messages.Log.ADDING_USER, userId, provider, financePlan));
         
         authenticateAndAuthorize(userToken, new FsOperation(OperationType.ADD_USER));
         
@@ -112,7 +110,7 @@ public class ApplicationFacade {
     
     public void unregisterUser(String userToken, String userId, String provider) 
             throws UnauthenticatedUserException, UnauthorizedRequestException, FogbowException {
-        LOGGER.info(String.format(Messages.Log.UNREGISTERING_USER, userId));
+        LOGGER.info(String.format(Messages.Log.UNREGISTERING_USER, userId, provider));
         
         authenticateAndAuthorize(userToken, new FsOperation(OperationType.UNREGISTER_USER));
         synchronizationManager.startOperation();
@@ -126,7 +124,7 @@ public class ApplicationFacade {
 
 	public void removeUser(String userToken, String userId, String provider) 
 	        throws UnauthorizedRequestException, FogbowException {
-		LOGGER.info(String.format(Messages.Log.REMOVING_USER, userId));
+		LOGGER.info(String.format(Messages.Log.REMOVING_USER, userId, provider));
 		
 		authenticateAndAuthorize(userToken, new FsOperation(OperationType.REMOVE_USER));
 		synchronizationManager.startOperation();
@@ -138,14 +136,13 @@ public class ApplicationFacade {
 		}
 	}
 	
-	// TODO maybe change name to unregisterSelf
-	public void removeSelf(String userToken) throws FogbowException {
-	    LOGGER.info(Messages.Log.RECEIVED_REMOVE_SELF);
+	public void unregisterSelf(String userToken) throws FogbowException {
+	    LOGGER.info(Messages.Log.RECEIVED_UNREGISTER_SELF);
 	    
         RSAPublicKey asPublicKey = FsPublicKeysHolder.getInstance().getAsPublicKey();
         SystemUser user = AuthenticationUtil.authenticate(asPublicKey, userToken);
         
-        LOGGER.info(String.format(Messages.Log.REMOVING_SELF, user.getId(), 
+        LOGGER.info(String.format(Messages.Log.UNREGISTERING_SELF, user.getId(), 
                 user.getIdentityProviderId()));
         
         synchronizationManager.startOperation();
@@ -159,7 +156,7 @@ public class ApplicationFacade {
 	
     public void changeUserPlan(String userToken, String userId, String provider, String financePlan) 
             throws UnauthenticatedUserException, UnauthorizedRequestException, FogbowException {
-        LOGGER.info(String.format(Messages.Log.CHANGING_USER_PLAN, userId));
+        LOGGER.info(String.format(Messages.Log.CHANGING_USER_PLAN, userId, provider, financePlan));
         
         authenticateAndAuthorize(userToken, new FsOperation(OperationType.CHANGE_USER_PLAN));
         synchronizationManager.startOperation();
@@ -191,7 +188,7 @@ public class ApplicationFacade {
 
 	public void updateFinanceState(String userToken, String userId, String provider, HashMap<String, String> financeState) 
 	        throws UnauthenticatedUserException, UnauthorizedRequestException, FogbowException {
-		LOGGER.info(String.format(Messages.Log.UPDATING_FINANCE_STATE, userId));
+		LOGGER.info(String.format(Messages.Log.UPDATING_FINANCE_STATE, userId, provider));
 		
 		authenticateAndAuthorize(userToken, new FsOperation(OperationType.UPDATE_FINANCE_STATE));
 		synchronizationManager.startOperation();
@@ -204,7 +201,7 @@ public class ApplicationFacade {
 	}
 	
 	public String getFinanceStateProperty(String userToken, String userId, String provider, String property) throws FogbowException {
-		LOGGER.info(String.format(Messages.Log.GETTING_FINANCE_STATE, userId, property));
+		LOGGER.info(String.format(Messages.Log.GETTING_FINANCE_STATE, userId, provider, property));
 		
 		authenticateAndAuthorize(userToken, new FsOperation(OperationType.GET_FINANCE_STATE));
 		synchronizationManager.startOperation();
@@ -218,7 +215,7 @@ public class ApplicationFacade {
 	
 	public void createFinancePlan(String userToken, String pluginClassName, String planName, Map<String, String> planInfo) 
 	        throws FogbowException {
-		LOGGER.info(String.format(Messages.Log.CREATING_FINANCE_PLAN, pluginClassName));
+		LOGGER.info(String.format(Messages.Log.CREATING_FINANCE_PLAN, planName, pluginClassName));
 		
 		authenticateAndAuthorize(userToken, new FsOperation(OperationType.CREATE_FINANCE_PLAN));
 		synchronizationManager.startOperation();

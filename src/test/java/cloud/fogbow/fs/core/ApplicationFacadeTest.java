@@ -290,7 +290,7 @@ public class ApplicationFacadeTest {
         
         setUpApplicationFacade();
 
-        ApplicationFacade.getInstance().removeSelf(userToken);
+        ApplicationFacade.getInstance().unregisterSelf(userToken);
 
         Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
         Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
@@ -319,7 +319,7 @@ public class ApplicationFacadeTest {
             unregisterUser(userIdToRemove, userProviderToRemove);
         
         try {
-            ApplicationFacade.getInstance().removeSelf(userToken);
+            ApplicationFacade.getInstance().unregisterSelf(userToken);
             Assert.fail("removeSelf is expected to throw exception.");
         } catch (FogbowException e) {
         }

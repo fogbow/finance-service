@@ -53,12 +53,12 @@ public class Messages {
 	}
 	
 	public static class Log {
-		public static final String ADDING_USER = "Adding user: %s.";
+		public static final String ADDING_USER = "Adding user: '%s', provider '%s', plan '%s'.";
 		public static final String ADDING_SELF = "Adding user '%s', provider '%s', plan '%s'.";
 		public static final String CHANGING_OPTIONS = "Changing finance options for plan: %s.";
-		public static final String CHANGING_SELF_PLAN = "Changing user '%s', provider '%s', to plan '%s'.";
-		public static final String CHANGING_USER_PLAN = "Changing user plan: %s.";
-		public static final String CREATING_FINANCE_PLAN = "Creating finance plan: %s.";
+		public static final String CHANGING_SELF_PLAN = "Changing self plan. User '%s', provider '%s', to plan '%s'.";
+		public static final String CHANGING_USER_PLAN = "Changing user '%s', provider '%s', to plan '%s'.";
+		public static final String CREATING_FINANCE_PLAN = "Creating finance plan '%s' using plugin '%s'.";
 		public static final String FAILED_TO_GENERATE_INVOICE = "Failed to generate invoice. Error message: %s.";
 		public static final String FAILED_TO_GENERATE_INVOICE_FOR_USER = "Failed to generate invoice for user %s. Error message: %s.";
 		public static final String FAILED_TO_DEDUCT_CREDITS = "Failed to deduct credits. Error message: %s.";
@@ -66,14 +66,14 @@ public class Messages {
 		public static final String FAILED_TO_MANAGE_RESOURCES = "Failed to manage resources. Error message: %s.";
 		public static final String FAILED_TO_PAUSE_USER_RESOURCES_FOR_USER = "Failed to pause resources for user %s. Error message: %s.";
 		public static final String FAILED_TO_RESUME_USER_RESOURCES_FOR_USER = "Failed to resume resources for user %s. Error message: %s.";
-		public static final String GETTING_FINANCE_STATE = "Getting finance state: user '%s' and property '%s'";
+		public static final String GETTING_FINANCE_STATE = "Getting finance state: user '%s', provider '%s' and property '%s'.";
 		public static final String GETTING_FINANCE_PLAN = "Getting finance plan: %s.";
 		public static final String GET_PUBLIC_KEY = "Get public key received.";
 		public static final String PROPERTY_FILE_S_NOT_FOUND = "Property file '%s' not found.";
 		public static final String RECEIVING_GET_VERSION = "Receiving get version.";
 		public static final String RECEIVED_ADD_SELF = "Received addSelf.";
 		public static final String RECEIVED_CHANGE_SELF_PLAN = "Received changeSelfPlan.";
-		public static final String RECEIVED_REMOVE_SELF = "Received removeSelf.";
+		public static final String RECEIVED_UNREGISTER_SELF = "Received unregisterSelf.";
 		public static final String RELOADING_AUTHORIZATION_PLUGIN = "Reloading authorization plugin.";
 		public static final String RELOADING_CONFIGURATION = "Reloading service configuration.";
 		public static final String RELOADING_FINANCE_PLUGINS = "Reloading finance plugins.";
@@ -81,14 +81,14 @@ public class Messages {
 		public static final String RELOADING_PROPERTIES_HOLDER = "Reloading properties holder.";
 		public static final String RELOADING_PUBLIC_KEYS_HOLDER = "Reloading public keys holder.";
 		public static final String REMOVING_FINANCE_PLAN = "Removing finance plan: %s.";
-		public static final String REMOVING_SELF = "Removing user '%s', provider '%s'.";
-		public static final String REMOVING_USER = "Removing user: %s.";
+		public static final String UNREGISTERING_SELF = "Unregistering self: user '%s', provider '%s'.";
+		public static final String REMOVING_USER = "Removing user '%s', provider '%s'.";
 		public static final String SETTING_POLICY = "Setting policy.";
 		public static final String STOPPING_FINANCE_PLUGINS = "Stopping finance plugins.";
 		public static final String UNABLE_TO_CLOSE_FILE_S = "Unable to close file '%s'.";
-		public static final String UNABLE_TO_FIND_USER = "Unable to find user %s, provider %s.";
-		public static final String UNREGISTERING_USER = "Unregistering user '%s'.";
-		public static final String UPDATING_FINANCE_STATE = "Updating finance state of user: %s.";
+		public static final String UNABLE_TO_FIND_USER = "Unable to find user '%s', provider '%s'.";
+		public static final String UNREGISTERING_USER = "Unregistering user '%s', provider '%s'.";
+		public static final String UPDATING_FINANCE_STATE = "Updating finance state of user '%s', provider '%s'.";
 		public static final String UPDATING_FINANCE_PLAN = "Updating finance plan: %s.";
 		public static final String UPDATING_POLICY = "Updating policy.";
 		public static final String USER_LIST_CHANGED_SKIPPING_CREDITS_DEDUCTION = "User list changed. Skipping credits deduction.";

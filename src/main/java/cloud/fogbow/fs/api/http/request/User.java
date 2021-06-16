@@ -33,7 +33,7 @@ public class User {
     @RequestMapping(method = RequestMethod.DELETE)
     public ResponseEntity<Boolean> unregisterSelf(
             @RequestHeader(value = SystemConstants.SYSTEM_USER_TOKEN_HEADER_KEY) String systemUserToken) throws FogbowException {
-        ApplicationFacade.getInstance().removeSelf(systemUserToken);
+        ApplicationFacade.getInstance().unregisterSelf(systemUserToken);
         return new ResponseEntity<Boolean>(HttpStatus.OK);
     }
     
