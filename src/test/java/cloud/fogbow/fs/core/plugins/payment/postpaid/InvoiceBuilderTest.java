@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import cloud.fogbow.common.exceptions.InvalidParameterException;
@@ -15,6 +16,7 @@ import cloud.fogbow.fs.core.models.InvoiceState;
 import cloud.fogbow.fs.core.models.ResourceItem;
 import cloud.fogbow.fs.core.models.VolumeItem;
 
+@Ignore
 public class InvoiceBuilderTest {
 
 	private static final String USER_ID_1 = "userId1";

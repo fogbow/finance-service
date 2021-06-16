@@ -93,6 +93,8 @@ public class InvoiceManager {
             List<Record> records) throws InternalServerErrorException {
         this.invoiceBuilder.setUserId(userId);
         this.invoiceBuilder.setProviderId(provider);
+        this.invoiceBuilder.setStartTime(paymentStartTime);
+        this.invoiceBuilder.setEndTime(paymentEndTime);
         
         // TODO What is the expected behavior for the empty records list case? 
         for (Record record : records) {

@@ -164,7 +164,7 @@ public class PostPaidFinancePlugin implements FinancePlugin {
             for (String invoiceId : financeState.keySet()) {
                 for (Invoice invoice : invoices) {
                     if (invoice.getInvoiceId().equals(invoiceId)) {
-                        invoice.setState(InvoiceState.fromValue(financeState.get(invoiceId)));
+//                        invoice.setState(InvoiceState.fromValue(financeState.get(invoiceId)));
                     }
                 }
             }

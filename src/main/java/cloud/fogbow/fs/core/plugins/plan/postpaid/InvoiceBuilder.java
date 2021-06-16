@@ -5,15 +5,15 @@ import java.util.Map;
 import java.util.UUID;
 
 import cloud.fogbow.fs.core.models.Invoice;
-import cloud.fogbow.fs.core.models.InvoiceState;
 import cloud.fogbow.fs.core.models.ResourceItem;
 
 public class InvoiceBuilder {
-
 	private Map<ResourceItem, Double> items;
 	private String userId;
 	private String providerId;
 	private Double invoiceTotal;
+	private Long startTime;
+	private Long endTime;
 	
 	public InvoiceBuilder() {
 		this.items = new HashMap<ResourceItem, Double>();
@@ -28,6 +28,14 @@ public class InvoiceBuilder {
 		this.providerId = providerId;
 	}
 	
+	public void setStartTime(Long startTime) {
+	    this.startTime = startTime;
+	}
+	
+	public void setEndTime(Long endTime) {
+	    this.endTime = endTime;
+	}
+	
 	public void addItem(ResourceItem resourceItem, Double valueToPayPerTimeUnit, Double timeUsed) {
 		Double itemValue = valueToPayPerTimeUnit * timeUsed;
 		items.put(resourceItem, itemValue);
@@ -35,7 +43,8 @@ public class InvoiceBuilder {
 	}
 
 	public Invoice buildInvoice() {
-		return new Invoice(UUID.randomUUID().toString(), userId, providerId, InvoiceState.WAITING, items, invoiceTotal);
+		return new Invoice(UUID.randomUUID().toString(), userId, providerId, startTime, endTime, 
+		        items, invoiceTotal);
 	}
 
 	public void reset() {

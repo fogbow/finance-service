@@ -15,18 +15,20 @@ import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
-import com.google.gson.Gson;
+import cloud.fogbow.common.exceptions.InvalidParameterException;
+import cloud.fogbow.fs.constants.Messages;
 
 @Entity
 @Table(name = "invoice_table")
 public class Invoice {
-
     private static final String INVOICE_ID_COLUMN_NAME = "invoice_id";
     private static final String USER_ID_COLUMN_NAME = "user_id";
     private static final String PROVIDER_ID_COLUMN_NAME = "provider_id";
     private static final String INVOICE_STATE_COLUMN_NAME = "state";
     private static final String INVOICE_ITEMS_COLUMN_NAME = "invoice_items";
     private static final String INVOICE_TOTAL_COLUMN_NAME = "invoice_total";
+    private static final String INVOICE_START_TIME_COLUMN_NAME = "start_time";
+    private static final String INVOICE_END_TIME_COLUMN_NAME = "end_time";
 
     @Column(name = INVOICE_ID_COLUMN_NAME)
     @Id
@@ -50,19 +52,25 @@ public class Invoice {
     @Column(name = INVOICE_TOTAL_COLUMN_NAME)
 	private Double invoiceTotal;
 	
-    // TODO add start and end times to invoice
+    @Column(name = INVOICE_START_TIME_COLUMN_NAME)
+    private Long startTime;
+    
+    @Column(name = INVOICE_END_TIME_COLUMN_NAME)
+    private Long endTime;
     
     public Invoice() {
         
     }
     
 	public Invoice(String invoiceId, String userId, String providerId, 
-			InvoiceState state, Map<ResourceItem, Double> items, 
+			Long startTime, Long endTime, Map<ResourceItem, Double> items, 
 			Double invoiceTotal) {
 		this.invoiceId = invoiceId;
 		this.userId = userId;
 		this.providerId = providerId;
-		this.state = state;
+		this.startTime = startTime;
+		this.endTime = endTime;
+		this.state = InvoiceState.WAITING;
 		this.invoiceTotal = invoiceTotal;
 		
 		this.invoiceItems = new ArrayList<InvoiceItem>();
@@ -104,7 +112,23 @@ public class Invoice {
 		this.providerId = providerId;
 	}
 
-	public Double getInvoiceTotal() {
+	public Long getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(Long startTime) {
+        this.startTime = startTime;
+    }
+
+    public Long getEndtime() {
+        return endTime;
+    }
+
+    public void setEndtime(Long endtime) {
+        this.endTime = endtime;
+    }
+
+    public Double getInvoiceTotal() {
 		return invoiceTotal;
 	}
 
@@ -116,20 +140,62 @@ public class Invoice {
 		return state;
 	}
 	
-	// TODO we must validate the state change
-	
-	public void setState(InvoiceState state) {
-		this.state = state;
+	public void setState(InvoiceState state) throws InvalidParameterException {
+	    switch (state) {
+	        case PAID: setAsPaid(); break;
+	        case DEFAULTING: setAsDefaulting(); break;
+	        default: throw new InvalidParameterException(
+                    String.format(Messages.Exception.CANNOT_CHANGE_INVOICE_STATE, 
+                            this.state.getValue(), state.getValue()));
+	    }
 	}
 	
-	public String jsonRepr() {
-		return new Gson().toJson(this);
+	private void setAsPaid() throws InvalidParameterException {
+	    if (this.state.equals(InvoiceState.WAITING) || 
+	            this.state.equals(InvoiceState.DEFAULTING)) {
+	        this.state = InvoiceState.PAID;
+	    } else {
+	        throw new InvalidParameterException(
+	                String.format(Messages.Exception.CANNOT_CHANGE_INVOICE_STATE, 
+	                        this.state.getValue(), InvoiceState.PAID.getValue()));
+	    }
 	}
 	
+	private void setAsDefaulting() throws InvalidParameterException {
+	    if (this.state.equals(InvoiceState.WAITING)) {
+	        this.state = InvoiceState.DEFAULTING;
+	    } else {
+            throw new InvalidParameterException(
+                    String.format(Messages.Exception.CANNOT_CHANGE_INVOICE_STATE, 
+                            this.state.getValue(), InvoiceState.DEFAULTING.getValue()));
+	    }
+	}
+
 	@Override
 	public String toString() {
-		String invoiceItemsString = "{";
-		List<String> invoiceItemsStringList = new ArrayList<String>();
+		List<String> invoiceItemsStringList = generateInvoiceItemsString();
+
+		String invoiceItemsString = String.format("{%s}", String.join(",", invoiceItemsStringList));
+		String invoiceTotalString = String.format("%.3f", invoiceTotal);
+		
+		StringBuilder invoiceStringBuilder = new StringBuilder();
+		
+		invoiceStringBuilder.
+		append("{\"id\":\"").append(invoiceId).
+		append("\", \"userId\":\"").append(userId).
+		append("\", \"providerId\":\"").append(providerId).
+		append("\", \"state\":\"").append(state).
+		append("\", \"invoiceItems\":").append(invoiceItemsString).
+		append(", \"invoiceTotal\":").append(invoiceTotalString).
+		append(", \"startTime\":").append(startTime).
+		append(", \"endTime\":").append(endTime).
+		append("}");
+		
+		return invoiceStringBuilder.toString();
+	}
+
+    private List<String> generateInvoiceItemsString() {
+        List<String> invoiceItemsStringList = new ArrayList<String>();
 		
 		for (InvoiceItem invoiceItem : invoiceItems) {
             String itemString = invoiceItem.getItem().toString();
@@ -137,13 +203,7 @@ public class Invoice {
             String itemValuePairString = itemString + ":" + valueString;
             invoiceItemsStringList.add(itemValuePairString);
 		}
-
-		invoiceItemsString += String.join(",", invoiceItemsStringList);
-		invoiceItemsString += "}";
 		
-		String invoiceTotalString = String.format("%.3f", invoiceTotal);
-		
-		return "{\"id\":\"" + invoiceId + "\", \"userId\":\"" + userId + "\", \"providerId\":\"" + providerId + "\", \"state\":\""
-				+ state + "\", \"invoiceItems\":" + invoiceItemsString + ", \"invoiceTotal\":" + invoiceTotalString + "}";
-	}
+        return invoiceItemsStringList;
+    }
 }

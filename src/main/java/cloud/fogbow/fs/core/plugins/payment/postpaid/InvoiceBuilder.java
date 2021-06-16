@@ -36,7 +36,7 @@ public class InvoiceBuilder {
 	}
 
 	public Invoice buildInvoice() {
-		return new Invoice(UUID.randomUUID().toString(), userId, providerId, InvoiceState.WAITING, items, invoiceTotal);
+		return null;//new Invoice(UUID.randomUUID().toString(), userId, providerId, InvoiceState.WAITING, items, invoiceTotal);
 	}
 
 	public void reset() {
