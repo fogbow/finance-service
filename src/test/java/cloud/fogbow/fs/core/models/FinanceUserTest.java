@@ -32,6 +32,7 @@ public class FinanceUserTest {
     private static final String INVOICE_ID_4 = "invoiceId4";
     private static final String NEW_PLAN_NAME = "newPlan";
     private static final Long UNSUBSCRIPTION_TIME = 100L;
+    private static final Long USER_LAST_BILLING_TIME = 1L;
     private FinanceUser financeUser;
     private UserId userId;
     private boolean stoppedResources;
@@ -65,7 +66,8 @@ public class FinanceUserTest {
         invoices.add(invoice4);
         
         financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
-                activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, timeUtils);
+                activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
+                USER_LAST_BILLING_TIME, timeUtils);
         
         String user1State = financeUser.getFinanceState(FinanceUser.ALL_USER_INVOICES_PROPERTY_NAME);
         
@@ -84,7 +86,8 @@ public class FinanceUserTest {
         setUpFinanceUserData();
 
         financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
-                activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, timeUtils);
+                activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
+                USER_LAST_BILLING_TIME, timeUtils);
 
         String user1State = financeUser.getFinanceState(FinanceUser.ALL_USER_INVOICES_PROPERTY_NAME);
         
@@ -95,14 +98,16 @@ public class FinanceUserTest {
     // is USER_CREDITS, it must return a String representing
     // the value of the given user credits.
     @Test
-    public void testGetFinanceStateUserCredits() throws InvalidParameterException, InternalServerErrorException {
+    public void testGetFinanceStateUserCredits() 
+            throws InvalidParameterException, InternalServerErrorException {
         setUpFinanceUserData();
         
         credits = Mockito.mock(UserCredits.class);
         Mockito.when(credits.getCreditsValue()).thenReturn(10.51);
         
         financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
-                activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, timeUtils);
+                activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
+                USER_LAST_BILLING_TIME, timeUtils);
         
         String returnedPropertyUser = financeUser.getFinanceState(FinanceUser.USER_CREDITS);
         
@@ -113,14 +118,16 @@ public class FinanceUserTest {
     // is USER_CREDITS, it must return a String representing
     // the value of the given user credits.
     @Test
-    public void testGetFinanceStateUserCreditsZeroCredits() throws InvalidParameterException, InternalServerErrorException {
+    public void testGetFinanceStateUserCreditsZeroCredits() 
+            throws InvalidParameterException, InternalServerErrorException {
         setUpFinanceUserData();
         
         credits = Mockito.mock(UserCredits.class);
         Mockito.when(credits.getCreditsValue()).thenReturn(0.0);
         
         financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
-                activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, timeUtils);
+                activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
+                USER_LAST_BILLING_TIME, timeUtils);
 
         String returnedPropertyUser = financeUser.getFinanceState(FinanceUser.USER_CREDITS);
 
@@ -131,14 +138,16 @@ public class FinanceUserTest {
     // is USER_CREDITS, it must return a String representing
     // the value of the given user credits.
     @Test
-    public void testGetFinanceStateUserCreditsNegativeCredits() throws InvalidParameterException, InternalServerErrorException {
+    public void testGetFinanceStateUserCreditsNegativeCredits() 
+            throws InvalidParameterException, InternalServerErrorException {
         setUpFinanceUserData();
 
         credits = Mockito.mock(UserCredits.class);
         Mockito.when(credits.getCreditsValue()).thenReturn(-1.113);
         
         financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
-                activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, timeUtils);
+                activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
+                USER_LAST_BILLING_TIME, timeUtils);
 
         String returnedPropertyUser = financeUser.getFinanceState(FinanceUser.USER_CREDITS);
 
@@ -148,11 +157,13 @@ public class FinanceUserTest {
     // test case: When calling the getFinanceState method using an
     // unknown property, it must throw an InvalidParameterException.
     @Test(expected = InvalidParameterException.class)
-    public void testGetFinanceStateUnknownProperty() throws InvalidParameterException, InternalServerErrorException {
+    public void testGetFinanceStateUnknownProperty() 
+            throws InvalidParameterException, InternalServerErrorException {
         setUpInvoices();
         
         financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
-                activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, timeUtils);
+                activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
+                USER_LAST_BILLING_TIME, timeUtils);
         
         financeUser.getFinanceState("unknownProperty");
     }
@@ -160,7 +171,8 @@ public class FinanceUserTest {
     // test case: When calling the updateFinanceState method passing INVOICE as property type, 
     // it must get the correct invoices and change the invoices states.
     @Test
-    public void testUpdateFinanceStateInvoice() throws InvalidParameterException, InternalServerErrorException {
+    public void testUpdateFinanceStateInvoice() 
+            throws InvalidParameterException, InternalServerErrorException {
         setUpFinanceUserData();
         setUpInvoices();
         
@@ -174,7 +186,8 @@ public class FinanceUserTest {
         financeState.put(INVOICE_ID_2, InvoiceState.DEFAULTING.getValue());
 
         financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
-                activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, timeUtils);
+                activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
+                USER_LAST_BILLING_TIME, timeUtils);
 
         financeUser.updateFinanceState(financeState);
         
@@ -186,7 +199,8 @@ public class FinanceUserTest {
     // test case: When calling the updateFinanceState method passing CREDITS as property type, 
     // it must update the credits using the given value.
     @Test
-    public void testUpdateFinanceStateCredits() throws InvalidParameterException, InternalServerErrorException {
+    public void testUpdateFinanceStateCredits() 
+            throws InvalidParameterException, InternalServerErrorException {
         this.credits = Mockito.mock(UserCredits.class);
         
         Map<String, String> financeState = new HashMap<String, String>();
@@ -195,7 +209,8 @@ public class FinanceUserTest {
         
         
         financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
-                activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, timeUtils);
+                activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
+                USER_LAST_BILLING_TIME, timeUtils);
         
         financeUser.updateFinanceState(financeState);
 
@@ -215,7 +230,8 @@ public class FinanceUserTest {
         financeState.put(FinanceUser.PROPERTY_TYPE_KEY, FinanceUser.CREDITS_PROPERTY_TYPE);
         
         financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
-                activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, timeUtils);
+                activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
+                USER_LAST_BILLING_TIME, timeUtils);
         
         financeUser.updateFinanceState(financeState);
     }
@@ -233,7 +249,8 @@ public class FinanceUserTest {
         
         
         financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
-                activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, timeUtils);
+                activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
+                USER_LAST_BILLING_TIME, timeUtils);
         
         financeUser.updateFinanceState(financeState);
     }
@@ -241,7 +258,8 @@ public class FinanceUserTest {
     // test case: When calling the updateFinanceState method passing a state which contains no 
     // property type field, it must throw an InvalidParameterException.
     @Test(expected = InvalidParameterException.class)
-    public void testUpdateFinanceStateCreditsMissingPropertyType() throws InvalidParameterException, InternalServerErrorException {
+    public void testUpdateFinanceStateCreditsMissingPropertyType() 
+            throws InvalidParameterException, InternalServerErrorException {
         this.credits = Mockito.mock(UserCredits.class);
         
         Map<String, String> financeState = new HashMap<String, String>();
@@ -249,7 +267,8 @@ public class FinanceUserTest {
         
         
         financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
-                activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, timeUtils);
+                activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
+                USER_LAST_BILLING_TIME, timeUtils);
         
         financeUser.updateFinanceState(financeState);
     }
@@ -257,7 +276,8 @@ public class FinanceUserTest {
     // test case: When calling the updateFinanceState method passing a state with an invalid
     // property type field, it must throw an InvalidParameterException.
     @Test(expected = InvalidParameterException.class)
-    public void testUpdateFinanceStateCreditsInvalidPropertyType() throws InvalidParameterException, InternalServerErrorException {
+    public void testUpdateFinanceStateCreditsInvalidPropertyType() 
+            throws InvalidParameterException, InternalServerErrorException {
         this.credits = Mockito.mock(UserCredits.class);
         
         Map<String, String> financeState = new HashMap<String, String>();
@@ -266,7 +286,8 @@ public class FinanceUserTest {
         
         
         financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
-                activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, timeUtils);
+                activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
+                USER_LAST_BILLING_TIME, timeUtils);
         
         financeUser.updateFinanceState(financeState);
     }
@@ -277,7 +298,8 @@ public class FinanceUserTest {
         setUpFinanceUserData();
 
         financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
-                null, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, timeUtils);
+                null, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
+                USER_LAST_BILLING_TIME, timeUtils);
         
         financeUser.subscribeToPlan(NEW_PLAN_NAME);
 
@@ -290,7 +312,8 @@ public class FinanceUserTest {
         this.activeSubscription = Mockito.mock(Subscription.class);
         
         financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
-                this.activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, timeUtils);
+                this.activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, 
+                subscriptionFactory, USER_LAST_BILLING_TIME, timeUtils);
 
         financeUser.subscribeToPlan(NEW_PLAN_NAME);
     }
@@ -301,7 +324,8 @@ public class FinanceUserTest {
         setUpFinanceUserData();
 
         financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
-                activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, timeUtils);
+                activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
+                USER_LAST_BILLING_TIME, timeUtils);
         
         financeUser.unsubscribe();
 
@@ -316,7 +340,8 @@ public class FinanceUserTest {
         setUpFinanceUserData();
         
         financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
-                null, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, timeUtils);
+                null, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
+                USER_LAST_BILLING_TIME, timeUtils);
         
         financeUser.unsubscribe();
     }
@@ -327,12 +352,14 @@ public class FinanceUserTest {
         setUpFinanceUserData();
         
         financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
-                null, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, timeUtils);
+                null, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
+                USER_LAST_BILLING_TIME, timeUtils);
         
         assertFalse(financeUser.isSubscribed());
         
         financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
-                null, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, timeUtils);
+                null, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
+                USER_LAST_BILLING_TIME, timeUtils);
     }
     
     // TODO documentation
@@ -341,7 +368,8 @@ public class FinanceUserTest {
         setUpFinanceUserData();
         
         financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
-                activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, timeUtils);
+                activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory,
+                USER_LAST_BILLING_TIME, timeUtils);
         
         assertTrue(financeUser.isSubscribed());
     }
@@ -352,7 +380,8 @@ public class FinanceUserTest {
         setUpFinanceUserData();
         
         financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
-                activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, timeUtils);
+                activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
+                USER_LAST_BILLING_TIME, timeUtils);
         
         assertEquals(NEW_PLAN_NAME, financeUser.getFinancePluginName());
     }
@@ -363,14 +392,16 @@ public class FinanceUserTest {
         setUpFinanceUserData();
         
         financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
-                null, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, timeUtils);
+                null, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
+                USER_LAST_BILLING_TIME, timeUtils);
         
         assertNull(financeUser.getFinancePluginName());
     }
     
     // TODO documentation
     @Test
-    public void testInvoicesArePaidAllInvoicesArePaid() throws InvalidParameterException, InternalServerErrorException {
+    public void testInvoicesArePaidAllInvoicesArePaid() 
+            throws InvalidParameterException, InternalServerErrorException {
         setUpInvoices();
         setUpFinanceUserData();
         
@@ -378,14 +409,16 @@ public class FinanceUserTest {
         invoices.add(invoice3);
         
         financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
-                activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, timeUtils);
+                activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
+                USER_LAST_BILLING_TIME, timeUtils);
         
         assertTrue(financeUser.invoicesArePaid());
     }
     
     // TODO documentation
     @Test
-    public void testInvoicesArePaidNotAllInvoicesArePaid() throws InvalidParameterException, InternalServerErrorException {
+    public void testInvoicesArePaidNotAllInvoicesArePaid() 
+            throws InvalidParameterException, InternalServerErrorException {
         setUpInvoices();
         setUpFinanceUserData();
         
@@ -394,7 +427,8 @@ public class FinanceUserTest {
         invoices.add(invoice3);
         
         financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
-                activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, timeUtils);
+                activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory,
+                USER_LAST_BILLING_TIME, timeUtils);
         
         assertFalse(financeUser.invoicesArePaid());
     }
@@ -408,7 +442,8 @@ public class FinanceUserTest {
         invoices.add(invoice2);
         
         financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
-                activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, timeUtils);
+                activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory,
+                USER_LAST_BILLING_TIME, timeUtils);
         
         financeUser.addInvoiceAsDebt(invoice1);
         

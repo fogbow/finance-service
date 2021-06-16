@@ -1,7 +1,6 @@
 package cloud.fogbow.fs.core.util;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.models.Invoice;
@@ -17,6 +16,6 @@ public class FinanceUserFactory {
     
     public FinanceUser getUser(String userId, String provider) {
         return new FinanceUser(userId, provider, userCreditsFactory.getUserCredits(userId, provider), 
-                new ArrayList<Invoice>(), new HashMap<String, String>());
+                new ArrayList<Invoice>());
     }
 }

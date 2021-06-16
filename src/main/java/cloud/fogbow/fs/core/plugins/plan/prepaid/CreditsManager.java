@@ -62,7 +62,7 @@ public class CreditsManager {
                     credits.deduct(resourceItem, valueToPayPerTimeUnit, timeUsed);
                 }
 
-                user.setProperty(FinanceUser.USER_LAST_BILLING_TIME, String.valueOf(paymentEndTime));
+                user.setLastBillingTime(paymentEndTime);
                 this.usersHolder.saveUser(user);
             }
         }

@@ -300,30 +300,6 @@ public class InMemoryUsersHolderTest {
         objectHolder.getUserById(USER_ID_1, "unknownprovider");
     }
     
-    // test case: When calling the method changeOptions, it must change the options
-    // used by the given user using the data contained in the given options map and
-    // then persist the changes using the DatabaseManager.
-    @Test
-    public void testChangeOptions() 
-            throws InvalidParameterException, InternalServerErrorException, ConfigurationErrorException {
-        Map<String, MultiConsumerSynchronizedList<FinanceUser>> usersByPlugin = 
-                new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
-        usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
-        
-        HashMap<String, String> newOptions = new HashMap<String, String>();
-        newOptions.put("option1", "optionvalue1");
-        newOptions.put("option2", "optionvalue2");
-         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, 
-                userFactory, usersByPlugin, inactiveUsersSynchronizedList);
-        
-        objectHolder.changeOptions(USER_ID_1, PROVIDER_ID_1, newOptions);
-        
-        Mockito.verify(user1).setProperty("option1", "optionvalue1");
-        Mockito.verify(user1).setProperty("option2", "optionvalue2");
-        Mockito.verify(databaseManager).saveUser(user1);
-    }
-    
     // test case: When calling the method saveUser, it must persist the user
     // data using the DatabaseManager.
     @Test

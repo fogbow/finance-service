@@ -27,11 +27,6 @@ public class FinanceUser implements Serializable {
     private static final long serialVersionUID = 1L;
 
     // TODO documentation
-    /*
-     * Properties
-     */
-    // TODO Change this property to be a class field
-    public static final String USER_LAST_BILLING_TIME = "last_billing_time";
 
     /*
      * Finance state
@@ -48,6 +43,7 @@ public class FinanceUser implements Serializable {
      * Database column names
      */
     private static final String STOPPED_RESOURCES_COLUMN_NAME = "stopped_resources";
+    private static final String LAST_BILLING_TIME_COLUMN_NAME = "user_last_billing_time";
     private static final String PROPERTIES_COLUMN_NAME = "properties";
     private static final String INVOICES_COLUMN_NAME = "invoices";
     private static final String INACTIVE_SUBSCRIPTIONS_COLUMN_NAME = "inactive_subscriptions";
@@ -58,6 +54,9 @@ public class FinanceUser implements Serializable {
     
     @Column(name = STOPPED_RESOURCES_COLUMN_NAME)
 	private boolean stoppedResources;
+    
+    @Column(name = LAST_BILLING_TIME_COLUMN_NAME)
+    private Long userLastBillingTime;
     
     @Column(name = PROPERTIES_COLUMN_NAME)
     @ElementCollection(fetch = FetchType.EAGER)
@@ -92,33 +91,22 @@ public class FinanceUser implements Serializable {
     public FinanceUser() {
 
 	}
-	
-    // TODO Merge these two constructors and
-    // remove the sets methods used to set up the FinanceUser
-	public FinanceUser(Map<String, String> properties) {
-		this.stoppedResources = false;
-		this.properties = properties;
-        long billingTime = System.currentTimeMillis();
-        this.setProperty(USER_LAST_BILLING_TIME, String.valueOf(billingTime));
+
+	public FinanceUser(String id, String provider, UserCredits credits, List<Invoice> invoices) {
+	    this.userId = new UserId(id, provider);
+        this.stoppedResources = false;
         this.activeSubscription = null;
         this.inactiveSubscriptions = new ArrayList<Subscription>();
         this.lastSubscriptionsDebts = new ArrayList<String>();
         this.subscriptionFactory = new SubscriptionFactory();
         this.timeUtils = new TimeUtils();
-	}
-	
-	public FinanceUser(String id, String provider, UserCredits credits, List<Invoice> invoices, 
-	        Map<String, String> properties) {
-	    this(properties);
-	    this.userId = new UserId(id, provider);
-	    this.credits = credits;
-	    this.invoices = invoices;
+        this.userLastBillingTime = this.timeUtils.getCurrentTimeMillis();
 	}
 	
 	public FinanceUser(UserId userId, boolean stoppedResources, Map<String, String> properties, 
 	        List<Invoice> invoices, UserCredits credits, Subscription activeSubscription, 
 	        List<Subscription> inactiveSubscriptions, List<String> lastSubscriptionsDebts, 
-	        SubscriptionFactory subscriptionFactory, TimeUtils timeUtils) {
+	        SubscriptionFactory subscriptionFactory, Long userLastBillingTime, TimeUtils timeUtils) {
 	    this.userId = userId;
 	    this.stoppedResources = stoppedResources;
 	    this.properties = properties;
@@ -128,13 +116,10 @@ public class FinanceUser implements Serializable {
 	    this.inactiveSubscriptions = inactiveSubscriptions;
 	    this.lastSubscriptionsDebts = lastSubscriptionsDebts;
 	    this.subscriptionFactory = subscriptionFactory;
+	    this.userLastBillingTime = userLastBillingTime;
 	    this.timeUtils = timeUtils;
 	}
-	
-	public void setUserId(String id, String provider) {
-	    this.userId = new UserId(id, provider);
-	}
-	
+
 	public String getProvider() {
 	    return this.userId.getProvider();
 	}
@@ -151,14 +136,14 @@ public class FinanceUser implements Serializable {
 		this.stoppedResources = stoppedResources;
 	}
 	
-	public String getProperty(String propertyName) {
-		return this.properties.get(propertyName);
+	public Long getLastBillingTime() {
+	    return this.userLastBillingTime;
 	}
 	
-	public void setProperty(String propertyName, String propertyValue) {
-		this.properties.put(propertyName, propertyValue);
+	public void setLastBillingTime(Long lastBillingTime) {
+	    this.userLastBillingTime = lastBillingTime;
 	}
-
+	
     public UserCredits getCredits() {
         return credits;
     }

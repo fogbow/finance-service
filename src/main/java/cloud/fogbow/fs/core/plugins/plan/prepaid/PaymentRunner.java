@@ -44,12 +44,7 @@ public class PaymentRunner extends StoppableRunner {
         this.paymentManager = paymentManager;
         this.usersHolder = usersHolder;
     }
-	
-	private long getUserLastBillingTime(FinanceUser user) {
-		String lastBillingTimeProperty = user.getProperty(FinanceUser.USER_LAST_BILLING_TIME);
-		return Long.valueOf(lastBillingTimeProperty);
-	}
-	
+
 	@Override
 	public void doRun() {
 	    MultiConsumerSynchronizedList<FinanceUser> registeredUsers = usersHolder.
@@ -77,7 +72,7 @@ public class PaymentRunner extends StoppableRunner {
     private void tryToRunPaymentForUser(FinanceUser user) {
         synchronized (user) {
             long billingTime = this.timeUtils.getCurrentTimeMillis();
-            long lastBillingTime = getUserLastBillingTime(user);
+            long lastBillingTime = user.getLastBillingTime();// getUserLastBillingTime(user);
 
             tryToDeductCreditsForUser(user, billingTime, lastBillingTime);
         }

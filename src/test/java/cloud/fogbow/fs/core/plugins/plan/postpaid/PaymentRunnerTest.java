@@ -297,14 +297,12 @@ public class PaymentRunnerTest {
         this.user1 = Mockito.mock(FinanceUser.class);
         Mockito.when(user1.getId()).thenReturn(ID_USER_1);
         Mockito.when(user1.getProvider()).thenReturn(PROVIDER_USER_1);
-        Mockito.when(user1.getProperty(PaymentRunner.USER_BILLING_INTERVAL)).thenReturn(String.valueOf(BILLING_INTERVAL));
-        Mockito.when(user1.getProperty(FinanceUser.USER_LAST_BILLING_TIME)).thenReturn(String.valueOf(INITIAL_USER_1_LAST_BILLING_TIME));
-        
+        Mockito.when(user1.getLastBillingTime()).thenReturn(INITIAL_USER_1_LAST_BILLING_TIME);
+
         this.user2 = Mockito.mock(FinanceUser.class);
         Mockito.when(user2.getId()).thenReturn(ID_USER_2);
         Mockito.when(user2.getProvider()).thenReturn(PROVIDER_USER_2);
-        Mockito.when(user2.getProperty(PaymentRunner.USER_BILLING_INTERVAL)).thenReturn(String.valueOf(BILLING_INTERVAL));
-        Mockito.when(user2.getProperty(FinanceUser.USER_LAST_BILLING_TIME)).thenReturn(String.valueOf(INITIAL_USER_2_LAST_BILLING_TIME));
+        Mockito.when(user2.getLastBillingTime()).thenReturn(INITIAL_USER_2_LAST_BILLING_TIME);
     }
     
     private void setUpObjectHolder() {

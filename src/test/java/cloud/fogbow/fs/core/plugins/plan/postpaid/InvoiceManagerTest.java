@@ -76,7 +76,7 @@ public class InvoiceManagerTest {
         Mockito.verify(this.invoiceBuilder).setEndTime(invoiceEndTime);
         Mockito.verify(this.objectHolder).getUserById(USER_ID_1, PROVIDER_ID_1);
         Mockito.verify(this.user1).addInvoice(invoiceToAdd);
-        Mockito.verify(this.user1).setProperty(FinanceUser.USER_LAST_BILLING_TIME, String.valueOf(invoiceEndTime));
+        Mockito.verify(this.user1).setLastBillingTime(invoiceEndTime);
         Mockito.verify(this.objectHolder).saveUser(user1);
     }
     
@@ -130,7 +130,7 @@ public class InvoiceManagerTest {
         Mockito.verify(this.invoiceBuilder).setEndTime(invoiceEndTime);
         Mockito.verify(this.objectHolder).getUserById(USER_ID_1, PROVIDER_ID_1);
         Mockito.verify(this.user1).addInvoiceAsDebt(invoiceToAdd);
-        Mockito.verify(this.user1).setProperty(FinanceUser.USER_LAST_BILLING_TIME, String.valueOf(invoiceEndTime));
+        Mockito.verify(this.user1).setLastBillingTime(invoiceEndTime);
         Mockito.verify(this.objectHolder).saveUser(user1);
     }
     

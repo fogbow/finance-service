@@ -314,11 +314,11 @@ public class StopServiceRunnerTest {
     }
 
     private void setUpUsers() {
-        this.user1 = new FinanceUser(new HashMap<String, String>());
-        user1.setUserId(ID_USER_1, PROVIDER_USER_1);
+//        this.user1 = new FinanceUser(new HashMap<String, String>());
+//        user1.setUserId(ID_USER_1, PROVIDER_USER_1);
 
-        this.user2 = new FinanceUser(new HashMap<String, String>());
-        user2.setUserId(ID_USER_2, PROVIDER_USER_2);
+//        this.user2 = new FinanceUser(new HashMap<String, String>());
+//        user2.setUserId(ID_USER_2, PROVIDER_USER_2);
     }
     
     private void setUpObjectHolder() {

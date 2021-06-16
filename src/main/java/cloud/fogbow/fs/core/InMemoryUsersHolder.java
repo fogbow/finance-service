@@ -263,13 +263,14 @@ public class InMemoryUsersHolder {
         }
     }
 
+    @Deprecated
     public void changeOptions(String userId, String provider, Map<String, String> financeOptions)
             throws InvalidParameterException, InternalServerErrorException {
         FinanceUser user = getUserById(userId, provider);
 
         synchronized (user) {
             for (String option : financeOptions.keySet()) {
-                user.setProperty(option, financeOptions.get(option));
+                
             }
 
             this.databaseManager.saveUser(user);

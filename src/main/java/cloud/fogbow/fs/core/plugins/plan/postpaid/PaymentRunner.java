@@ -54,11 +54,6 @@ public class PaymentRunner extends StoppableRunner {
         this.timeUtils = timeUtils;
     }
 
-    private long getUserLastBillingTime(FinanceUser user) {
-        String lastBillingTimeProperty = user.getProperty(FinanceUser.USER_LAST_BILLING_TIME);
-        return Long.valueOf(lastBillingTimeProperty);
-    }
-
     @Override
     public void doRun() {
         MultiConsumerSynchronizedList<FinanceUser> registeredUsers = userHolder.
@@ -90,7 +85,7 @@ public class PaymentRunner extends StoppableRunner {
         synchronized(user) {
             // TODO concurrency check: check if the user is still subscribed to the plan or was removed
             long billingTime = this.timeUtils.getCurrentTimeMillis();
-            long lastBillingTime = getUserLastBillingTime(user);
+            long lastBillingTime = user.getLastBillingTime();// getUserLastBillingTime(user);
 
             // run payment regardless of time
             try {
@@ -107,7 +102,7 @@ public class PaymentRunner extends StoppableRunner {
         synchronized(user) {
             // TODO concurrency check: check if the user is still subscribed to the plan or was removed
             long billingTime = this.timeUtils.getCurrentTimeMillis();
-            long lastBillingTime = getUserLastBillingTime(user);
+            long lastBillingTime = user.getLastBillingTime();
             
             if (isBillingTime(billingTime, lastBillingTime, billingInterval)) {
                 tryToGenerateInvoiceForUser(user, billingTime, lastBillingTime);

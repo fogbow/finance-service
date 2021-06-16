@@ -84,8 +84,8 @@ public class InvoiceManager {
         } else { 
             user.addInvoice(invoice);
         }
-            
-        user.setProperty(FinanceUser.USER_LAST_BILLING_TIME, String.valueOf(paymentEndTime));
+        
+        user.setLastBillingTime(paymentEndTime);
         this.userHolder.saveUser(user);
     }
     
