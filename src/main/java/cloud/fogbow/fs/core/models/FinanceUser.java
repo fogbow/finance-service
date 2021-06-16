@@ -94,6 +94,8 @@ public class FinanceUser implements Serializable {
 
 	public FinanceUser(String id, String provider, UserCredits credits, List<Invoice> invoices) {
 	    this.userId = new UserId(id, provider);
+	    this.credits = credits;
+	    this.invoices = invoices;
         this.stoppedResources = false;
         this.activeSubscription = null;
         this.inactiveSubscriptions = new ArrayList<Subscription>();

@@ -53,7 +53,9 @@ public class PostPaidPlanPluginTest {
     private static final String PROVIDER_USER_NOT_MANAGED = "providerUserNotManaged";
     private static final String PLAN_NAME = "planName";
     private static final String RULES_JSON = "rulesjson";
+    private static final String RULES_STRING = "rulesString";
     private static final String NEW_RULES_JSON = "newRulesJson";
+    private static final String NEW_RULES_STRING = "newRulesString";
     private static final String FINANCE_PLAN_FILE_PATH = "financeplanfilepath";
     private static final String NEW_PLAN_NAME = "newPlanName";
     private AccountingServiceClient accountingServiceClient;
@@ -465,7 +467,7 @@ public class PostPaidPlanPluginTest {
     @Test
     public void testSetOptionsWithPlanRulesPlanIsNotNull() throws InvalidParameterException, InternalServerErrorException {
         this.plan = Mockito.mock(FinancePlan.class);
-        Mockito.when(this.plan.getRulesAsMap()).thenReturn(rulesMap);
+        Mockito.when(this.plan.toString()).thenReturn(RULES_STRING);
         
         this.jsonUtils = Mockito.mock(JsonUtils.class);
         Mockito.when(this.jsonUtils.toJson(rulesMap)).thenReturn(RULES_JSON);
@@ -479,7 +481,7 @@ public class PostPaidPlanPluginTest {
         
         assertEquals(String.valueOf(userBillingInterval), optionsBefore.get(PaymentRunner.USER_BILLING_INTERVAL));
         assertEquals(String.valueOf(invoiceWaitTime), optionsBefore.get(PostPaidPlanPlugin.INVOICE_WAIT_TIME));
-        assertEquals(RULES_JSON, optionsBefore.get(PostPaidPlanPlugin.FINANCE_PLAN_RULES));
+        assertEquals(RULES_STRING, optionsBefore.get(PostPaidPlanPlugin.FINANCE_PLAN_RULES));
         
         // new options
         Map<String, String> financeOptions = new HashMap<String, String>();
@@ -502,7 +504,7 @@ public class PostPaidPlanPluginTest {
     @Test
     public void testSetOptionsWithPlanRulesPlanIsNull() throws InvalidParameterException, InternalServerErrorException {
         this.plan = Mockito.mock(FinancePlan.class);
-        Mockito.when(this.plan.getRulesAsMap()).thenReturn(newRulesMap);
+        Mockito.when(this.plan.toString()).thenReturn(NEW_RULES_STRING);
         
         this.jsonUtils = Mockito.mock(JsonUtils.class);
         Mockito.when(this.jsonUtils.toJson(newRulesMap)).thenReturn(NEW_RULES_JSON);
@@ -528,7 +530,7 @@ public class PostPaidPlanPluginTest {
         
         assertEquals(String.valueOf(newUserBillingInterval), optionsAfter.get(PaymentRunner.USER_BILLING_INTERVAL));
         assertEquals(String.valueOf(newInvoiceWaitTime), optionsAfter.get(PostPaidPlanPlugin.INVOICE_WAIT_TIME));
-        assertEquals(NEW_RULES_JSON, optionsAfter.get(PostPaidPlanPlugin.FINANCE_PLAN_RULES));
+        assertEquals(NEW_RULES_STRING, optionsAfter.get(PostPaidPlanPlugin.FINANCE_PLAN_RULES));
         
         Mockito.verify(this.planFactory).createFinancePlan(PLAN_NAME, newRulesMap);
     }
@@ -537,7 +539,7 @@ public class PostPaidPlanPluginTest {
     @Test
     public void testSetOptionsWithPlanRuleFromFile() throws InvalidParameterException, InternalServerErrorException {
         this.plan = Mockito.mock(FinancePlan.class);
-        Mockito.when(this.plan.getRulesAsMap()).thenReturn(newRulesMap);
+        Mockito.when(this.plan.toString()).thenReturn(NEW_RULES_STRING);
         
         this.jsonUtils = Mockito.mock(JsonUtils.class);
         Mockito.when(this.jsonUtils.toJson(newRulesMap)).thenReturn(NEW_RULES_JSON);
@@ -563,7 +565,7 @@ public class PostPaidPlanPluginTest {
         
         assertEquals(String.valueOf(newUserBillingInterval), optionsAfter.get(PaymentRunner.USER_BILLING_INTERVAL));
         assertEquals(String.valueOf(newInvoiceWaitTime), optionsAfter.get(PostPaidPlanPlugin.INVOICE_WAIT_TIME));
-        assertEquals(NEW_RULES_JSON, optionsAfter.get(PostPaidPlanPlugin.FINANCE_PLAN_RULES));
+        assertEquals(NEW_RULES_STRING, optionsAfter.get(PostPaidPlanPlugin.FINANCE_PLAN_RULES));
         
         Mockito.verify(this.planFactory).createFinancePlan(PLAN_NAME, FINANCE_PLAN_FILE_PATH);
     }
@@ -572,7 +574,7 @@ public class PostPaidPlanPluginTest {
     @Test(expected = InvalidParameterException.class)
     public void testSetOptionsThrowsExceptionIfNoPlanStartUpOptionIsPassed() throws InvalidParameterException, InternalServerErrorException {
         this.plan = Mockito.mock(FinancePlan.class);
-        Mockito.when(this.plan.getRulesAsMap()).thenReturn(rulesMap);
+        Mockito.when(this.plan.toString()).thenReturn(RULES_STRING);
         
         this.jsonUtils = Mockito.mock(JsonUtils.class);
         Mockito.when(this.jsonUtils.toJson(rulesMap)).thenReturn(RULES_JSON);
@@ -585,7 +587,7 @@ public class PostPaidPlanPluginTest {
         
         assertEquals(String.valueOf(userBillingInterval), optionsBefore.get(PaymentRunner.USER_BILLING_INTERVAL));
         assertEquals(String.valueOf(invoiceWaitTime), optionsBefore.get(PostPaidPlanPlugin.INVOICE_WAIT_TIME));
-        assertEquals(RULES_JSON, optionsBefore.get(PostPaidPlanPlugin.FINANCE_PLAN_RULES));
+        assertEquals(RULES_STRING, optionsBefore.get(PostPaidPlanPlugin.FINANCE_PLAN_RULES));
         
         // new options
         Map<String, String> financeOptions = new HashMap<String, String>();
@@ -599,7 +601,7 @@ public class PostPaidPlanPluginTest {
     @Test
     public void testGetOptions() throws InvalidParameterException, InternalServerErrorException {
         this.plan = Mockito.mock(FinancePlan.class);
-        Mockito.when(this.plan.getRulesAsMap()).thenReturn(rulesMap);
+        Mockito.when(this.plan.toString()).thenReturn(RULES_STRING);
         
         this.jsonUtils = Mockito.mock(JsonUtils.class);
         Mockito.when(this.jsonUtils.toJson(rulesMap)).thenReturn(RULES_JSON);
@@ -612,7 +614,7 @@ public class PostPaidPlanPluginTest {
         
         assertEquals(String.valueOf(userBillingInterval), options.get(PaymentRunner.USER_BILLING_INTERVAL));
         assertEquals(String.valueOf(invoiceWaitTime), options.get(PostPaidPlanPlugin.INVOICE_WAIT_TIME));
-        assertEquals(RULES_JSON, options.get(PostPaidPlanPlugin.FINANCE_PLAN_RULES));
+        assertEquals(RULES_STRING, options.get(PostPaidPlanPlugin.FINANCE_PLAN_RULES));
     }
     
     // TODO documentation

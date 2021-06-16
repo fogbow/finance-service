@@ -212,10 +212,24 @@ public class FinancePlan {
 		}
 	}
 	
-	// TODO investigate getFinancePlan output format problem
 	public Map<String, String> getRulesAsMap() {
 	    return generateRulesRepr();
 	}
+	
+    @Override
+    public String toString() {
+        Map<String, String> rulesRepr = generateRulesRepr();
+        List<String> financePlanItemsStrings = new ArrayList<String>();
+        Integer ruleIndex = 0;
+        
+        for (String item : rulesRepr.keySet()) {
+            financePlanItemsStrings.add(
+                    String.format("%s:[%s,%s]", String.valueOf(ruleIndex), item, rulesRepr.get(item)));
+            ruleIndex++;
+        }
+        
+        return String.format("{%s}", String.join(",", financePlanItemsStrings));
+    }
 
 	private Map<String, String> generateRulesRepr() {
         Map<String, String> rulesRepr = new HashMap<String, String>();

@@ -224,9 +224,9 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
     
     @Override
     public Map<String, String> getOptions() {
-        HashMap<String, String> options = new HashMap<String, String>();
-        String planRules = this.jsonUtils.toJson(plan.getRulesAsMap());
+        String planRules = plan.toString();
         
+        HashMap<String, String> options = new HashMap<String, String>();
         options.put(FINANCE_PLAN_RULES, planRules);
         options.put(PaymentRunner.USER_BILLING_INTERVAL, String.valueOf(userBillingTime));
         options.put(INVOICE_WAIT_TIME, String.valueOf(invoiceWaitTime));
@@ -357,11 +357,14 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
         this.usersHolder = objectsHolder;
         this.accountingServiceClient = new AccountingServiceClient();
         this.rasClient = new RasClient();
+        this.planFactory = new FinancePlanFactory();
+        this.jsonUtils = new JsonUtils();
+        this.debtsChecker = new DebtsPaymentChecker(usersHolder);
         this.threadsAreRunning = false;
         
         this.invoiceManager = new InvoiceManager(this.usersHolder, plan);
     }
-    
+
     static class PostPaidPluginOptionsLoader {
         public Map<String, String> load() throws ConfigurationErrorException {
             Map<String, String> options = new HashMap<String, String>();
