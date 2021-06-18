@@ -8,7 +8,6 @@ import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
-import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.plugins.PersistablePlanPlugin;
 import cloud.fogbow.fs.core.util.list.ModifiedListException;
 import cloud.fogbow.fs.core.util.list.MultiConsumerSynchronizedList;
@@ -62,46 +61,6 @@ public class InMemoryFinanceObjectsHolder {
     
     public MultiConsumerSynchronizedList<PersistablePlanPlugin> getPlanPlugins() {
         return this.planPlugins;
-    }
-    
-    /*
-     * 
-     * User methods
-     * 
-     */
-
-    @Deprecated
-    public void registerUser(String userId, String provider, String pluginName)
-            throws InternalServerErrorException, InvalidParameterException {
-        this.usersHolder.registerUser(userId, provider, pluginName);
-    }
-
-    @Deprecated
-    public void saveUser(FinanceUser user) throws InvalidParameterException, InternalServerErrorException { 
-        this.usersHolder.saveUser(user);
-    }
-
-    @Deprecated
-    public void removeUser(String userId, String provider)
-            throws InvalidParameterException, InternalServerErrorException {
-        this.usersHolder.removeUser(userId, provider);
-    }
-
-    @Deprecated
-    public FinanceUser getUserById(String id, String provider)
-            throws InternalServerErrorException, InvalidParameterException {
-        return this.usersHolder.getUserById(id, provider);
-    }
-
-    @Deprecated
-    public MultiConsumerSynchronizedList<FinanceUser> getRegisteredUsersByPaymentType(String pluginName) {
-        return this.usersHolder.getRegisteredUsersByPaymentType(pluginName);
-    }
-
-    @Deprecated
-    public void changeOptions(String userId, String provider, Map<String, String> financeOptions)
-            throws InvalidParameterException, InternalServerErrorException {
-        this.usersHolder.changeOptions(userId, provider, financeOptions);
     }
 
     /*
