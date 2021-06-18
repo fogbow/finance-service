@@ -81,6 +81,9 @@ public class ApplicationFacadeTest {
 	private SynchronizationManager synchronizationManager;
 	private SystemUser systemUser;
 	private SystemUser systemUserToAuthorize;
+	private SystemUser systemUserToUnregister;
+	private SystemUser systemUserToRemove;
+	private SystemUser systemUserToChange;
 	private FsOperation operation;
 	private AuthorizationPlugin<FsOperation> authorizationPlugin;
     private RasOperation rasOperation;
@@ -200,7 +203,7 @@ public class ApplicationFacadeTest {
         Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
         Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
         Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
-        Mockito.verify(financeManager, Mockito.times(1)).unregisterUser(userIdToUnregister, userProviderToUnregister);
+        Mockito.verify(financeManager, Mockito.times(1)).unregisterUser(systemUserToUnregister);
     }
 	
     // test case: When calling the unregisterUser method, if the call to 
@@ -219,8 +222,7 @@ public class ApplicationFacadeTest {
         ApplicationFacade.getInstance().setFinanceManager(financeManager);
         ApplicationFacade.getInstance().setSynchronizationManager(synchronizationManager);
         
-        Mockito.doThrow(FogbowException.class).when(this.financeManager).unregisterUser(userIdToUnregister, 
-                userProviderToUnregister);
+        Mockito.doThrow(FogbowException.class).when(this.financeManager).unregisterUser(systemUserToUnregister);
         
         try {
             ApplicationFacade.getInstance().unregisterUser(adminToken, userIdToUnregister, userProviderToUnregister);
@@ -248,7 +250,7 @@ public class ApplicationFacadeTest {
 		Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
         Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
 		Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
-		Mockito.verify(financeManager, Mockito.times(1)).removeUser(this.userIdToRemove, this.userProviderToRemove);
+		Mockito.verify(financeManager, Mockito.times(1)).removeUser(systemUserToRemove);
 	}
 	
 	// test case: When calling the removeUser method, if the call to
@@ -267,8 +269,7 @@ public class ApplicationFacadeTest {
 		ApplicationFacade.getInstance().setFinanceManager(financeManager);
 		ApplicationFacade.getInstance().setSynchronizationManager(synchronizationManager);
 
-		Mockito.doThrow(FogbowException.class).when(this.financeManager).removeUser(userIdToRemove, 
-				this.userProviderToRemove);
+		Mockito.doThrow(FogbowException.class).when(this.financeManager).removeUser(systemUserToRemove);
 
 		try {
 			ApplicationFacade.getInstance().removeUser(adminToken, userIdToRemove, this.userProviderToRemove);
@@ -286,10 +287,11 @@ public class ApplicationFacadeTest {
     @Test
     public void testRemoveSelf() throws FogbowException {
         setUpPublicKeysHolder();
+        setUpAuthentication();
         
         PowerMockito.mockStatic(AuthenticationUtil.class);
         this.systemUser = new SystemUser(userIdToRemove, userIdToRemove, userProviderToRemove);
-        BDDMockito.given(AuthenticationUtil.authenticate(asPublicKey, userToken)).willReturn(systemUser);
+        BDDMockito.given(AuthenticationUtil.authenticate(asPublicKey, userToken)).willReturn(systemUserToRemove);
         
         setUpApplicationFacade();
 
@@ -297,7 +299,7 @@ public class ApplicationFacadeTest {
 
         Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
         Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
-        Mockito.verify(financeManager, Mockito.times(1)).unregisterUser(userIdToRemove, userProviderToRemove);
+        Mockito.verify(financeManager, Mockito.times(1)).unregisterUser(systemUserToRemove);
     }
     
     // test case: When calling the removeSelf method, if the call to 
@@ -306,10 +308,11 @@ public class ApplicationFacadeTest {
     @Test
     public void testRemoveSelfFinishesOperationIfOperationFails() throws FogbowException {
         setUpPublicKeysHolder();
+        setUpAuthentication();
         
         PowerMockito.mockStatic(AuthenticationUtil.class);
         this.systemUser = new SystemUser(userIdToRemove, userIdToRemove, userProviderToRemove);
-        BDDMockito.given(AuthenticationUtil.authenticate(asPublicKey, userToken)).willReturn(systemUser);
+        BDDMockito.given(AuthenticationUtil.authenticate(asPublicKey, userToken)).willReturn(systemUserToRemove);
         
         this.financeManager = Mockito.mock(FinanceManager.class);
         this.synchronizationManager = Mockito.mock(SynchronizationManager.class);
@@ -319,7 +322,7 @@ public class ApplicationFacadeTest {
         ApplicationFacade.getInstance().setSynchronizationManager(synchronizationManager);
         
         Mockito.doThrow(FogbowException.class).when(this.financeManager).
-            unregisterUser(userIdToRemove, userProviderToRemove);
+            unregisterUser(systemUserToRemove);
         
         try {
             ApplicationFacade.getInstance().unregisterSelf(userToken);
@@ -346,7 +349,7 @@ public class ApplicationFacadeTest {
         Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
         Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
         Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
-        Mockito.verify(financeManager, Mockito.times(1)).changePlan(userIdToChange, userProviderToChange, newPlanName);
+        Mockito.verify(financeManager, Mockito.times(1)).changePlan(systemUserToChange, newPlanName);
     }
     
     // test case: When calling the changeUserPlan method, if the call to
@@ -366,7 +369,7 @@ public class ApplicationFacadeTest {
         ApplicationFacade.getInstance().setSynchronizationManager(synchronizationManager);
 
         Mockito.doThrow(FogbowException.class).when(this.financeManager).changePlan(
-                userIdToChange, userProviderToChange, newPlanName);
+                systemUserToChange, newPlanName);
 
         try {
             ApplicationFacade.getInstance().changeUserPlan(adminToken, userIdToChange, userProviderToChange, newPlanName);
@@ -384,10 +387,11 @@ public class ApplicationFacadeTest {
     @Test
     public void testChangeSelfPlan() throws FogbowException {
         setUpPublicKeysHolder();
+        setUpAuthentication();
         
         PowerMockito.mockStatic(AuthenticationUtil.class);
         this.systemUser = new SystemUser(userIdToChange, userIdToChange, userProviderToChange);
-        BDDMockito.given(AuthenticationUtil.authenticate(asPublicKey, userToken)).willReturn(systemUser);
+        BDDMockito.given(AuthenticationUtil.authenticate(asPublicKey, userToken)).willReturn(systemUserToChange);
         
         setUpApplicationFacade();
 
@@ -395,8 +399,7 @@ public class ApplicationFacadeTest {
 
         Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
         Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
-        Mockito.verify(financeManager, Mockito.times(1)).changePlan(
-                userIdToChange, userProviderToChange, newPlanName);
+        Mockito.verify(financeManager, Mockito.times(1)).changePlan(systemUserToChange, newPlanName);
     }
     
     // test case: When calling the changeSelfPlan method, if the call to 
@@ -405,10 +408,11 @@ public class ApplicationFacadeTest {
     @Test
     public void testChangeSelfPlanFinishesOperationIfOperationFails() throws FogbowException {
         setUpPublicKeysHolder();
+        setUpAuthentication();
         
         PowerMockito.mockStatic(AuthenticationUtil.class);
         this.systemUser = new SystemUser(userIdToChange, userIdToChange, userProviderToChange);
-        BDDMockito.given(AuthenticationUtil.authenticate(asPublicKey, userToken)).willReturn(systemUser);
+        BDDMockito.given(AuthenticationUtil.authenticate(asPublicKey, userToken)).willReturn(systemUserToChange);
         
         this.financeManager = Mockito.mock(FinanceManager.class);
         this.synchronizationManager = Mockito.mock(SynchronizationManager.class);
@@ -418,7 +422,7 @@ public class ApplicationFacadeTest {
         ApplicationFacade.getInstance().setSynchronizationManager(synchronizationManager);
         
         Mockito.doThrow(FogbowException.class).when(this.financeManager).
-            changePlan(userIdToChange, userProviderToChange, newPlanName);
+            changePlan(systemUserToChange, newPlanName);
         
         try {
             ApplicationFacade.getInstance().changeSelfPlan(userToken, newPlanName);
@@ -446,8 +450,7 @@ public class ApplicationFacadeTest {
 		Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
         Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
 		Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
-		Mockito.verify(financeManager, Mockito.times(1)).updateFinanceState(this.userIdToChange,
-				this.userProviderToChange, this.newState);
+		Mockito.verify(financeManager, Mockito.times(1)).updateFinanceState(systemUserToChange, this.newState);
 	}
 	
 	// test case: When calling the updateFinanceState method, if the call to
@@ -466,8 +469,8 @@ public class ApplicationFacadeTest {
 		ApplicationFacade.getInstance().setFinanceManager(financeManager);
 		ApplicationFacade.getInstance().setSynchronizationManager(synchronizationManager);
 
-		Mockito.doThrow(FogbowException.class).when(this.financeManager).updateFinanceState(this.userIdToChange, 
-				this.userProviderToChange, this.newState);
+		Mockito.doThrow(FogbowException.class).when(this.financeManager).updateFinanceState(
+		        systemUserToChange, this.newState);
 
 		try {
 			ApplicationFacade.getInstance().updateFinanceState(this.adminToken, this.userIdToChange, 
@@ -491,8 +494,8 @@ public class ApplicationFacadeTest {
         setUpAuthorization(OperationType.GET_FINANCE_STATE);
         setUpApplicationFacade();
         
-        Mockito.when(financeManager.getFinanceStateProperty(userIdToChange, 
-                userProviderToChange, property)).thenReturn(propertyValue);
+        Mockito.when(financeManager.getFinanceStateProperty(systemUserToChange, property)).
+        thenReturn(propertyValue);
         
         String returnedProperty = ApplicationFacade.getInstance().getFinanceStateProperty(adminToken, 
                 userIdToChange, userProviderToChange, property);
@@ -513,8 +516,8 @@ public class ApplicationFacadeTest {
         setUpAuthorization(OperationType.GET_FINANCE_STATE);
         setUpApplicationFacade();
         
-        Mockito.when(financeManager.getFinanceStateProperty(userIdToChange, 
-                userProviderToChange, property)).thenThrow(new FogbowException("message"));
+        Mockito.when(financeManager.getFinanceStateProperty(systemUserToChange, property)).
+        thenThrow(new FogbowException("message"));
         
         try {
             ApplicationFacade.getInstance().getFinanceStateProperty(adminToken, 
@@ -994,6 +997,12 @@ public class ApplicationFacadeTest {
 		this.systemUser = new SystemUser(adminId, adminUserName, adminProvider);
 		BDDMockito.given(AuthenticationUtil.authenticate(asPublicKey, adminToken)).willReturn(systemUser);
 		BDDMockito.given(AuthenticationUtil.authenticate(rasPublicKey, userToken)).willReturn(systemUserToAuthorize);
+		
+		this.systemUserToChange = new SystemUser(this.userIdToChange, this.userIdToChange, this.userProviderToChange);
+		this.systemUserToUnregister = new SystemUser(this.userIdToUnregister, this.userIdToUnregister, 
+		        this.userProviderToUnregister);
+		this.systemUserToRemove = new SystemUser(this.userIdToRemove, this.userIdToRemove, 
+		        this.userProviderToRemove);
 	}
 	
 	private void setUpAuthorization(OperationType operationType) throws UnauthorizedRequestException {

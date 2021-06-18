@@ -118,7 +118,7 @@ public class ApplicationFacade {
         synchronizationManager.startOperation();
         
         try {
-            this.financeManager.unregisterUser(userId, provider);
+            this.financeManager.unregisterUser(new SystemUser(userId, userId, provider));
         } finally {
             synchronizationManager.finishOperation();
         }
@@ -132,7 +132,7 @@ public class ApplicationFacade {
 		synchronizationManager.startOperation();
 		
 		try {
-			this.financeManager.removeUser(userId, provider);
+			this.financeManager.removeUser(new SystemUser(userId, userId, provider));
 		} finally {
 			synchronizationManager.finishOperation();
 		}
@@ -150,7 +150,7 @@ public class ApplicationFacade {
         synchronizationManager.startOperation();
         
         try {
-            this.financeManager.unregisterUser(user.getId(), user.getIdentityProviderId());
+            this.financeManager.unregisterUser(user);
         } finally {
             synchronizationManager.finishOperation();
         }
@@ -164,7 +164,7 @@ public class ApplicationFacade {
         synchronizationManager.startOperation();
         
         try {
-            this.financeManager.changePlan(userId, provider, financePlan);
+            this.financeManager.changePlan(new SystemUser(userId, userId, provider), financePlan);
         } finally {
             synchronizationManager.finishOperation();
         }
@@ -182,7 +182,7 @@ public class ApplicationFacade {
         synchronizationManager.startOperation();
         
         try {
-            this.financeManager.changePlan(user.getId(), user.getIdentityProviderId(), newPlanName);
+            this.financeManager.changePlan(user, newPlanName);
         } finally {
             synchronizationManager.finishOperation();
         }
@@ -196,7 +196,7 @@ public class ApplicationFacade {
 		synchronizationManager.startOperation();
 		
 		try {
-			this.financeManager.updateFinanceState(userId, provider, financeState);			
+			this.financeManager.updateFinanceState(new SystemUser(userId, userId, provider), financeState);			
 		} finally {
 			synchronizationManager.finishOperation();
 		}
@@ -209,7 +209,7 @@ public class ApplicationFacade {
 		synchronizationManager.startOperation();
 
 		try {
-			return this.financeManager.getFinanceStateProperty(userId, provider, property);
+			return this.financeManager.getFinanceStateProperty(new SystemUser(userId, userId, provider), property);
 		} finally {
 			synchronizationManager.finishOperation();
 		}

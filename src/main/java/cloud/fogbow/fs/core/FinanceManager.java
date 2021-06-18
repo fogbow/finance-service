@@ -28,13 +28,15 @@ public class FinanceManager {
         }
     }
 
-    private void tryToCreateDefaultPlanPlugin() throws ConfigurationErrorException, InvalidParameterException, InternalServerErrorException {
+    private void tryToCreateDefaultPlanPlugin() 
+            throws ConfigurationErrorException, InvalidParameterException, InternalServerErrorException {
         String defaultPlanPluginType = PropertiesHolder.getInstance()
                 .getProperty(ConfigurationPropertyKeys.DEFAULT_PLAN_PLUGIN_TYPE);
         String defaultPlanName = PropertiesHolder.getInstance()
                 .getProperty(ConfigurationPropertyKeys.DEFAULT_PLAN_NAME);
         
-        PersistablePlanPlugin plugin = PlanPluginInstantiator.getPlanPlugin(defaultPlanPluginType, defaultPlanName, objectHolder.getInMemoryUsersHolder());
+        PersistablePlanPlugin plugin = PlanPluginInstantiator.getPlanPlugin(
+                defaultPlanPluginType, defaultPlanName, objectHolder.getInMemoryUsersHolder());
         objectHolder.registerPlanPlugin(plugin);
     }
 
@@ -100,7 +102,8 @@ public class FinanceManager {
         }
     }
 
-    private void tryToStart(MultiConsumerSynchronizedList<PersistablePlanPlugin> planPlugins, Integer consumerId) throws InternalServerErrorException, ModifiedListException {
+    private void tryToStart(MultiConsumerSynchronizedList<PersistablePlanPlugin> planPlugins, Integer consumerId)
+            throws InternalServerErrorException, ModifiedListException {
         PersistablePlanPlugin plugin = planPlugins.getNext(consumerId);
         
         while (plugin != null) {
@@ -131,7 +134,8 @@ public class FinanceManager {
         }
     }
     
-    private void tryToStop(MultiConsumerSynchronizedList<PersistablePlanPlugin> planPlugins, Integer consumerId) throws InternalServerErrorException, ModifiedListException {
+    private void tryToStop(MultiConsumerSynchronizedList<PersistablePlanPlugin> planPlugins, Integer consumerId)
+            throws InternalServerErrorException, ModifiedListException {
         PersistablePlanPlugin plugin = planPlugins.getNext(consumerId);
         
         while (plugin != null) {
@@ -151,9 +155,11 @@ public class FinanceManager {
      * User Management
      */
   
-    public void addUser(SystemUser user, String financePlan) throws InvalidParameterException, InternalServerErrorException {
+    public void addUser(SystemUser user, String financePlan) 
+            throws InvalidParameterException, InternalServerErrorException {
         while (true) {
-            MultiConsumerSynchronizedList<PersistablePlanPlugin> planPlugins = this.objectHolder.getPlanPlugins();
+            MultiConsumerSynchronizedList<PersistablePlanPlugin> planPlugins = 
+                    this.objectHolder.getPlanPlugins();
             Integer consumerId = planPlugins.startIterating();
             
             try {
@@ -169,7 +175,8 @@ public class FinanceManager {
         } 
     }
 
-    private void tryToAdd(MultiConsumerSynchronizedList<PersistablePlanPlugin> planPlugins, SystemUser user, String pluginName, Integer consumerId) 
+    private void tryToAdd(MultiConsumerSynchronizedList<PersistablePlanPlugin> planPlugins, 
+            SystemUser user, String pluginName, Integer consumerId) 
             throws InternalServerErrorException, ModifiedListException, InvalidParameterException {
         PersistablePlanPlugin plugin = planPlugins.getNext(consumerId);
         
@@ -187,26 +194,24 @@ public class FinanceManager {
         throw new InvalidParameterException(String.format(Messages.Exception.UNMANAGED_USER, user.getId()));
     }
 
-    // TODO we need to decide a standard for these methods signatures
-    // some receive userid + provider id, others receive systemuser
-    public void removeUser(String userId, String provider)
+    public void removeUser(SystemUser systemUser)
             throws InvalidParameterException, InternalServerErrorException {
-        checkUserIsNotManaged(userId, provider);
+        checkUserIsNotManaged(systemUser);
 
         InMemoryUsersHolder usersHolder = this.objectHolder.getInMemoryUsersHolder();
-        FinanceUser user = usersHolder.getUserById(userId, provider);
+        FinanceUser user = usersHolder.getUserById(systemUser.getId(), systemUser.getIdentityProviderId());
 
         synchronized (user) {
-            usersHolder.removeUser(userId, provider);
+            usersHolder.removeUser(systemUser.getId(), systemUser.getIdentityProviderId());
         }
     }
 
-    private void checkUserIsNotManaged(String userId, String provider)
+    private void checkUserIsNotManaged(SystemUser systemUser)
             throws InternalServerErrorException, InvalidParameterException {
         PersistablePlanPlugin plugin = null;
         
         try {
-            plugin = getUserPlugin(userId, provider);
+            plugin = getUserPlugin(systemUser);
         } catch (InvalidParameterException e) {
             
         }
@@ -214,28 +219,28 @@ public class FinanceManager {
         if (plugin != null) {
             throw new InvalidParameterException(
                     String.format(Messages.Exception.USER_IS_MANAGED_BY_PLUGIN, 
-                    userId, provider, plugin.getName()));  
+                    systemUser.getId(), systemUser.getIdentityProviderId(), plugin.getName()));  
         }
     }
 
-    public void unregisterUser(String userId, String provider) throws InvalidParameterException, InternalServerErrorException {
-        PersistablePlanPlugin plugin = getUserPlugin(userId, provider);
+    public void unregisterUser(SystemUser systemUser) throws InvalidParameterException, InternalServerErrorException {
+        PersistablePlanPlugin plugin = getUserPlugin(systemUser);
         synchronized(plugin) {
-            plugin.unregisterUser(new SystemUser(userId, userId, provider));
+            plugin.unregisterUser(systemUser);
         }
     }
 
-    public void changePlan(String userId, String provider, String newPlanName) throws InvalidParameterException, InternalServerErrorException {
-        PersistablePlanPlugin plugin = getUserPlugin(userId, provider);
+    public void changePlan(SystemUser systemUser, String newPlanName) throws InvalidParameterException, InternalServerErrorException {
+        PersistablePlanPlugin plugin = getUserPlugin(systemUser);
         synchronized(plugin) {
-            plugin.changePlan(new SystemUser(userId, userId, provider), newPlanName);
+            plugin.changePlan(systemUser, newPlanName);
         }
     }
 
-    public void updateFinanceState(String userId, String provider, Map<String, String> financeState)
+    public void updateFinanceState(SystemUser systemUser, Map<String, String> financeState)
             throws InvalidParameterException, InternalServerErrorException {
         InMemoryUsersHolder usersHolder = this.objectHolder.getInMemoryUsersHolder();
-        FinanceUser user = usersHolder.getUserById(userId, provider);
+        FinanceUser user = usersHolder.getUserById(systemUser.getId(), systemUser.getIdentityProviderId());
         
         synchronized(user) {
             user.updateFinanceState(financeState);
@@ -243,16 +248,16 @@ public class FinanceManager {
         }
     }
 
-    public String getFinanceStateProperty(String userId, String provider, String property) throws FogbowException {
+    public String getFinanceStateProperty(SystemUser systemUser, String property) throws FogbowException {
         InMemoryUsersHolder usersHolder = this.objectHolder.getInMemoryUsersHolder();
-        FinanceUser user = usersHolder.getUserById(userId, provider);
+        FinanceUser user = usersHolder.getUserById(systemUser.getId(), systemUser.getIdentityProviderId());
         
         synchronized(user) {
             return user.getFinanceState(property);
         }
     }
 
-    private PersistablePlanPlugin getUserPlugin(String userId, String provider) throws InvalidParameterException, 
+    private PersistablePlanPlugin getUserPlugin(SystemUser systemUser) throws InvalidParameterException, 
     InternalServerErrorException {
         PersistablePlanPlugin plugin = null;
         
@@ -261,7 +266,7 @@ public class FinanceManager {
             Integer consumerId = planPlugins.startIterating();
             
             try {
-                plugin = tryToGet(planPlugins, new SystemUser(userId, userId, provider), consumerId);
+                plugin = tryToGet(planPlugins, systemUser, consumerId);
                 planPlugins.stopIterating(consumerId);
                 break;
             } catch (ModifiedListException e) {
@@ -275,8 +280,9 @@ public class FinanceManager {
         return plugin;
     }
 
-    private PersistablePlanPlugin tryToGet(MultiConsumerSynchronizedList<PersistablePlanPlugin> planPlugins, SystemUser user, Integer consumerId) 
-            throws InternalServerErrorException, ModifiedListException, InvalidParameterException {
+    private PersistablePlanPlugin tryToGet(MultiConsumerSynchronizedList<PersistablePlanPlugin> planPlugins, 
+            SystemUser user, Integer consumerId) throws InternalServerErrorException, ModifiedListException, 
+            InvalidParameterException {
         PersistablePlanPlugin plugin = planPlugins.getNext(consumerId);
         
         while (plugin != null) {
@@ -294,8 +300,10 @@ public class FinanceManager {
      * Plan management
      */
 
-    public void createFinancePlan(String pluginClassName, String planName, Map<String, String> pluginOptions) throws InternalServerErrorException, InvalidParameterException {
-        PersistablePlanPlugin plugin = PlanPluginInstantiator.getPlanPlugin(pluginClassName, planName, pluginOptions, objectHolder.getInMemoryUsersHolder());
+    public void createFinancePlan(String pluginClassName, String planName, Map<String, String> pluginOptions) 
+            throws InternalServerErrorException, InvalidParameterException {
+        PersistablePlanPlugin plugin = PlanPluginInstantiator.getPlanPlugin(pluginClassName, planName, 
+                pluginOptions, objectHolder.getInMemoryUsersHolder());
         this.objectHolder.registerPlanPlugin(plugin);
         // TODO update test
         plugin.startThreads();
@@ -310,7 +318,8 @@ public class FinanceManager {
         this.objectHolder.updatePlanPlugin(planName, financeOptions);
     }
     
-    public Map<String, String> getFinancePlanOptions(String pluginName) throws InternalServerErrorException, InvalidParameterException {
+    public Map<String, String> getFinancePlanOptions(String pluginName) 
+            throws InternalServerErrorException, InvalidParameterException {
         return this.objectHolder.getPlanPluginOptions(pluginName);
     }
 }

@@ -185,7 +185,7 @@ public class FinanceManagerTest {
 		
 		FinanceManager financeManager = new FinanceManager(objectHolder);
 		
-		assertEquals(PROPERTY_VALUE_1, financeManager.getFinanceStateProperty(USER_ID_1, PROVIDER_USER_1, PROPERTY_NAME_1));
+		assertEquals(PROPERTY_VALUE_1, financeManager.getFinanceStateProperty(systemUser1, PROPERTY_NAME_1));
 	}
 	
 	// test case: When calling the getFinanceStateProperty method passing an AuthorizableUser
@@ -195,7 +195,7 @@ public class FinanceManagerTest {
 		setUpFinancePluginUnmanagedUser();
 
 		FinanceManager financeManager = new FinanceManager(objectHolder);
-		financeManager.getFinanceStateProperty(USER_ID_1, PROVIDER_USER_1, PROPERTY_NAME_1);
+		financeManager.getFinanceStateProperty(systemUser1, PROPERTY_NAME_1);
 	}
 	
 	// TODO documentation
@@ -211,7 +211,7 @@ public class FinanceManagerTest {
         
         FinanceManager financeManager = new FinanceManager(objectHolder);
         
-        assertEquals(PROPERTY_VALUE_2, financeManager.getFinanceStateProperty(USER_ID_2, PROVIDER_USER_2, PROPERTY_NAME_2));
+        assertEquals(PROPERTY_VALUE_2, financeManager.getFinanceStateProperty(systemUser2, PROPERTY_NAME_2));
 	}
 	
 	// test case: When calling the addUser method, it must add the 
@@ -266,7 +266,7 @@ public class FinanceManagerTest {
 		
 		FinanceManager financeManager = new FinanceManager(objectHolder);
 		
-		financeManager.removeUser(USER_ID_1, PROVIDER_USER_1);
+		financeManager.removeUser(systemUser1);
 	}
 	
 	// TODO documentation
@@ -279,7 +279,7 @@ public class FinanceManagerTest {
 	    
 	    FinanceManager financeManager = new FinanceManager(objectHolder);
 	    
-	    financeManager.removeUser(USER_ID_1, PROVIDER_USER_1);
+	    financeManager.removeUser(systemUser1);
 	    
 	    Mockito.verify(usersHolder).removeUser(USER_ID_1, PROVIDER_USER_1);
 	}
@@ -291,7 +291,7 @@ public class FinanceManagerTest {
 
         FinanceManager financeManager = new FinanceManager(objectHolder);
 
-        financeManager.removeUser(USER_ID_1, PROVIDER_USER_1);
+        financeManager.removeUser(systemUser1);
 	}
 	
 	// TODO documentation
@@ -301,9 +301,9 @@ public class FinanceManagerTest {
 
         FinanceManager financeManager = new FinanceManager(objectHolder);
 
-        financeManager.unregisterUser(USER_ID_1, PROVIDER_USER_1);
+        financeManager.unregisterUser(systemUser1);
 
-        Mockito.verify(this.plan1).unregisterUser(new SystemUser(USER_ID_1, USER_ID_1, PROVIDER_USER_1));// removeUser(USER_ID_1, PROVIDER_USER_1);
+        Mockito.verify(this.plan1).unregisterUser(new SystemUser(USER_ID_1, USER_ID_1, PROVIDER_USER_1));
 	}
 	
 	// TODO documentation
@@ -313,7 +313,7 @@ public class FinanceManagerTest {
 	    
 	    FinanceManager financeManager = new FinanceManager(objectHolder);
 	    
-	    financeManager.changePlan(USER_ID_1, PROVIDER_USER_1, NEW_PLAN_NAME);
+	    financeManager.changePlan(systemUser1, NEW_PLAN_NAME);
 	    
 	    Mockito.verify(this.plan1).changePlan(new SystemUser(USER_ID_1, USER_ID_1, PROVIDER_USER_1), NEW_PLAN_NAME);
 	}
@@ -326,7 +326,7 @@ public class FinanceManagerTest {
 		Map<String, String> newFinanceState = new HashMap<String, String>();
 		
 		FinanceManager financeManager = new FinanceManager(objectHolder);
-		financeManager.updateFinanceState(USER_ID_1, PROVIDER_USER_1, newFinanceState);
+		financeManager.updateFinanceState(systemUser1, newFinanceState);
 		
 		Mockito.verify(financeUser1).updateFinanceState(newFinanceState);
 		Mockito.verify(this.usersHolder).saveUser(financeUser1);
@@ -342,7 +342,7 @@ public class FinanceManagerTest {
 		Map<String, String> newFinanceState = new HashMap<String, String>();
 		
 		FinanceManager financeManager = new FinanceManager(objectHolder);
-		financeManager.updateFinanceState(USER_ID_1, PROVIDER_USER_1, newFinanceState);
+		financeManager.updateFinanceState(systemUser1, newFinanceState);
 	}
 	
 	// test case: When calling the startPlugins method, it must call the startThreads
