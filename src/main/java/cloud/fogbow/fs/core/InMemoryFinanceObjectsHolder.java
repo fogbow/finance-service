@@ -15,6 +15,7 @@ import cloud.fogbow.fs.core.util.list.MultiConsumerSynchronizedListFactory;
 
 public class InMemoryFinanceObjectsHolder {
     private DatabaseManager databaseManager;
+    // TODO rename to financePlans
     private MultiConsumerSynchronizedList<PersistablePlanPlugin> planPlugins;
     private InMemoryUsersHolder usersHolder;
     private MultiConsumerSynchronizedListFactory listFactory;

@@ -30,7 +30,6 @@ import cloud.fogbow.fs.core.util.list.ModifiedListException;
 import cloud.fogbow.fs.core.util.list.MultiConsumerSynchronizedList;
 import cloud.fogbow.ras.core.models.RasOperation;
 
-// TODO update documentation
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({PropertiesHolder.class, FsPublicKeysHolder.class,
     AuthenticationUtil.class, PlanPluginInstantiator.class})
@@ -63,7 +62,7 @@ public class FinanceManagerTest {
 	private static final String UNKNOWN_PLUGIN_NAME = "unknownplugin";
     private static final String PLUGIN_CLASS_NAME = "pluginClassName";
     private static final String PLAN_NAME = "planName";
-    private static final String NEW_PLAN_NAME = null;
+    private static final String NEW_PLAN_NAME = "newPlanName";
 	private InMemoryFinanceObjectsHolder objectHolder;
 	private SystemUser systemUser1;
 	private SystemUser systemUser2;
@@ -80,9 +79,7 @@ public class FinanceManagerTest {
     private FinanceUser financeUser3;
 
 	// test case: When calling the constructor, it must get
-	// the names of the finance plugins from a PropertiesHolder
-	// instance and call the FinancePluginInstantiator to 
-	// instantiate the finance plugins.
+	// the finance plans list from the InMemoryFinanceObjectsHolder.
 	@Test
 	public void testConstructor() throws FogbowException, ModifiedListException {
 		setUpFinancePlugin();
@@ -92,11 +89,12 @@ public class FinanceManagerTest {
 		Mockito.verify(objectHolder).getPlanPlugins();
 	}
 	
-	// test case: When calling the constructor and the default finance plan does 
-	// not exist in the database, it must call the FinancePlanFactory to create 
-	// the default plan and call the DatabaseManager to save the plan.
+	// test case: When calling the constructor and the list of finance plans acquired from
+	// the InMemoryFinanceObjectsHolder is empty, it must call the PlanPluginInstantiator to
+	// create the default plan and call the InMemoryFinanceObjectsHolder to register the plan.
 	@Test
-	public void testContructorDefaultFinancePlanDoesNotExist() throws FogbowException, ModifiedListException {
+	public void testContructorDefaultFinancePlanDoesNotExist() 
+	        throws FogbowException, ModifiedListException {
         setUpFinancePlugin();
 
         PowerMockito.mockStatic(PropertiesHolder.class);
@@ -108,9 +106,11 @@ public class FinanceManagerTest {
         BDDMockito.given(PropertiesHolder.getInstance()).willReturn(propertiesHolder);
         
         PowerMockito.mockStatic(PlanPluginInstantiator.class);
-        BDDMockito.given(PlanPluginInstantiator.getPlanPlugin(PLUGIN_CLASS_NAME, PLAN_NAME, usersHolder)).willReturn(plan1);
+        BDDMockito.given(PlanPluginInstantiator.getPlanPlugin(PLUGIN_CLASS_NAME, PLAN_NAME, 
+                usersHolder)).willReturn(plan1);
         
-        MultiConsumerSynchronizedList<PersistablePlanPlugin> emptyPluginList = Mockito.mock(MultiConsumerSynchronizedList.class);
+        MultiConsumerSynchronizedList<PersistablePlanPlugin> emptyPluginList = 
+                Mockito.mock(MultiConsumerSynchronizedList.class);
         Mockito.when(emptyPluginList.isEmpty()).thenReturn(true);
         
         objectHolder = Mockito.mock(InMemoryFinanceObjectsHolder.class);
@@ -124,11 +124,14 @@ public class FinanceManagerTest {
         
         PowerMockito.verifyStatic(PlanPluginInstantiator.class);
         PlanPluginInstantiator.getPlanPlugin(PLUGIN_CLASS_NAME, PLAN_NAME, usersHolder);
+        
+        Mockito.verify(objectHolder).registerPlanPlugin(plan1);
 	}
 	
-	// test case: When calling the isAuthorized method passing an AuthorizableUser,
-	// it must check which finance plugin manages the user and call the isAuthorized 
-	// method of the plugin.
+	// test case: When calling the isAuthorized method passing a SystemUser,
+	// it must check which finance plan manages the user and call the isAuthorized 
+	// method of the plan. If the user is authorized by the plan, the method must
+	// return true.
 	@Test
 	public void testIsAuthorizedUserIsAuthorized() throws FogbowException, ModifiedListException {
 		setUpFinancePlugin();
@@ -139,7 +142,10 @@ public class FinanceManagerTest {
 		assertTrue(financeManager.isAuthorized(systemUser1, operation1));
 	}
 
-	// TODO documentation
+	// test case: When calling the isAuthorized method passing a SystemUser,
+    // it must check which finance plan manages the user and call the isAuthorized 
+    // method of the plan. If the user is not authorized by the plan, the method must
+    // return false.
     @Test
     public void testIsAuthorizedUserIsNotAuthorized() throws FogbowException, ModifiedListException {
         setUpFinancePlugin();
@@ -150,8 +156,8 @@ public class FinanceManagerTest {
         assertFalse(financeManager.isAuthorized(systemUser3, operation3));
     }
 
-	// test case: When calling the isAuthorized method passing an AuthorizableUser which
-	// is not managed by any finance plugin, it must throw an InvalidParameterException.
+	// test case: When calling the isAuthorized method passing a SystemUser which
+	// is not managed by any finance plan, it must throw an InvalidParameterException.
 	@Test
 	public void testIsAuthorizedUserIsNotManaged() throws FogbowException, ModifiedListException {
 		setUpFinancePluginUnmanagedUser();
@@ -161,7 +167,9 @@ public class FinanceManagerTest {
 		assertFalse(financeManager.isAuthorized(systemUser1, operation1));
 	}
 	
-	// TODO documentation
+	// test case: When calling the isAuthorized method, if the finance plans list throws a 
+	// ModifiedListException while searching for the correct finance plan, the method must
+	// restart the iteration over the finance plans list.
 	@Test
 	public void testIsAuthorizedModifiedListExceptionIsThrown() throws ModifiedListException, FogbowException {
         setUpFinancePlugin();
@@ -176,9 +184,8 @@ public class FinanceManagerTest {
 	    assertTrue(financeManager.isAuthorized(systemUser2, operation2));
 	}
 	
-	// test case: When calling the getFinanceStateProperty method passing an AuthorizableUser, 
-	// it must check which finance plugin manages the user and call the getUserFinanceState
-	// method of the plugin.
+	// test case: When calling the getFinanceStateProperty method passing a SystemUser, 
+	// it must call the method getFinanceState of the correct FinanceUser.
 	@Test
 	public void testGetFinanceStateProperty() throws FogbowException, ModifiedListException {
 		setUpFinancePlugin();
@@ -188,59 +195,48 @@ public class FinanceManagerTest {
 		assertEquals(PROPERTY_VALUE_1, financeManager.getFinanceStateProperty(systemUser1, PROPERTY_NAME_1));
 	}
 	
-	// test case: When calling the getFinanceStateProperty method passing an AuthorizableUser
-	// which is not managed by any finance plugin, it must throw an InvalidParameterException.
+	// test case: When calling the getFinanceStateProperty method passing a SystemUser which does not
+	// exist in the system, it must throw an InvalidParameterException.
 	@Test(expected = InvalidParameterException.class)
-	public void testGetFinanceStatePropertyUserIsNotManaged() throws FogbowException, ModifiedListException {
+	public void testGetFinanceStatePropertyUserDoesNotExist() throws FogbowException, ModifiedListException {
 		setUpFinancePluginUnmanagedUser();
 
 		FinanceManager financeManager = new FinanceManager(objectHolder);
 		financeManager.getFinanceStateProperty(systemUser1, PROPERTY_NAME_1);
 	}
 	
-	// TODO documentation
-	@Test
-	public void testGentFinanceStatePropertyModifiedListExceptionIsThrown() throws FogbowException, ModifiedListException {
-        setUpFinancePlugin();
-        setUpAuthentication();
-        
-        Mockito.when(plugins.getNext(Mockito.anyInt())).
-        thenReturn(this.plan1).
-        thenThrow(new ModifiedListException()).
-        thenReturn(this.plan1, this.plan2, null);
-        
-        FinanceManager financeManager = new FinanceManager(objectHolder);
-        
-        assertEquals(PROPERTY_VALUE_2, financeManager.getFinanceStateProperty(systemUser2, PROPERTY_NAME_2));
-	}
-	
 	// test case: When calling the addUser method, it must add the 
-	// user using the correct FinancePlugin.
+	// user using the correct finance plan.
 	@Test
 	public void testAddUser() throws FogbowException, ModifiedListException {
 		setUpFinancePlugin();
 		
 		FinanceManager financeManager = new FinanceManager(objectHolder);
 
-		financeManager.addUser(new SystemUser(USER_ID_TO_ADD_1, USER_ID_TO_ADD_1, PROVIDER_USER_TO_ADD_1), PLUGIN_1_NAME);
-		financeManager.addUser(new SystemUser(USER_ID_TO_ADD_2, USER_ID_TO_ADD_2, PROVIDER_USER_TO_ADD_2), PLUGIN_2_NAME);
+		financeManager.addUser(new SystemUser(USER_ID_TO_ADD_1, USER_ID_TO_ADD_1, 
+		        PROVIDER_USER_TO_ADD_1), PLUGIN_1_NAME);
+		financeManager.addUser(new SystemUser(USER_ID_TO_ADD_2, USER_ID_TO_ADD_2, 
+		        PROVIDER_USER_TO_ADD_2), PLUGIN_2_NAME);
 
 		Mockito.verify(this.plan1, Mockito.times(1)).registerUser(Mockito.any(SystemUser.class));
 		Mockito.verify(this.plan2, Mockito.times(1)).registerUser(Mockito.any(SystemUser.class));
 	}
 	
 	// test case: When calling the addUser method and the FinanceManager
-	// does not know the finance plugin, it must throw an InvalidParameterException.
+	// does not know the finance plan, it must throw an InvalidParameterException.
 	@Test(expected = InvalidParameterException.class)
 	public void testAddUserUnknownPlugin() throws FogbowException, ModifiedListException {
 		setUpFinancePlugin();
 		
 		FinanceManager financeManager = new FinanceManager(objectHolder);
 		
-		financeManager.addUser(new SystemUser(USER_ID_TO_ADD_1, USER_ID_TO_ADD_1, PROVIDER_USER_TO_ADD_1), UNKNOWN_PLUGIN_NAME);
+		financeManager.addUser(new SystemUser(USER_ID_TO_ADD_1, USER_ID_TO_ADD_1, 
+		        PROVIDER_USER_TO_ADD_1), UNKNOWN_PLUGIN_NAME);
 	}
 	
-	// TODO documentation
+	// test case: When calling the addUser method, if the finance plans list throws a 
+    // ModifiedListException while searching for the correct finance plan, the method must
+    // restart the iteration over the finance plans list.
 	@Test
 	public void testAddUserModifiedListExceptionIsThrown() throws FogbowException, ModifiedListException {
         setUpFinancePlugin();
@@ -252,24 +248,15 @@ public class FinanceManagerTest {
         
         FinanceManager financeManager = new FinanceManager(objectHolder);
 
-        financeManager.addUser(new SystemUser(USER_ID_TO_ADD_2, USER_ID_TO_ADD_2, PROVIDER_USER_TO_ADD_2), PLUGIN_2_NAME);
+        financeManager.addUser(new SystemUser(USER_ID_TO_ADD_2, USER_ID_TO_ADD_2, 
+                PROVIDER_USER_TO_ADD_2), PLUGIN_2_NAME);
 
         Mockito.verify(this.plan2, Mockito.times(1)).registerUser(Mockito.any(SystemUser.class));
 	}
 
-	// test case: When calling the removeUser method and the user
-	// to be removed is not managed by any finance plugin, it must 
-	// throw an InvalidParameterException.
-	@Test(expected = InvalidParameterException.class)
-	public void testRemoveUserUnmanagedUser() throws ConfigurationErrorException, InvalidParameterException, InternalServerErrorException, ModifiedListException {
-		setUpFinancePluginUnmanagedUser();
-		
-		FinanceManager financeManager = new FinanceManager(objectHolder);
-		
-		financeManager.removeUser(systemUser1);
-	}
-	
-	// TODO documentation
+	// test case: When calling the removeUser method, it must check if the user is 
+	// not managed by any finance plan and then call the InMemoryUsersHolder to
+	// remove the user.
 	@Test
 	public void testRemoveUser() throws FogbowException, ModifiedListException {
 	    setUpFinancePlugin();
@@ -284,7 +271,23 @@ public class FinanceManagerTest {
 	    Mockito.verify(usersHolder).removeUser(USER_ID_1, PROVIDER_USER_1);
 	}
 	
-	// TODO documentation
+	// test case: When calling the removeUser method and the user
+    // to be removed does not exist in the system, it must 
+    // throw an InvalidParameterException.
+    @Test(expected = InvalidParameterException.class)
+    public void testRemoveUserUnmanagedUser() 
+            throws ConfigurationErrorException, InvalidParameterException,
+            InternalServerErrorException, ModifiedListException {
+        setUpFinancePluginUnmanagedUser();
+        
+        FinanceManager financeManager = new FinanceManager(objectHolder);
+        
+        financeManager.removeUser(systemUser1);
+    }
+	
+	// test case: When calling the removeUser method and the user
+    // to be removed is still managed by a finance plan, it must 
+    // throw an InvalidParameterException.
 	@Test(expected = InvalidParameterException.class)
 	public void testRemoveUserStillManagedByPlan() throws FogbowException, ModifiedListException {
         setUpFinancePlugin();
@@ -294,7 +297,9 @@ public class FinanceManagerTest {
         financeManager.removeUser(systemUser1);
 	}
 	
-	// TODO documentation
+	// test case: When calling the unregisterUser method, it must
+	// find the finance plan which manages the user and then 
+	// call the unregisterUser method of the plan.
 	@Test
 	public void testUnregisterUser() throws FogbowException, ModifiedListException {
         setUpFinancePlugin();
@@ -306,7 +311,9 @@ public class FinanceManagerTest {
         Mockito.verify(this.plan1).unregisterUser(new SystemUser(USER_ID_1, USER_ID_1, PROVIDER_USER_1));
 	}
 	
-	// TODO documentation
+	// test case: When calling the changePlan method, it must
+	// find the finance plan which manages the user and then
+	// call the changePlan method of the plan.
 	@Test
 	public void testChangePlan() throws FogbowException, ModifiedListException {
 	    setUpFinancePlugin();
@@ -318,8 +325,9 @@ public class FinanceManagerTest {
 	    Mockito.verify(this.plan1).changePlan(new SystemUser(USER_ID_1, USER_ID_1, PROVIDER_USER_1), NEW_PLAN_NAME);
 	}
 	
-	// test case: When calling the updateFinanceState method, it must
-	// change the user's finance state using the correct FinancePlugin.
+	// test case: When calling the updateFinanceState method, it must call
+	// the method updateFinanceState of the correct user and then call the
+	// InMemoryUsersHolder to save the user.
 	@Test
 	public void testUpdateFinanceState() throws FogbowException, ModifiedListException {
 		setUpFinancePlugin();
@@ -332,10 +340,10 @@ public class FinanceManagerTest {
 		Mockito.verify(this.usersHolder).saveUser(financeUser1);
 	}
 	
-	// test case: When calling the updateFinanceState method and the user
-	// is not managed by any finance plugin, it must throw an InvalidParameterException.
+	// test case: When calling the updateFinanceState method and the user does not
+	// exist in the system, it must throw an InvalidParameterException.
 	@Test(expected = InvalidParameterException.class)
-	public void testUpdateFinanceStateUnmanagedUser() throws InvalidParameterException, 
+	public void testUpdateFinanceStateUserDoesNotExist() throws InvalidParameterException, 
 	ConfigurationErrorException, InternalServerErrorException, ModifiedListException {
 		setUpFinancePluginUnmanagedUser();
 		
@@ -346,7 +354,7 @@ public class FinanceManagerTest {
 	}
 	
 	// test case: When calling the startPlugins method, it must call the startThreads
-	// method of all the known finance plugins.
+	// method of all the known finance plans.
 	@Test
 	public void testStartThreads() throws FogbowException, ModifiedListException {
 		setUpFinancePlugin();
@@ -362,7 +370,10 @@ public class FinanceManagerTest {
 		Mockito.verify(plan2, Mockito.times(1)).startThreads();
 	}
 	
-	// TODO documentation
+	// test case: When calling the startPlugins method, if the finance plans list throws a 
+    // ModifiedListException while iterating over the plans, the method must restart the
+	// iteration over the finance plan list and must not call the startThreads method of 
+	// an already started plan.
 	@Test
 	public void testStartThreadsModifiedListException() throws FogbowException, ModifiedListException {
         setUpFinancePlugin();
@@ -384,7 +395,7 @@ public class FinanceManagerTest {
 	}
 
 	// test case: When calling the stopPlugins method, it must call the stopThreads
-	// method of all the known finance plugins.
+	// method of all the known finance plans.
 	@Test
 	public void testStopThreads() throws FogbowException, ModifiedListException {
 		setUpFinancePlugin();
@@ -396,11 +407,14 @@ public class FinanceManagerTest {
 
 		financeManager.stopPlugins();
 
-        Mockito.verify(plan1, Mockito.times(1)).startThreads();
-        Mockito.verify(plan2, Mockito.times(1)).startThreads();
+        Mockito.verify(plan1, Mockito.times(1)).stopThreads();
+        Mockito.verify(plan2, Mockito.times(1)).stopThreads();
 	}
 	
-	// TODO documentation
+	// test case: When calling the stopPlugins method, if the finance plans list throws a 
+    // ModifiedListException while iterating over the plans, the method must restart the
+    // iteration over the finance plan list and must not call the stopThreads method of 
+    // an already stopped plan.
 	@Test
 	public void testStopThreadsModifiedListException() throws FogbowException, ModifiedListException {
         setUpFinancePlugin();
@@ -417,14 +431,12 @@ public class FinanceManagerTest {
 
         financeManager.stopPlugins();
 
-        Mockito.verify(plan1, Mockito.times(1)).startThreads();
-        Mockito.verify(plan2, Mockito.times(1)).startThreads();
+        Mockito.verify(plan1, Mockito.times(1)).stopThreads();
+        Mockito.verify(plan2, Mockito.times(1)).stopThreads();
 	}
 	
-	// test case: When calling the reset plugins method, it must get
-    // the names of the finance plugins from a PropertiesHolder
-    // instance and call the FinancePluginInstantiator to 
-    // instantiate the finance plugins.
+	// test case: When calling the resetPlugins method, it must call
+	// the reset method of the InMemoryFinanceObjectsHolder.
 	@Test
 	public void testResetPlugins() throws FogbowException, ModifiedListException {
 	    setUpFinancePlugin();
@@ -437,8 +449,8 @@ public class FinanceManagerTest {
 	}
 	
 	// test case: When calling the createFinancePlan method, it must call the 
-	// FinancePlanFactory to create a new FinancePlan and call the saveFinancePlan
-	// method of the DatabaseManager.
+	// PlanPluginFactory to create a new finance plan and call the registerPlanPlugin
+	// method of the InMemoryFinanceObjectsHolder.
 	@Test
 	public void testCreateFinancePlan() throws FogbowException, ModifiedListException {
 	    setUpFinancePlugin();

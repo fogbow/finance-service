@@ -140,7 +140,7 @@ public class FinanceManager {
         
         while (plugin != null) {
             if (plugin.isStarted()) {
-                plugin.startThreads();
+                plugin.stopThreads();
             }
 
             plugin = planPlugins.getNext(consumerId);
