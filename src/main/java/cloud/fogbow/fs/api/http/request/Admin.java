@@ -18,7 +18,6 @@ import cloud.fogbow.fs.core.ApplicationFacade;
 import io.swagger.annotations.ApiParam;
 
 // TODO documentation
-// TODO change positions of provider and userId parameters
 @CrossOrigin
 @RestController
 @RequestMapping(value = Admin.ADMIN_ENDPOINT)
@@ -73,7 +72,7 @@ public class Admin {
     }
     
     // TODO documentation
-    @RequestMapping(value = "/user/unregister/{provider}/{userId}", method = RequestMethod.DELETE)
+    @RequestMapping(value = "/user/unregister/{userId}/{provider}", method = RequestMethod.DELETE)
     public ResponseEntity<Boolean> unregisterUser(
             @PathVariable String userId,
             @PathVariable String provider,
@@ -83,7 +82,7 @@ public class Admin {
     }
     
     // TODO documentation
-    @RequestMapping(value = "/user/{provider}/{userId}", method = RequestMethod.DELETE)
+    @RequestMapping(value = "/user/{userId}/{provider}", method = RequestMethod.DELETE)
     public ResponseEntity<Boolean> removeUser(
             @PathVariable String userId,
             @PathVariable String provider,

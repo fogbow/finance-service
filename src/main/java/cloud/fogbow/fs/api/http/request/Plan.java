@@ -19,7 +19,6 @@ import cloud.fogbow.fs.constants.SystemConstants;
 import cloud.fogbow.fs.core.ApplicationFacade;
 
 //TODO documentation
-//TODO change positions of provider and userId parameters
 @CrossOrigin
 @RestController
 @RequestMapping(value = Plan.PLAN_ENDPOINT)
@@ -28,7 +27,7 @@ public class Plan {
 	public static final String PLAN_USER_SUFFIX = "/user";
 	
 	// TODO documentation
-	@RequestMapping(value = PLAN_USER_SUFFIX + "/{provider}/{userId}", method = RequestMethod.PUT)
+	@RequestMapping(value = PLAN_USER_SUFFIX + "/{userId}/{provider}", method = RequestMethod.PUT)
 	public ResponseEntity<Boolean> updateFinanceState(
 			@PathVariable String userId,
 			@PathVariable String provider,
@@ -39,7 +38,7 @@ public class Plan {
 	}
 	
 	// TODO documentation
-	@RequestMapping(value = PLAN_USER_SUFFIX + "/{provider}/{userId}/{property}", method = RequestMethod.GET)
+	@RequestMapping(value = PLAN_USER_SUFFIX + "/{userId}/{provider}/{property}", method = RequestMethod.GET)
 	public ResponseEntity<String> getFinanceStateProperty(
 			@PathVariable String userId,
 			@PathVariable String provider,
