@@ -17,11 +17,11 @@ import cloud.fogbow.common.models.SystemUser;
 import cloud.fogbow.common.plugins.authorization.AuthorizationPlugin;
 import cloud.fogbow.common.util.CryptoUtil;
 import cloud.fogbow.common.util.ServiceAsymmetricKeysHolder;
-import cloud.fogbow.fs.api.parameters.AuthorizableUser;
 import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.models.OperationType;
 import cloud.fogbow.fs.core.plugins.authorization.FsOperation;
 import cloud.fogbow.fs.core.util.SynchronizationManager;
+import cloud.fogbow.ras.core.models.RasOperation;
 
 public class ApplicationFacade {
 	private static Logger LOGGER = Logger.getLogger(ApplicationFacade.class);
@@ -65,11 +65,13 @@ public class ApplicationFacade {
 		}
 	}
 	
-	public boolean isAuthorized(AuthorizableUser user) throws FogbowException {
+	public boolean isAuthorized(String userToken, RasOperation operation) throws FogbowException {
 		synchronizationManager.startOperation();
 		
 		try { 
-			return this.financeManager.isAuthorized(user);
+	        RSAPublicKey rasPublicKey = FsPublicKeysHolder.getInstance().getRasPublicKey();
+	        SystemUser authenticatedUser = AuthenticationUtil.authenticate(rasPublicKey, userToken);
+			return this.financeManager.isAuthorized(authenticatedUser, operation);
 		} finally {
 			synchronizationManager.finishOperation();
 		}

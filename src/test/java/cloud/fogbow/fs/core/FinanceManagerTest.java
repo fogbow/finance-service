@@ -22,7 +22,6 @@ import cloud.fogbow.common.exceptions.FogbowException;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.common.models.SystemUser;
-import cloud.fogbow.fs.api.parameters.AuthorizableUser;
 import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.plugins.PersistablePlanPlugin;
@@ -66,9 +65,6 @@ public class FinanceManagerTest {
     private static final String PLAN_NAME = "planName";
     private static final String NEW_PLAN_NAME = null;
 	private InMemoryFinanceObjectsHolder objectHolder;
-	private AuthorizableUser user1;
-	private AuthorizableUser user2;
-	private AuthorizableUser user3;
 	private SystemUser systemUser1;
 	private SystemUser systemUser2;
 	private SystemUser systemUser3;
@@ -140,7 +136,7 @@ public class FinanceManagerTest {
 		
 		FinanceManager financeManager = new FinanceManager(objectHolder);
 		
-		assertTrue(financeManager.isAuthorized(user1));
+		assertTrue(financeManager.isAuthorized(systemUser1, operation1));
 	}
 
 	// TODO documentation
@@ -151,7 +147,7 @@ public class FinanceManagerTest {
 
         FinanceManager financeManager = new FinanceManager(objectHolder);
 
-        assertFalse(financeManager.isAuthorized(user3));
+        assertFalse(financeManager.isAuthorized(systemUser3, operation3));
     }
 
 	// test case: When calling the isAuthorized method passing an AuthorizableUser which
@@ -162,7 +158,7 @@ public class FinanceManagerTest {
 		setUpAuthentication();
 		
 		FinanceManager financeManager = new FinanceManager(objectHolder);
-		assertFalse(financeManager.isAuthorized(user1));
+		assertFalse(financeManager.isAuthorized(systemUser1, operation1));
 	}
 	
 	// TODO documentation
@@ -177,7 +173,7 @@ public class FinanceManagerTest {
 	    thenReturn(this.plan1, this.plan2, null);
 	    
 	    FinanceManager financeManager = new FinanceManager(objectHolder);
-	    assertTrue(financeManager.isAuthorized(user2));
+	    assertTrue(financeManager.isAuthorized(systemUser2, operation2));
 	}
 	
 	// test case: When calling the getFinanceStateProperty method passing an AuthorizableUser, 
@@ -508,18 +504,6 @@ public class FinanceManagerTest {
         Mockito.when(plugins.startIterating()).thenReturn(0);
         Mockito.when(plugins.getNext(Mockito.anyInt())).thenReturn(this.plan1, this.plan2, null);
         Mockito.when(plugins.isEmpty()).thenReturn(false);
-
-		this.user1 = Mockito.mock(AuthorizableUser.class);
-		this.user2 = Mockito.mock(AuthorizableUser.class);
-		this.user3 = Mockito.mock(AuthorizableUser.class);
-		
-		Mockito.when(this.user1.getUserToken()).thenReturn(USER_1_TOKEN);
-		Mockito.when(this.user2.getUserToken()).thenReturn(USER_2_TOKEN);
-		Mockito.when(this.user3.getUserToken()).thenReturn(USER_3_TOKEN);
-
-		Mockito.when(this.user1.getOperation()).thenReturn(operation1);
-		Mockito.when(this.user2.getOperation()).thenReturn(operation2);
-		Mockito.when(this.user3.getOperation()).thenReturn(operation3);
 	}
 	
 	private void setUpFinancePluginUnmanagedUser() 
@@ -545,11 +529,6 @@ public class FinanceManagerTest {
         Mockito.when(plugins.startIterating()).thenReturn(0);
         Mockito.when(plugins.getNext(Mockito.anyInt())).thenReturn(this.plan1, this.plan2, null);
         Mockito.when(plugins.isEmpty()).thenReturn(false);
-
-		this.user1 = Mockito.mock(AuthorizableUser.class);
-		
-		Mockito.when(this.user1.getUserToken()).thenReturn(USER_1_TOKEN);
-		Mockito.when(this.user1.getOperation()).thenReturn(operation1);
 	}
 	
 	private void setUpAuthentication() throws FogbowException {

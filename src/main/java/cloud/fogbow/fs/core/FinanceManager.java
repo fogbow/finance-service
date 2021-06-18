@@ -1,15 +1,12 @@
 package cloud.fogbow.fs.core;
 
-import java.security.interfaces.RSAPublicKey;
 import java.util.Map;
 
-import cloud.fogbow.as.core.util.AuthenticationUtil;
 import cloud.fogbow.common.exceptions.ConfigurationErrorException;
 import cloud.fogbow.common.exceptions.FogbowException;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.common.models.SystemUser;
-import cloud.fogbow.fs.api.parameters.AuthorizableUser;
 import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
 import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.models.FinanceUser;
@@ -41,12 +38,7 @@ public class FinanceManager {
         objectHolder.registerPlanPlugin(plugin);
     }
 
-    // TODO this method should receive SystemUser and operation
-    public boolean isAuthorized(AuthorizableUser user) throws FogbowException {
-        String userToken = user.getUserToken();
-        RSAPublicKey rasPublicKey = FsPublicKeysHolder.getInstance().getRasPublicKey();
-        SystemUser authenticatedUser = AuthenticationUtil.authenticate(rasPublicKey, userToken);
-        
+    public boolean isAuthorized(SystemUser user, RasOperation operation) throws FogbowException {
         MultiConsumerSynchronizedList<PersistablePlanPlugin> planPlugins = this.objectHolder.getPlanPlugins();
         boolean authorized = false;
         
@@ -54,7 +46,7 @@ public class FinanceManager {
             Integer consumerId = planPlugins.startIterating();
             
             try {
-                authorized = tryToAuthorize(planPlugins, authenticatedUser, user.getOperation(), consumerId);
+                authorized = tryToAuthorize(planPlugins, user, operation, consumerId);
                 planPlugins.stopIterating(consumerId);
                 break;
             } catch (ModifiedListException e) {

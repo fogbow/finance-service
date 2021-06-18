@@ -28,10 +28,10 @@ import cloud.fogbow.common.models.SystemUser;
 import cloud.fogbow.common.plugins.authorization.AuthorizationPlugin;
 import cloud.fogbow.common.util.CryptoUtil;
 import cloud.fogbow.common.util.ServiceAsymmetricKeysHolder;
-import cloud.fogbow.fs.api.parameters.AuthorizableUser;
 import cloud.fogbow.fs.core.models.OperationType;
 import cloud.fogbow.fs.core.plugins.authorization.FsOperation;
 import cloud.fogbow.fs.core.util.SynchronizationManager;
+import cloud.fogbow.ras.core.models.RasOperation;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({FsPublicKeysHolder.class, AuthenticationUtil.class, 
@@ -76,11 +76,14 @@ public class ApplicationFacadeTest {
 	
 	private FsPublicKeysHolder keysHolder;
 	private RSAPublicKey asPublicKey;
+	private RSAPublicKey rasPublicKey;
 	private FinanceManager financeManager;
 	private SynchronizationManager synchronizationManager;
 	private SystemUser systemUser;
+	private SystemUser systemUserToAuthorize;
 	private FsOperation operation;
 	private AuthorizationPlugin<FsOperation> authorizationPlugin;
+    private RasOperation rasOperation;
 
 	// test case: When calling the addUser method, it must authorize the 
 	// operation and call the FinanceManager. Also, it must start and finish 
@@ -525,24 +528,25 @@ public class ApplicationFacadeTest {
         Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
     }
 	
-	// test case: When calling the isAuthorized method, it must call the isAuthorized
+	// test case: When calling the isAuthorized method, it must create the SystemUser 
+    // instance using the user token passed as argument and then call the isAuthorized
 	// method of the FinanceManager and start and finish operations correctly using
 	// the SynchronizationManager.
 	@Test
 	public void testIsAuthorized() throws FogbowException {
 	    setUpPublicKeysHolder();
+        setUpAuthentication();
         setUpApplicationFacade();
         
         Boolean authorized = true;
-        AuthorizableUser authorizableUser = Mockito.mock(AuthorizableUser.class);
-        Mockito.when(financeManager.isAuthorized(authorizableUser)).thenReturn(authorized);
+        Mockito.when(financeManager.isAuthorized(this.systemUserToAuthorize, this.rasOperation)).thenReturn(authorized);
 
-        Boolean returnedAuthorized = ApplicationFacade.getInstance().isAuthorized(authorizableUser);
+        Boolean returnedAuthorized = ApplicationFacade.getInstance().isAuthorized(this.userToken, this.rasOperation);
         assertEquals(authorized, returnedAuthorized);
         
         Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
         Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
-        Mockito.verify(this.financeManager).isAuthorized(authorizableUser);
+        Mockito.verify(this.financeManager).isAuthorized(this.systemUserToAuthorize, this.rasOperation);
 	}
 	
 	// test case: When calling the isAuthorized method, if the call to
@@ -551,21 +555,21 @@ public class ApplicationFacadeTest {
     @Test
     public void testIsAuthorizedFinishesOperationIfOperationFails() throws FogbowException {
         setUpPublicKeysHolder();
+        setUpAuthentication();
         setUpApplicationFacade();
 
-        AuthorizableUser authorizableUser = Mockito.mock(AuthorizableUser.class);
-
-        Mockito.doThrow(FogbowException.class).when(this.financeManager).isAuthorized(authorizableUser);            
+        Mockito.doThrow(FogbowException.class).when(this.financeManager).
+        isAuthorized(this.systemUserToAuthorize, this.rasOperation);            
 
         try {
-            ApplicationFacade.getInstance().isAuthorized(authorizableUser);
+            ApplicationFacade.getInstance().isAuthorized(this.userToken, this.rasOperation);
             Assert.fail("isAuthorized is expected to throw exception.");
         } catch (FogbowException e) {
         }
         
         Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
         Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
-        Mockito.verify(this.financeManager).isAuthorized(authorizableUser);
+        Mockito.verify(this.financeManager).isAuthorized(this.systemUserToAuthorize, this.rasOperation);
     }
     
     // test case: When calling the getPublicKey method, it must call the 
@@ -979,14 +983,17 @@ public class ApplicationFacadeTest {
 		PowerMockito.mockStatic(FsPublicKeysHolder.class);
 		this.keysHolder = Mockito.mock(FsPublicKeysHolder.class);
 		this.asPublicKey = Mockito.mock(RSAPublicKey.class);
+		this.rasPublicKey = Mockito.mock(RSAPublicKey.class);
 		BDDMockito.given(FsPublicKeysHolder.getInstance()).willReturn(keysHolder);
 		Mockito.when(keysHolder.getAsPublicKey()).thenReturn(asPublicKey);
+        Mockito.when(keysHolder.getRasPublicKey()).thenReturn(rasPublicKey);
 	}
 	
 	private void setUpAuthentication() throws UnauthenticatedUserException {
 		PowerMockito.mockStatic(AuthenticationUtil.class);
 		this.systemUser = new SystemUser(adminId, adminUserName, adminProvider);
 		BDDMockito.given(AuthenticationUtil.authenticate(asPublicKey, adminToken)).willReturn(systemUser);
+		BDDMockito.given(AuthenticationUtil.authenticate(rasPublicKey, userToken)).willReturn(systemUserToAuthorize);
 	}
 	
 	private void setUpAuthorization(OperationType operationType) throws UnauthorizedRequestException {

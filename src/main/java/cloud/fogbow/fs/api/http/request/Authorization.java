@@ -27,7 +27,7 @@ public class Authorization {
     @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<RemoteAuthorizationResponse> isAuthorized(
             @RequestBody AuthorizableUser user) throws FogbowException {
-        boolean authorized = ApplicationFacade.getInstance().isAuthorized(user);
+        boolean authorized = ApplicationFacade.getInstance().isAuthorized(user.getUserToken(), user.getOperation());
         return new ResponseEntity<RemoteAuthorizationResponse>(new RemoteAuthorizationResponse(authorized), HttpStatus.OK);
     }
 }
