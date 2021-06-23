@@ -5,7 +5,6 @@ import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
 import java.security.Key;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,9 +44,10 @@ public class AccountingServiceClient {
     // clients of ACCS' API.
     static final String SIMPLE_DATE_FORMAT = "yyyy-MM-dd";
     // TODO documentation
-	private static final String COMPUTE_RESOURCE = "compute";
-	private static final String VOLUME_RESOURCE = "volume";
-	private static final List<String> RESOURCE_TYPES = Arrays.asList(COMPUTE_RESOURCE, VOLUME_RESOURCE);
+    @VisibleForTesting
+	static final String COMPUTE_RESOURCE = "compute";
+    @VisibleForTesting
+	static final String VOLUME_RESOURCE = "volume";
 	@VisibleForTesting
 	static final String RECORDS_REQUEST_CONTENT_TYPE = "application/json";
 
@@ -96,8 +96,6 @@ public class AccountingServiceClient {
 	}
 	
     public List<Record> getUserRecords(String userId, String requester, long startTime, long endTime) throws FogbowException {
-        List<Record> userRecords = new ArrayList<Record>();
-
         try {
             String requestStartDate = this.timeUtils.toDate(SIMPLE_DATE_FORMAT, startTime);
             String requestEndDate = this.timeUtils.toDate(SIMPLE_DATE_FORMAT, endTime);
@@ -106,19 +104,13 @@ public class AccountingServiceClient {
                 this.token = getToken();
             }
 
-            // TODO This implementation does not look very efficient. We should
-            // try to find another solution, maybe adding a more powerful 
-            // API method to ACCS
-            for (String resourceType : RESOURCE_TYPES) {
-                HttpResponse response = doRequestAndCheckStatus(userId, requester, localProvider, resourceType, 
-                        requestStartDate, requestEndDate);
-                userRecords.addAll(getRecordsFromResponse(response));
-            }
+            HttpResponse response = doRequestAndCheckStatus(userId, requester, localProvider, requestStartDate, 
+                    requestEndDate);
+            List<Record> userRecords = getRecordsFromResponse(response);
+            return filterUsefulRecords(userRecords);
         } catch (URISyntaxException e) {
             throw new FogbowException(e.getMessage());
         }
-        
-        return userRecords;
     }
 
     private String getToken() throws FogbowException {
@@ -131,9 +123,9 @@ public class AccountingServiceClient {
     }
 
     private HttpResponse doRequestAndCheckStatus(String userId, String requester, 
-    		String localProvider, String resourceType, String startDate, String endDate) throws URISyntaxException, FogbowException {
+    		String localProvider, String startDate, String endDate) throws URISyntaxException, FogbowException {
         String endpoint = getAccountingEndpoint(cloud.fogbow.accs.api.http.request.ResourceUsage.USAGE_ENDPOINT, 
-        		userId, requester, localProvider, resourceType, startDate, endDate);
+        		userId, requester, localProvider, startDate, endDate);
         HttpResponse response = doRequest(this.token, endpoint);
         
         // If the token expired, authenticate and try again
@@ -149,15 +141,14 @@ public class AccountingServiceClient {
         
         return response;
     }
-    
-    // http://{accs-address}:{accs-port}/accs/usage/{userId}/{requester-provider}/{local-provider}/{resource-type}/{start-date}/{end-date}
+
+    // http://{accs-address}:{accs-port}/accs/usage/{userId}/{requester-provider}/{local-provider}/{start-date}/{end-date}
     private String getAccountingEndpoint(String path, String userId, String requester, 
-    		String localProvider, String resourceType, String startDate, String endDate) throws URISyntaxException {
+            String localProvider, String startDate, String endDate) throws URISyntaxException {
         URI uri = new URI(accountingServiceAddress);
         uri = UriComponentsBuilder.fromUri(uri).port(accountingServicePort).path(path).path("/").
-        		path(userId).path("/").path(requester).path("/").path(localProvider).path("/").
-        		path(resourceType).path("/").path(startDate).path("/").path(endDate).
-                build(true).toUri();
+                path(userId).path("/").path(requester).path("/").path(localProvider).path("/").
+                path(startDate).path("/").path(endDate).build(true).toUri();
         return uri.toString();
     }
     
@@ -174,5 +165,18 @@ public class AccountingServiceClient {
     
     private List<Record> getRecordsFromResponse(HttpResponse response) throws InvalidParameterException {
     	return recordUtil.getRecordsFromString(response.getContent());
+    }
+    
+    private List<Record> filterUsefulRecords(List<Record> userRecords) {
+        List<Record> filteredRecords = new ArrayList<Record>();
+        
+        for (Record record : userRecords) {
+            if (record.getResourceType().equals(COMPUTE_RESOURCE) || 
+                    record.getResourceType().equals(VOLUME_RESOURCE)) {
+                filteredRecords.add(record);
+            }
+        }
+        
+        return filteredRecords;
     }
 }

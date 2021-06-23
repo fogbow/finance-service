@@ -1,6 +1,7 @@
 package cloud.fogbow.fs.core.util.client;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.security.GeneralSecurityException;
@@ -62,33 +63,27 @@ public class AccountingServiceClientTest {
 	private String requester = "requester";
 	private String requestStartDate = "01-01-1970";
 	private String requestEndDate = "01-01-2000";
-	private String resourceTypeCompute = "compute";
-	private String resourceTypeVolume = "volume";
 	
 	// request / response fields
 	private HttpResponse responseCompute;
-	private HttpResponse responseVolume;
 	private Map<String, String> headers1;
 	private Map<String, String> headers2;
 	private Map<String, String> body;
-	private String urlCompute;
-	private String urlVolume;
+	private String accsUrl;
 	private RecordUtils recordUtils;
 	private Record recordCompute1;
 	private Record recordCompute2;
 	private Record recordVolume;
-	private ArrayList<Record> responseComputeRecords;
-	private ArrayList<Record> responseVolumeRecords;
-	private String responseComputeContent = "responseComputeContent";
-	private String responseVolumeContent = "responseVolumeContent";
+	private Record recordNetwork;
+	private ArrayList<Record> response;
+	private String responseContent = "responseContent";
 	private int successCode = 200;
 	private int errorCode = 500;
 	private int expiredTokenCode = 401;
     private TimeUtils timeUtils;
 
 	// test case: When calling the method getUserRecords, it must set up 
-	// one request for each resource type correctly and return the correct 
-	// records for the user.
+	// the request correctly and return only compute and volume records.
 	@Test
 	public void testGetUserRecords() throws FogbowException, GeneralSecurityException {
 		setUpKeys();
@@ -107,33 +102,17 @@ public class AccountingServiceClientTest {
 		assertTrue(userRecords.contains(recordCompute1));
 		assertTrue(userRecords.contains(recordCompute2));
 		assertTrue(userRecords.contains(recordVolume));
+		assertFalse(userRecords.contains(recordNetwork));
 	}
 
 	// test case: When calling the method getUserRecords and the return code 
-	// for the compute request is not 200, it must throw an UnavailableProviderException.
+	// for the request is not 200, it must throw an UnavailableProviderException.
 	@Test(expected = UnavailableProviderException.class)
 	public void testGetUserRecordsErrorReturnCodeComputeRequest() throws FogbowException, GeneralSecurityException {
 		setUpKeys();
 		setUpAuthentication();
 		setUpRecords();
 		setUpResponse(errorCode, successCode);
-		setUpRequest();
-		
-		AccountingServiceClient accsClient = new AccountingServiceClient(authenticationServiceClient, 
-				localProvider, managerUserName, managerPassword, 
-				accountingServiceAddress, accountingServicePort, recordUtils, timeUtils);
-
-		accsClient.getUserRecords(userId, requester, startTime, endTime);
-	}
-	
-	// test case: When calling the method getUserRecords and the return code
-	// for the volume request is not 200, it must throw an UnavailableProviderException.
-	@Test(expected = UnavailableProviderException.class)
-	public void testGetUserRecordsErrorReturnCodeVolumeRequest() throws FogbowException, GeneralSecurityException {
-		setUpKeys();
-		setUpAuthentication();
-		setUpRecords();
-		setUpResponse(successCode, errorCode);
 		setUpRequest();
 		
 		AccountingServiceClient accsClient = new AccountingServiceClient(authenticationServiceClient, 
@@ -163,9 +142,8 @@ public class AccountingServiceClientTest {
         accsClient.getUserRecords(userId, requester, startTime, endTime);
         
         PowerMockito.verifyStatic(HttpRequestClient.class, Mockito.times(1));
-        HttpRequestClient.doGenericRequest(HttpMethod.GET, urlCompute, headers1, body);
-        HttpRequestClient.doGenericRequest(HttpMethod.GET, urlCompute, headers2, body);
-        HttpRequestClient.doGenericRequest(HttpMethod.GET, urlVolume, headers2, body);
+        HttpRequestClient.doGenericRequest(HttpMethod.GET, accsUrl, headers1, body);
+        HttpRequestClient.doGenericRequest(HttpMethod.GET, accsUrl, headers2, body);
 	}
 	
 	private void setUpKeys() throws InternalServerErrorException, FogbowException, UnauthenticatedUserException,
@@ -207,15 +185,26 @@ public class AccountingServiceClientTest {
 	
 	private void setUpRecords() {
 		this.recordCompute1 = Mockito.mock(Record.class);
-		this.recordCompute2 = Mockito.mock(Record.class);
-		this.recordVolume = Mockito.mock(Record.class);
-
-		this.responseComputeRecords = new ArrayList<Record>();
-		this.responseComputeRecords.add(recordCompute1);
-		this.responseComputeRecords.add(recordCompute2);
+		Mockito.when(this.recordCompute1.getResourceType()).thenReturn(
+		        AccountingServiceClient.COMPUTE_RESOURCE);
 		
-		this.responseVolumeRecords = new ArrayList<Record>();
-		this.responseVolumeRecords.add(recordVolume);
+		this.recordCompute2 = Mockito.mock(Record.class);
+	    Mockito.when(this.recordCompute2.getResourceType()).thenReturn(
+	                AccountingServiceClient.COMPUTE_RESOURCE);
+		
+		this.recordVolume = Mockito.mock(Record.class);
+	    Mockito.when(this.recordVolume.getResourceType()).thenReturn(
+                  AccountingServiceClient.VOLUME_RESOURCE);
+	    
+	    this.recordNetwork = Mockito.mock(Record.class);
+        Mockito.when(this.recordNetwork.getResourceType()).thenReturn(
+                  "network");
+
+		this.response = new ArrayList<Record>();
+		this.response.add(recordCompute1);
+		this.response.add(recordCompute2);
+		this.response.add(recordVolume);
+		this.response.add(recordNetwork);
 	}
 	
 	private void setUpResponse(int returnCodeComputeRequest, int returnCodeVolumeRequest) throws InvalidParameterException {
@@ -228,27 +217,19 @@ public class AccountingServiceClientTest {
 	    
 		this.recordUtils = Mockito.mock(RecordUtils.class);
 		
-		Mockito.when(this.recordUtils.getRecordsFromString(responseComputeContent)).thenReturn(responseComputeRecords);
-		Mockito.when(this.recordUtils.getRecordsFromString(responseVolumeContent)).thenReturn(responseVolumeRecords);
+		Mockito.when(this.recordUtils.getRecordsFromString(responseContent)).thenReturn(response);
 
 		responseCompute = Mockito.mock(HttpResponse.class);
 		Mockito.when(responseCompute.getHttpCode()).thenReturn(returnCodeComputeRequest);
-		Mockito.when(responseCompute.getContent()).thenReturn(responseComputeContent);
-		
-		responseVolume = Mockito.mock(HttpResponse.class);
-		Mockito.when(responseVolume.getHttpCode()).thenReturn(returnCodeVolumeRequest);
-		Mockito.when(responseVolume.getContent()).thenReturn(responseVolumeContent);
+		Mockito.when(responseCompute.getContent()).thenReturn(responseContent);
 	}
 
 	private void setUpRequest() throws FogbowException {
-		// http://{accs-address}:{accs-port}/accs/usage/{userId}/{requester-provider}/{local-provider}/{resource-type}/{start-date}/{end-date}
-		urlCompute = String.format("%s:%s/%s/%s/%s/%s/%s/%s/%s", accountingServiceAddress, accountingServicePort,
+		// http://{accs-address}:{accs-port}/accs/usage/{userId}/{requester-provider}/{local-provider}/{start-date}/{end-date}
+		accsUrl = String.format("%s:%s/%s/%s/%s/%s/%s/%s", accountingServiceAddress, accountingServicePort,
 				cloud.fogbow.accs.api.http.request.ResourceUsage.USAGE_ENDPOINT, userId, requester, localProvider,
-				resourceTypeCompute, requestStartDate, requestEndDate);
-		urlVolume = String.format("%s:%s/%s/%s/%s/%s/%s/%s/%s", accountingServiceAddress, accountingServicePort,
-				cloud.fogbow.accs.api.http.request.ResourceUsage.USAGE_ENDPOINT, userId, requester, localProvider,
-				resourceTypeVolume, requestStartDate, requestEndDate);
-		
+				requestStartDate, requestEndDate);
+
 		headers1 = new HashMap<String, String>();
 		headers1.put(CommonKeys.CONTENT_TYPE_KEY, AccountingServiceClient.RECORDS_REQUEST_CONTENT_TYPE);
 		headers1.put(CommonKeys.SYSTEM_USER_TOKEN_HEADER_KEY, rewrapAdminToken1);
@@ -260,9 +241,7 @@ public class AccountingServiceClientTest {
 		body = new HashMap<String, String>();
 		
 		PowerMockito.mockStatic(HttpRequestClient.class);
-		BDDMockito.given(HttpRequestClient.doGenericRequest(HttpMethod.GET, urlCompute, headers1, body)).willReturn(responseCompute);
-		BDDMockito.given(HttpRequestClient.doGenericRequest(HttpMethod.GET, urlCompute, headers2, body)).willReturn(responseCompute);
-		BDDMockito.given(HttpRequestClient.doGenericRequest(HttpMethod.GET, urlVolume, headers1, body)).willReturn(responseVolume);
-		BDDMockito.given(HttpRequestClient.doGenericRequest(HttpMethod.GET, urlVolume, headers2, body)).willReturn(responseVolume);
+		BDDMockito.given(HttpRequestClient.doGenericRequest(HttpMethod.GET, accsUrl, headers1, body)).willReturn(responseCompute);
+		BDDMockito.given(HttpRequestClient.doGenericRequest(HttpMethod.GET, accsUrl, headers2, body)).willReturn(responseCompute);
 	}
 }

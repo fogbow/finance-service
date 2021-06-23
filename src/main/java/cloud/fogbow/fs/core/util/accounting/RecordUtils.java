@@ -19,6 +19,7 @@ public class RecordUtils {
 	private static final String RESOURCE_TYPE_KEY = "resourceType";
 	private static final String COMPUTE_RESOURCE = "compute";
 	private static final String VOLUME_RESOURCE = "volume";
+	private static final String NETWORK_RESOURCE = "network";
 	
 	private JsonUtils jsonUtils;
 	
@@ -38,6 +39,7 @@ public class RecordUtils {
         	switch(recordType) {
         		case COMPUTE_RESOURCE: record = getComputeRecord(rawRecord); break;
         		case VOLUME_RESOURCE: record = getVolumeRecord(rawRecord); break;
+        		case NETWORK_RESOURCE: record = getNetworkRecord(rawRecord); break;
         		default: throw new InvalidParameterException(
         		        String.format(Messages.Exception.INVALID_RECORD_TYPE, recordType));
             }
@@ -48,7 +50,7 @@ public class RecordUtils {
         return recordList;
 	}
 
-	private ComputeRecord getComputeRecord(LinkedTreeMap<String, Object> rawRecord) throws InvalidParameterException {
+    private ComputeRecord getComputeRecord(LinkedTreeMap<String, Object> rawRecord) throws InvalidParameterException {
 		String jsonRepr = this.jsonUtils.toJson((LinkedTreeMap<String, Object>) rawRecord);
 		ComputeRecord computeRecord = this.jsonUtils.fromJson(jsonRepr, ComputeRecord.class);
 		computeRecord.validate();
@@ -61,6 +63,13 @@ public class RecordUtils {
 		volumeRecord.validate();
 		return volumeRecord;
 	}
+
+    private Record getNetworkRecord(LinkedTreeMap<String, Object> rawRecord) throws InvalidParameterException {
+        String jsonRepr = this.jsonUtils.toJson((LinkedTreeMap<String, Object>) rawRecord);
+        NetworkRecord networkRecord = this.jsonUtils.fromJson(jsonRepr, NetworkRecord.class);
+        networkRecord.validate();
+        return networkRecord;
+    }
 	
 	public class ComputeRecord extends Record {
 		private ComputeSpec spec;
@@ -92,9 +101,10 @@ public class RecordUtils {
 	public class VolumeRecord extends Record {
 		private VolumeSpec spec;
 		
-		public VolumeRecord(Long id, String orderId, String resourceType, ComputeSpec spec, String requester, Timestamp startTime,
+		public VolumeRecord(Long id, String orderId, String resourceType, VolumeSpec spec, String requester, Timestamp startTime,
 				  Timestamp startDate, Timestamp endTime, Timestamp endDate, long duration, OrderState state) {
 			super(id, orderId, resourceType, requester, startTime, startDate, endTime, endDate, duration, state);
+			this.spec = spec;
 		}
 		
 		@Override
@@ -114,6 +124,34 @@ public class RecordUtils {
             checkRecordPropertyIsNotNull("startDate", getStartDate());
         }
 	}
+	
+    public class NetworkRecord extends Record {
+        private NetworkSpec spec;
+
+        public NetworkRecord(Long id, String orderId, String resourceType, NetworkSpec spec, String requester,
+                Timestamp startTime, Timestamp startDate, Timestamp endTime, Timestamp endDate, long duration,
+                OrderState state) {
+            super(id, orderId, resourceType, requester, startTime, startDate, endTime, endDate, duration, state);
+            this.spec = spec;
+        }
+
+        @Override
+        public OrderSpec getSpec() {
+            return spec;
+        }
+
+        @Override
+        public void setSpec(OrderSpec orderSpec) {
+            this.spec = (NetworkSpec) orderSpec;
+        }
+
+        public void validate() throws InvalidParameterException {
+            checkRecordPropertyIsNotNull("resourceType", getResourceType());
+            checkRecordPropertyIsNotNull("spec", getSpec());
+            checkRecordPropertyIsNotNull("startTime", getStartTime());
+            checkRecordPropertyIsNotNull("startDate", getStartDate());
+        }
+    }
 	
    public Double getTimeFromRecord(Record record, Long paymentStartTime, Long paymentEndTime) {
         Timestamp endTimeTimestamp = record.getEndTime();
