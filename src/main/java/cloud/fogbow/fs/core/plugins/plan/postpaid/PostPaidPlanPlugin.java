@@ -10,6 +10,8 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import cloud.fogbow.common.exceptions.ConfigurationErrorException;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
@@ -365,6 +367,7 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
         this.invoiceManager = new InvoiceManager(this.usersHolder, plan);
     }
 
+    @VisibleForTesting
     static class PostPaidPluginOptionsLoader {
         public Map<String, String> load() throws ConfigurationErrorException {
             Map<String, String> options = new HashMap<String, String>();

@@ -17,7 +17,6 @@ import cloud.fogbow.fs.core.models.Invoice;
 import cloud.fogbow.fs.core.models.InvoiceState;
 
 public class DebtsPaymentCheckerTest {
-
     private static final String USER_ID_1 = "userId1";
     private static final String PROVIDER_1 = "provider1";
     private static final String INVOICE_ID_1 = "invoiceId1";
@@ -32,7 +31,9 @@ public class DebtsPaymentCheckerTest {
     private Invoice invoice2;
     private Invoice invoice3;
     
-    // TODO documentation
+    // test case: When calling the hasPaid method for a FinanceUser and the
+    // user's list of debts contains at least one Invoice in state DEFAULTING, 
+    // it must return false.
     @Test
     public void testSubscriptionDebtDefaulting() throws InternalServerErrorException, InvalidParameterException {
         setUpInvoices(InvoiceState.PAID, InvoiceState.DEFAULTING);
@@ -45,7 +46,8 @@ public class DebtsPaymentCheckerTest {
         assertFalse(hasPaidResponse);
     }
     
-    // TODO documentation
+    // test case: When calling the hasPaid method for a FinanceUser and all the
+    // invoices in the user's list of debts are in the state PAID, it must return true.
     @Test
     public void testSubscriptionDebtsPaid() throws InternalServerErrorException, InvalidParameterException {
         setUpInvoices(InvoiceState.PAID, InvoiceState.PAID);
@@ -58,7 +60,9 @@ public class DebtsPaymentCheckerTest {
         assertTrue(hasPaidResponse);
     }
     
-    // TODO documentation
+    // test case: When calling the hasPaid method for a FinanceUser and all the invoices 
+    // in the user's list of debts are either in the state PAID or in the state WAITING, 
+    // it must return true.
     @Test
     public void testSubscriptionDebtsWaiting() throws InternalServerErrorException, InvalidParameterException {
         setUpInvoices(InvoiceState.WAITING, InvoiceState.PAID);
@@ -71,7 +75,8 @@ public class DebtsPaymentCheckerTest {
         assertTrue(hasPaidResponse);
     }
 
-    // TODO documentation
+    // test case: When calling the hasPaid method for a FinanceUser and the user has no
+    // debts, it must return true.
     @Test
     public void testSubscriptionEmptyDebts() throws InternalServerErrorException, InvalidParameterException {
         setUpInvoices(InvoiceState.WAITING, InvoiceState.PAID);
