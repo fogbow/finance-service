@@ -189,11 +189,48 @@ public class FinanceUserTest {
                 activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
                 USER_LAST_BILLING_TIME, timeUtils);
 
+        
         financeUser.updateFinanceState(financeState);
         
         
         Mockito.verify(invoice1).setState(InvoiceState.PAID);
         Mockito.verify(invoice2).setState(InvoiceState.DEFAULTING);
+        Mockito.verify(lastSubscriptionsDebts, Mockito.never()).remove(Mockito.anyInt());
+    }
+    
+    // test case: When calling the updateFinanceState method passing INVOICE as property type, 
+    // if any invoice state is changed to PAID, it must remove the invoice from the 
+    // lastSubscriptionDebts list if necessary.
+    @Test
+    public void testUpdateFinanceStateInvoiceUpdatesSubscriptionsDebts() 
+            throws InvalidParameterException, InternalServerErrorException {
+        setUpFinanceUserData();
+        setUpInvoices();
+        
+        ArrayList<Invoice> invoices = new ArrayList<Invoice>();
+        invoices.add(invoice1);
+        invoices.add(invoice2);
+        
+        financeState = new HashMap<String, String>();
+        financeState.put(FinanceUser.PROPERTY_TYPE_KEY, FinanceUser.INVOICE_PROPERTY_TYPE);
+        financeState.put(INVOICE_ID_1, InvoiceState.PAID.getValue());
+        financeState.put(INVOICE_ID_2, InvoiceState.DEFAULTING.getValue());
+        
+        this.lastSubscriptionsDebts = new ArrayList<String>();
+        this.lastSubscriptionsDebts.add(invoice1.getInvoiceId());
+        this.lastSubscriptionsDebts.add(invoice2.getInvoiceId());
+        
+        financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
+                activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
+                USER_LAST_BILLING_TIME, timeUtils);
+        
+        
+        financeUser.updateFinanceState(financeState);
+        
+        
+        Mockito.verify(invoice1).setState(InvoiceState.PAID);
+        assertEquals(1, lastSubscriptionsDebts.size());
+        assertEquals(invoice2.getInvoiceId(), lastSubscriptionsDebts.get(0));
     }
     
     // test case: When calling the updateFinanceState method passing CREDITS as property type, 
@@ -292,7 +329,8 @@ public class FinanceUserTest {
         financeUser.updateFinanceState(financeState);
     }
 
-    // TODO documentation
+    // test case: When calling the subscribeToPlan method, it must call the SubscriptionFactory
+    // to create a new subscription.
     @Test
     public void testSubscribeToPlan() throws InvalidParameterException {
         setUpFinanceUserData();
@@ -306,7 +344,8 @@ public class FinanceUserTest {
         Mockito.verify(this.subscriptionFactory).getSubscription(NEW_PLAN_NAME);
     }
     
-    // TODO documentation
+    // test case: When calling the subscribeToPlan method and the user is already
+    // subscribed to a plan, it must throw an InvalidParameterException.
     @Test(expected = InvalidParameterException.class)
     public void testSubscribeToPlanAlreadySubscribed() throws InvalidParameterException {
         this.activeSubscription = Mockito.mock(Subscription.class);
@@ -318,7 +357,8 @@ public class FinanceUserTest {
         financeUser.subscribeToPlan(NEW_PLAN_NAME);
     }
     
-    // TODO documentation
+    // test case: When calling the unsubscribe method, it must set the current subscription end time
+    // and move the subscription to the list of inactiveSubscriptions. 
     @Test
     public void testUnsubscribe() throws InvalidParameterException {
         setUpFinanceUserData();
@@ -334,7 +374,8 @@ public class FinanceUserTest {
         Mockito.verify(this.inactiveSubscriptions).add(activeSubscription);
     }
     
-    // TODO documentation
+    // test case: When calling the unsubscribe method and the user is not subscribed
+    // to any plan, it must throw an InvalidParameterException.
     @Test(expected = InvalidParameterException.class)
     public void testUnsubscribeNotSubscribedToPlan() throws InvalidParameterException {
         setUpFinanceUserData();
@@ -346,7 +387,8 @@ public class FinanceUserTest {
         financeUser.unsubscribe();
     }
     
-    // TODO documentation
+    // test case: When calling the isSubscribed method and the user is not subscribed to
+    // any plan, it must return false.
     @Test
     public void testIsSubscribedUserIsNotSubscribed() {
         setUpFinanceUserData();
@@ -356,13 +398,10 @@ public class FinanceUserTest {
                 USER_LAST_BILLING_TIME, timeUtils);
         
         assertFalse(financeUser.isSubscribed());
-        
-        financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
-                null, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
-                USER_LAST_BILLING_TIME, timeUtils);
     }
     
-    // TODO documentation
+    // test case: When calling the isSubscribed method and the user is subscribed to a plan,
+    // it must return true.
     @Test
     public void testIsSubscribedUserIsSubscribed() {
         setUpFinanceUserData();
@@ -374,7 +413,8 @@ public class FinanceUserTest {
         assertTrue(financeUser.isSubscribed());
     }
     
-    // TODO documentation
+    // test case: When calling the getFinancePluginName and the user is subscribed to a plan, 
+    // it must return the current plan name.
     @Test
     public void testGetFinancePluginNameUserIsSubscribed() {
         setUpFinanceUserData();
@@ -386,7 +426,8 @@ public class FinanceUserTest {
         assertEquals(NEW_PLAN_NAME, financeUser.getFinancePluginName());
     }
     
-    // TODO documentation
+    // test case: When calling the getFinancePluginName and the user is not subscribed to any plan,
+    // it must return null.
     @Test
     public void testGetFinancePluginNameUserIsNotSubscribed() {
         setUpFinanceUserData();
@@ -398,7 +439,8 @@ public class FinanceUserTest {
         assertNull(financeUser.getFinancePluginName());
     }
     
-    // TODO documentation
+    // test case: When calling the invoicesArePaid method and the state of all the registered 
+    // invoices is PAID, the method must return true. 
     @Test
     public void testInvoicesArePaidAllInvoicesArePaid() 
             throws InvalidParameterException, InternalServerErrorException {
@@ -415,7 +457,8 @@ public class FinanceUserTest {
         assertTrue(financeUser.invoicesArePaid());
     }
     
-    // TODO documentation
+    // test case: When calling the invoicesArePaid method and the state of at least one invoice
+    // is not PAID, the method must return false. 
     @Test
     public void testInvoicesArePaidNotAllInvoicesArePaid() 
             throws InvalidParameterException, InternalServerErrorException {
@@ -433,7 +476,8 @@ public class FinanceUserTest {
         assertFalse(financeUser.invoicesArePaid());
     }
     
-    // TODO documentation
+    // test case: When calling the addInvoiceAsDebt method, it must add the invoice to the list
+    // of subscription debts.
     @Test
     public void testInvoiceAsDebt() throws InvalidParameterException, InternalServerErrorException {
         setUpInvoices();

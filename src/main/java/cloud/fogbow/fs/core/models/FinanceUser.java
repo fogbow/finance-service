@@ -297,7 +297,6 @@ public class FinanceUser implements Serializable {
         for (String invoiceId : financeState.keySet()) {
             InvoiceState newState = InvoiceState.fromValue(financeState.get(invoiceId));
             
-            // TODO test
             if (lastSubscriptionsDebts.contains(invoiceId) &&
                     newState.equals(InvoiceState.PAID)) {
                 lastSubscriptionsDebts.remove(invoiceId);

@@ -53,7 +53,6 @@ public class FinanceManager {
                 break;
             } catch (ModifiedListException e) {
                 consumerId = planPlugins.startIterating();
-                // TODO test
             } catch (Exception e) {
                 planPlugins.stopIterating(consumerId);
                 throw e;
@@ -94,7 +93,6 @@ public class FinanceManager {
                 break;
             } catch (ModifiedListException e) {
                 consumerId = planPlugins.startIterating();
-                // TODO test
             } catch (Exception e) {
                 planPlugins.stopIterating(consumerId);
                 throw e;
@@ -124,7 +122,6 @@ public class FinanceManager {
                 tryToStop(planPlugins, consumerId);
                 planPlugins.stopIterating(consumerId);
                 break;
-                // TODO test
             } catch (ModifiedListException e) {
                 consumerId = planPlugins.startIterating();
             } catch (Exception e) {
@@ -305,7 +302,6 @@ public class FinanceManager {
         PersistablePlanPlugin plugin = PlanPluginInstantiator.getPlanPlugin(pluginClassName, planName, 
                 pluginOptions, objectHolder.getInMemoryUsersHolder());
         this.objectHolder.registerPlanPlugin(plugin);
-        // TODO update test
         plugin.startThreads();
     }
     

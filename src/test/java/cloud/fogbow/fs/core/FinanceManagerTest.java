@@ -8,6 +8,7 @@ import java.security.interfaces.RSAPublicKey;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.BDDMockito;
@@ -184,6 +185,29 @@ public class FinanceManagerTest {
 	    assertTrue(financeManager.isAuthorized(systemUser2, operation2));
 	}
 	
+	// test case: When calling the isAuthorized method and the plugin throws an exception
+	// when checking the user authorization, it must stop the iteration over the plugin list
+	// and rethrow the exception.
+	@Test
+	public void testIsAuthorizedPluginThrowsException() throws FogbowException, ModifiedListException {
+	    setUpFinancePlugin();
+        setUpAuthentication();
+        
+        Mockito.when(this.plan1.isRegisteredUser(systemUser1)).
+        thenThrow(new InternalServerErrorException());
+        
+        FinanceManager financeManager = new FinanceManager(objectHolder);
+        
+        try {
+            financeManager.isAuthorized(systemUser1, operation1);
+            Assert.fail("Expected to throw InternalServerErrorException.");
+        } catch (InternalServerErrorException e) {
+            
+        }
+        
+        Mockito.verify(this.plugins).stopIterating(Mockito.anyInt());
+	}
+	
 	// test case: When calling the getFinanceStateProperty method passing a SystemUser, 
 	// it must call the method getFinanceState of the correct FinanceUser.
 	@Test
@@ -356,7 +380,7 @@ public class FinanceManagerTest {
 	// test case: When calling the startPlugins method, it must call the startThreads
 	// method of all the known finance plans.
 	@Test
-	public void testStartThreads() throws FogbowException, ModifiedListException {
+	public void testStartPlugins() throws FogbowException, ModifiedListException {
 		setUpFinancePlugin();
 		
 		Mockito.when(plan1.isStarted()).thenReturn(false);
@@ -375,7 +399,7 @@ public class FinanceManagerTest {
 	// iteration over the finance plan list and must not call the startThreads method of 
 	// an already started plan.
 	@Test
-	public void testStartThreadsModifiedListException() throws FogbowException, ModifiedListException {
+	public void testStartPluginsModifiedListException() throws FogbowException, ModifiedListException {
         setUpFinancePlugin();
 
         Mockito.when(plan1.isStarted()).thenReturn(false, true);
@@ -393,11 +417,36 @@ public class FinanceManagerTest {
         Mockito.verify(plan1, Mockito.times(1)).startThreads();
         Mockito.verify(plan2, Mockito.times(1)).startThreads();
 	}
+	
+	// test case: When calling the startPlugins method, if the iteration over the 
+	// plugins list throws an exception, the method must stop the iteration and 
+	// rethrow the exception.
+	@Test
+	public void testStartPluginsListIterationThrowsException() throws FogbowException, ModifiedListException {
+	    setUpFinancePlugin();
+	    
+        Mockito.when(plan1.isStarted()).thenReturn(false);
+        Mockito.when(plan2.isStarted()).thenReturn(false);
+
+        Mockito.when(plugins.getNext(Mockito.anyInt())).
+        thenThrow(new InternalServerErrorException());
+        
+        FinanceManager financeManager = new FinanceManager(objectHolder);
+
+        try {
+            financeManager.startPlugins();
+            Assert.fail("Expected to throw InternalServerErrorException.");
+        } catch (InternalServerErrorException e) {
+            
+        }
+        
+        Mockito.verify(this.plugins).stopIterating(Mockito.anyInt());
+	}
 
 	// test case: When calling the stopPlugins method, it must call the stopThreads
 	// method of all the known finance plans.
 	@Test
-	public void testStopThreads() throws FogbowException, ModifiedListException {
+	public void testStopPlugins() throws FogbowException, ModifiedListException {
 		setUpFinancePlugin();
 		
         Mockito.when(plan1.isStarted()).thenReturn(true);
@@ -416,7 +465,7 @@ public class FinanceManagerTest {
     // iteration over the finance plan list and must not call the stopThreads method of 
     // an already stopped plan.
 	@Test
-	public void testStopThreadsModifiedListException() throws FogbowException, ModifiedListException {
+	public void testStopPluginsModifiedListException() throws FogbowException, ModifiedListException {
         setUpFinancePlugin();
 
         Mockito.when(plan1.isStarted()).thenReturn(true, false);
@@ -435,6 +484,31 @@ public class FinanceManagerTest {
         Mockito.verify(plan2, Mockito.times(1)).stopThreads();
 	}
 	
+	// test case: When calling the stopPlugins method, if the iteration over the 
+    // plugins list throws an exception, the method must stop the iteration and 
+    // rethrow the exception.
+    @Test
+    public void testStopPluginsListIterationThrowsException() throws FogbowException, ModifiedListException {
+        setUpFinancePlugin();
+        
+        Mockito.when(plan1.isStarted()).thenReturn(true);
+        Mockito.when(plan2.isStarted()).thenReturn(true);
+
+        Mockito.when(plugins.getNext(Mockito.anyInt())).
+        thenThrow(new InternalServerErrorException());
+        
+        FinanceManager financeManager = new FinanceManager(objectHolder);
+
+        try {
+            financeManager.stopPlugins();
+            Assert.fail("Expected to throw InternalServerErrorException.");
+        } catch (InternalServerErrorException e) {
+            
+        }
+        
+        Mockito.verify(this.plugins).stopIterating(Mockito.anyInt());
+    }
+	
 	// test case: When calling the resetPlugins method, it must call
 	// the reset method of the InMemoryFinanceObjectsHolder.
 	@Test
@@ -449,8 +523,8 @@ public class FinanceManagerTest {
 	}
 	
 	// test case: When calling the createFinancePlan method, it must call the 
-	// PlanPluginFactory to create a new finance plan and call the registerPlanPlugin
-	// method of the InMemoryFinanceObjectsHolder.
+	// PlanPluginFactory to create a new finance plan, register the plan using the
+	// InMemoryFinanceObjectsHolder and start the plan's threads.
 	@Test
 	public void testCreateFinancePlan() throws FogbowException, ModifiedListException {
 	    setUpFinancePlugin();
@@ -467,6 +541,7 @@ public class FinanceManagerTest {
         
        
         Mockito.verify(objectHolder).registerPlanPlugin(plan1);
+        Mockito.verify(plan1).startThreads();
 	}
 	
 	private void setUpFinancePlugin() throws FogbowException, ModifiedListException {
@@ -523,7 +598,7 @@ public class FinanceManagerTest {
 		systemUser1 = new SystemUser(USER_ID_1, USER_NAME_1, PROVIDER_USER_1);
 		operation1 = Mockito.mock(RasOperation.class);
 		
-        MultiConsumerSynchronizedList<PersistablePlanPlugin> plugins = Mockito.mock(MultiConsumerSynchronizedList.class);
+        this.plugins = Mockito.mock(MultiConsumerSynchronizedList.class);
         this.plan1 = Mockito.mock(PersistablePlanPlugin.class);
         Mockito.when(this.plan1.isRegisteredUser(systemUser1)).thenReturn(false);
         
