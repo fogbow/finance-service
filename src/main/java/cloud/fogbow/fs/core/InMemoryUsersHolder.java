@@ -146,6 +146,7 @@ public class InMemoryUsersHolder {
             if (userToRemove.isSubscribed()) {
                 removeUserByPlugin(userToRemove);
             } else {
+                // TODO test
                 this.inactiveUsers.removeItem(userToRemove);
             }
             this.databaseManager.removeUser(userId, provider);
@@ -203,6 +204,7 @@ public class InMemoryUsersHolder {
                 userToReturn = getUserFromList(id, provider, this.inactiveUsers, consumerId);
                 this.inactiveUsers.stopIterating(consumerId);
                 break;
+                // TODO test
             } catch (ModifiedListException e) {
                 consumerId = this.inactiveUsers.startIterating();
             } catch (Exception e) {

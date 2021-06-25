@@ -12,6 +12,7 @@ public class TimeUtils {
     
     private String timeZone;
     
+    // TODO test
     public TimeUtils() {
         this.timeZone = PropertiesHolder.getInstance().
                 getProperty(ConfigurationPropertyKeys.TIME_ZONE, DEFAULT_TIME_ZONE);

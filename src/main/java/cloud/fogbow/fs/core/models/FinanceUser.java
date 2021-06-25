@@ -154,6 +154,7 @@ public class FinanceUser implements Serializable {
         this.credits = credits;
     }
 
+    // TODO test get and set invoices
     public List<Invoice> getInvoices() {
         return invoices;
     }

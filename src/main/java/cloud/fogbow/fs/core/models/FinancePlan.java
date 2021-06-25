@@ -216,6 +216,7 @@ public class FinancePlan {
 	    return generateRulesRepr();
 	}
 	
+	// TODO test
     @Override
     public String toString() {
         Map<String, String> rulesRepr = generateRulesRepr();

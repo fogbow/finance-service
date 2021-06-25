@@ -266,6 +266,7 @@ public class FinanceManager {
                 plugin = tryToGet(planPlugins, systemUser, consumerId);
                 planPlugins.stopIterating(consumerId);
                 break;
+                // TODO test
             } catch (ModifiedListException e) {
                 consumerId = planPlugins.startIterating();
             } catch (Exception e) {
@@ -305,15 +306,18 @@ public class FinanceManager {
         plugin.startThreads();
     }
     
+    // TODO test
     public void removeFinancePlan(String pluginName) throws InternalServerErrorException, InvalidParameterException {
         this.objectHolder.removePlanPlugin(pluginName);
     }
     
+    // TODO test
     public void changeOptions(String planName, Map<String, String> financeOptions)
             throws InvalidParameterException, InternalServerErrorException {
         this.objectHolder.updatePlanPlugin(planName, financeOptions);
     }
     
+    // TODO test
     public Map<String, String> getFinancePlanOptions(String pluginName) 
             throws InternalServerErrorException, InvalidParameterException {
         return this.objectHolder.getPlanPluginOptions(pluginName);

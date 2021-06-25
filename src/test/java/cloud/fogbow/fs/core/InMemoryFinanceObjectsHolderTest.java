@@ -23,7 +23,6 @@ import cloud.fogbow.fs.core.util.list.ModifiedListException;
 import cloud.fogbow.fs.core.util.list.MultiConsumerSynchronizedList;
 import cloud.fogbow.fs.core.util.list.MultiConsumerSynchronizedListFactory;
 
-// TODO review documentation
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({PropertiesHolder.class})
 public class InMemoryFinanceObjectsHolderTest {
@@ -51,7 +50,7 @@ public class InMemoryFinanceObjectsHolderTest {
     }
     
     // test case: When creating a new InMemoryFinanceObjectsHolder instance, the constructor
-    // must acquire the data from FinanceUsers and FinancePlans using the DatabaseManager and
+    // must acquire the data from FinancePlans using the DatabaseManager and
     // prepare its internal data holding lists properly.
     @Test
     public void testConstructorSetsUpDataStructuresCorrectly() throws InternalServerErrorException, InvalidParameterException, ConfigurationErrorException {
@@ -63,7 +62,8 @@ public class InMemoryFinanceObjectsHolderTest {
         Mockito.verify(planSynchronizedList).addItem(plan2);
     }
     
-    // TODO documentation
+    // test case: When calling the reset method, it must reacquire all the data from
+    // FinancePlans using the DatabaseManager and set up new data holding lists properly.
     @Test
     public void testResetSetsUpDataStructuresCorrectly() throws InternalServerErrorException, ConfigurationErrorException {
         objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, usersHolder, listFactory, planSynchronizedList);
@@ -206,7 +206,7 @@ public class InMemoryFinanceObjectsHolderTest {
         objectHolder.updatePlanPlugin("unknownplan", updatedPlanInfo);
     }
     
-    // test case: When calling the method getFinancePlan map, it must return a 
+    // test case: When calling the method getFinancePlanOptions, it must return a 
     // Map containing the plan data related to the correct FinancePlan instance.
     @Test
     public void testGetFinancePlanMap() throws InternalServerErrorException, InvalidParameterException {
@@ -222,7 +222,7 @@ public class InMemoryFinanceObjectsHolderTest {
         Mockito.verify(planSynchronizedList).stopIterating(Mockito.anyInt());
     }
     
-    // test case: When calling the method getFinancePlanMap passing as argument
+    // test case: When calling the method getFinancePlanOptions passing as argument
     // an unknown plan, it must throw an InvalidParameterException.
     @Test(expected = InvalidParameterException.class)
     public void testGetFinancePlanMapUnknownPlan() throws InternalServerErrorException, InvalidParameterException {

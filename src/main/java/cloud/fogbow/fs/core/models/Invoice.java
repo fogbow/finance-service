@@ -155,6 +155,7 @@ public class Invoice {
 	            this.state.equals(InvoiceState.DEFAULTING)) {
 	        this.state = InvoiceState.PAID;
 	    } else {
+	        // TODO test
 	        throw new InvalidParameterException(
 	                String.format(Messages.Exception.CANNOT_CHANGE_INVOICE_STATE, 
 	                        this.state.getValue(), InvoiceState.PAID.getValue()));

@@ -173,6 +173,7 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
 
     private void checkContainsProperty(Map<String, String> financeOptions, String property) throws InvalidParameterException {
         if (!financeOptions.keySet().contains(property)) {
+            // TODO test
             throw new InvalidParameterException(
                     String.format(Messages.Exception.MISSING_FINANCE_OPTION, property));
         }
@@ -182,6 +183,7 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
         try {
             Long.valueOf(property);
         } catch (NumberFormatException e) {
+            // TODO test
             throw new InvalidParameterException(
                     String.format(Messages.Exception.INVALID_FINANCE_OPTION, property, propertyName));
         }
