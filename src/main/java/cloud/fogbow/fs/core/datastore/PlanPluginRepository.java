@@ -4,5 +4,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import cloud.fogbow.fs.core.plugins.PersistablePlanPlugin;
 
+// TODO change name to FinancePlanRepository
 public interface PlanPluginRepository extends JpaRepository<PersistablePlanPlugin, String>{
 }

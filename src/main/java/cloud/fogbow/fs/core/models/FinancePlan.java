@@ -24,6 +24,7 @@ import com.google.common.annotations.VisibleForTesting;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.constants.Messages;
 
+// TODO change name to finance policy
 @Entity
 @Table(name = "finance_plan_table")
 public class FinancePlan {

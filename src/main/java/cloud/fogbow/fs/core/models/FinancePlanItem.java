@@ -9,6 +9,7 @@ import javax.persistence.Id;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
+// TODO change name to finance rule
 @Entity
 @Table(name = "finance_plan_items_table")
 public class FinancePlanItem {
