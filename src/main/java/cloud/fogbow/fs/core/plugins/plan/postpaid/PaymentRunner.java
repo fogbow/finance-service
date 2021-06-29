@@ -78,14 +78,13 @@ public class PaymentRunner extends StoppableRunner {
         checkIfMustStop();
     }
     
-    // TODO test
     public void runLastPaymentForUser(String userId, String provider) throws InternalServerErrorException, InvalidParameterException {
         FinanceUser user = userHolder.getUserById(userId, provider);
         
         synchronized(user) {
             // TODO concurrency check: check if the user is still subscribed to the plan or was removed
             long billingTime = this.timeUtils.getCurrentTimeMillis();
-            long lastBillingTime = user.getLastBillingTime();// getUserLastBillingTime(user);
+            long lastBillingTime = user.getLastBillingTime();
 
             // run payment regardless of time
             try {
@@ -93,7 +92,8 @@ public class PaymentRunner extends StoppableRunner {
                 this.invoiceGenerator.generateLastInvoiceForUser(user.getId(), user.getProvider(),
                         lastBillingTime, billingTime, records);
             } catch (FogbowException e) {
-                LOGGER.error(String.format(Messages.Log.FAILED_TO_GENERATE_INVOICE_FOR_USER, user.getId(), e.getMessage()));
+                throw new InternalServerErrorException(
+                        String.format(Messages.Log.FAILED_TO_GENERATE_INVOICE_FOR_USER, user.getId(), e.getMessage()));
             }
         }
     }

@@ -544,6 +544,36 @@ public class FinanceManagerTest {
         Mockito.verify(plan1).startThreads();
 	}
 	
+	// test case: When calling the changeOptions method, it must call the updatePlanPlugin method
+	// of the InMemoryFinanceObjectsHolder.
+	@Test
+	public void testChangeOptions() throws FogbowException, ModifiedListException {
+	    setUpFinancePlugin();
+	    
+	    Map<String, String> newPlanInfo = new HashMap<String, String>();
+	    FinanceManager financeManager = new FinanceManager(objectHolder);
+	    
+	    financeManager.changeOptions(PLUGIN_1_NAME, newPlanInfo);
+	    
+	    Mockito.verify(objectHolder).updatePlanPlugin(PLUGIN_1_NAME, newPlanInfo);
+	}
+	
+	// test case: When calling the getFinancePlanOptions method, it must call the getPlanPluginOptions
+	// method of the InMemoryFinanceObjectsHolder.
+	@Test
+	public void testGetFinancePlanOptions() throws FogbowException, ModifiedListException {
+        setUpFinancePlugin();
+
+        Map<String, String> planInfo = new HashMap<String, String>();
+        planInfo.put("optionkey", "optionvalue");
+        
+        Mockito.when(this.objectHolder.getPlanPluginOptions(PLUGIN_1_NAME)).thenReturn(planInfo);
+        
+        FinanceManager financeManager = new FinanceManager(objectHolder);
+        
+        assertEquals(planInfo, financeManager.getFinancePlanOptions(PLUGIN_1_NAME));
+	}
+	
 	private void setUpFinancePlugin() throws FogbowException, ModifiedListException {
 		systemUser1 = new SystemUser(USER_ID_1, USER_NAME_1, PROVIDER_USER_1);
 		systemUser2 = new SystemUser(USER_ID_2, USER_NAME_2, PROVIDER_USER_2);

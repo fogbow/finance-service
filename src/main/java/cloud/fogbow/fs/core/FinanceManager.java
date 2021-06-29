@@ -311,13 +311,11 @@ public class FinanceManager {
         this.objectHolder.removePlanPlugin(pluginName);
     }
     
-    // TODO test
     public void changeOptions(String planName, Map<String, String> financeOptions)
             throws InvalidParameterException, InternalServerErrorException {
         this.objectHolder.updatePlanPlugin(planName, financeOptions);
     }
     
-    // TODO test
     public Map<String, String> getFinancePlanOptions(String pluginName) 
             throws InternalServerErrorException, InvalidParameterException {
         return this.objectHolder.getPlanPluginOptions(pluginName);

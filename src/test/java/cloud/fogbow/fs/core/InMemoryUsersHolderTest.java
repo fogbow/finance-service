@@ -33,6 +33,8 @@ public class InMemoryUsersHolderTest {
     private static final String PROVIDER_ID_3 = "providerId3";
     private static final String USER_ID_4 = "userId4";
     private static final String PROVIDER_ID_4 = "providerId4";
+    private static final String USER_ID_5 = "userId5";
+    private static final String PROVIDER_ID_5 = "providerId5";
     private static final String USER_ID_TO_ADD = "userIdToAdd";
     private static final String PROVIDER_ID_TO_ADD = "providerIdToAdd";
     private static final String INVOICE_ID_1 = "invoiceId1";
@@ -53,14 +55,15 @@ public class InMemoryUsersHolderTest {
     private ArrayList<Invoice> invoicesList;
     private FinanceUser user1;
     private FinanceUser user2;
+    private FinanceUser user3;
+    private FinanceUser user4;
+    private FinanceUser user5;
     private ArrayList<FinanceUser> usersList;
     private MultiConsumerSynchronizedList<FinanceUser> inactiveUsersSynchronizedList;
     private MultiConsumerSynchronizedList<FinanceUser> userSynchronizedList1;
     private MultiConsumerSynchronizedList<FinanceUser> userSynchronizedList2;
     private MultiConsumerSynchronizedListFactory listFactory;
     private FinanceUserFactory userFactory;
-    private FinanceUser user3;
-    private FinanceUser user4;
 
     @Before
     public void setUp() 
@@ -108,7 +111,7 @@ public class InMemoryUsersHolderTest {
                 new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
         usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, 
+        objectHolder = new InMemoryUsersHolder(databaseManager, listFactory, 
                 userFactory, usersByPlugin, inactiveUsersSynchronizedList);
         
         objectHolder.registerUser(USER_ID_TO_ADD, PROVIDER_ID_TO_ADD, PLAN_NAME_1);
@@ -126,7 +129,7 @@ public class InMemoryUsersHolderTest {
                 new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
         usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, 
+        objectHolder = new InMemoryUsersHolder(databaseManager, listFactory, 
                 userFactory, usersByPlugin, inactiveUsersSynchronizedList);
 
         objectHolder.registerUser(USER_ID_1, PROVIDER_ID_1, PLAN_NAME_1);
@@ -142,7 +145,7 @@ public class InMemoryUsersHolderTest {
                 new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
         usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, 
+        objectHolder = new InMemoryUsersHolder(databaseManager, listFactory, 
                 userFactory, usersByPlugin, inactiveUsersSynchronizedList);
 
         objectHolder.registerUser(USER_ID_3, PROVIDER_ID_3, PLAN_NAME_1);
@@ -162,12 +165,29 @@ public class InMemoryUsersHolderTest {
                 new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
         usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, 
+        objectHolder = new InMemoryUsersHolder(databaseManager, listFactory, 
                 userFactory, usersByPlugin, inactiveUsersSynchronizedList);        
         objectHolder.removeUser(USER_ID_1, PROVIDER_ID_1);
         
         Mockito.verify(userSynchronizedList1).removeItem(Mockito.any(FinanceUser.class));
         Mockito.verify(databaseManager).removeUser(USER_ID_1, PROVIDER_ID_1);
+    }
+    
+    // test case: When calling the method removeUser, if the given user is inactive, then it must
+    // remove the user from the list of inactive users and then delete the user from the database using
+    // the DatabaseManager.
+    @Test
+    public void testRemoveInactiveUser() throws InvalidParameterException, InternalServerErrorException {
+        Map<String, MultiConsumerSynchronizedList<FinanceUser>> usersByPlugin = 
+                new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
+        usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
+        
+        objectHolder = new InMemoryUsersHolder(databaseManager, listFactory, 
+                userFactory, usersByPlugin, inactiveUsersSynchronizedList);        
+        objectHolder.removeUser(USER_ID_3, PROVIDER_ID_3);
+        
+        Mockito.verify(inactiveUsersSynchronizedList).removeItem(Mockito.any(FinanceUser.class));
+        Mockito.verify(databaseManager).removeUser(USER_ID_3, PROVIDER_ID_3);
     }
     
     // test case: When calling the method removeUser passing unknown UserId and ProviderId, it 
@@ -179,7 +199,7 @@ public class InMemoryUsersHolderTest {
                 new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
         usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, 
+        objectHolder = new InMemoryUsersHolder(databaseManager, listFactory, 
                 userFactory, usersByPlugin, inactiveUsersSynchronizedList);
         
         objectHolder.removeUser("unknownuser", "unknownprovider");
@@ -194,7 +214,7 @@ public class InMemoryUsersHolderTest {
         usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
         usersByPlugin.put(PLAN_NAME_2, userSynchronizedList2);
         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, 
+        objectHolder = new InMemoryUsersHolder(databaseManager, listFactory, 
                 userFactory, usersByPlugin, inactiveUsersSynchronizedList);
         
         objectHolder.changePlan(USER_ID_4, PROVIDER_ID_4, PLAN_NAME_2);
@@ -216,7 +236,7 @@ public class InMemoryUsersHolderTest {
         usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
         usersByPlugin.put(PLAN_NAME_2, userSynchronizedList2);
         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, 
+        objectHolder = new InMemoryUsersHolder(databaseManager, listFactory, 
                 userFactory, usersByPlugin, inactiveUsersSynchronizedList);
         
         assertEquals(user1, objectHolder.getUserById(USER_ID_1, PROVIDER_ID_1));
@@ -241,7 +261,7 @@ public class InMemoryUsersHolderTest {
                 new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
         usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, 
+        objectHolder = new InMemoryUsersHolder(databaseManager, listFactory, 
                 userFactory, usersByPlugin, inactiveUsersSynchronizedList);
         
         assertEquals(user2, objectHolder.getUserById(USER_ID_2, PROVIDER_ID_2));
@@ -262,10 +282,52 @@ public class InMemoryUsersHolderTest {
                 new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
         usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, 
+        objectHolder = new InMemoryUsersHolder(databaseManager, listFactory, 
                 userFactory, usersByPlugin, inactiveUsersSynchronizedList);
         
         objectHolder.getUserById(USER_ID_2, PROVIDER_ID_2);
+    }
+    
+    // test case: When calling the method getUserById and a concurrent modification on the inactive users list
+    // occurs while the method is iterating over it, it must restart the iteration and return 
+    // the correct user.
+    @Test
+    public void testGetUserByIdInactiveUsersListChanges() 
+            throws InternalServerErrorException, ModifiedListException, InvalidParameterException, ConfigurationErrorException {
+        Mockito.when(inactiveUsersSynchronizedList.getNext(Mockito.anyInt())).
+        thenReturn(user3).
+        thenThrow(new ModifiedListException()).
+        thenReturn(user3, user5);
+
+        Map<String, MultiConsumerSynchronizedList<FinanceUser>> usersByPlugin = 
+                new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
+        usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
+        
+        objectHolder = new InMemoryUsersHolder(databaseManager, listFactory, 
+                userFactory, usersByPlugin, inactiveUsersSynchronizedList);
+        
+        assertEquals(user5, objectHolder.getUserById(USER_ID_5, PROVIDER_ID_5));
+        
+        Mockito.verify(inactiveUsersSynchronizedList, Mockito.times(1)).stopIterating(Mockito.anyInt());
+    }
+    
+    // test case: When calling the method getUserById and the internal inactive users list throws an
+    // InternalServerErrorException while iterating over it, it must rethrow the exception.
+    @Test(expected = InternalServerErrorException.class)
+    public void testGetUserByIdInactiveUsersListThrowsException() 
+            throws InternalServerErrorException, ModifiedListException, InvalidParameterException, ConfigurationErrorException {
+        Mockito.when(inactiveUsersSynchronizedList.getNext(Mockito.anyInt())).
+        thenReturn(user3).
+        thenThrow(new InternalServerErrorException());
+
+        Map<String, MultiConsumerSynchronizedList<FinanceUser>> usersByPlugin = 
+                new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
+        usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
+        
+        objectHolder = new InMemoryUsersHolder(databaseManager, listFactory, 
+                userFactory, usersByPlugin, inactiveUsersSynchronizedList);
+        
+        objectHolder.getUserById(USER_ID_5, PROVIDER_ID_5);
     }
     
     // test case: When calling the method getUserById and the UserId passed as parameter is 
@@ -277,7 +339,7 @@ public class InMemoryUsersHolderTest {
                 new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
         usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, 
+        objectHolder = new InMemoryUsersHolder(databaseManager, listFactory, 
                 userFactory, usersByPlugin, inactiveUsersSynchronizedList);
         
         objectHolder.getUserById("unknownuser", PROVIDER_ID_1);
@@ -292,7 +354,7 @@ public class InMemoryUsersHolderTest {
                 new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
         usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, 
+        objectHolder = new InMemoryUsersHolder(databaseManager, listFactory, 
                 userFactory, usersByPlugin, inactiveUsersSynchronizedList);
         
         
@@ -308,7 +370,7 @@ public class InMemoryUsersHolderTest {
                 new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
         usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, 
+        objectHolder = new InMemoryUsersHolder(databaseManager, listFactory, 
                 userFactory, usersByPlugin, inactiveUsersSynchronizedList);
         
         objectHolder.saveUser(user1);
@@ -325,7 +387,7 @@ public class InMemoryUsersHolderTest {
                 new HashMap<String, MultiConsumerSynchronizedList<FinanceUser>>();
         usersByPlugin.put(PLAN_NAME_1, userSynchronizedList1);
         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, 
+        objectHolder = new InMemoryUsersHolder(databaseManager, listFactory, 
                 userFactory, usersByPlugin, inactiveUsersSynchronizedList);
         
         objectHolder.unregisterUser(USER_ID_1, PROVIDER_ID_1);
@@ -349,7 +411,7 @@ public class InMemoryUsersHolderTest {
         Mockito.when(unknownUser.getId()).thenReturn("unknownuser");
         Mockito.when(unknownUser.getProvider()).thenReturn("unknownprovider");
         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, 
+        objectHolder = new InMemoryUsersHolder(databaseManager, listFactory, 
                 userFactory, usersByPlugin, inactiveUsersSynchronizedList);
         
         objectHolder.saveUser(unknownUser);
@@ -368,7 +430,7 @@ public class InMemoryUsersHolderTest {
                 Mockito.mock(MultiConsumerSynchronizedList.class);
         Mockito.doReturn(emptySynchronizedList).when(listFactory).getList();
         
-        objectHolder = new InMemoryUsersHolder(databaseManager, userCreditsFactory, listFactory, 
+        objectHolder = new InMemoryUsersHolder(databaseManager, listFactory, 
                 userFactory, usersByPlugin, inactiveUsersSynchronizedList);
         
         assertEquals(userSynchronizedList1, objectHolder.getRegisteredUsersByPlan(PLAN_NAME_1));
@@ -382,7 +444,7 @@ public class InMemoryUsersHolderTest {
         inactiveUsersSynchronizedList = Mockito.mock(MultiConsumerSynchronizedList.class);
         Mockito.when(userSynchronizedList1.getNext(Mockito.anyInt())).thenReturn(user1, user4, null);
         Mockito.when(userSynchronizedList2.getNext(Mockito.anyInt())).thenReturn(user2, null);
-        Mockito.when(inactiveUsersSynchronizedList.getNext(Mockito.anyInt())).thenReturn(user3, null);
+        Mockito.when(inactiveUsersSynchronizedList.getNext(Mockito.anyInt())).thenReturn(user3, user5, null);
         
         listFactory = Mockito.mock(MultiConsumerSynchronizedListFactory.class);
         Mockito.doReturn(inactiveUsersSynchronizedList).doReturn(userSynchronizedList1).doReturn(userSynchronizedList2).when(listFactory).getList();
@@ -456,11 +518,17 @@ public class InMemoryUsersHolderTest {
         Mockito.when(user4.getId()).thenReturn(USER_ID_4);
         Mockito.when(user4.getProvider()).thenReturn(PROVIDER_ID_4);
         Mockito.when(user4.isSubscribed()).thenReturn(true);
+        user5 = Mockito.mock(FinanceUser.class);
+        Mockito.when(user5.getFinancePluginName()).thenReturn(PLAN_NAME_1);
+        Mockito.when(user5.getId()).thenReturn(USER_ID_5);
+        Mockito.when(user5.getProvider()).thenReturn(PROVIDER_ID_5);
+        Mockito.when(user5.isSubscribed()).thenReturn(false);
         
         usersList = new ArrayList<FinanceUser>();
         usersList.add(user1);
         usersList.add(user2);
         usersList.add(user3);
         usersList.add(user4);
+        usersList.add(user5);
     }
 }

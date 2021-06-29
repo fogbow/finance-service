@@ -20,7 +20,6 @@ import cloud.fogbow.fs.core.util.list.MultiConsumerSynchronizedListFactory;
 
 public class InMemoryUsersHolder {
     private DatabaseManager databaseManager;
-    private UserCreditsFactory userCreditsFactory;
     private MultiConsumerSynchronizedListFactory listFactory;
     private FinanceUserFactory userFactory;
     
@@ -37,7 +36,6 @@ public class InMemoryUsersHolder {
             MultiConsumerSynchronizedListFactory listFactory, UserCreditsFactory userCreditsFactory, 
             FinanceUserFactory userFactory)
             throws InternalServerErrorException, ConfigurationErrorException {
-        this.userCreditsFactory = userCreditsFactory;
         this.databaseManager = databaseManager;
         this.listFactory = listFactory;
         this.userFactory = userFactory;
@@ -52,12 +50,10 @@ public class InMemoryUsersHolder {
     }
     
     @VisibleForTesting
-    InMemoryUsersHolder(DatabaseManager databaseManager, UserCreditsFactory userCreditsFactory, 
-            MultiConsumerSynchronizedListFactory listFactory, FinanceUserFactory userFactory,
-            Map<String, MultiConsumerSynchronizedList<FinanceUser>> usersByPlugin, 
+    InMemoryUsersHolder(DatabaseManager databaseManager, MultiConsumerSynchronizedListFactory listFactory, 
+            FinanceUserFactory userFactory, Map<String, MultiConsumerSynchronizedList<FinanceUser>> usersByPlugin, 
             MultiConsumerSynchronizedList<FinanceUser> inactiveUsers) {
         this.databaseManager = databaseManager;
-        this.userCreditsFactory = userCreditsFactory;
         this.listFactory = listFactory;
         this.userFactory = userFactory;
         this.usersByPlugin = usersByPlugin;
@@ -146,7 +142,6 @@ public class InMemoryUsersHolder {
             if (userToRemove.isSubscribed()) {
                 removeUserByPlugin(userToRemove);
             } else {
-                // TODO test
                 this.inactiveUsers.removeItem(userToRemove);
             }
             this.databaseManager.removeUser(userId, provider);
@@ -204,7 +199,6 @@ public class InMemoryUsersHolder {
                 userToReturn = getUserFromList(id, provider, this.inactiveUsers, consumerId);
                 this.inactiveUsers.stopIterating(consumerId);
                 break;
-                // TODO test
             } catch (ModifiedListException e) {
                 consumerId = this.inactiveUsers.startIterating();
             } catch (Exception e) {

@@ -52,9 +52,9 @@ public class PaymentRunnerTest {
     private MultiConsumerSynchronizedList<FinanceUser> users;
     
     // test case: When calling the doRun method, it must get the 
-    // list of users from the DatabaseManager. For each user, 
-    // if it is billing time, it must get the user records, set
-    // the records in the database and start payment.
+    // list of users from the InMemoryUsersHolder. For each user, 
+    // if it is billing time, it must get the user records and call the
+    // InvoiceManager to generate an invoice.
     @Test
     public void testRunIsBillingTime() throws FogbowException, ModifiedListException {
         //
@@ -94,9 +94,9 @@ public class PaymentRunnerTest {
     }
     
     // test case: When calling the doRun method, it must get the
-    // list of users from the DatabaseManager. For each user,
+    // list of users from the InMemoryUsersHolder. For each user,
     // if it is not billing time, it must not change the user state
-    // nor start payment.
+    // nor start invoice generation.
     @Test
     public void testRunNotBillingTime() throws FogbowException, ModifiedListException {
         //
@@ -259,6 +259,51 @@ public class PaymentRunnerTest {
         Mockito.verify(paymentManager, Mockito.never()).generateInvoiceForUser(ID_USER_2, PROVIDER_USER_2,
                 INITIAL_USER_2_LAST_BILLING_TIME, timeValues.get(1), userRecords);
     }
+
+    // test case: When calling the runLastPaymentForUser method, it must get the user records and call the
+    // InvoiceManager to generate the last invoice for the user.
+    @Test
+    public void testRunLastPaymentForUser() throws FogbowException, ModifiedListException {
+        this.timeUtils = Mockito.mock(TimeUtils.class);
+        timeValues = Arrays.asList(INITIAL_USER_1_LAST_BILLING_TIME + BILLING_INTERVAL);
+        
+        Mockito.when(timeUtils.getCurrentTimeMillis()).thenReturn(timeValues.get(0));
+        
+        setUpDatabase();
+        setUpAccounting();
+        
+        this.paymentManager = Mockito.mock(InvoiceManager.class);
+        
+        PaymentRunner paymentRunner = new PaymentRunner(PLAN_NAME, invoiceWaitTime, BILLING_INTERVAL,
+                usersHolder, accountingServiceClient, paymentManager, timeUtils);
+        
+        paymentRunner.runLastPaymentForUser(ID_USER_1, PROVIDER_USER_1);
+        
+        Mockito.verify(paymentManager, Mockito.times(1)).generateLastInvoiceForUser(ID_USER_1, PROVIDER_USER_1, 
+                INITIAL_USER_1_LAST_BILLING_TIME, timeValues.get(0), userRecords);
+    }
+    
+    // test case: When calling the runLastPaymentForUser method and the AccountingServiceClient threw
+    // an exception when acquiring the user records, it must throw an InternalServerErrorException.
+    @Test(expected = InternalServerErrorException.class)
+    public void testRunLastPaymentForUserErrorOnAcquiringUserRecords() throws FogbowException, ModifiedListException {
+        this.timeUtils = Mockito.mock(TimeUtils.class);
+        timeValues = Arrays.asList(INITIAL_USER_1_LAST_BILLING_TIME + BILLING_INTERVAL);
+        Mockito.when(timeUtils.getCurrentTimeMillis()).thenReturn(timeValues.get(0));
+        
+        setUpDatabase();
+        setUpAccounting();
+        
+        Mockito.doThrow(FogbowException.class).when(accountingServiceClient).getUserRecords(ID_USER_1, 
+                PROVIDER_USER_1, INITIAL_USER_1_LAST_BILLING_TIME, timeValues.get(0));
+        
+        this.paymentManager = Mockito.mock(InvoiceManager.class);
+        
+        PaymentRunner paymentRunner = new PaymentRunner(PLAN_NAME, invoiceWaitTime, BILLING_INTERVAL,
+                usersHolder, accountingServiceClient, paymentManager, timeUtils);
+        
+        paymentRunner.runLastPaymentForUser(ID_USER_1, PROVIDER_USER_1);
+    }
     
     private void setUpDatabase() throws InvalidParameterException, ModifiedListException, InternalServerErrorException {
         setUpUsers();
@@ -271,7 +316,7 @@ public class PaymentRunnerTest {
         setUpObjectHolder();
     }
 
-    private void setUpDatabaseUserListChanges() throws InternalServerErrorException, ModifiedListException {
+    private void setUpDatabaseUserListChanges() throws InternalServerErrorException, ModifiedListException, InvalidParameterException {
         setUpUsers();
 
         users = Mockito.mock(MultiConsumerSynchronizedList.class);
@@ -282,7 +327,7 @@ public class PaymentRunnerTest {
         setUpObjectHolder();
     }
     
-    private void setUpDatabaseErrorOnGettingItemFromList() throws InternalServerErrorException, ModifiedListException {
+    private void setUpDatabaseErrorOnGettingItemFromList() throws InternalServerErrorException, ModifiedListException, InvalidParameterException {
         setUpUsers();
 
         users = Mockito.mock(MultiConsumerSynchronizedList.class);
@@ -305,9 +350,10 @@ public class PaymentRunnerTest {
         Mockito.when(user2.getLastBillingTime()).thenReturn(INITIAL_USER_2_LAST_BILLING_TIME);
     }
     
-    private void setUpObjectHolder() {
+    private void setUpObjectHolder() throws InternalServerErrorException, InvalidParameterException {
         this.usersHolder = Mockito.mock(InMemoryUsersHolder.class);
         Mockito.when(usersHolder.getRegisteredUsersByPlan(PLAN_NAME)).thenReturn(users);
+        Mockito.when(usersHolder.getUserById(ID_USER_1, PROVIDER_USER_1)).thenReturn(user1);
     }
     
     private void setUpAccounting() throws FogbowException {

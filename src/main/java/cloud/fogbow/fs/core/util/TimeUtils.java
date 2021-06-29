@@ -4,15 +4,17 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import cloud.fogbow.fs.core.PropertiesHolder;
 import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
 
 public class TimeUtils {
-    private static final String DEFAULT_TIME_ZONE = "GMT0:00";
+    @VisibleForTesting
+    static final String DEFAULT_TIME_ZONE = "GMT0:00";
     
     private String timeZone;
     
-    // TODO test
     public TimeUtils() {
         this.timeZone = PropertiesHolder.getInstance().
                 getProperty(ConfigurationPropertyKeys.TIME_ZONE, DEFAULT_TIME_ZONE);
