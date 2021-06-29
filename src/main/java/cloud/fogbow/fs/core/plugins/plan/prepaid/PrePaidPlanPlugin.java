@@ -132,8 +132,6 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
             Map<String, String> financeOptions) throws InvalidParameterException, InternalServerErrorException {
         this(name, creditsDeductionWaitTime, usersHolder, accountingServiceClient, rasClient, invoiceManager, 
                 planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, financePlan);
-        
-        setOptions(financeOptions);
     }
     
     PrePaidPlanPlugin(String name, long creditsDeductionWaitTime, InMemoryUsersHolder usersHolder, 
@@ -194,6 +192,8 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
             setUpPlanFromRulesString(financeOptions.get(FINANCE_PLAN_RULES), planFactory);
         } else if (financeOptions.containsKey(FINANCE_PLAN_RULES_FILE_PATH))  {
             setUpPlanFromRulesFile(financeOptions.get(FINANCE_PLAN_RULES_FILE_PATH), planFactory);
+        } else {
+            throw new InvalidParameterException(Messages.Exception.NO_FINANCE_PLAN_CREATION_METHOD_PROVIDED);
         }
     }
 
@@ -223,7 +223,7 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
     @Override
     public Map<String, String> getOptions() {
         HashMap<String, String> options = new HashMap<String, String>();
-        String planRules = this.jsonUtils.toJson(plan.getRulesAsMap());
+        String planRules = plan.toString();
         
         options.put(FINANCE_PLAN_RULES, planRules);
         options.put(CREDITS_DEDUCTION_WAIT_TIME, String.valueOf(creditsDeductionWaitTime));

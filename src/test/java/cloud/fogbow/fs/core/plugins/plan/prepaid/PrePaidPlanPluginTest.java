@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.BDDMockito;
@@ -35,8 +36,6 @@ import cloud.fogbow.ras.core.models.Operation;
 import cloud.fogbow.ras.core.models.RasOperation;
 import cloud.fogbow.ras.core.models.ResourceType;
 
-// TODO refactor
-// TODO review documentation
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({PropertiesHolder.class})
 public class PrePaidPlanPluginTest {
@@ -53,6 +52,8 @@ public class PrePaidPlanPluginTest {
     private static final String FINANCE_PLAN_RULES_FILE_PATH = "rulesfilepath";
     private static final String RULES_JSON = "rulesjson";
     private static final String NEW_RULES_JSON = "newrulesjson";
+    private static final String RULES_STRING = "rulesString";
+    private static final String NEW_RULES_STRING = "newRulesString";
     private static final String FINANCE_PLAN_FILE_PATH = "financeplanfilepath";
     private InMemoryUsersHolder objectHolder;
     private AccountingServiceClient accountingServiceClient;
@@ -68,15 +69,21 @@ public class PrePaidPlanPluginTest {
     private DebtsPaymentChecker debtsChecker;
     private PaymentRunner paymentRunner;
     private StopServiceRunner stopServiceRunner;
+    private HashMap<String, String> financeOptions;
+    private FinancePlan newPlan;
+    
+    @Before
+    public void setUp() throws InvalidParameterException {
+        setUpFinanceOptions();
+        setUpPlan();
+    }
     
     // test case: When calling the isRegisteredUser method, it must
     // get the user from the objects holder and check if the user
-    // is managed by the plugin.
+    // is managed by the plan.
     @Test
-    public void testIsRegisteredUser() throws InvalidParameterException, ModifiedListException, InternalServerErrorException {
-        Map<String, String> financeOptions = new HashMap<String, String>();
-        financeOptions.put(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME, String.valueOf(creditsDeductionWaitTime));
-        
+    public void testIsRegisteredUser() 
+            throws InvalidParameterException, ModifiedListException, InternalServerErrorException {
         FinanceUser financeUser1 = Mockito.mock(FinanceUser.class);
         Mockito.when(financeUser1.isSubscribed()).thenReturn(true);
         Mockito.when(financeUser1.getFinancePluginName()).thenReturn(PLAN_NAME);
@@ -94,8 +101,9 @@ public class PrePaidPlanPluginTest {
         Mockito.when(objectHolder.getUserById(USER_ID_2, PROVIDER_USER_2)).thenReturn(financeUser2);
         Mockito.when(objectHolder.getUserById(USER_NOT_MANAGED, PROVIDER_USER_NOT_MANAGED)).thenReturn(financeUser3);
 
-        PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(PLAN_NAME, creditsDeductionWaitTime, objectHolder, accountingServiceClient,
-                rasClient, paymentManager, planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, plan, financeOptions);
+        PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(PLAN_NAME, creditsDeductionWaitTime, objectHolder, 
+                accountingServiceClient, rasClient, paymentManager, planFactory, jsonUtils, debtsChecker, paymentRunner, 
+                stopServiceRunner, plan, financeOptions);
 
         assertTrue(prePaidFinancePlugin.isRegisteredUser(new SystemUser(USER_ID_1, USER_NAME_1, PROVIDER_USER_1)));
         assertTrue(prePaidFinancePlugin.isRegisteredUser(new SystemUser(USER_ID_2, USER_NAME_2, PROVIDER_USER_2)));
@@ -105,10 +113,8 @@ public class PrePaidPlanPluginTest {
     // test case: When calling the isRegisteredUser method passing as argument 
     // a user not subscribed to any plan, it must return false.
     @Test
-    public void testIsRegisteredUserUserIsNotSubscribedToAnyPlan() throws InvalidParameterException, ModifiedListException, InternalServerErrorException {
-        Map<String, String> financeOptions = new HashMap<String, String>();
-        financeOptions.put(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME, String.valueOf(creditsDeductionWaitTime));
-        
+    public void testIsRegisteredUserUserIsNotSubscribedToAnyPlan() 
+            throws InvalidParameterException, ModifiedListException, InternalServerErrorException {
         FinanceUser financeUser1 = Mockito.mock(FinanceUser.class);
         Mockito.when(financeUser1.isSubscribed()).thenReturn(false);
         
@@ -117,8 +123,9 @@ public class PrePaidPlanPluginTest {
         
         this.jsonUtils = Mockito.mock(JsonUtils.class);
         
-        PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(PLAN_NAME, creditsDeductionWaitTime, objectHolder, accountingServiceClient,
-                rasClient, paymentManager, planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, plan, financeOptions);
+        PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(PLAN_NAME, creditsDeductionWaitTime, objectHolder, 
+                accountingServiceClient, rasClient, paymentManager, planFactory, jsonUtils, debtsChecker, paymentRunner, 
+                stopServiceRunner, plan, financeOptions);
         
         assertFalse(prePaidFinancePlugin.isRegisteredUser(new SystemUser(USER_ID_1, USER_NAME_1, PROVIDER_USER_1)));
     }
@@ -128,9 +135,6 @@ public class PrePaidPlanPluginTest {
     // the method must return true.
     @Test
     public void testIsAuthorizedCreateOperationUserStateIsGoodFinancially() throws InvalidParameterException, InternalServerErrorException {
-        Map<String, String> financeOptions = new HashMap<String, String>();
-        financeOptions.put(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME, String.valueOf(creditsDeductionWaitTime));
-        
         this.paymentManager = Mockito.mock(CreditsManager.class);
         Mockito.when(this.paymentManager.hasPaid(USER_ID_1, PROVIDER_USER_1)).thenReturn(true);
         
@@ -151,9 +155,6 @@ public class PrePaidPlanPluginTest {
     // the method must return true.
     @Test
     public void testIsAuthorizedNonCreationOperationUserStateIsNotGoodFinancially() throws InvalidParameterException, InternalServerErrorException {
-        Map<String, String> financeOptions = new HashMap<String, String>();
-        financeOptions.put(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME, String.valueOf(creditsDeductionWaitTime));
-        
         this.paymentManager = Mockito.mock(CreditsManager.class);
         Mockito.when(this.paymentManager.hasPaid(USER_ID_1, PROVIDER_USER_1)).thenReturn(false);
         
@@ -174,9 +175,6 @@ public class PrePaidPlanPluginTest {
     // the method must return false.
     @Test
     public void testIsAuthorizedCreationOperationUserStateIsNotGoodFinancially() throws InvalidParameterException, InternalServerErrorException {
-        Map<String, String> financeOptions = new HashMap<String, String>();
-        financeOptions.put(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME, String.valueOf(creditsDeductionWaitTime));
-        
         this.paymentManager = Mockito.mock(CreditsManager.class);
         Mockito.when(this.paymentManager.hasPaid(USER_ID_1, PROVIDER_USER_1)).thenReturn(false);
         
@@ -197,9 +195,6 @@ public class PrePaidPlanPluginTest {
     // the method must return true.
     @Test
     public void testIsAuthorizedNonCreationOperationUserHasNotPaidPastInvoices() throws InvalidParameterException, InternalServerErrorException {
-        Map<String, String> financeOptions = new HashMap<String, String>();
-        financeOptions.put(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME, String.valueOf(creditsDeductionWaitTime));
-        
         this.paymentManager = Mockito.mock(CreditsManager.class);
         Mockito.when(this.paymentManager.hasPaid(USER_ID_1, PROVIDER_USER_1)).thenReturn(true);
         
@@ -220,9 +215,6 @@ public class PrePaidPlanPluginTest {
     // the method must return false.
     @Test
     public void testIsAuthorizedCreationOperationUserHasNotPaidPastInvoices() throws InvalidParameterException, InternalServerErrorException {
-        Map<String, String> financeOptions = new HashMap<String, String>();
-        financeOptions.put(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME, String.valueOf(creditsDeductionWaitTime));
-        
         this.paymentManager = Mockito.mock(CreditsManager.class);
         Mockito.when(this.paymentManager.hasPaid(USER_ID_1, PROVIDER_USER_1)).thenReturn(true);
         
@@ -238,14 +230,10 @@ public class PrePaidPlanPluginTest {
         assertFalse(postPaidFinancePlugin.isAuthorized(user, operation));
     }
     
-    // test case: When calling the registerUser method, it must call the DatabaseManager
-    // to create the user, create a UserCredits instance for the new user and 
-    // save the user credits using the DatabaseManager.
+    // test case: When calling the registerUser method, it must call the InMemoryUsersHolder
+    // to register the user using given parameters and resume the user resources.
     @Test
     public void testRegisterUser() throws InternalServerErrorException, InvalidParameterException {
-        Map<String, String> financeOptions = new HashMap<String, String>();
-        financeOptions.put(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME, String.valueOf(creditsDeductionWaitTime));
-        
         FinanceUser user = Mockito.mock(FinanceUser.class);
         this.stopServiceRunner = Mockito.mock(StopServiceRunner.class);
         
@@ -259,14 +247,13 @@ public class PrePaidPlanPluginTest {
         
         
         Mockito.verify(objectHolder).registerUser(USER_ID_1, PROVIDER_USER_1, PLAN_NAME);
+        Mockito.verify(this.stopServiceRunner).resumeResourcesForUser(user);
     }
     
-    // TODO documentation
+    // test case: When calling the purgeUser method, it must call the InMemoryUsersHolder to remove
+    // the user and purge the user resources through the StopServiceRunner.
     @Test
     public void testPurgeUser() throws FogbowException {
-        Map<String, String> financeOptions = new HashMap<String, String>();
-        financeOptions.put(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME, String.valueOf(creditsDeductionWaitTime));
-        
         FinanceUser user = Mockito.mock(FinanceUser.class);
         this.stopServiceRunner = Mockito.mock(StopServiceRunner.class);
         
@@ -289,11 +276,7 @@ public class PrePaidPlanPluginTest {
     // InMemoryUsersHolder to change the user plan. 
     @Test
     public void testChangePlan() throws InvalidParameterException, InternalServerErrorException {
-        Map<String, String> financeOptions = new HashMap<String, String>();
-        financeOptions.put(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME, String.valueOf(creditsDeductionWaitTime));
-        
         FinanceUser financeUser1 = Mockito.mock(FinanceUser.class);
-        Mockito.when(financeUser1.invoicesArePaid()).thenReturn(true);
         
         this.objectHolder = Mockito.mock(InMemoryUsersHolder.class);
         Mockito.when(objectHolder.getUserById(USER_ID_1, PROVIDER_USER_1)).thenReturn(financeUser1);
@@ -308,12 +291,11 @@ public class PrePaidPlanPluginTest {
         Mockito.verify(this.objectHolder).changePlan(USER_ID_1, PROVIDER_USER_1, NEW_PLAN_NAME);
     }
 
-    // TODO documentation
+    // test case: When calling the unregisterUser method, it must call the 
+    // InMemoryUsersHolder to unregister the user then purge the user resources through
+    // the StopServiceRunner.
     @Test
     public void testUnregisterUser() throws InvalidParameterException, InternalServerErrorException {
-        Map<String, String> financeOptions = new HashMap<String, String>();
-        financeOptions.put(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME, String.valueOf(creditsDeductionWaitTime));
-        
         this.stopServiceRunner = Mockito.mock(StopServiceRunner.class);
         FinanceUser financeUser1 = Mockito.mock(FinanceUser.class);
         
@@ -329,84 +311,46 @@ public class PrePaidPlanPluginTest {
         Mockito.verify(this.objectHolder).unregisterUser(USER_ID_1, PROVIDER_USER_1);
     }
     
-    // TODO documentation
-    @Test
-    public void testSetOptions() throws InvalidParameterException, InternalServerErrorException {
-        this.plan = Mockito.mock(FinancePlan.class);
-        Mockito.when(this.plan.getRulesAsMap()).thenReturn(rulesMap);
-        
-        this.jsonUtils = Mockito.mock(JsonUtils.class);
-        Mockito.when(this.jsonUtils.toJson(rulesMap)).thenReturn(RULES_JSON);
-        
-        PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(PLAN_NAME, creditsDeductionWaitTime, 
-                objectHolder, accountingServiceClient, rasClient, paymentManager, planFactory, 
-                this.jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, this.plan);
-        
-        Map<String, String> optionsBefore = prePaidFinancePlugin.getOptions();
-        
-        assertEquals(String.valueOf(creditsDeductionWaitTime), optionsBefore.get(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME));
-        assertEquals(RULES_JSON, optionsBefore.get(PrePaidPlanPlugin.FINANCE_PLAN_RULES));
-        
-        // new options
-        Map<String, String> financeOptions = new HashMap<String, String>();
-        financeOptions.put(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME, String.valueOf(newCreditsDeductionWaitTime));
-        
-        prePaidFinancePlugin.setOptions(financeOptions);
-        
-        
-        Map<String, String> optionsAfter = prePaidFinancePlugin.getOptions();
-        
-        assertEquals(String.valueOf(newCreditsDeductionWaitTime), optionsAfter.get(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME));
-        // rules are not updated
-        assertEquals(RULES_JSON, optionsAfter.get(PrePaidPlanPlugin.FINANCE_PLAN_RULES));
-    }
-    
-    // TODO documentation
+    // test case: When calling the setOptions method, if the finance plan used by
+    // the PrePaid plan is not null, then the method must update the finance plan
+    // using the rules passed as argument and also update the other plan parameters.
     @Test
     public void testSetOptionsWithPlanRulesPlanIsNotNull() throws InvalidParameterException, InternalServerErrorException {
-        this.plan = Mockito.mock(FinancePlan.class);
-        Mockito.when(this.plan.getRulesAsMap()).thenReturn(rulesMap);
-        
-        this.jsonUtils = Mockito.mock(JsonUtils.class);
-        Mockito.when(this.jsonUtils.toJson(rulesMap)).thenReturn(RULES_JSON);
-        Mockito.when(this.jsonUtils.fromJson(NEW_RULES_JSON, Map.class)).thenReturn(newRulesMap);
-        
+        // set up the PostPaid plan with a not null finance plan
         PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(PLAN_NAME, creditsDeductionWaitTime, 
                 objectHolder, accountingServiceClient, rasClient, paymentManager, planFactory, 
                 this.jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, this.plan);
         
+        // verify plan options before the setOptions operation
         Map<String, String> optionsBefore = prePaidFinancePlugin.getOptions();
         
         assertEquals(String.valueOf(creditsDeductionWaitTime), optionsBefore.get(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME));
-        assertEquals(RULES_JSON, optionsBefore.get(PrePaidPlanPlugin.FINANCE_PLAN_RULES));
+        assertEquals(RULES_STRING, optionsBefore.get(PrePaidPlanPlugin.FINANCE_PLAN_RULES));
         
         // new options
         Map<String, String> financeOptions = new HashMap<String, String>();
         financeOptions.put(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME, String.valueOf(newCreditsDeductionWaitTime));
         financeOptions.put(PrePaidPlanPlugin.FINANCE_PLAN_RULES, NEW_RULES_JSON);
         
+        // exercise
         prePaidFinancePlugin.setOptions(financeOptions);
         
-        
+        // verify
         Map<String, String> optionsAfter = prePaidFinancePlugin.getOptions();
         
+        // updated the plan parameters
         assertEquals(String.valueOf(newCreditsDeductionWaitTime), optionsAfter.get(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME));
+        
+        // updated the plan rules
         Mockito.verify(this.plan).update(newRulesMap);
     }
     
-    // TODO documentation
+    // test case: When calling the setOptions method, if the finance plan used by
+    // the PrePaid plan is null, then the method must create a new finance plan instance 
+    // using the plan factory, then update the other plan parameters.
     @Test
     public void testSetOptionsWithPlanRulesPlanIsNull() throws InvalidParameterException, InternalServerErrorException {
-        this.plan = Mockito.mock(FinancePlan.class);
-        Mockito.when(this.plan.getRulesAsMap()).thenReturn(newRulesMap);
-        
-        this.jsonUtils = Mockito.mock(JsonUtils.class);
-        Mockito.when(this.jsonUtils.toJson(newRulesMap)).thenReturn(NEW_RULES_JSON);
-        Mockito.when(this.jsonUtils.fromJson(NEW_RULES_JSON, Map.class)).thenReturn(newRulesMap);
-        
-        this.planFactory = Mockito.mock(FinancePlanFactory.class);
-        Mockito.when(this.planFactory.createFinancePlan(PLAN_NAME, newRulesMap)).thenReturn(plan);
-        
+        // set up the PostPaid plan with a null finance plan
         PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(PLAN_NAME, creditsDeductionWaitTime, 
                 objectHolder, accountingServiceClient, rasClient, paymentManager, planFactory, 
                 this.jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, null);
@@ -416,30 +360,27 @@ public class PrePaidPlanPluginTest {
         financeOptions.put(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME, String.valueOf(newCreditsDeductionWaitTime));
         financeOptions.put(PrePaidPlanPlugin.FINANCE_PLAN_RULES, NEW_RULES_JSON);
         
+        // exercise
         prePaidFinancePlugin.setOptions(financeOptions);
         
-        
+        // verify
         Map<String, String> optionsAfter = prePaidFinancePlugin.getOptions();
         
+        // updated the plan parameters
         assertEquals(String.valueOf(newCreditsDeductionWaitTime), optionsAfter.get(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME));
-        assertEquals(NEW_RULES_JSON, optionsAfter.get(PrePaidPlanPlugin.FINANCE_PLAN_RULES));
+        assertEquals(NEW_RULES_STRING, optionsAfter.get(PrePaidPlanPlugin.FINANCE_PLAN_RULES));
         
+        // created a new plan using the rules passed as argument
         Mockito.verify(this.planFactory).createFinancePlan(PLAN_NAME, newRulesMap);
     }
     
-    // TODO documentation
+    // test case: When calling the setOptions method, if the finance options map passed
+    // as argument contains a finance plan rules file path, then the method must create
+    // a new finance plan instance using the plan factory, passing the finance plan file path,
+    // then update the other plan parameters.
     @Test
     public void testSetOptionsWithPlanRuleFromFile() throws InvalidParameterException, InternalServerErrorException {
-        this.plan = Mockito.mock(FinancePlan.class);
-        Mockito.when(this.plan.getRulesAsMap()).thenReturn(newRulesMap);
-        
-        this.jsonUtils = Mockito.mock(JsonUtils.class);
-        Mockito.when(this.jsonUtils.toJson(newRulesMap)).thenReturn(NEW_RULES_JSON);
-        
-        this.planFactory = Mockito.mock(FinancePlanFactory.class);
-        Mockito.when(this.planFactory.createFinancePlan(PLAN_NAME, FINANCE_PLAN_FILE_PATH)).thenReturn(plan);
-        
-        
+        // set up the PostPaid plan with a not null finance plan
         PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(PLAN_NAME, creditsDeductionWaitTime, 
                 objectHolder, accountingServiceClient, rasClient, paymentManager, planFactory, 
                 this.jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, this.plan);
@@ -449,26 +390,45 @@ public class PrePaidPlanPluginTest {
         financeOptions.put(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME, String.valueOf(newCreditsDeductionWaitTime));
         financeOptions.put(PrePaidPlanPlugin.FINANCE_PLAN_RULES_FILE_PATH, FINANCE_PLAN_FILE_PATH);
         
+        // exercise
         prePaidFinancePlugin.setOptions(financeOptions);
         
-        
+        // verify
         Map<String, String> optionsAfter = prePaidFinancePlugin.getOptions();
         
+        // updated the plan parameters
         assertEquals(String.valueOf(newCreditsDeductionWaitTime), optionsAfter.get(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME));
-        assertEquals(NEW_RULES_JSON, optionsAfter.get(PrePaidPlanPlugin.FINANCE_PLAN_RULES));
+        assertEquals(NEW_RULES_STRING, optionsAfter.get(PrePaidPlanPlugin.FINANCE_PLAN_RULES));
         
+        // created a new plan using the finance plan file path passed as argument
         Mockito.verify(this.planFactory).createFinancePlan(PLAN_NAME, FINANCE_PLAN_FILE_PATH);
     }
     
-    // TODO documentation
+    // test case: When calling the setOptions method, if the finance options map passed
+    // as argument contains no finance plan startup option, then the method must
+    // throw an InvalidParameterException.
+    @Test(expected = InvalidParameterException.class)
+    public void testSetOptionsThrowsExceptionIfNoPlanStartUpOptionIsPassed() throws InvalidParameterException, InternalServerErrorException {
+        PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(PLAN_NAME, creditsDeductionWaitTime, 
+                objectHolder, accountingServiceClient, rasClient, paymentManager, planFactory, 
+                this.jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, this.plan);
+        
+        Map<String, String> optionsBefore = prePaidFinancePlugin.getOptions();
+        
+        assertEquals(String.valueOf(creditsDeductionWaitTime), optionsBefore.get(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME));
+        assertEquals(RULES_STRING, optionsBefore.get(PrePaidPlanPlugin.FINANCE_PLAN_RULES));
+        
+        // new options
+        Map<String, String> financeOptions = new HashMap<String, String>();
+        financeOptions.put(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME, String.valueOf(newCreditsDeductionWaitTime));
+        
+        prePaidFinancePlugin.setOptions(financeOptions);
+    }
+    
+    // test case: When calling the getOptions method, it must return a Map containing 
+    // Strings that represent all the finance options used by the PrePaid plan.
     @Test
     public void testGetOptions() throws InvalidParameterException, InternalServerErrorException {
-        this.plan = Mockito.mock(FinancePlan.class);
-        Mockito.when(this.plan.getRulesAsMap()).thenReturn(rulesMap);
-        
-        this.jsonUtils = Mockito.mock(JsonUtils.class);
-        Mockito.when(this.jsonUtils.toJson(rulesMap)).thenReturn(RULES_JSON);
-
         PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(PLAN_NAME, creditsDeductionWaitTime, 
                 objectHolder, accountingServiceClient, rasClient, paymentManager, planFactory, 
                 this.jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, this.plan);
@@ -476,10 +436,12 @@ public class PrePaidPlanPluginTest {
         Map<String, String> options = prePaidFinancePlugin.getOptions();
         
         assertEquals(String.valueOf(creditsDeductionWaitTime), options.get(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME));
-        assertEquals(RULES_JSON, options.get(PrePaidPlanPlugin.FINANCE_PLAN_RULES));
+        assertEquals(RULES_STRING, options.get(PrePaidPlanPlugin.FINANCE_PLAN_RULES));
     }
 
-    // TODO documentation
+    // test case: When calling the PrePaidPluginOptionsLoader.load method, it must
+    // get all the necessary PrePaid parameters from a PropertiesHolder instance and
+    // return these parameters as a Map.
     @Test
     public void testPrePaidPluginOptionsLoaderValidOptions() throws ConfigurationErrorException {
         setUpOptions(String.valueOf(creditsDeductionWaitTime), FINANCE_PLAN_RULES_FILE_PATH);
@@ -492,7 +454,8 @@ public class PrePaidPlanPluginTest {
         assertEquals(FINANCE_PLAN_RULES_FILE_PATH, options.get(PrePaidPlanPlugin.FINANCE_PLAN_RULES_FILE_PATH));
     }
     
-    // TODO documentation
+    // test case: When calling the PrePaidPluginOptionsLoader.load method and the property
+    // CreditsDeductionWaitTime is missing, it must throw a ConfigurationErrorException.
     @Test(expected = ConfigurationErrorException.class)
     public void testPrePaidPluginOptionsLoaderMissingCreditsDeductionWaitTime() throws ConfigurationErrorException {
         setUpOptions(null, FINANCE_PLAN_RULES_FILE_PATH);
@@ -502,7 +465,8 @@ public class PrePaidPlanPluginTest {
         loader.load();
     }
     
-    // TODO documentation
+    // test case: When calling the PrePaidPluginOptionsLoader.load method and the property
+    // FinancePlanRulesFilePath is missing, it must throw a ConfigurationErrorException.
     @Test(expected = ConfigurationErrorException.class)
     public void testPrePaidPluginOptionsLoaderMissingFinancePlanRulesFilePath() throws ConfigurationErrorException {
         setUpOptions(String.valueOf(creditsDeductionWaitTime), null);
@@ -510,6 +474,11 @@ public class PrePaidPlanPluginTest {
         PrePaidPluginOptionsLoader loader = new PrePaidPluginOptionsLoader();
         
         loader.load();
+    }
+    
+    private void setUpFinanceOptions() {
+        financeOptions = new HashMap<String, String>();
+        financeOptions.put(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME, String.valueOf(creditsDeductionWaitTime));
     }
     
     private void setUpOptions(String creditsDeductionWaitTime, String financePlanRulesPath) {
@@ -520,5 +489,22 @@ public class PrePaidPlanPluginTest {
         
         PowerMockito.mockStatic(PropertiesHolder.class);
         BDDMockito.given(PropertiesHolder.getInstance()).willReturn(propertiesHolder);
+    }
+    
+    private void setUpPlan() throws InvalidParameterException {
+        this.plan = Mockito.mock(FinancePlan.class);
+        Mockito.when(this.plan.toString()).thenReturn(RULES_STRING);
+        
+        this.newPlan = Mockito.mock(FinancePlan.class);
+        Mockito.when(this.newPlan.toString()).thenReturn(NEW_RULES_STRING);
+        
+        this.jsonUtils = Mockito.mock(JsonUtils.class);
+        Mockito.when(this.jsonUtils.toJson(rulesMap)).thenReturn(RULES_JSON);
+        Mockito.when(this.jsonUtils.toJson(newRulesMap)).thenReturn(NEW_RULES_JSON);
+        Mockito.when(this.jsonUtils.fromJson(NEW_RULES_JSON, Map.class)).thenReturn(newRulesMap);
+        
+        this.planFactory = Mockito.mock(FinancePlanFactory.class);
+        Mockito.when(this.planFactory.createFinancePlan(PLAN_NAME, newRulesMap)).thenReturn(newPlan);
+        Mockito.when(this.planFactory.createFinancePlan(PLAN_NAME, FINANCE_PLAN_FILE_PATH)).thenReturn(newPlan);
     }
 }

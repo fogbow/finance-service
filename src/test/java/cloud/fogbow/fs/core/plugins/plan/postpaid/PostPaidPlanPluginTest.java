@@ -516,7 +516,7 @@ public class PostPaidPlanPluginTest {
         Mockito.verify(this.planFactory).createFinancePlan(PLAN_NAME, FINANCE_PLAN_FILE_PATH);
     }
     
-    // test case: When calling the setOptions method, it the finance options map passed
+    // test case: When calling the setOptions method, if the finance options map passed
     // as argument contains no finance plan startup option, then the method must
     // throw an InvalidParameterException.
     @Test(expected = InvalidParameterException.class)

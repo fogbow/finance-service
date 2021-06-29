@@ -24,7 +24,6 @@ import cloud.fogbow.fs.core.util.list.ModifiedListException;
 import cloud.fogbow.fs.core.util.list.MultiConsumerSynchronizedList;
 import cloud.fogbow.fs.core.util.list.MultiConsumerSynchronizedListFactory;
 
-// TODO review documentation
 public class InMemoryUsersHolderTest {
     private static final String USER_ID_1 = "userId1";
     private static final String PROVIDER_ID_1 = "providerId1";
@@ -88,7 +87,7 @@ public class InMemoryUsersHolderTest {
     }
     
     // test case: When creating an InMemoryUsersHolder instance and no user is registered
-    // in the database, the constructor must set up correctly the internal data structures.
+    // in the database, the constructor must set up the internal data structures correctly .
     @Test
     public void testConstructorLoadsUserDataCorrectlyNoUser() 
             throws InternalServerErrorException, ConfigurationErrorException {
