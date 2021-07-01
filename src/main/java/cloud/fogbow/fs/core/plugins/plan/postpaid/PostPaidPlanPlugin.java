@@ -19,11 +19,11 @@ import cloud.fogbow.common.models.SystemUser;
 import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.InMemoryUsersHolder;
 import cloud.fogbow.fs.core.PropertiesHolder;
-import cloud.fogbow.fs.core.models.FinancePlan;
+import cloud.fogbow.fs.core.models.FinancePolicy;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.plugins.DebtsPaymentChecker;
 import cloud.fogbow.fs.core.plugins.PersistablePlanPlugin;
-import cloud.fogbow.fs.core.util.FinancePlanFactory;
+import cloud.fogbow.fs.core.util.FinancePolicyFactory;
 import cloud.fogbow.fs.core.util.JsonUtils;
 import cloud.fogbow.fs.core.util.client.AccountingServiceClient;
 import cloud.fogbow.fs.core.util.client.RasClient;
@@ -86,7 +86,7 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
     private JsonUtils jsonUtils;
     
     @Transient
-    private FinancePlanFactory planFactory;
+    private FinancePolicyFactory planFactory;
     
     @Transient
     private DebtsPaymentChecker debtsChecker;
@@ -98,7 +98,7 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
     private long invoiceWaitTime;
     
     @OneToOne(cascade={CascadeType.ALL})
-    private FinancePlan plan;
+    private FinancePolicy policy;
 
     @Column(name = PLAN_NAME_COLUMN_NAME)
     private String name;
@@ -115,13 +115,13 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
     public PostPaidPlanPlugin(String planName, InMemoryUsersHolder usersHolder, Map<String, String> financeOptions)
             throws ConfigurationErrorException, InvalidParameterException, InternalServerErrorException {
         this(planName, usersHolder, new AccountingServiceClient(), new RasClient(),
-                new FinancePlanFactory(), new JsonUtils(), new DebtsPaymentChecker(usersHolder), financeOptions);
+                new FinancePolicyFactory(), new JsonUtils(), new DebtsPaymentChecker(usersHolder), financeOptions);
         
-        this.invoiceManager = new InvoiceManager(this.usersHolder, plan);
+        this.invoiceManager = new InvoiceManager(this.usersHolder, policy);
     }
     
     PostPaidPlanPlugin(String planName, InMemoryUsersHolder usersHolder, AccountingServiceClient accountingServiceClient,
-            RasClient rasClient, FinancePlanFactory planFactory, JsonUtils jsonUtils, DebtsPaymentChecker debtsChecker, 
+            RasClient rasClient, FinancePolicyFactory planFactory, JsonUtils jsonUtils, DebtsPaymentChecker debtsChecker, 
             Map<String, String> financeOptions) throws InvalidParameterException, InternalServerErrorException {
         this.name = planName;
         this.usersHolder = usersHolder;
@@ -137,17 +137,17 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
     
     PostPaidPlanPlugin(String name, long userBillingInterval, long invoiceWaitTime, InMemoryUsersHolder usersHolder, 
             AccountingServiceClient accountingServiceClient, RasClient rasClient, InvoiceManager invoiceManager, 
-            FinancePlanFactory planFactory, JsonUtils jsonUtils, DebtsPaymentChecker debtsChecker, PaymentRunner paymentRunner,
-            StopServiceRunner stopServiceRunner, FinancePlan financePlan, Map<String, String> financeOptions) 
+            FinancePolicyFactory planFactory, JsonUtils jsonUtils, DebtsPaymentChecker debtsChecker, PaymentRunner paymentRunner,
+            StopServiceRunner stopServiceRunner, FinancePolicy policy, Map<String, String> financeOptions) 
                     throws InvalidParameterException, InternalServerErrorException {
         this(name, userBillingInterval, invoiceWaitTime, usersHolder, accountingServiceClient, rasClient, invoiceManager, 
-                planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, financePlan);
+                planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, policy);
     }
     
     PostPaidPlanPlugin(String name, long userBillingInterval, long invoiceWaitTime, InMemoryUsersHolder usersHolder, 
             AccountingServiceClient accountingServiceClient, RasClient rasClient, InvoiceManager invoiceManager, 
-            FinancePlanFactory planFactory, JsonUtils jsonUtils, DebtsPaymentChecker debtsChecker, PaymentRunner paymentRunner, 
-            StopServiceRunner stopServiceRunner, FinancePlan financePlan) 
+            FinancePolicyFactory planFactory, JsonUtils jsonUtils, DebtsPaymentChecker debtsChecker, PaymentRunner paymentRunner, 
+            StopServiceRunner stopServiceRunner, FinancePolicy policy) 
                     throws InvalidParameterException, InternalServerErrorException {
         this.name = name;
         this.userBillingTime = userBillingInterval;
@@ -158,7 +158,7 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
         this.planFactory = planFactory;
         this.invoiceManager = invoiceManager;
         this.jsonUtils = jsonUtils;
-        this.plan = financePlan;
+        this.policy = policy;
         this.debtsChecker = debtsChecker;
         this.paymentRunner = paymentRunner;
         this.stopServiceRunner = stopServiceRunner;
@@ -199,7 +199,7 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
         }
     }
     
-    private void setUpPlanFromOptions(Map<String, String> financeOptions, FinancePlanFactory planFactory) throws InvalidParameterException {
+    private void setUpPlanFromOptions(Map<String, String> financeOptions, FinancePolicyFactory planFactory) throws InvalidParameterException {
         if (financeOptions.containsKey(FINANCE_PLAN_RULES)) {
             setUpPlanFromRulesString(financeOptions.get(FINANCE_PLAN_RULES), planFactory);
         } else if (financeOptions.containsKey(FINANCE_PLAN_RULES_FILE_PATH))  {
@@ -209,22 +209,22 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
         }
     }
 
-    private void setUpPlanFromRulesString(String rulesString, FinancePlanFactory planFactory)
+    private void setUpPlanFromRulesString(String rulesString, FinancePolicyFactory planFactory)
             throws InvalidParameterException {
         Map<String, String> planInfo = this.jsonUtils.fromJson(rulesString, Map.class);
         
-        if (this.plan == null) {
-            this.plan = planFactory.createFinancePlan(this.name, planInfo);
+        if (this.policy == null) {
+            this.policy = planFactory.createFinancePolicy(this.name, planInfo);
         } else {
-            synchronized(this.plan) {
-                this.plan.update(planInfo);
+            synchronized(this.policy) {
+                this.policy.update(planInfo);
             }
         }
     }
     
-    private void setUpPlanFromRulesFile(String financePlanFilePath, FinancePlanFactory planFactory)
+    private void setUpPlanFromRulesFile(String financePlanFilePath, FinancePolicyFactory planFactory)
             throws InvalidParameterException {
-        this.plan = planFactory.createFinancePlan(this.name, financePlanFilePath);
+        this.policy = planFactory.createFinancePolicy(this.name, financePlanFilePath);
     }
     
     @Override
@@ -234,7 +234,7 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
     
     @Override
     public Map<String, String> getOptions() {
-        String planRules = plan.toString();
+        String planRules = policy.toString();
         
         HashMap<String, String> options = new HashMap<String, String>();
         options.put(FINANCE_PLAN_RULES, planRules);
@@ -367,12 +367,12 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
         this.usersHolder = objectsHolder;
         this.accountingServiceClient = new AccountingServiceClient();
         this.rasClient = new RasClient();
-        this.planFactory = new FinancePlanFactory();
+        this.planFactory = new FinancePolicyFactory();
         this.jsonUtils = new JsonUtils();
         this.debtsChecker = new DebtsPaymentChecker(usersHolder);
         this.threadsAreRunning = false;
         
-        this.invoiceManager = new InvoiceManager(this.usersHolder, plan);
+        this.invoiceManager = new InvoiceManager(this.usersHolder, policy);
     }
 
     @VisibleForTesting

@@ -456,7 +456,7 @@ public class InMemoryUsersHolderTest {
     private void setUpDatabase() {
         databaseManager = Mockito.mock(DatabaseManager.class);
         Mockito.when(databaseManager.getRegisteredUsers()).thenReturn(usersList);
-        Mockito.when(databaseManager.getRegisteredPlanPlugins()).thenReturn(plansList);
+        Mockito.when(databaseManager.getRegisteredPlans()).thenReturn(plansList);
     }
     
     private void setUpCredits() {

@@ -9,10 +9,9 @@ import javax.persistence.Id;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
-// TODO change name to finance rule
 @Entity
-@Table(name = "finance_plan_items_table")
-public class FinancePlanItem {
+@Table(name = "finance_rules_table")
+public class FinanceRule {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(nullable = false, unique = true)
@@ -24,11 +23,11 @@ public class FinancePlanItem {
     @Column
     private Double value;
     
-    public FinancePlanItem() {
+    public FinanceRule() {
         
     }
     
-    public FinancePlanItem(ResourceItem item, Double value) {
+    public FinanceRule(ResourceItem item, Double value) {
         this.item = item;
         this.value = value;
     }

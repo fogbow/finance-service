@@ -17,7 +17,7 @@ public class DatabaseManager {
 	private UserRepository userRepository;
 	
 	@Autowired
-	private PlanPluginRepository planPluginRepository;
+	private FinancePlanRepository planRepository;
 	
 	public DatabaseManager() {
 	}
@@ -35,15 +35,15 @@ public class DatabaseManager {
 	    return userRepository.findAll();
 	}
 
-    public List<PersistablePlanPlugin> getRegisteredPlanPlugins() {
-        return planPluginRepository.findAll();
+    public List<PersistablePlanPlugin> getRegisteredPlans() {
+        return planRepository.findAll();
     }
 
-    public void savePlanPlugin(PersistablePlanPlugin plugin) {
-        planPluginRepository.save(plugin);
+    public void savePlan(PersistablePlanPlugin plan) {
+        planRepository.save(plan);
     }
 
-    public void removePlanPlugin(PersistablePlanPlugin plugin) {
-        planPluginRepository.delete(plugin);
+    public void removePlan(PersistablePlanPlugin plan) {
+        planRepository.delete(plan);
     }
 }

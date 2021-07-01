@@ -5,7 +5,7 @@ import java.util.List;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.core.InMemoryUsersHolder;
-import cloud.fogbow.fs.core.models.FinancePlan;
+import cloud.fogbow.fs.core.models.FinancePolicy;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.models.Invoice;
 import cloud.fogbow.fs.core.models.InvoiceState;
@@ -17,21 +17,21 @@ public class InvoiceManager {
     private InMemoryUsersHolder userHolder;
     private RecordUtils resourceItemFactory;
     private InvoiceBuilder invoiceBuilder;
-    private FinancePlan financePlan;
+    private FinancePolicy policy;
     
-    public InvoiceManager(InMemoryUsersHolder userHolder, FinancePlan financePlan) {
+    public InvoiceManager(InMemoryUsersHolder userHolder, FinancePolicy policy) {
         this.userHolder = userHolder;
         this.resourceItemFactory = new RecordUtils();
         this.invoiceBuilder = new InvoiceBuilder();
-        this.financePlan = financePlan;
+        this.policy = policy;
     }
 
     public InvoiceManager(InMemoryUsersHolder userHolder, RecordUtils resourceItemFactory,
-            InvoiceBuilder invoiceBuilder, FinancePlan financePlan) {
+            InvoiceBuilder invoiceBuilder, FinancePolicy policy) {
         this.userHolder = userHolder;
         this.resourceItemFactory = resourceItemFactory;
         this.invoiceBuilder = invoiceBuilder;
-        this.financePlan = financePlan;
+        this.policy = policy;
     }
     
     public boolean hasPaid(String userId, String provider) throws InvalidParameterException, InternalServerErrorException {
@@ -54,7 +54,7 @@ public class InvoiceManager {
         FinanceUser user = this.userHolder.getUserById(userId, provider);
         
         synchronized(user) {
-            synchronized(financePlan) {
+            synchronized(policy) {
                 boolean lastInvoice = false;
                 generateInvoiceAndUpdateUser(userId, provider, paymentStartTime, paymentEndTime, records, user, lastInvoice);
             }
@@ -67,7 +67,7 @@ public class InvoiceManager {
         FinanceUser user = this.userHolder.getUserById(userId, provider);
         
         synchronized(user) {
-            synchronized(financePlan) {
+            synchronized(policy) {
                 boolean lastInvoice = true;
                 generateInvoiceAndUpdateUser(userId, provider, paymentStartTime, paymentEndTime, records, user, lastInvoice);
             }
@@ -98,7 +98,7 @@ public class InvoiceManager {
         
         // TODO What is the expected behavior for the empty records list case? 
         for (Record record : records) {
-            addRecordToInvoice(record, financePlan, paymentStartTime, paymentEndTime);
+            addRecordToInvoice(record, policy, paymentStartTime, paymentEndTime);
         }
         
         Invoice invoice = invoiceBuilder.buildInvoice();
@@ -106,7 +106,7 @@ public class InvoiceManager {
         return invoice;
     }
     
-    private void addRecordToInvoice(Record record, FinancePlan plan, 
+    private void addRecordToInvoice(Record record, FinancePolicy plan, 
             Long paymentStartTime, Long paymentEndTime) throws InternalServerErrorException {
         try {
             ResourceItem resourceItem = resourceItemFactory.getItemFromRecord(record);
@@ -119,7 +119,7 @@ public class InvoiceManager {
         }
     }
     
-    public void setPlan(FinancePlan financePlan) {
-        this.financePlan = financePlan;
+    public void setPlan(FinancePolicy financePlan) {
+        this.policy = financePlan;
     }
 }

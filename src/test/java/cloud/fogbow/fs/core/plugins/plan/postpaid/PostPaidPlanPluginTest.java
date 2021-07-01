@@ -23,11 +23,11 @@ import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.common.models.SystemUser;
 import cloud.fogbow.fs.core.InMemoryUsersHolder;
 import cloud.fogbow.fs.core.PropertiesHolder;
-import cloud.fogbow.fs.core.models.FinancePlan;
+import cloud.fogbow.fs.core.models.FinancePolicy;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.plugins.DebtsPaymentChecker;
 import cloud.fogbow.fs.core.plugins.plan.postpaid.PostPaidPlanPlugin.PostPaidPluginOptionsLoader;
-import cloud.fogbow.fs.core.util.FinancePlanFactory;
+import cloud.fogbow.fs.core.util.FinancePolicyFactory;
 import cloud.fogbow.fs.core.util.JsonUtils;
 import cloud.fogbow.fs.core.util.client.AccountingServiceClient;
 import cloud.fogbow.fs.core.util.client.RasClient;
@@ -60,21 +60,21 @@ public class PostPaidPlanPluginTest {
     private AccountingServiceClient accountingServiceClient;
     private RasClient rasClient;
     private InvoiceManager paymentManager;
-    private FinancePlanFactory planFactory;
+    private FinancePolicyFactory planFactory;
     private long userBillingInterval = 10L;
     private long newUserBillingInterval = 20L;
     private long invoiceWaitTime = 1L;
     private long newInvoiceWaitTime = 2L;
     private InMemoryUsersHolder objectHolder;
     private JsonUtils jsonUtils;
-    private FinancePlan plan;
+    private FinancePolicy plan;
     private Map<String, String> rulesMap = new HashMap<String, String>();
     private Map<String, String> newRulesMap = new HashMap<String, String>();
     private HashMap<String, String> financeOptions;
     private DebtsPaymentChecker debtsChecker;
     private StopServiceRunner stopServiceRunner;
     private PaymentRunner paymentRunner;
-    private FinancePlan newPlan;
+    private FinancePolicy newPlan;
 
     @Before
     public void setUp() throws InvalidParameterException {
@@ -482,7 +482,7 @@ public class PostPaidPlanPluginTest {
         assertEquals(NEW_RULES_STRING, optionsAfter.get(PostPaidPlanPlugin.FINANCE_PLAN_RULES));
         
         // created a new plan using the rules passed as argument
-        Mockito.verify(this.planFactory).createFinancePlan(PLAN_NAME, newRulesMap);
+        Mockito.verify(this.planFactory).createFinancePolicy(PLAN_NAME, newRulesMap);
     }
     
     // test case: When calling the setOptions method, if the finance options map passed
@@ -514,7 +514,7 @@ public class PostPaidPlanPluginTest {
         assertEquals(NEW_RULES_STRING, optionsAfter.get(PostPaidPlanPlugin.FINANCE_PLAN_RULES));
         
         // created a new plan using the finance plan file path passed as argument
-        Mockito.verify(this.planFactory).createFinancePlan(PLAN_NAME, FINANCE_PLAN_FILE_PATH);
+        Mockito.verify(this.planFactory).createFinancePolicy(PLAN_NAME, FINANCE_PLAN_FILE_PATH);
     }
     
     // test case: When calling the setOptions method, if the finance options map passed
@@ -622,10 +622,10 @@ public class PostPaidPlanPluginTest {
     }
 
     private void setUpPlan() throws InvalidParameterException {
-        this.plan = Mockito.mock(FinancePlan.class);
+        this.plan = Mockito.mock(FinancePolicy.class);
         Mockito.when(this.plan.toString()).thenReturn(RULES_STRING);
         
-        this.newPlan = Mockito.mock(FinancePlan.class);
+        this.newPlan = Mockito.mock(FinancePolicy.class);
         Mockito.when(this.newPlan.toString()).thenReturn(NEW_RULES_STRING);
         
         this.jsonUtils = Mockito.mock(JsonUtils.class);
@@ -633,8 +633,8 @@ public class PostPaidPlanPluginTest {
         Mockito.when(this.jsonUtils.toJson(newRulesMap)).thenReturn(NEW_RULES_JSON);
         Mockito.when(this.jsonUtils.fromJson(NEW_RULES_JSON, Map.class)).thenReturn(newRulesMap);
         
-        this.planFactory = Mockito.mock(FinancePlanFactory.class);
-        Mockito.when(this.planFactory.createFinancePlan(PLAN_NAME, newRulesMap)).thenReturn(newPlan);
-        Mockito.when(this.planFactory.createFinancePlan(PLAN_NAME, FINANCE_PLAN_FILE_PATH)).thenReturn(newPlan);
+        this.planFactory = Mockito.mock(FinancePolicyFactory.class);
+        Mockito.when(this.planFactory.createFinancePolicy(PLAN_NAME, newRulesMap)).thenReturn(newPlan);
+        Mockito.when(this.planFactory.createFinancePolicy(PLAN_NAME, FINANCE_PLAN_FILE_PATH)).thenReturn(newPlan);
     }
 }

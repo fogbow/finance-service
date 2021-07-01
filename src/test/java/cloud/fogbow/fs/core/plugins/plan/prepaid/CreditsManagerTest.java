@@ -14,7 +14,7 @@ import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.core.InMemoryUsersHolder;
 import cloud.fogbow.fs.core.models.ComputeItem;
-import cloud.fogbow.fs.core.models.FinancePlan;
+import cloud.fogbow.fs.core.models.FinancePolicy;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.models.ResourceItem;
 import cloud.fogbow.fs.core.models.UserCredits;
@@ -38,7 +38,7 @@ public class CreditsManagerTest {
     private UserCredits userCredits1;
     private UserCredits userCredits2;
     private UserCredits userCredits3;
-    private FinancePlan financePlan;
+    private FinancePolicy policy;
     private FinanceUser financeUser1;
     private FinanceUser financeUser2;
     private FinanceUser financeUser3;
@@ -66,7 +66,7 @@ public class CreditsManagerTest {
         setUpPlan();
         setUpDatabase();
         
-        CreditsManager creditsManager = new CreditsManager(objectHolder, financePlan, recordUtils);
+        CreditsManager creditsManager = new CreditsManager(objectHolder, policy, recordUtils);
         
         assertTrue(creditsManager.hasPaid(USER_ID1, PROVIDER1));
         assertTrue(creditsManager.hasPaid(USER_ID2, PROVIDER2));
@@ -85,7 +85,7 @@ public class CreditsManagerTest {
         setUpPlan();
         setUpDatabase();
         
-        CreditsManager creditsManager = new CreditsManager(objectHolder, financePlan, recordUtils);
+        CreditsManager creditsManager = new CreditsManager(objectHolder, policy, recordUtils);
         
         creditsManager.startPaymentProcess(USER_ID1, PROVIDER1, PAYMENT_START_TIME, PAYMENT_END_TIME, records);
         
@@ -105,7 +105,7 @@ public class CreditsManagerTest {
         setUpPlan();
         setUpDatabase();
         
-        CreditsManager creditsManager = new CreditsManager(objectHolder, financePlan, recordUtils);
+        CreditsManager creditsManager = new CreditsManager(objectHolder, policy, recordUtils);
         
         creditsManager.startPaymentProcess(USER_ID1, PROVIDER1, PAYMENT_START_TIME, PAYMENT_END_TIME, records);
         
@@ -138,7 +138,7 @@ public class CreditsManagerTest {
         setUpPlan();
         setUpDatabase();
         
-        CreditsManager creditsManager = new CreditsManager(objectHolder, financePlan, recordUtils);
+        CreditsManager creditsManager = new CreditsManager(objectHolder, policy, recordUtils);
         
         try {
             creditsManager.startPaymentProcess(USER_ID1, PROVIDER1, PAYMENT_START_TIME, PAYMENT_END_TIME, records);
@@ -159,13 +159,13 @@ public class CreditsManagerTest {
         
         setUpRecords();
 
-        this.financePlan = Mockito.mock(FinancePlan.class);
-        Mockito.when(financePlan.getItemFinancialValue(resourceItem1)).thenThrow(new InvalidParameterException());
-        Mockito.when(financePlan.getItemFinancialValue(resourceItem2)).thenThrow(new InvalidParameterException());
+        this.policy = Mockito.mock(FinancePolicy.class);
+        Mockito.when(policy.getItemFinancialValue(resourceItem1)).thenThrow(new InvalidParameterException());
+        Mockito.when(policy.getItemFinancialValue(resourceItem2)).thenThrow(new InvalidParameterException());
         
         setUpDatabase();
         
-        CreditsManager creditsManager = new CreditsManager(objectHolder, financePlan, recordUtils);
+        CreditsManager creditsManager = new CreditsManager(objectHolder, policy, recordUtils);
         
         try {
             creditsManager.startPaymentProcess(USER_ID1, PROVIDER1, PAYMENT_START_TIME, PAYMENT_END_TIME, records);            
@@ -197,9 +197,9 @@ public class CreditsManagerTest {
     }
     
     private void setUpPlan() throws InvalidParameterException {
-        this.financePlan = Mockito.mock(FinancePlan.class);
-        Mockito.when(financePlan.getItemFinancialValue(resourceItem1)).thenReturn(VALUE_ITEM_1);
-        Mockito.when(financePlan.getItemFinancialValue(resourceItem2)).thenReturn(VALUE_ITEM_2);
+        this.policy = Mockito.mock(FinancePolicy.class);
+        Mockito.when(policy.getItemFinancialValue(resourceItem1)).thenReturn(VALUE_ITEM_1);
+        Mockito.when(policy.getItemFinancialValue(resourceItem2)).thenReturn(VALUE_ITEM_2);
     }
     
     private void setUpDatabase() throws InvalidParameterException, InternalServerErrorException {

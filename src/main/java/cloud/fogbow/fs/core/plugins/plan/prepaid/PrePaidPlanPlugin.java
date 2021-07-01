@@ -17,11 +17,11 @@ import cloud.fogbow.common.models.SystemUser;
 import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.InMemoryUsersHolder;
 import cloud.fogbow.fs.core.PropertiesHolder;
-import cloud.fogbow.fs.core.models.FinancePlan;
+import cloud.fogbow.fs.core.models.FinancePolicy;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.plugins.DebtsPaymentChecker;
 import cloud.fogbow.fs.core.plugins.PersistablePlanPlugin;
-import cloud.fogbow.fs.core.util.FinancePlanFactory;
+import cloud.fogbow.fs.core.util.FinancePolicyFactory;
 import cloud.fogbow.fs.core.util.JsonUtils;
 import cloud.fogbow.fs.core.util.client.AccountingServiceClient;
 import cloud.fogbow.fs.core.util.client.RasClient;
@@ -83,7 +83,7 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
     private InMemoryUsersHolder usersHolder;
     
     @Transient
-    private FinancePlanFactory planFactory;
+    private FinancePolicyFactory planFactory;
     
     @Transient
     private JsonUtils jsonUtils;
@@ -95,7 +95,7 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
     private long creditsDeductionWaitTime;
 
     @OneToOne(cascade={CascadeType.ALL})
-    private FinancePlan plan;
+    private FinancePolicy policy;
     
     @Column(name = PLAN_NAME_COLUMN_NAME)
     private String name;
@@ -112,14 +112,14 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
     public PrePaidPlanPlugin(String planName, InMemoryUsersHolder usersHolder, 
             Map<String, String> financeOptions) throws InvalidParameterException, ConfigurationErrorException {
         this(planName, usersHolder, new AccountingServiceClient(), new RasClient(),
-                new FinancePlanFactory(), new JsonUtils(), new DebtsPaymentChecker(usersHolder), financeOptions);
+                new FinancePolicyFactory(), new JsonUtils(), new DebtsPaymentChecker(usersHolder), financeOptions);
         
-        this.creditsManager = new CreditsManager(this.usersHolder, plan);
+        this.creditsManager = new CreditsManager(this.usersHolder, policy);
     }
     
     public PrePaidPlanPlugin(String planName, InMemoryUsersHolder usersHolder,
             AccountingServiceClient accountingServiceClient, RasClient rasClient,
-            FinancePlanFactory financePlanFactory, JsonUtils jsonUtils, DebtsPaymentChecker debtsChecker, 
+            FinancePolicyFactory financePlanFactory, JsonUtils jsonUtils, DebtsPaymentChecker debtsChecker, 
             Map<String, String> financeOptions) throws InvalidParameterException {
         this.name = planName;
         this.usersHolder = usersHolder;
@@ -135,17 +135,17 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
 
     PrePaidPlanPlugin(String name, long creditsDeductionWaitTime, InMemoryUsersHolder usersHolder, 
             AccountingServiceClient accountingServiceClient, RasClient rasClient, CreditsManager invoiceManager, 
-            FinancePlanFactory planFactory, JsonUtils jsonUtils, DebtsPaymentChecker debtsChecker, 
-            PaymentRunner paymentRunner, StopServiceRunner stopServiceRunner, FinancePlan financePlan, 
+            FinancePolicyFactory planFactory, JsonUtils jsonUtils, DebtsPaymentChecker debtsChecker, 
+            PaymentRunner paymentRunner, StopServiceRunner stopServiceRunner, FinancePolicy policy, 
             Map<String, String> financeOptions) throws InvalidParameterException, InternalServerErrorException {
         this(name, creditsDeductionWaitTime, usersHolder, accountingServiceClient, rasClient, invoiceManager, 
-                planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, financePlan);
+                planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, policy);
     }
     
     PrePaidPlanPlugin(String name, long creditsDeductionWaitTime, InMemoryUsersHolder usersHolder, 
             AccountingServiceClient accountingServiceClient, RasClient rasClient, CreditsManager invoiceManager, 
-            FinancePlanFactory planFactory, JsonUtils jsonUtils, DebtsPaymentChecker debtsChecker, 
-            PaymentRunner paymentRunner, StopServiceRunner stopServiceRunner, FinancePlan financePlan) 
+            FinancePolicyFactory planFactory, JsonUtils jsonUtils, DebtsPaymentChecker debtsChecker, 
+            PaymentRunner paymentRunner, StopServiceRunner stopServiceRunner, FinancePolicy policy) 
                     throws InvalidParameterException, InternalServerErrorException {
         this.name = name;
         this.creditsDeductionWaitTime = creditsDeductionWaitTime;
@@ -158,7 +158,7 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
         this.debtsChecker = debtsChecker;
         this.paymentRunner = paymentRunner;
         this.stopServiceRunner = stopServiceRunner;
-        this.plan = financePlan;
+        this.policy = policy;
         this.threadsAreRunning = false;
     }
     
@@ -193,7 +193,7 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
         }
     }
     
-    private void setUpPlanFromOptions(Map<String, String> financeOptions, FinancePlanFactory planFactory) throws InvalidParameterException {
+    private void setUpPlanFromOptions(Map<String, String> financeOptions, FinancePolicyFactory planFactory) throws InvalidParameterException {
         if (financeOptions.containsKey(FINANCE_PLAN_RULES)) {
             setUpPlanFromRulesString(financeOptions.get(FINANCE_PLAN_RULES), planFactory);
         } else if (financeOptions.containsKey(FINANCE_PLAN_RULES_FILE_PATH))  {
@@ -203,22 +203,22 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
         }
     }
 
-    private void setUpPlanFromRulesString(String rulesString, FinancePlanFactory planFactory)
+    private void setUpPlanFromRulesString(String rulesString, FinancePolicyFactory planFactory)
             throws InvalidParameterException {
         Map<String, String> planInfo = this.jsonUtils.fromJson(rulesString, Map.class);
         
-        if (this.plan == null) {
-            this.plan = planFactory.createFinancePlan(this.name, planInfo);
+        if (this.policy == null) {
+            this.policy = planFactory.createFinancePolicy(this.name, planInfo);
         } else {
-            synchronized(this.plan) {
-                this.plan.update(planInfo);
+            synchronized(this.policy) {
+                this.policy.update(planInfo);
             }
         }
     }
     
-    private void setUpPlanFromRulesFile(String financePlanFilePath, FinancePlanFactory planFactory)
+    private void setUpPlanFromRulesFile(String financePlanFilePath, FinancePolicyFactory planFactory)
             throws InvalidParameterException {
-        this.plan = planFactory.createFinancePlan(this.name, financePlanFilePath);
+        this.policy = planFactory.createFinancePolicy(this.name, financePlanFilePath);
     }
 
     @Override
@@ -229,7 +229,7 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
     @Override
     public Map<String, String> getOptions() {
         HashMap<String, String> options = new HashMap<String, String>();
-        String planRules = plan.toString();
+        String planRules = policy.toString();
         
         options.put(FINANCE_PLAN_RULES, planRules);
         options.put(CREDITS_DEDUCTION_WAIT_TIME, String.valueOf(creditsDeductionWaitTime));
@@ -343,7 +343,7 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
         this.rasClient = new RasClient();
         this.threadsAreRunning = false;
         
-        this.creditsManager = new CreditsManager(this.usersHolder, plan);
+        this.creditsManager = new CreditsManager(this.usersHolder, policy);
     }
     
     static class PrePaidPluginOptionsLoader {

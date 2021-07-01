@@ -56,7 +56,7 @@ public class InMemoryFinanceObjectsHolderTest {
     public void testConstructorSetsUpDataStructuresCorrectly() throws InternalServerErrorException, InvalidParameterException, ConfigurationErrorException {
         new InMemoryFinanceObjectsHolder(databaseManager, usersHolder, listFactory);
         
-        Mockito.verify(databaseManager).getRegisteredPlanPlugins();
+        Mockito.verify(databaseManager).getRegisteredPlans();
         Mockito.verify(listFactory).getList();
         Mockito.verify(planSynchronizedList).addItem(plan1);
         Mockito.verify(planSynchronizedList).addItem(plan2);
@@ -70,7 +70,7 @@ public class InMemoryFinanceObjectsHolderTest {
         
         objectHolder.reset();
         
-        Mockito.verify(databaseManager).getRegisteredPlanPlugins();
+        Mockito.verify(databaseManager).getRegisteredPlans();
         Mockito.verify(listFactory).getList();
         Mockito.verify(planSynchronizedList).addItem(plan1);
         Mockito.verify(planSynchronizedList).addItem(plan2);
@@ -89,7 +89,7 @@ public class InMemoryFinanceObjectsHolderTest {
         objectHolder.registerPlanPlugin(planPlugin1);
         
         Mockito.verify(planSynchronizedList).addItem(planPlugin1);
-        Mockito.verify(databaseManager).savePlanPlugin(planPlugin1);
+        Mockito.verify(databaseManager).savePlan(planPlugin1);
     }
 
     // test case: When calling the method registerFinancePlan and the
@@ -165,7 +165,7 @@ public class InMemoryFinanceObjectsHolderTest {
         
         objectHolder.removePlanPlugin(PLAN_NAME_1);
         
-        Mockito.verify(databaseManager).removePlanPlugin(plan1);
+        Mockito.verify(databaseManager).removePlan(plan1);
         Mockito.verify(planSynchronizedList).removeItem(plan1);
     }
     
@@ -191,7 +191,7 @@ public class InMemoryFinanceObjectsHolderTest {
         
         
         Mockito.verify(plan1).setOptions(updatedPlanInfo);
-        Mockito.verify(databaseManager).savePlanPlugin(plan1);
+        Mockito.verify(databaseManager).savePlan(plan1);
         Mockito.verify(planSynchronizedList).stopIterating(Mockito.anyInt());
     }
     
@@ -241,7 +241,7 @@ public class InMemoryFinanceObjectsHolderTest {
 
     private void setUpDatabase() {
         databaseManager = Mockito.mock(DatabaseManager.class);
-        Mockito.when(databaseManager.getRegisteredPlanPlugins()).thenReturn(plansList);
+        Mockito.when(databaseManager.getRegisteredPlans()).thenReturn(plansList);
     }
 
     private void setUpPlans() {

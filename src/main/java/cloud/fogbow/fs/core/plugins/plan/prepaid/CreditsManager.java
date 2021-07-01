@@ -5,7 +5,7 @@ import java.util.List;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.core.InMemoryUsersHolder;
-import cloud.fogbow.fs.core.models.FinancePlan;
+import cloud.fogbow.fs.core.models.FinancePolicy;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.models.ResourceItem;
 import cloud.fogbow.fs.core.models.UserCredits;
@@ -15,17 +15,17 @@ import cloud.fogbow.fs.core.util.accounting.RecordUtils;
 public class CreditsManager {
     private RecordUtils recordUtils;
     private InMemoryUsersHolder usersHolder;
-    private FinancePlan plan;
+    private FinancePolicy policy;
     
-    public CreditsManager(InMemoryUsersHolder usersHolder, FinancePlan plan) {
+    public CreditsManager(InMemoryUsersHolder usersHolder, FinancePolicy plan) {
         this.usersHolder = usersHolder;
-        this.plan = plan;
+        this.policy = plan;
         this.recordUtils = new RecordUtils();
     }
     
-    public CreditsManager(InMemoryUsersHolder usersHolder, FinancePlan plan, RecordUtils recordUtils) {
+    public CreditsManager(InMemoryUsersHolder usersHolder, FinancePolicy policy, RecordUtils recordUtils) {
         this.usersHolder = usersHolder;
-        this.plan = plan;
+        this.policy = policy;
         this.recordUtils = recordUtils;
     }
     
@@ -43,7 +43,7 @@ public class CreditsManager {
         FinanceUser user = this.usersHolder.getUserById(userId, provider);
         
         synchronized (user) {
-            synchronized (plan) {
+            synchronized (policy) {
                 UserCredits credits = user.getCredits();
                 
                 for (Record record : records) {
@@ -52,7 +52,7 @@ public class CreditsManager {
 
                     try {
                         resourceItem = recordUtils.getItemFromRecord(record);
-                        valueToPayPerTimeUnit = plan.getItemFinancialValue(resourceItem);
+                        valueToPayPerTimeUnit = policy.getItemFinancialValue(resourceItem);
                     } catch (InvalidParameterException e) {
                         throw new InternalServerErrorException(e.getMessage());
                     }

@@ -24,10 +24,9 @@ import com.google.common.annotations.VisibleForTesting;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.constants.Messages;
 
-// TODO change name to finance policy
 @Entity
-@Table(name = "finance_plan_table")
-public class FinancePlan {
+@Table(name = "finance_policy_table")
+public class FinancePolicy {
 
 	public static final String PLAN_FIELDS_SEPARATOR = "-";
 	public static final String ITEM_FIELDS_SEPARATOR = ",";
@@ -53,16 +52,16 @@ public class FinancePlan {
     @Column(name = FINANCE_PLAN_ITEMS_COLUMN_NAME)
     @ElementCollection(fetch = FetchType.EAGER)
     @OneToMany(cascade={CascadeType.ALL})
-    private List<FinancePlanItem> items;
+    private List<FinanceRule> items;
     
     // Since accessing a resource item value in a Map 
     // is expected to be faster than accessing the value
     // in a List, we keep this copy of the plan data for 
     // access operations.
 	@Transient
-	private Map<ResourceItem, Double> plan;
+	private Map<ResourceItem, Double> policy;
 	
-	public FinancePlan() {
+	public FinancePolicy() {
 	    
 	}
 	
@@ -70,27 +69,27 @@ public class FinancePlan {
 	// with the data loaded from the database.
     @PostLoad
     private void startUp() {
-        plan = getPlanFromDatabaseItems(items);
+        policy = getPlanFromDatabaseItems(items);
     }
     
     @VisibleForTesting
-    Map<ResourceItem, Double> getPlanFromDatabaseItems(List<FinancePlanItem> databaseItems) {
+    Map<ResourceItem, Double> getPlanFromDatabaseItems(List<FinanceRule> databaseItems) {
         Map<ResourceItem, Double> plan = new HashMap<ResourceItem, Double>();
         
-        for (FinancePlanItem item : databaseItems) {
+        for (FinanceRule item : databaseItems) {
             plan.put(item.getItem(), item.getValue());
         }
         
         return plan;
     }
 	
-    public FinancePlan(String planName, String planPath) throws InvalidParameterException {
+    public FinancePolicy(String planName, String planPath) throws InvalidParameterException {
     	Map<String, String> planInfo = getPlanFromFile(planPath);
     	Map<ResourceItem, Double> plan = validatePlanInfo(planInfo);
     	this.items = getDatabaseItems(plan);
     	
 		this.name = planName;
-		this.plan = plan;
+		this.policy = plan;
     }
     
     private Map<String, String> getPlanFromFile(String planPath) throws InvalidParameterException {
@@ -119,25 +118,25 @@ public class FinancePlan {
         }
     }
     
-	private List<FinancePlanItem> getDatabaseItems(Map<ResourceItem, Double> inMemoryPlan) {
-	    List<FinancePlanItem> databasePlanItems = new ArrayList<FinancePlanItem>();
+	private List<FinanceRule> getDatabaseItems(Map<ResourceItem, Double> inMemoryPlan) {
+	    List<FinanceRule> databasePlanItems = new ArrayList<FinanceRule>();
 	    
 	    for (ResourceItem item : inMemoryPlan.keySet()) {
-	        databasePlanItems.add(new FinancePlanItem(item, inMemoryPlan.get(item)));
+	        databasePlanItems.add(new FinanceRule(item, inMemoryPlan.get(item)));
 	    }
 	    
         return databasePlanItems;
     }
 	
-    public FinancePlan(String planName, Map<String, String> planInfo) throws InvalidParameterException {
+    public FinancePolicy(String planName, Map<String, String> planInfo) throws InvalidParameterException {
 		Map<ResourceItem, Double> plan = validatePlanInfo(planInfo);
 		this.name = planName;
-		this.plan = plan;
+		this.policy = plan;
 		this.items = getDatabaseItems(plan);
 	}
     
-    FinancePlan(Map<ResourceItem, Double> plan) {
-        this.plan = plan;
+    FinancePolicy(Map<ResourceItem, Double> plan) {
+        this.policy = plan;
     }
     
 	public String getName() {
@@ -224,9 +223,9 @@ public class FinancePlan {
         List<String> financePlanItemsStrings = new ArrayList<String>();
         Integer ruleIndex = 0;
         
-        for (ResourceItem item : this.plan.keySet()) {
+        for (ResourceItem item : this.policy.keySet()) {
             financePlanItemsStrings.add(
-                    String.format("%s:[%s,%s]", String.valueOf(ruleIndex), item.toString(), String.valueOf(this.plan.get(item))));
+                    String.format("%s:[%s,%s]", String.valueOf(ruleIndex), item.toString(), String.valueOf(this.policy.get(item))));
             ruleIndex++;
         }
         
@@ -236,8 +235,8 @@ public class FinancePlan {
 	private Map<String, String> generateRulesRepr() {
         Map<String, String> rulesRepr = new HashMap<String, String>();
 	    
-        for (ResourceItem item : this.plan.keySet()) {
-            rulesRepr.put(item.toString(), String.valueOf(this.plan.get(item)));
+        for (ResourceItem item : this.policy.keySet()) {
+            rulesRepr.put(item.toString(), String.valueOf(this.policy.get(item)));
         }
         
         return rulesRepr;
@@ -245,13 +244,13 @@ public class FinancePlan {
 
 	public void update(Map<String, String> planInfo) throws InvalidParameterException {
 		Map<ResourceItem, Double> newPlan = validatePlanInfo(planInfo);
-		this.plan = newPlan;
+		this.policy = newPlan;
 		this.items = getDatabaseItems(newPlan);
 	}
 
 	public Double getItemFinancialValue(ResourceItem resourceItem) throws InvalidParameterException {
-		if (plan.containsKey(resourceItem)) { 
-			return plan.get(resourceItem);	
+		if (policy.containsKey(resourceItem)) { 
+			return policy.get(resourceItem);	
 		}
 		
 		throw new InvalidParameterException(String.format(Messages.Exception.UNKNOWN_RESOURCE_ITEM, 

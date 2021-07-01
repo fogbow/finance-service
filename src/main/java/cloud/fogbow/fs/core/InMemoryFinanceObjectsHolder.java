@@ -15,8 +15,7 @@ import cloud.fogbow.fs.core.util.list.MultiConsumerSynchronizedListFactory;
 
 public class InMemoryFinanceObjectsHolder {
     private DatabaseManager databaseManager;
-    // TODO rename to financePlans
-    private MultiConsumerSynchronizedList<PersistablePlanPlugin> planPlugins;
+    private MultiConsumerSynchronizedList<PersistablePlanPlugin> financePlans;
     private InMemoryUsersHolder usersHolder;
     private MultiConsumerSynchronizedListFactory listFactory;
 
@@ -39,16 +38,16 @@ public class InMemoryFinanceObjectsHolder {
         this.databaseManager = databaseManager;
         this.usersHolder = usersHolder;
         this.listFactory = listFactory;
-        this.planPlugins = planPlugins;
+        this.financePlans = planPlugins;
     }
 
     private void loadData() throws InternalServerErrorException, ConfigurationErrorException {
-        List<PersistablePlanPlugin> databasePlanPlugins = this.databaseManager.getRegisteredPlanPlugins();
-        planPlugins = listFactory.getList();
+        List<PersistablePlanPlugin> databasePlans = this.databaseManager.getRegisteredPlans();
+        financePlans = listFactory.getList();
         
-        for (PersistablePlanPlugin plugin : databasePlanPlugins) {
-            plugin.setUp(this.usersHolder);
-            planPlugins.addItem(plugin);
+        for (PersistablePlanPlugin plan : databasePlans) {
+            plan.setUp(this.usersHolder);
+            financePlans.addItem(plan);
         }
     }
 
@@ -61,7 +60,7 @@ public class InMemoryFinanceObjectsHolder {
     }
     
     public MultiConsumerSynchronizedList<PersistablePlanPlugin> getPlanPlugins() {
-        return this.planPlugins;
+        return this.financePlans;
     }
 
     /*
@@ -72,23 +71,23 @@ public class InMemoryFinanceObjectsHolder {
 
     public void registerPlanPlugin(PersistablePlanPlugin plugin) throws InternalServerErrorException, InvalidParameterException {
         checkIfPluginExists(plugin.getName());
-        this.planPlugins.addItem(plugin);
-        this.databaseManager.savePlanPlugin(plugin);
+        this.financePlans.addItem(plugin);
+        this.databaseManager.savePlan(plugin);
     }
 
     public PersistablePlanPlugin getPlanPlugin(String pluginName) throws InternalServerErrorException, InvalidParameterException {
-        Integer consumerId = planPlugins.startIterating();
+        Integer consumerId = financePlans.startIterating();
         PersistablePlanPlugin planToReturn = null;
 
         while (true) {
             try {
                 planToReturn = tryToGetPluginFromList(pluginName, consumerId);
-                planPlugins.stopIterating(consumerId);
+                financePlans.stopIterating(consumerId);
                 break;
             } catch (ModifiedListException e) {
-                consumerId = planPlugins.startIterating();
+                consumerId = financePlans.startIterating();
             } catch (Exception e) {
-                planPlugins.stopIterating(consumerId);
+                financePlans.stopIterating(consumerId);
                 throw e;
             }
         }
@@ -102,7 +101,7 @@ public class InMemoryFinanceObjectsHolder {
 
     private PersistablePlanPlugin tryToGetPluginFromList(String pluginName, Integer consumerId)
             throws ModifiedListException, InternalServerErrorException {
-        PersistablePlanPlugin item = planPlugins.getNext(consumerId);
+        PersistablePlanPlugin item = financePlans.getNext(consumerId);
         PersistablePlanPlugin planToReturn = null;
 
         while (item != null) {
@@ -111,7 +110,7 @@ public class InMemoryFinanceObjectsHolder {
                 break;
             }
 
-            item = planPlugins.getNext(consumerId);
+            item = financePlans.getNext(consumerId);
         }
 
         return planToReturn;
@@ -132,8 +131,8 @@ public class InMemoryFinanceObjectsHolder {
         PersistablePlanPlugin planPlugin = getPlanPlugin(pluginName);
         
         synchronized(planPlugin) {
-            planPlugins.removeItem(planPlugin);
-            this.databaseManager.removePlanPlugin(planPlugin);
+            financePlans.removeItem(planPlugin);
+            this.databaseManager.removePlan(planPlugin);
         }
     }
 
@@ -144,7 +143,7 @@ public class InMemoryFinanceObjectsHolder {
         synchronized(planPlugin) {
             planPlugin.stopThreads();
             planPlugin.setOptions(pluginOptions);
-            this.databaseManager.savePlanPlugin(planPlugin);
+            this.databaseManager.savePlan(planPlugin);
             planPlugin.startThreads();
         }
     }

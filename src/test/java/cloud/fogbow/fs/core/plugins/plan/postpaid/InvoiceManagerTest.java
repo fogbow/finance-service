@@ -14,7 +14,7 @@ import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.core.InMemoryUsersHolder;
 import cloud.fogbow.fs.core.models.ComputeItem;
-import cloud.fogbow.fs.core.models.FinancePlan;
+import cloud.fogbow.fs.core.models.FinancePolicy;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.models.Invoice;
 import cloud.fogbow.fs.core.models.InvoiceState;
@@ -53,7 +53,7 @@ public class InvoiceManagerTest {
     private List<Record> records;
     private VolumeItem item1;
     private ComputeItem item2;
-    private FinancePlan financePlan;
+    private FinancePolicy financePlan;
     private Invoice invoiceToAdd;
     
     // test case: When calling the generateInvoiceForUser method, it must
@@ -207,7 +207,7 @@ public class InvoiceManagerTest {
     }
     
     private void setUpErrorFinancePlan() throws InvalidParameterException, InternalServerErrorException {
-        this.financePlan = Mockito.mock(FinancePlan.class);
+        this.financePlan = Mockito.mock(FinancePolicy.class);
         Mockito.when(this.financePlan.getItemFinancialValue(item1)).thenThrow(new InvalidParameterException());
         Mockito.when(this.financePlan.getItemFinancialValue(item2)).thenReturn(ITEM_2_VALUE);
 
@@ -256,7 +256,7 @@ public class InvoiceManagerTest {
     }
 
     private void setUpFinancePlan() throws InvalidParameterException {
-        this.financePlan = Mockito.mock(FinancePlan.class);
+        this.financePlan = Mockito.mock(FinancePolicy.class);
         Mockito.when(this.financePlan.getItemFinancialValue(item1)).thenReturn(ITEM_1_VALUE);
         Mockito.when(this.financePlan.getItemFinancialValue(item2)).thenReturn(ITEM_2_VALUE);
     }
