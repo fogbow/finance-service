@@ -1,20 +1,21 @@
 package cloud.fogbow.fs.core.models;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
 import cloud.fogbow.common.exceptions.InvalidParameterException;
+import cloud.fogbow.fs.core.util.TestUtils;
 
 public class InvoiceTest {
 
@@ -32,6 +33,11 @@ public class InvoiceTest {
     private Double invoiceTotal;
     private Set<ResourceItem> itemsSet;
 
+    @Before
+    public void setUp() {
+        setUpInvoiceData();
+    }
+    
     @Test
     public void testToStringWithNoInvoiceItems() {
         invoiceItems = new HashMap<ResourceItem, Double>();
@@ -50,9 +56,6 @@ public class InvoiceTest {
 
     @Test
     public void testToString() {
-        setUpInvoiceData();
-        
-        
         Invoice invoice = new Invoice(INVOICE_ID, USER_ID, PROVIDER_ID, START_TIME, END_TIME, invoiceItems, invoiceTotal);
         
         
@@ -66,8 +69,6 @@ public class InvoiceTest {
     
     @Test
     public void testSetPaid() throws InvalidParameterException {
-        setUpInvoiceData();
-        
         Invoice invoice = new Invoice(INVOICE_ID, USER_ID, PROVIDER_ID, 
                 START_TIME, END_TIME, invoiceItems, invoiceTotal);
         
@@ -77,8 +78,6 @@ public class InvoiceTest {
     
     @Test
     public void testSetDefaulting() throws InvalidParameterException {
-        setUpInvoiceData();
-        
         Invoice invoice = new Invoice(INVOICE_ID, USER_ID, PROVIDER_ID, 
                 START_TIME, END_TIME, invoiceItems, invoiceTotal);
         
@@ -88,8 +87,6 @@ public class InvoiceTest {
     
     @Test
     public void testSetDefaultingAndThenPaid() throws InvalidParameterException {
-        setUpInvoiceData();
-        
         Invoice invoice = new Invoice(INVOICE_ID, USER_ID, PROVIDER_ID, 
                 START_TIME, END_TIME, invoiceItems, invoiceTotal);
         
@@ -102,8 +99,6 @@ public class InvoiceTest {
     
     @Test(expected = InvalidParameterException.class)
     public void testCannotSetStateDefaultingAndThenWaiting() throws InvalidParameterException {
-        setUpInvoiceData();
-        
         Invoice invoice = new Invoice(INVOICE_ID, USER_ID, PROVIDER_ID, 
                 START_TIME, END_TIME, invoiceItems, invoiceTotal);
         
@@ -113,8 +108,6 @@ public class InvoiceTest {
     
     @Test(expected = InvalidParameterException.class)
     public void testCannotSetStatePaidAndThenWaiting() throws InvalidParameterException {
-        setUpInvoiceData();
-        
         Invoice invoice = new Invoice(INVOICE_ID, USER_ID, PROVIDER_ID, 
                 START_TIME, END_TIME, invoiceItems, invoiceTotal);
         
@@ -124,12 +117,38 @@ public class InvoiceTest {
     
     @Test(expected = InvalidParameterException.class)
     public void testCannotSetStatePaidAndThenDefaulting() throws InvalidParameterException {
-        setUpInvoiceData();
-        
         Invoice invoice = new Invoice(INVOICE_ID, USER_ID, PROVIDER_ID, 
                 START_TIME, END_TIME, invoiceItems, invoiceTotal);
         
         invoice.setState(InvoiceState.PAID);
+        invoice.setState(InvoiceState.DEFAULTING);
+    }
+    
+    @Test(expected = InvalidParameterException.class)
+    public void testCannotSetStatePaidAlreadyPaidInvoice() throws InvalidParameterException {
+        Invoice invoice = new Invoice(INVOICE_ID, USER_ID, PROVIDER_ID, 
+                START_TIME, END_TIME, invoiceItems, invoiceTotal);
+        
+        try {
+            invoice.setState(InvoiceState.PAID);
+        } catch (InvalidParameterException e) {
+            Assert.fail("Unexpected exception.");
+        }
+        
+        invoice.setState(InvoiceState.PAID);
+    }
+    
+    @Test(expected = InvalidParameterException.class)
+    public void testCannotSetStateDefaultingAlreadyDefaultingInvoice() throws InvalidParameterException {
+        Invoice invoice = new Invoice(INVOICE_ID, USER_ID, PROVIDER_ID, 
+                START_TIME, END_TIME, invoiceItems, invoiceTotal);
+        
+        try {
+            invoice.setState(InvoiceState.DEFAULTING);
+        } catch (InvalidParameterException e) {
+            Assert.fail("Unexpected exception.");
+        }
+        
         invoice.setState(InvoiceState.DEFAULTING);
     }
 
@@ -140,9 +159,7 @@ public class InvoiceTest {
         Mockito.when(resourceItem2.toString()).thenReturn(RESOURCE_ITEM_2_STRING);
         
         // This code assures a certain order of resource items is used in the string generation
-        List<ResourceItem> resourceItemsList = 
-                new ArrayList<ResourceItem>(Arrays.asList(resourceItem1, resourceItem2));
-        Iterator<ResourceItem> iterator = new TestIterator<ResourceItem>(resourceItemsList);
+        Iterator<ResourceItem> iterator = new TestUtils().getIterator(Arrays.asList(resourceItem1, resourceItem2));
         
         itemsSet = Mockito.mock(HashSet.class);
         Mockito.when(itemsSet.iterator()).thenReturn(iterator);
@@ -153,26 +170,5 @@ public class InvoiceTest {
         Mockito.when(invoiceItems.get(resourceItem2)).thenReturn(RESOURCE_ITEM_2_VALUE);
 
         invoiceTotal = RESOURCE_ITEM_1_VALUE + RESOURCE_ITEM_2_VALUE;
-    }
-    
-    private class TestIterator<T> implements Iterator<T> {
-
-        private int currentIndex;
-        private List<T> objs;
-          
-        public TestIterator(List<T> objs) {
-            this.currentIndex = 0;
-            this.objs = objs;
-        }
-        
-        @Override
-        public boolean hasNext() {
-            return currentIndex < this.objs.size();
-        }
-
-        @Override
-        public T next() {
-            return objs.get(currentIndex++);
-        }
     }
 }

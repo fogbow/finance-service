@@ -43,11 +43,22 @@ public class AccountingServiceClient {
     // I think should be made public to possible
     // clients of ACCS' API.
     static final String SIMPLE_DATE_FORMAT = "yyyy-MM-dd";
-    // TODO documentation
+    /**
+     * String used to represent the resource type compute in 
+     * the records provided by the Accounting Service.
+     */
     @VisibleForTesting
 	static final String COMPUTE_RESOURCE = "compute";
+    /**
+     * String used to represent the resource type volume in 
+     * the records provided by the Accounting Service.
+     */
     @VisibleForTesting
 	static final String VOLUME_RESOURCE = "volume";
+    /**
+     * Key used in the header of the resources usage request to
+     * represent the content type.
+     */
 	@VisibleForTesting
 	static final String RECORDS_REQUEST_CONTENT_TYPE = "application/json";
 

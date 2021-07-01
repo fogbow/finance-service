@@ -24,18 +24,37 @@ import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
 import cloud.fogbow.fs.core.PropertiesHolder;
 
 public class AuthenticationServiceClient {
-
-    // TODO documentation
+    /**
+     * Key used in the header of the get token request to
+     * represent the content type.
+     */
 	@VisibleForTesting
 	static final String AUTHENTICATION_REQUEST_CONTENT_TYPE = "application/json";
+	/**
+	 * Key used in the response body to represent the user token.
+	 */
 	@VisibleForTesting
 	static final String TOKEN_RESPONSE_KEY = "token";
+	/**
+	 * Key used in the body of the get token request to represent
+	 * the user public key.
+	 */
 	@VisibleForTesting
 	static final String PUBLIC_KEY_REQUEST_KEY = "publicKey";
+	/**
+	 * Key used in the body of the get token request to represent
+	 * the credentials map.
+	 */
 	@VisibleForTesting
 	static final String CREDENTIALS_REQUEST_KEY = "credentials";
+	/**
+	 * Key used in the credentials map to represent the password.
+	 */
 	@VisibleForTesting
 	static final String PASSWORD_REQUEST_KEY = "password";
+	/**
+	 * Key used in the credentials map to represent the username.
+	 */
 	@VisibleForTesting
 	static final String USERNAME_REQUEST_KEY = "username";
 	

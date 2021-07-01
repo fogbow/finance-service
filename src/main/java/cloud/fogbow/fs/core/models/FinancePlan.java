@@ -43,8 +43,6 @@ public class FinancePlan {
 	private static final String FINANCE_PLAN_ID_COLUMN_NAME = "finance_plan_id";
     private static final String FINANCE_PLAN_ITEMS_COLUMN_NAME = "finance_plan_items";
 
-    // TODO in the current design, this attribute 
-    // is not useful.
     @Column(name = FINANCE_PLAN_ID_COLUMN_NAME)
 	@Id
 	private String name;
@@ -137,7 +135,11 @@ public class FinancePlan {
 		this.plan = plan;
 		this.items = getDatabaseItems(plan);
 	}
-	
+    
+    FinancePlan(Map<ResourceItem, Double> plan) {
+        this.plan = plan;
+    }
+    
 	public String getName() {
 		return name;
 	}
@@ -217,16 +219,14 @@ public class FinancePlan {
 	    return generateRulesRepr();
 	}
 	
-	// TODO test
     @Override
     public String toString() {
-        Map<String, String> rulesRepr = generateRulesRepr();
         List<String> financePlanItemsStrings = new ArrayList<String>();
         Integer ruleIndex = 0;
         
-        for (String item : rulesRepr.keySet()) {
+        for (ResourceItem item : this.plan.keySet()) {
             financePlanItemsStrings.add(
-                    String.format("%s:[%s,%s]", String.valueOf(ruleIndex), item, rulesRepr.get(item)));
+                    String.format("%s:[%s,%s]", String.valueOf(ruleIndex), item.toString(), String.valueOf(this.plan.get(item))));
             ruleIndex++;
         }
         
@@ -243,8 +243,6 @@ public class FinancePlan {
         return rulesRepr;
     }
 
-	// TODO test
-    // TODO discuss how this operation should be performed
 	public void update(Map<String, String> planInfo) throws InvalidParameterException {
 		Map<ResourceItem, Double> newPlan = validatePlanInfo(planInfo);
 		this.plan = newPlan;

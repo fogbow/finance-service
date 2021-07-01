@@ -11,6 +11,8 @@ import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpResponseException;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import cloud.fogbow.as.core.util.TokenProtector;
 import cloud.fogbow.common.constants.FogbowConstants;
 import cloud.fogbow.common.constants.HttpMethod;
@@ -29,9 +31,12 @@ import cloud.fogbow.fs.core.FsPublicKeysHolder;
 import cloud.fogbow.fs.core.PropertiesHolder;
 
 public class RasClient {
-	
-    // TODO documentation
-	private static final String RECORDS_REQUEST_CONTENT_TYPE = "application/json";
+    /**
+     * Key used in the header of the requests to the Resource Allocation Service
+     * to represent the content type.
+     */
+    @VisibleForTesting
+	static final String RAS_REQUEST_CONTENT_TYPE = "application/json";
 	
 	private AuthenticationServiceClient authenticationServiceClient;
 	private String publicKey;
@@ -113,7 +118,7 @@ public class RasClient {
 	private HttpResponse doPauseRequest(String token, String endpoint) throws FogbowException {
 		// header
 		HashMap<String, String> headers = new HashMap<String, String>();
-		headers.put(CommonKeys.CONTENT_TYPE_KEY, RECORDS_REQUEST_CONTENT_TYPE);
+		headers.put(CommonKeys.CONTENT_TYPE_KEY, RAS_REQUEST_CONTENT_TYPE);
 		headers.put(CommonKeys.SYSTEM_USER_TOKEN_HEADER_KEY, token);
 		
 		// body
@@ -160,7 +165,7 @@ public class RasClient {
 	private HttpResponse doResumeRequest(String token, String endpoint) throws FogbowException {
 		// header
 		HashMap<String, String> headers = new HashMap<String, String>();
-		headers.put(CommonKeys.CONTENT_TYPE_KEY, RECORDS_REQUEST_CONTENT_TYPE);
+		headers.put(CommonKeys.CONTENT_TYPE_KEY, RAS_REQUEST_CONTENT_TYPE);
 		headers.put(CommonKeys.SYSTEM_USER_TOKEN_HEADER_KEY, token);
 		
 		// body
@@ -209,7 +214,7 @@ public class RasClient {
     private HttpResponse doPurgeUserRequest(String token, String endpoint) throws FogbowException {
         // header
         HashMap<String, String> headers = new HashMap<String, String>();
-        headers.put(CommonKeys.CONTENT_TYPE_KEY, RECORDS_REQUEST_CONTENT_TYPE);
+        headers.put(CommonKeys.CONTENT_TYPE_KEY, RAS_REQUEST_CONTENT_TYPE);
         headers.put(CommonKeys.SYSTEM_USER_TOKEN_HEADER_KEY, token);
         
         // body

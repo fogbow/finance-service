@@ -254,11 +254,11 @@ public class RasClientTest {
 	
 	private void setUpRequestAndResponse(int returnCode) throws FogbowException {
 		headers1 = new HashMap<String, String>();
-		headers1.put(CommonKeys.CONTENT_TYPE_KEY, AccountingServiceClient.RECORDS_REQUEST_CONTENT_TYPE);
+		headers1.put(CommonKeys.CONTENT_TYPE_KEY, RasClient.RAS_REQUEST_CONTENT_TYPE);
 		headers1.put(CommonKeys.SYSTEM_USER_TOKEN_HEADER_KEY, rewrapAdminToken1);
 		
 		headers2 = new HashMap<String, String>();
-        headers2.put(CommonKeys.CONTENT_TYPE_KEY, AccountingServiceClient.RECORDS_REQUEST_CONTENT_TYPE);
+        headers2.put(CommonKeys.CONTENT_TYPE_KEY, RasClient.RAS_REQUEST_CONTENT_TYPE);
         headers2.put(CommonKeys.SYSTEM_USER_TOKEN_HEADER_KEY, rewrapAdminToken2);
         
 		body = new HashMap<String, String>();
