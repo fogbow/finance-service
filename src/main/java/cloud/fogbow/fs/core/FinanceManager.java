@@ -266,7 +266,6 @@ public class FinanceManager {
                 plugin = tryToGet(planPlugins, systemUser, consumerId);
                 planPlugins.stopIterating(consumerId);
                 break;
-                // TODO test
             } catch (ModifiedListException e) {
                 consumerId = planPlugins.startIterating();
             } catch (Exception e) {

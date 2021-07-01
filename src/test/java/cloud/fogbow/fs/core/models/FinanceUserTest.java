@@ -494,6 +494,42 @@ public class FinanceUserTest {
         Mockito.verify(this.lastSubscriptionsDebts).add(INVOICE_ID_1);
     }
     
+    // test case: When calling the removeDebt method, it must remove the given invoice id from the list
+    // of subscription debts.
+    @Test
+    public void testRemoveDebt() throws InvalidParameterException, InternalServerErrorException {
+        setUpInvoices();
+        setUpFinanceUserData();
+        
+        financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
+                activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory,
+                USER_LAST_BILLING_TIME, timeUtils);
+        
+        financeUser.removeDebt(INVOICE_ID_1);
+        
+        Mockito.verify(this.lastSubscriptionsDebts).remove(INVOICE_ID_1);
+    }
+    
+    // test case: When calling the addInvoice method, it must add the invoice correctly.
+    @Test
+    public void testGetAndAddInvoices() throws InvalidParameterException, InternalServerErrorException {
+        setUpInvoices();
+        setUpFinanceUserData();
+        
+        financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
+                activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory,
+                USER_LAST_BILLING_TIME, timeUtils);
+        
+        assertTrue(financeUser.getInvoices().isEmpty());
+        
+        financeUser.addInvoice(invoice1);
+        financeUser.addInvoice(invoice2);
+        
+        assertEquals(2, financeUser.getInvoices().size());
+        assertTrue(financeUser.getInvoices().contains(invoice1));
+        assertTrue(financeUser.getInvoices().contains(invoice2));
+    }
+    
     private void setUpInvoices() throws InvalidParameterException, InternalServerErrorException {
         invoice1 = Mockito.mock(Invoice.class);
         Mockito.when(invoice1.getInvoiceId()).thenReturn(INVOICE_ID_1);

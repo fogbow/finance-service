@@ -40,12 +40,20 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
      * allows the invoice generation at each attempt.
      */
     public static final String INVOICE_WAIT_TIME = "invoice_wait_time";
-    // TODO documentation
-    public static final String FINANCE_PLAN_RULES = "financeplan";
-    public static final String USER_BILLING_TIME_COLUMN_NAME = "user_billing_time";
-    public static final String INVOICE_WAIT_TIME_COLUMN_NAME = "invoice_wait_time";
-    public static final String PLAN_NAME_COLUMN_NAME = "name";
+    /**
+     * The key to use in the map passed as argument to setOptions and the constructors
+     * to indicate the path of the file that contains the plan configuration.
+     */
     public static final String FINANCE_PLAN_RULES_FILE_PATH = "finance_plan_file_path";
+    /**
+     * The key to use in the map passed as argument to setOptions and the constructors
+     * to indicate the string that contains the plan configuration.
+     */
+    public static final String FINANCE_PLAN_RULES = "financeplan";
+    
+    private static final String PLAN_NAME_COLUMN_NAME = "name";
+    private static final String USER_BILLING_TIME_COLUMN_NAME = "user_billing_time";
+    private static final String INVOICE_WAIT_TIME_COLUMN_NAME = "invoice_wait_time";
 
     @Transient
     private Thread paymentThread;

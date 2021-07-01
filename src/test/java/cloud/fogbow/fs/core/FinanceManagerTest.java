@@ -335,6 +335,25 @@ public class FinanceManagerTest {
         Mockito.verify(this.plan1).unregisterUser(new SystemUser(USER_ID_1, USER_ID_1, PROVIDER_USER_1));
 	}
 	
+	// test case: When calling the unregisterUser method, if the finance plans list throws a 
+    // ModifiedListException while searching for the correct finance plan, the method must
+    // restart the iteration over the finance plans list.
+	@Test
+	public void testUnregisterUserModifiedListExceptionIsThrown() throws FogbowException, ModifiedListException {
+        setUpFinancePlugin();
+
+        Mockito.when(plugins.getNext(Mockito.anyInt())).
+        thenReturn(this.plan1).
+        thenThrow(new ModifiedListException()).
+        thenReturn(this.plan1, this.plan2, null);
+	    
+        FinanceManager financeManager = new FinanceManager(objectHolder);
+        
+        financeManager.unregisterUser(systemUser2);
+        
+        Mockito.verify(this.plan2).unregisterUser(new SystemUser(USER_ID_2, USER_ID_2, PROVIDER_USER_2));
+	}
+	
 	// test case: When calling the changePlan method, it must
 	// find the finance plan which manages the user and then
 	// call the changePlan method of the plan.
@@ -347,6 +366,25 @@ public class FinanceManagerTest {
 	    financeManager.changePlan(systemUser1, NEW_PLAN_NAME);
 	    
 	    Mockito.verify(this.plan1).changePlan(new SystemUser(USER_ID_1, USER_ID_1, PROVIDER_USER_1), NEW_PLAN_NAME);
+	}
+	
+	// test case: When calling the changePlan method, if the finance plans list throws a 
+    // ModifiedListException while searching for the correct finance plan, the method must
+    // restart the iteration over the finance plans list.
+	@Test
+	public void testChangePlanModifiedListExceptionIsThrown() throws FogbowException, ModifiedListException {
+        setUpFinancePlugin();
+
+        Mockito.when(plugins.getNext(Mockito.anyInt())).
+        thenReturn(this.plan1).
+        thenThrow(new ModifiedListException()).
+        thenReturn(this.plan1, this.plan2, null);
+        
+        FinanceManager financeManager = new FinanceManager(objectHolder);
+        
+        financeManager.changePlan(systemUser2, NEW_PLAN_NAME);
+        
+        Mockito.verify(this.plan2).changePlan(new SystemUser(USER_ID_2, USER_ID_2, PROVIDER_USER_2), NEW_PLAN_NAME);
 	}
 	
 	// test case: When calling the updateFinanceState method, it must call

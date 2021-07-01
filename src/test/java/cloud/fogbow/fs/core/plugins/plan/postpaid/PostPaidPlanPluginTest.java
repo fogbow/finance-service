@@ -392,10 +392,10 @@ public class PostPaidPlanPluginTest {
     public void testSetOptionsMissingOption() throws InvalidParameterException, InternalServerErrorException {
         objectHolder = Mockito.mock(InMemoryUsersHolder.class);
         Map<String, String> financeOptions = new HashMap<String, String>();
+        financeOptions.put(PostPaidPlanPlugin.FINANCE_PLAN_RULES_FILE_PATH, FINANCE_PLAN_FILE_PATH);
 
         PostPaidPlanPlugin postPaidFinancePlugin = new PostPaidPlanPlugin(PLAN_NAME, userBillingInterval, invoiceWaitTime, objectHolder, 
                 accountingServiceClient, rasClient, paymentManager, planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, plan, financeOptions);
-        
         
         postPaidFinancePlugin.setOptions(financeOptions);
     }
@@ -406,6 +406,7 @@ public class PostPaidPlanPluginTest {
     @Test(expected = InvalidParameterException.class)
     public void testSetOptionsInvalidOption() throws InvalidParameterException, InternalServerErrorException {
         financeOptions.put(PaymentRunner.USER_BILLING_INTERVAL, "invalidoption");
+        financeOptions.put(PostPaidPlanPlugin.FINANCE_PLAN_RULES_FILE_PATH, FINANCE_PLAN_FILE_PATH);
         
         objectHolder = Mockito.mock(InMemoryUsersHolder.class);
 

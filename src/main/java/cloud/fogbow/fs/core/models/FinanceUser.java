@@ -154,7 +154,6 @@ public class FinanceUser implements Serializable {
         this.credits = credits;
     }
 
-    // TODO test get and set invoices
     public List<Invoice> getInvoices() {
         return invoices;
     }
@@ -167,11 +166,7 @@ public class FinanceUser implements Serializable {
         this.invoices.add(invoice);
         this.lastSubscriptionsDebts.add(invoice.getInvoiceId());
     }
-    
-    public void setInvoices(List<Invoice> invoices) {
-        this.invoices = invoices;
-    }
-    
+
     public boolean invoicesArePaid() {
         for (Invoice invoice : invoices) {
             if (!invoice.getState().equals(InvoiceState.PAID)) {

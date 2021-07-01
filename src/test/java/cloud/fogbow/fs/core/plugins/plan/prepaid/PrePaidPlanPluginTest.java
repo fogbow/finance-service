@@ -425,6 +425,31 @@ public class PrePaidPlanPluginTest {
         prePaidFinancePlugin.setOptions(financeOptions);
     }
     
+    @Test(expected = InvalidParameterException.class)
+    public void testSetOptionsMissingOption() throws InvalidParameterException, InternalServerErrorException {
+        Map<String, String> financeOptions = new HashMap<String, String>();
+        financeOptions.put(PrePaidPlanPlugin.FINANCE_PLAN_RULES_FILE_PATH, FINANCE_PLAN_FILE_PATH);
+        
+        PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(PLAN_NAME, creditsDeductionWaitTime, 
+                objectHolder, accountingServiceClient, rasClient, paymentManager, planFactory, 
+                this.jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, this.plan);
+        
+        prePaidFinancePlugin.setOptions(financeOptions);
+    }
+    
+    @Test(expected = InvalidParameterException.class)
+    public void testSetOptionsInvalidOption() throws InvalidParameterException, InternalServerErrorException {
+        Map<String, String> financeOptions = new HashMap<String, String>();
+        financeOptions.put(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME, "invalidoption");
+        financeOptions.put(PrePaidPlanPlugin.FINANCE_PLAN_RULES_FILE_PATH, FINANCE_PLAN_FILE_PATH);
+        
+        PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(PLAN_NAME, creditsDeductionWaitTime, 
+                objectHolder, accountingServiceClient, rasClient, paymentManager, planFactory, 
+                this.jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, this.plan);
+        
+        prePaidFinancePlugin.setOptions(financeOptions);
+    }
+    
     // test case: When calling the getOptions method, it must return a Map containing 
     // Strings that represent all the finance options used by the PrePaid plan.
     @Test

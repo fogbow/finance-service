@@ -41,11 +41,19 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
      * to indicate the value of credits to add to the user state.
      */
     public static final String CREDITS_TO_ADD = "CREDITS_TO_ADD";
-    // TODO documentation
+    /**
+     * The key to use in the map passed as argument to setOptions and the constructors
+     * to indicate the path of the file that contains the plan configuration.
+     */
     public static final String FINANCE_PLAN_RULES_FILE_PATH = "finance_plan_file_path";
+    /**
+     * The key to use in the map passed as argument to setOptions and the constructors
+     * to indicate the string that contains the plan configuration.
+     */
     public static final String FINANCE_PLAN_RULES = "financeplan";
-    public static final String PLAN_NAME_COLUMN_NAME = "name";
-    public static final String CREDITS_DEDUCTION_WAIT_TIME_COLUMN_NAME = "credits_deduction_wait_time";
+    
+    private static final String PLAN_NAME_COLUMN_NAME = "name";
+    private static final String CREDITS_DEDUCTION_WAIT_TIME_COLUMN_NAME = "credits_deduction_wait_time";
 
     @Transient
     private Thread paymentThread;
@@ -171,7 +179,6 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
 
     private void checkContainsProperty(Map<String, String> financeOptions, String property) throws InvalidParameterException {
         if (!financeOptions.keySet().contains(property)) {
-            // TODO test
             throw new InvalidParameterException(
                     String.format(Messages.Exception.MISSING_FINANCE_OPTION, property));
         }
@@ -181,7 +188,6 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
         try {
             Long.valueOf(property);
         } catch (NumberFormatException e) {
-            // TODO test
             throw new InvalidParameterException(
                     String.format(Messages.Exception.INVALID_FINANCE_OPTION, property, propertyName));
         }
