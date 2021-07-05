@@ -36,13 +36,6 @@ import cloud.fogbow.fs.core.util.accounting.Record;
 import cloud.fogbow.fs.core.util.accounting.RecordUtils;
 
 public class AccountingServiceClient {
-    // This string represents the date format
-    // expected by the AccountingService, as
-    // specified in the RecordService class. The format
-    // is specified through a private field, which
-    // I think should be made public to possible
-    // clients of ACCS' API.
-    static final String SIMPLE_DATE_FORMAT = "yyyy-MM-dd";
     /**
      * String used to represent the resource type compute in 
      * the records provided by the Accounting Service.
@@ -108,8 +101,10 @@ public class AccountingServiceClient {
 	
     public List<Record> getUserRecords(String userId, String requester, long startTime, long endTime) throws FogbowException {
         try {
-            String requestStartDate = this.timeUtils.toDate(SIMPLE_DATE_FORMAT, startTime);
-            String requestEndDate = this.timeUtils.toDate(SIMPLE_DATE_FORMAT, endTime);
+            String requestStartDate = this.timeUtils.toDate(
+                    cloud.fogbow.accs.constants.SystemConstants.COMPLETE_DATE_FORMAT, startTime);
+            String requestEndDate = this.timeUtils.toDate(
+                    cloud.fogbow.accs.constants.SystemConstants.COMPLETE_DATE_FORMAT, endTime);
             
             if (this.token == null) {
                 this.token = getToken();

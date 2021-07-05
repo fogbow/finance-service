@@ -210,9 +210,11 @@ public class AccountingServiceClientTest {
 	private void setUpResponse(int returnCodeComputeRequest, int returnCodeVolumeRequest) throws InvalidParameterException {
 	    this.timeUtils = Mockito.mock(TimeUtils.class);
 	    
-	    Mockito.when(this.timeUtils.toDate(AccountingServiceClient.SIMPLE_DATE_FORMAT, startTime)).
+	    Mockito.when(this.timeUtils.toDate(
+	            cloud.fogbow.accs.constants.SystemConstants.COMPLETE_DATE_FORMAT, startTime)).
 	            thenReturn(requestStartDate);
-	    Mockito.when(this.timeUtils.toDate(AccountingServiceClient.SIMPLE_DATE_FORMAT, endTime)).
+	    Mockito.when(this.timeUtils.toDate(
+	            cloud.fogbow.accs.constants.SystemConstants.COMPLETE_DATE_FORMAT, endTime)).
 	            thenReturn(requestEndDate);
 	    
 		this.recordUtils = Mockito.mock(RecordUtils.class);
