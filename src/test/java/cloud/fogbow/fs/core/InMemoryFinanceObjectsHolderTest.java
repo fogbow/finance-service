@@ -18,6 +18,7 @@ import cloud.fogbow.common.exceptions.ConfigurationErrorException;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
+import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.plugins.PersistablePlanPlugin;
 import cloud.fogbow.fs.core.util.list.ModifiedListException;
 import cloud.fogbow.fs.core.util.list.MultiConsumerSynchronizedList;
@@ -34,6 +35,8 @@ public class InMemoryFinanceObjectsHolderTest {
     private DatabaseManager databaseManager;
     private MultiConsumerSynchronizedListFactory listFactory;
     private MultiConsumerSynchronizedList<PersistablePlanPlugin> planSynchronizedList;
+    private MultiConsumerSynchronizedList<FinanceUser> plan1Users;
+    private MultiConsumerSynchronizedList<FinanceUser> plan2Users;
 
     private List<PersistablePlanPlugin> plansList;
     private PersistablePlanPlugin plan1;
@@ -47,6 +50,7 @@ public class InMemoryFinanceObjectsHolderTest {
         setUpPlans();
         setUpDatabase();
         setUpLists();
+        setUpUsersHolder();
     }
     
     // test case: When creating a new InMemoryFinanceObjectsHolder instance, the constructor
@@ -157,8 +161,9 @@ public class InMemoryFinanceObjectsHolderTest {
         objectHolder.getPlanPlugin("unknownplan");
     }
     
-    // test case: When calling the method removeFinancePlan, it must remove the given plan
-    // from the plans list and delete the plan from the database using the DatabaseManager.
+    // test case: When calling the method removeFinancePlan, it must check if the list of users
+    // subscribed to the plan is empty, remove the given plan from the plans list and 
+    // delete the plan from the database using the DatabaseManager.
     @Test
     public void testRemoveFinancePlan() throws InvalidParameterException, InternalServerErrorException {
         objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, usersHolder, listFactory, planSynchronizedList);
@@ -167,6 +172,8 @@ public class InMemoryFinanceObjectsHolderTest {
         
         Mockito.verify(databaseManager).removePlan(plan1);
         Mockito.verify(planSynchronizedList).removeItem(plan1);
+        Mockito.verify(usersHolder).getRegisteredUsersByPlan(PLAN_NAME_1);
+        Mockito.verify(plan1Users).isEmpty();
     }
     
     // test case: When calling the method removeFinancePlan passing as argument
@@ -176,6 +183,15 @@ public class InMemoryFinanceObjectsHolderTest {
         objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, usersHolder, listFactory, planSynchronizedList);
         
         objectHolder.removePlanPlugin("unknownplan");
+    }
+    
+    // test case: When calling the method removeFinancePlan passing as argument
+    // a plan with registered users, it must throw an InvalidParameterException.
+    @Test(expected = InvalidParameterException.class)
+    public void testRemoveFinancePlanRegisteredUsersListIsNotEmpty() throws InternalServerErrorException, InvalidParameterException {
+        objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, usersHolder, listFactory, planSynchronizedList);
+        
+        objectHolder.removePlanPlugin(PLAN_NAME_2);
     }
     
     // test case: When calling the method updateFinancePlan, it must call the method 
@@ -234,6 +250,12 @@ public class InMemoryFinanceObjectsHolderTest {
     private void setUpLists() throws InvalidParameterException, ModifiedListException, InternalServerErrorException {
         planSynchronizedList = Mockito.mock(MultiConsumerSynchronizedList.class);
         Mockito.when(planSynchronizedList.getNext(Mockito.anyInt())).thenReturn(plan1, plan2, null);
+
+        plan1Users = Mockito.mock(MultiConsumerSynchronizedList.class);
+        Mockito.when(plan1Users.isEmpty()).thenReturn(true);
+        
+        plan2Users = Mockito.mock(MultiConsumerSynchronizedList.class);
+        Mockito.when(plan2Users.isEmpty()).thenReturn(false);
         
         listFactory = Mockito.mock(MultiConsumerSynchronizedListFactory.class);
         Mockito.doReturn(planSynchronizedList).when(listFactory).getList();
@@ -254,5 +276,11 @@ public class InMemoryFinanceObjectsHolderTest {
         plansList = new ArrayList<PersistablePlanPlugin>();
         plansList.add(plan1);
         plansList.add(plan2);
+    }
+    
+    private void setUpUsersHolder() {
+        this.usersHolder = Mockito.mock(InMemoryUsersHolder.class);
+        Mockito.when(this.usersHolder.getRegisteredUsersByPlan(PLAN_NAME_1)).thenReturn(plan1Users);
+        Mockito.when(this.usersHolder.getRegisteredUsersByPlan(PLAN_NAME_2)).thenReturn(plan2Users);
     }
 }

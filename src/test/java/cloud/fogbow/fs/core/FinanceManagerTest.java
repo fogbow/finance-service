@@ -582,6 +582,19 @@ public class FinanceManagerTest {
         Mockito.verify(plan1).startThreads();
 	}
 	
+	// test case: When calling the removeFinancePlan method, it must call the
+	// removePlanPlugin method of the InMemoryFinanceObjectsHolder.
+	@Test
+	public void testRemoveFinancePlan() throws FogbowException, ModifiedListException {
+	    setUpFinancePlugin();
+	    
+	    FinanceManager financeManager = new FinanceManager(objectHolder);
+	    
+	    financeManager.removeFinancePlan(PLUGIN_1_NAME);
+	    
+	    Mockito.verify(objectHolder).removePlanPlugin(PLUGIN_1_NAME);
+	}
+	
 	// test case: When calling the changeOptions method, it must call the updatePlanPlugin method
 	// of the InMemoryFinanceObjectsHolder.
 	@Test

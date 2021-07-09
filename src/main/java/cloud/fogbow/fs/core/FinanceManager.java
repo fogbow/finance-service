@@ -305,7 +305,6 @@ public class FinanceManager {
         plugin.startThreads();
     }
     
-    // TODO test
     public void removeFinancePlan(String pluginName) throws InternalServerErrorException, InvalidParameterException {
         this.objectHolder.removePlanPlugin(pluginName);
     }

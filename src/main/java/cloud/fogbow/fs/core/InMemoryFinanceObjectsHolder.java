@@ -69,12 +69,14 @@ public class InMemoryFinanceObjectsHolder {
      * 
      */
 
+    // TODO change name to registerFinancePlan
     public void registerPlanPlugin(PersistablePlanPlugin plugin) throws InternalServerErrorException, InvalidParameterException {
         checkIfPluginExists(plugin.getName());
         this.financePlans.addItem(plugin);
         this.databaseManager.savePlan(plugin);
     }
 
+    // TODO change name to getFinancePlan
     public PersistablePlanPlugin getPlanPlugin(String pluginName) throws InternalServerErrorException, InvalidParameterException {
         Integer consumerId = financePlans.startIterating();
         PersistablePlanPlugin planToReturn = null;
@@ -126,16 +128,21 @@ public class InMemoryFinanceObjectsHolder {
         throw new InvalidParameterException(String.format(Messages.Exception.FINANCE_PLAN_ALREADY_EXISTS, name));
     }
 
+    // TODO change name to removeFinancePlan
     public void removePlanPlugin(String pluginName) throws InternalServerErrorException, InvalidParameterException {
-        // TODO how should we treat the users who use this plan?
         PersistablePlanPlugin planPlugin = getPlanPlugin(pluginName);
         
         synchronized(planPlugin) {
+            if (!this.usersHolder.getRegisteredUsersByPlan(pluginName).isEmpty()) {
+                throw new InvalidParameterException(
+                        String.format(Messages.Exception.FINANCE_PLAN_HAS_REGISTERED_USERS, pluginName));
+            }
             financePlans.removeItem(planPlugin);
             this.databaseManager.removePlan(planPlugin);
         }
     }
 
+    // TODO change name to updateFinancePlan
     public void updatePlanPlugin(String pluginName, Map<String, String> pluginOptions) 
             throws InternalServerErrorException, InvalidParameterException {
         PersistablePlanPlugin planPlugin = getPlanPlugin(pluginName);
@@ -148,6 +155,7 @@ public class InMemoryFinanceObjectsHolder {
         }
     }
 
+    // TODO change name to getFinancePlanOptions
     public Map<String, String> getPlanPluginOptions(String pluginName) 
             throws InternalServerErrorException, InvalidParameterException {
         PersistablePlanPlugin planPlugin = getPlanPlugin(pluginName);

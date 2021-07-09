@@ -7,6 +7,7 @@ public class Messages {
 	    public static final String CANNOT_CHANGE_INVOICE_STATE = "Cannot change invoice state from '%s' to '%s'.";
 	    public static final String CANNOT_REMOVE_DEFAULT_FINANCE_PLAN = "Cannot remove default finance plan.";
 	    public static final String FINANCE_PLAN_ALREADY_EXISTS = "Finance plan '%s' already exists.";
+	    public static final String FINANCE_PLAN_HAS_REGISTERED_USERS = "Finance plan '%s' has registered users.";
 		public static final String GENERIC_EXCEPTION_S = "Operation returned error: %s.";
 		public static final String INVALID_COMPUTE_ITEM_FIELD = "Invalid compute item field.";
 		public static final String INVALID_CONSUMER_INDEX = "Invalid consumer index.";
