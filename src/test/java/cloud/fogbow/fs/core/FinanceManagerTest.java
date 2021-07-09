@@ -87,7 +87,7 @@ public class FinanceManagerTest {
 
 		new FinanceManager(objectHolder);
 		
-		Mockito.verify(objectHolder).getPlanPlugins();
+		Mockito.verify(objectHolder).getPlans();
 	}
 	
 	// test case: When calling the constructor and the list of finance plans acquired from
@@ -107,7 +107,7 @@ public class FinanceManagerTest {
         BDDMockito.given(PropertiesHolder.getInstance()).willReturn(propertiesHolder);
         
         PowerMockito.mockStatic(PlanPluginInstantiator.class);
-        BDDMockito.given(PlanPluginInstantiator.getPlanPlugin(PLUGIN_CLASS_NAME, PLAN_NAME, 
+        BDDMockito.given(PlanPluginInstantiator.getPlan(PLUGIN_CLASS_NAME, PLAN_NAME, 
                 usersHolder)).willReturn(plan1);
         
         MultiConsumerSynchronizedList<PersistablePlanPlugin> emptyPluginList = 
@@ -115,7 +115,7 @@ public class FinanceManagerTest {
         Mockito.when(emptyPluginList.isEmpty()).thenReturn(true);
         
         objectHolder = Mockito.mock(InMemoryFinanceObjectsHolder.class);
-        Mockito.when(objectHolder.getPlanPlugins()).thenReturn(emptyPluginList);
+        Mockito.when(objectHolder.getPlans()).thenReturn(emptyPluginList);
         Mockito.when(objectHolder.getInMemoryUsersHolder()).thenReturn(usersHolder);
         
         new FinanceManager(objectHolder);
@@ -124,9 +124,9 @@ public class FinanceManagerTest {
         Mockito.verify(propertiesHolder).getProperty(ConfigurationPropertyKeys.DEFAULT_PLAN_PLUGIN_TYPE);
         
         PowerMockito.verifyStatic(PlanPluginInstantiator.class);
-        PlanPluginInstantiator.getPlanPlugin(PLUGIN_CLASS_NAME, PLAN_NAME, usersHolder);
+        PlanPluginInstantiator.getPlan(PLUGIN_CLASS_NAME, PLAN_NAME, usersHolder);
         
-        Mockito.verify(objectHolder).registerPlanPlugin(plan1);
+        Mockito.verify(objectHolder).registerFinancePlan(plan1);
 	}
 	
 	// test case: When calling the isAuthorized method passing a SystemUser,
@@ -570,7 +570,7 @@ public class FinanceManagerTest {
 	    Map<String, String> planInfo = new HashMap<String, String>();
 
 	    PowerMockito.mockStatic(PlanPluginInstantiator.class);
-	    BDDMockito.given(PlanPluginInstantiator.getPlanPlugin(PLUGIN_CLASS_NAME, PLAN_NAME, planInfo, usersHolder)).willReturn(plan1);
+	    BDDMockito.given(PlanPluginInstantiator.getPlan(PLUGIN_CLASS_NAME, PLAN_NAME, planInfo, usersHolder)).willReturn(plan1);
 	    
 	    FinanceManager financeManager = new FinanceManager(objectHolder);
 	    
@@ -578,12 +578,12 @@ public class FinanceManagerTest {
         financeManager.createFinancePlan(PLUGIN_CLASS_NAME, PLAN_NAME, planInfo);
         
        
-        Mockito.verify(objectHolder).registerPlanPlugin(plan1);
+        Mockito.verify(objectHolder).registerFinancePlan(plan1);
         Mockito.verify(plan1).startThreads();
 	}
 	
 	// test case: When calling the removeFinancePlan method, it must call the
-	// removePlanPlugin method of the InMemoryFinanceObjectsHolder.
+	// removeFinancePlan method of the InMemoryFinanceObjectsHolder.
 	@Test
 	public void testRemoveFinancePlan() throws FogbowException, ModifiedListException {
 	    setUpFinancePlugin();
@@ -592,10 +592,10 @@ public class FinanceManagerTest {
 	    
 	    financeManager.removeFinancePlan(PLUGIN_1_NAME);
 	    
-	    Mockito.verify(objectHolder).removePlanPlugin(PLUGIN_1_NAME);
+	    Mockito.verify(objectHolder).removeFinancePlan(PLUGIN_1_NAME);
 	}
 	
-	// test case: When calling the changeOptions method, it must call the updatePlanPlugin method
+	// test case: When calling the changeOptions method, it must call the updateFinancePlan method
 	// of the InMemoryFinanceObjectsHolder.
 	@Test
 	public void testChangeOptions() throws FogbowException, ModifiedListException {
@@ -606,10 +606,10 @@ public class FinanceManagerTest {
 	    
 	    financeManager.changeOptions(PLUGIN_1_NAME, newPlanInfo);
 	    
-	    Mockito.verify(objectHolder).updatePlanPlugin(PLUGIN_1_NAME, newPlanInfo);
+	    Mockito.verify(objectHolder).updateFinancePlan(PLUGIN_1_NAME, newPlanInfo);
 	}
 	
-	// test case: When calling the getFinancePlanOptions method, it must call the getPlanPluginOptions
+	// test case: When calling the getFinancePlanOptions method, it must call the getFinancePlanOptions
 	// method of the InMemoryFinanceObjectsHolder.
 	@Test
 	public void testGetFinancePlanOptions() throws FogbowException, ModifiedListException {
@@ -618,7 +618,7 @@ public class FinanceManagerTest {
         Map<String, String> planInfo = new HashMap<String, String>();
         planInfo.put("optionkey", "optionvalue");
         
-        Mockito.when(this.objectHolder.getPlanPluginOptions(PLUGIN_1_NAME)).thenReturn(planInfo);
+        Mockito.when(this.objectHolder.getFinancePlanOptions(PLUGIN_1_NAME)).thenReturn(planInfo);
         
         FinanceManager financeManager = new FinanceManager(objectHolder);
         
@@ -666,9 +666,9 @@ public class FinanceManagerTest {
         
         Mockito.when(this.objectHolder.getInMemoryUsersHolder()).thenReturn(this.usersHolder);
         
-        Mockito.when(this.objectHolder.getPlanPlugins()).thenReturn(plugins);
-        Mockito.when(this.objectHolder.getPlanPlugin(PLUGIN_1_NAME)).thenReturn(this.plan1);
-        Mockito.when(this.objectHolder.getPlanPlugin(PLUGIN_2_NAME)).thenReturn(this.plan2);
+        Mockito.when(this.objectHolder.getPlans()).thenReturn(plugins);
+        Mockito.when(this.objectHolder.getFinancePlan(PLUGIN_1_NAME)).thenReturn(this.plan1);
+        Mockito.when(this.objectHolder.getFinancePlan(PLUGIN_2_NAME)).thenReturn(this.plan2);
         Mockito.when(plugins.startIterating()).thenReturn(0);
         Mockito.when(plugins.getNext(Mockito.anyInt())).thenReturn(this.plan1, this.plan2, null);
         Mockito.when(plugins.isEmpty()).thenReturn(false);
@@ -693,7 +693,7 @@ public class FinanceManagerTest {
         
         Mockito.when(this.objectHolder.getInMemoryUsersHolder()).thenReturn(this.usersHolder);
         
-        Mockito.when(this.objectHolder.getPlanPlugins()).thenReturn(plugins);
+        Mockito.when(this.objectHolder.getPlans()).thenReturn(plugins);
         Mockito.when(plugins.startIterating()).thenReturn(0);
         Mockito.when(plugins.getNext(Mockito.anyInt())).thenReturn(this.plan1, this.plan2, null);
         Mockito.when(plugins.isEmpty()).thenReturn(false);

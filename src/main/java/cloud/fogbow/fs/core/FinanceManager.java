@@ -23,7 +23,7 @@ public class FinanceManager {
             throws ConfigurationErrorException, InternalServerErrorException, InvalidParameterException {
         this.objectHolder = objectHolder;
         
-        if (objectHolder.getPlanPlugins().isEmpty()) {
+        if (objectHolder.getPlans().isEmpty()) {
             tryToCreateDefaultPlanPlugin();
         }
     }
@@ -35,26 +35,26 @@ public class FinanceManager {
         String defaultPlanName = PropertiesHolder.getInstance()
                 .getProperty(ConfigurationPropertyKeys.DEFAULT_PLAN_NAME);
         
-        PersistablePlanPlugin plugin = PlanPluginInstantiator.getPlanPlugin(
+        PersistablePlanPlugin plan = PlanPluginInstantiator.getPlan(
                 defaultPlanPluginType, defaultPlanName, objectHolder.getInMemoryUsersHolder());
-        objectHolder.registerPlanPlugin(plugin);
+        objectHolder.registerFinancePlan(plan);
     }
 
     public boolean isAuthorized(SystemUser user, RasOperation operation) throws FogbowException {
-        MultiConsumerSynchronizedList<PersistablePlanPlugin> planPlugins = this.objectHolder.getPlanPlugins();
+        MultiConsumerSynchronizedList<PersistablePlanPlugin> plans = this.objectHolder.getPlans();
         boolean authorized = false;
         
         while (true) {
-            Integer consumerId = planPlugins.startIterating();
+            Integer consumerId = plans.startIterating();
             
             try {
-                authorized = tryToAuthorize(planPlugins, user, operation, consumerId);
-                planPlugins.stopIterating(consumerId);
+                authorized = tryToAuthorize(plans, user, operation, consumerId);
+                plans.stopIterating(consumerId);
                 break;
             } catch (ModifiedListException e) {
-                consumerId = planPlugins.startIterating();
+                consumerId = plans.startIterating();
             } catch (Exception e) {
-                planPlugins.stopIterating(consumerId);
+                plans.stopIterating(consumerId);
                 throw e;
             }
         }
@@ -62,21 +62,21 @@ public class FinanceManager {
         return authorized;
     }
 
-    private boolean tryToAuthorize(MultiConsumerSynchronizedList<PersistablePlanPlugin> planPlugins, 
+    private boolean tryToAuthorize(MultiConsumerSynchronizedList<PersistablePlanPlugin> plans, 
             SystemUser authenticatedUser, RasOperation operation, Integer consumerId) 
             throws InvalidParameterException, InternalServerErrorException, ModifiedListException {
-        PersistablePlanPlugin plugin = planPlugins.getNext(consumerId);
+        PersistablePlanPlugin plan = plans.getNext(consumerId);
         boolean authorized = false;
         
-        while (plugin != null) {
-            synchronized(plugin) {
-                if (plugin.isRegisteredUser(authenticatedUser)) {
-                    authorized = plugin.isAuthorized(authenticatedUser, operation);
+        while (plan != null) {
+            synchronized(plan) {
+                if (plan.isRegisteredUser(authenticatedUser)) {
+                    authorized = plan.isAuthorized(authenticatedUser, operation);
                     return authorized;
                 }  
             }
             
-            plugin = planPlugins.getNext(consumerId);
+            plan = plans.getNext(consumerId);
         }
         
         return false;
@@ -84,63 +84,63 @@ public class FinanceManager {
 
     public void startPlugins() throws InternalServerErrorException {
         while (true) {
-            MultiConsumerSynchronizedList<PersistablePlanPlugin> planPlugins = this.objectHolder.getPlanPlugins();
-            Integer consumerId = planPlugins.startIterating();
+            MultiConsumerSynchronizedList<PersistablePlanPlugin> plans = this.objectHolder.getPlans();
+            Integer consumerId = plans.startIterating();
             
             try {
-                tryToStart(planPlugins, consumerId);
-                planPlugins.stopIterating(consumerId);
+                tryToStart(plans, consumerId);
+                plans.stopIterating(consumerId);
                 break;
             } catch (ModifiedListException e) {
-                consumerId = planPlugins.startIterating();
+                consumerId = plans.startIterating();
             } catch (Exception e) {
-                planPlugins.stopIterating(consumerId);
+                plans.stopIterating(consumerId);
                 throw e;
             }
         }
     }
 
-    private void tryToStart(MultiConsumerSynchronizedList<PersistablePlanPlugin> planPlugins, Integer consumerId)
+    private void tryToStart(MultiConsumerSynchronizedList<PersistablePlanPlugin> plans, Integer consumerId)
             throws InternalServerErrorException, ModifiedListException {
-        PersistablePlanPlugin plugin = planPlugins.getNext(consumerId);
+        PersistablePlanPlugin plan = plans.getNext(consumerId);
         
-        while (plugin != null) {
-            if (!plugin.isStarted()) {
-                plugin.startThreads();
+        while (plan != null) {
+            if (!plan.isStarted()) {
+                plan.startThreads();
             }
 
-            plugin = planPlugins.getNext(consumerId);
+            plan = plans.getNext(consumerId);
         }   
     }
 
     public void stopPlugins() throws InternalServerErrorException {
         while (true) {
-            MultiConsumerSynchronizedList<PersistablePlanPlugin> planPlugins = this.objectHolder.getPlanPlugins();
-            Integer consumerId = planPlugins.startIterating();
+            MultiConsumerSynchronizedList<PersistablePlanPlugin> plans = this.objectHolder.getPlans();
+            Integer consumerId = plans.startIterating();
             
             try {
-                tryToStop(planPlugins, consumerId);
-                planPlugins.stopIterating(consumerId);
+                tryToStop(plans, consumerId);
+                plans.stopIterating(consumerId);
                 break;
             } catch (ModifiedListException e) {
-                consumerId = planPlugins.startIterating();
+                consumerId = plans.startIterating();
             } catch (Exception e) {
-                planPlugins.stopIterating(consumerId);
+                plans.stopIterating(consumerId);
                 throw e;
             }
         }
     }
     
-    private void tryToStop(MultiConsumerSynchronizedList<PersistablePlanPlugin> planPlugins, Integer consumerId)
+    private void tryToStop(MultiConsumerSynchronizedList<PersistablePlanPlugin> plans, Integer consumerId)
             throws InternalServerErrorException, ModifiedListException {
-        PersistablePlanPlugin plugin = planPlugins.getNext(consumerId);
+        PersistablePlanPlugin plugin = plans.getNext(consumerId);
         
         while (plugin != null) {
             if (plugin.isStarted()) {
                 plugin.stopThreads();
             }
 
-            plugin = planPlugins.getNext(consumerId);
+            plugin = plans.getNext(consumerId);
         }  
     }
 
@@ -155,37 +155,37 @@ public class FinanceManager {
     public void addUser(SystemUser user, String financePlan) 
             throws InvalidParameterException, InternalServerErrorException {
         while (true) {
-            MultiConsumerSynchronizedList<PersistablePlanPlugin> planPlugins = 
-                    this.objectHolder.getPlanPlugins();
-            Integer consumerId = planPlugins.startIterating();
+            MultiConsumerSynchronizedList<PersistablePlanPlugin> plans = 
+                    this.objectHolder.getPlans();
+            Integer consumerId = plans.startIterating();
             
             try {
-                tryToAdd(planPlugins, user, financePlan, consumerId);
-                planPlugins.stopIterating(consumerId);
+                tryToAdd(plans, user, financePlan, consumerId);
+                plans.stopIterating(consumerId);
                 break;
             } catch (ModifiedListException e) {
-                consumerId = planPlugins.startIterating();
+                consumerId = plans.startIterating();
             } catch (Exception e) {
-                planPlugins.stopIterating(consumerId);
+                plans.stopIterating(consumerId);
                 throw e;
             }
         } 
     }
 
-    private void tryToAdd(MultiConsumerSynchronizedList<PersistablePlanPlugin> planPlugins, 
+    private void tryToAdd(MultiConsumerSynchronizedList<PersistablePlanPlugin> plans, 
             SystemUser user, String pluginName, Integer consumerId) 
             throws InternalServerErrorException, ModifiedListException, InvalidParameterException {
-        PersistablePlanPlugin plugin = planPlugins.getNext(consumerId);
+        PersistablePlanPlugin plan = plans.getNext(consumerId);
         
-        while (plugin != null) {
-            synchronized(plugin) {
-                if (plugin.getName().equals(pluginName)) {
-                    plugin.registerUser(user);
+        while (plan != null) {
+            synchronized(plan) {
+                if (plan.getName().equals(pluginName)) {
+                    plan.registerUser(user);
                     return;
                 }
             }
             
-            plugin = planPlugins.getNext(consumerId);
+            plan = plans.getNext(consumerId);
         } 
         
         throw new InvalidParameterException(String.format(Messages.Exception.UNMANAGED_USER, user.getId()));
@@ -205,32 +205,32 @@ public class FinanceManager {
 
     private void checkUserIsNotManaged(SystemUser systemUser)
             throws InternalServerErrorException, InvalidParameterException {
-        PersistablePlanPlugin plugin = null;
+        PersistablePlanPlugin plan = null;
         
         try {
-            plugin = getUserPlugin(systemUser);
+            plan = getUserPlan(systemUser);
         } catch (InvalidParameterException e) {
             
         }
         
-        if (plugin != null) {
+        if (plan != null) {
             throw new InvalidParameterException(
                     String.format(Messages.Exception.USER_IS_MANAGED_BY_PLUGIN, 
-                    systemUser.getId(), systemUser.getIdentityProviderId(), plugin.getName()));  
+                    systemUser.getId(), systemUser.getIdentityProviderId(), plan.getName()));  
         }
     }
 
     public void unregisterUser(SystemUser systemUser) throws InvalidParameterException, InternalServerErrorException {
-        PersistablePlanPlugin plugin = getUserPlugin(systemUser);
-        synchronized(plugin) {
-            plugin.unregisterUser(systemUser);
+        PersistablePlanPlugin plan = getUserPlan(systemUser);
+        synchronized(plan) {
+            plan.unregisterUser(systemUser);
         }
     }
 
     public void changePlan(SystemUser systemUser, String newPlanName) throws InvalidParameterException, InternalServerErrorException {
-        PersistablePlanPlugin plugin = getUserPlugin(systemUser);
-        synchronized(plugin) {
-            plugin.changePlan(systemUser, newPlanName);
+        PersistablePlanPlugin plan = getUserPlan(systemUser);
+        synchronized(plan) {
+            plan.changePlan(systemUser, newPlanName);
         }
     }
 
@@ -254,40 +254,40 @@ public class FinanceManager {
         }
     }
 
-    private PersistablePlanPlugin getUserPlugin(SystemUser systemUser) throws InvalidParameterException, 
+    private PersistablePlanPlugin getUserPlan(SystemUser systemUser) throws InvalidParameterException, 
     InternalServerErrorException {
-        PersistablePlanPlugin plugin = null;
+        PersistablePlanPlugin plan = null;
         
         while (true) {
-            MultiConsumerSynchronizedList<PersistablePlanPlugin> planPlugins = this.objectHolder.getPlanPlugins();
-            Integer consumerId = planPlugins.startIterating();
+            MultiConsumerSynchronizedList<PersistablePlanPlugin> plans = this.objectHolder.getPlans();
+            Integer consumerId = plans.startIterating();
             
             try {
-                plugin = tryToGet(planPlugins, systemUser, consumerId);
-                planPlugins.stopIterating(consumerId);
+                plan = tryToGet(plans, systemUser, consumerId);
+                plans.stopIterating(consumerId);
                 break;
             } catch (ModifiedListException e) {
-                consumerId = planPlugins.startIterating();
+                consumerId = plans.startIterating();
             } catch (Exception e) {
-                planPlugins.stopIterating(consumerId);
+                plans.stopIterating(consumerId);
                 throw e;
             }
         }
         
-        return plugin;
+        return plan;
     }
 
-    private PersistablePlanPlugin tryToGet(MultiConsumerSynchronizedList<PersistablePlanPlugin> planPlugins, 
+    private PersistablePlanPlugin tryToGet(MultiConsumerSynchronizedList<PersistablePlanPlugin> plans, 
             SystemUser user, Integer consumerId) throws InternalServerErrorException, ModifiedListException, 
             InvalidParameterException {
-        PersistablePlanPlugin plugin = planPlugins.getNext(consumerId);
+        PersistablePlanPlugin plan = plans.getNext(consumerId);
         
-        while (plugin != null) {
-            if (plugin.isRegisteredUser(user)) {
-                return plugin;
+        while (plan != null) {
+            if (plan.isRegisteredUser(user)) {
+                return plan;
             }
             
-            plugin = planPlugins.getNext(consumerId);
+            plan = plans.getNext(consumerId);
         } 
         
         throw new InvalidParameterException(String.format(Messages.Exception.UNMANAGED_USER, user.getId()));
@@ -299,23 +299,23 @@ public class FinanceManager {
 
     public void createFinancePlan(String pluginClassName, String planName, Map<String, String> pluginOptions) 
             throws InternalServerErrorException, InvalidParameterException {
-        PersistablePlanPlugin plugin = PlanPluginInstantiator.getPlanPlugin(pluginClassName, planName, 
+        PersistablePlanPlugin plan = PlanPluginInstantiator.getPlan(pluginClassName, planName, 
                 pluginOptions, objectHolder.getInMemoryUsersHolder());
-        this.objectHolder.registerPlanPlugin(plugin);
-        plugin.startThreads();
+        this.objectHolder.registerFinancePlan(plan);
+        plan.startThreads();
     }
     
     public void removeFinancePlan(String pluginName) throws InternalServerErrorException, InvalidParameterException {
-        this.objectHolder.removePlanPlugin(pluginName);
+        this.objectHolder.removeFinancePlan(pluginName);
     }
     
     public void changeOptions(String planName, Map<String, String> financeOptions)
             throws InvalidParameterException, InternalServerErrorException {
-        this.objectHolder.updatePlanPlugin(planName, financeOptions);
+        this.objectHolder.updateFinancePlan(planName, financeOptions);
     }
     
     public Map<String, String> getFinancePlanOptions(String pluginName) 
             throws InternalServerErrorException, InvalidParameterException {
-        return this.objectHolder.getPlanPluginOptions(pluginName);
+        return this.objectHolder.getFinancePlanOptions(pluginName);
     }
 }

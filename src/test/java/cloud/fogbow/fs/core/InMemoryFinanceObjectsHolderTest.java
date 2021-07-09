@@ -90,7 +90,7 @@ public class InMemoryFinanceObjectsHolderTest {
         
         objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, usersHolder, listFactory, planSynchronizedList);
         
-        objectHolder.registerPlanPlugin(planPlugin1);
+        objectHolder.registerFinancePlan(planPlugin1);
         
         Mockito.verify(planSynchronizedList).addItem(planPlugin1);
         Mockito.verify(databaseManager).savePlan(planPlugin1);
@@ -107,7 +107,7 @@ public class InMemoryFinanceObjectsHolderTest {
         objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, usersHolder, listFactory, planSynchronizedList);
         
 
-        objectHolder.registerPlanPlugin(planPlugin1);
+        objectHolder.registerFinancePlan(planPlugin1);
     }
     
     // test case: When calling the method getFinancePlan, it must iterate 
@@ -116,8 +116,8 @@ public class InMemoryFinanceObjectsHolderTest {
     public void testGetFinancePlan() throws InvalidParameterException, InternalServerErrorException {
         objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, usersHolder, listFactory, planSynchronizedList);
         
-        assertEquals(plan1, objectHolder.getPlanPlugin(PLAN_NAME_1));
-        assertEquals(plan2, objectHolder.getPlanPlugin(PLAN_NAME_2));
+        assertEquals(plan1, objectHolder.getFinancePlan(PLAN_NAME_1));
+        assertEquals(plan2, objectHolder.getFinancePlan(PLAN_NAME_2));
         
         Mockito.verify(planSynchronizedList, Mockito.times(2)).stopIterating(Mockito.anyInt());
     }
@@ -133,7 +133,7 @@ public class InMemoryFinanceObjectsHolderTest {
         
         objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, usersHolder, listFactory, planSynchronizedList);
         
-        assertEquals(plan2, objectHolder.getPlanPlugin(PLAN_NAME_2));
+        assertEquals(plan2, objectHolder.getFinancePlan(PLAN_NAME_2));
         
         Mockito.verify(planSynchronizedList).stopIterating(Mockito.anyInt());
     }
@@ -149,7 +149,7 @@ public class InMemoryFinanceObjectsHolderTest {
         
         objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, usersHolder, listFactory, planSynchronizedList);
         
-        objectHolder.getPlanPlugin(PLAN_NAME_2);
+        objectHolder.getFinancePlan(PLAN_NAME_2);
     }
     
     // test case: When calling the method getFinancePlan passing as argument an unknown
@@ -158,7 +158,7 @@ public class InMemoryFinanceObjectsHolderTest {
     public void testGetFinancePlanUnknownPlan() throws InvalidParameterException, InternalServerErrorException {
         objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, usersHolder, listFactory, planSynchronizedList);
         
-        objectHolder.getPlanPlugin("unknownplan");
+        objectHolder.getFinancePlan("unknownplan");
     }
     
     // test case: When calling the method removeFinancePlan, it must check if the list of users
@@ -168,7 +168,7 @@ public class InMemoryFinanceObjectsHolderTest {
     public void testRemoveFinancePlan() throws InvalidParameterException, InternalServerErrorException {
         objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, usersHolder, listFactory, planSynchronizedList);
         
-        objectHolder.removePlanPlugin(PLAN_NAME_1);
+        objectHolder.removeFinancePlan(PLAN_NAME_1);
         
         Mockito.verify(databaseManager).removePlan(plan1);
         Mockito.verify(planSynchronizedList).removeItem(plan1);
@@ -182,7 +182,7 @@ public class InMemoryFinanceObjectsHolderTest {
     public void testRemoveFinancePlanUnknownPlan() throws InternalServerErrorException, InvalidParameterException {
         objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, usersHolder, listFactory, planSynchronizedList);
         
-        objectHolder.removePlanPlugin("unknownplan");
+        objectHolder.removeFinancePlan("unknownplan");
     }
     
     // test case: When calling the method removeFinancePlan passing as argument
@@ -191,7 +191,7 @@ public class InMemoryFinanceObjectsHolderTest {
     public void testRemoveFinancePlanRegisteredUsersListIsNotEmpty() throws InternalServerErrorException, InvalidParameterException {
         objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, usersHolder, listFactory, planSynchronizedList);
         
-        objectHolder.removePlanPlugin(PLAN_NAME_2);
+        objectHolder.removeFinancePlan(PLAN_NAME_2);
     }
     
     // test case: When calling the method updateFinancePlan, it must call the method 
@@ -203,7 +203,7 @@ public class InMemoryFinanceObjectsHolderTest {
         Map<String, String> updatedPlanInfo = new HashMap<String, String>();
 
         
-        objectHolder.updatePlanPlugin(PLAN_NAME_1, updatedPlanInfo);
+        objectHolder.updateFinancePlan(PLAN_NAME_1, updatedPlanInfo);
         
         
         Mockito.verify(plan1).setOptions(updatedPlanInfo);
@@ -219,7 +219,7 @@ public class InMemoryFinanceObjectsHolderTest {
         Map<String, String> updatedPlanInfo = new HashMap<String, String>();
 
         
-        objectHolder.updatePlanPlugin("unknownplan", updatedPlanInfo);
+        objectHolder.updateFinancePlan("unknownplan", updatedPlanInfo);
     }
     
     // test case: When calling the method getFinancePlanOptions, it must return a 
@@ -231,7 +231,7 @@ public class InMemoryFinanceObjectsHolderTest {
         Mockito.when(plan1.getOptions()).thenReturn(rulesPlan1);
         
         
-        Map<String, String> returnedMap = objectHolder.getPlanPluginOptions(PLAN_NAME_1);
+        Map<String, String> returnedMap = objectHolder.getFinancePlanOptions(PLAN_NAME_1);
         
         
         assertEquals(rulesPlan1, returnedMap);
@@ -244,7 +244,7 @@ public class InMemoryFinanceObjectsHolderTest {
     public void testGetFinancePlanMapUnknownPlan() throws InternalServerErrorException, InvalidParameterException {
         objectHolder = new InMemoryFinanceObjectsHolder(databaseManager, usersHolder, listFactory, planSynchronizedList);
 
-        objectHolder.getPlanPluginOptions("unknownplan");
+        objectHolder.getFinancePlanOptions("unknownplan");
     }
 
     private void setUpLists() throws InvalidParameterException, ModifiedListException, InternalServerErrorException {
