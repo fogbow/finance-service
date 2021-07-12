@@ -65,7 +65,7 @@ public class RasClientTest {
 		RasClient rasClient = new RasClient(authenticationServiceClient, managerUserName, 
 				managerPassword, rasAddress, rasPort);
 		
-		rasClient.pauseResourcesByUser(userId);
+		rasClient.pauseResourcesByUser(userId, provider);
 		
 		PowerMockito.verifyStatic(HttpRequestClient.class);
 		HttpRequestClient.doGenericRequest(HttpMethod.POST, rasPauseEndpoint, headers1, body);
@@ -82,7 +82,7 @@ public class RasClientTest {
 		RasClient rasClient = new RasClient(authenticationServiceClient, managerUserName, 
 				managerPassword, rasAddress, rasPort);
 		
-		rasClient.pauseResourcesByUser(userId);
+		rasClient.pauseResourcesByUser(userId, provider);
 	}
 	
 	// test case: When calling the method resumeResourcesByUser, it must set up
@@ -96,7 +96,7 @@ public class RasClientTest {
 		RasClient rasClient = new RasClient(authenticationServiceClient, managerUserName, 
 				managerPassword, rasAddress, rasPort);
 		
-		rasClient.resumeResourcesByUser(userId);
+		rasClient.resumeResourcesByUser(userId, provider);
 		
 		PowerMockito.verifyStatic(HttpRequestClient.class);
 		HttpRequestClient.doGenericRequest(HttpMethod.POST, rasResumeEndpoint, headers1, body);
@@ -113,7 +113,7 @@ public class RasClientTest {
 		RasClient rasClient = new RasClient(authenticationServiceClient, managerUserName, 
 				managerPassword, rasAddress, rasPort);
 		
-		rasClient.resumeResourcesByUser(userId);
+		rasClient.resumeResourcesByUser(userId, provider);
 	}
 	
 	// test case: When calling the method purgeUser, it must set up
@@ -161,7 +161,7 @@ public class RasClientTest {
         RasClient rasClient = new RasClient(authenticationServiceClient, managerUserName, 
                 managerPassword, rasAddress, rasPort);
         
-        rasClient.pauseResourcesByUser(userId);
+        rasClient.pauseResourcesByUser(userId, provider);
         
         PowerMockito.verifyStatic(HttpRequestClient.class, Mockito.times(1));
         HttpRequestClient.doGenericRequest(HttpMethod.POST, rasPauseEndpoint, headers1, body);
@@ -184,7 +184,7 @@ public class RasClientTest {
         RasClient rasClient = new RasClient(authenticationServiceClient, managerUserName, 
                 managerPassword, rasAddress, rasPort);
         
-        rasClient.resumeResourcesByUser(userId);
+        rasClient.resumeResourcesByUser(userId, provider);
         
         PowerMockito.verifyStatic(HttpRequestClient.class, Mockito.times(1));
         HttpRequestClient.doGenericRequest(HttpMethod.POST, rasResumeEndpoint, headers1, body);
@@ -263,10 +263,10 @@ public class RasClientTest {
         
 		body = new HashMap<String, String>();
 		
-		rasPauseEndpoint = String.format("%s:%s/%s/%s", rasAddress, rasPort,
-				cloud.fogbow.ras.api.http.request.Compute.PAUSE_COMPUTE_ENDPOINT, userId);
-		rasResumeEndpoint = String.format("%s:%s/%s/%s", rasAddress, rasPort,
-				cloud.fogbow.ras.api.http.request.Compute.RESUME_COMPUTE_ENDPOINT, userId);
+		rasPauseEndpoint = String.format("%s:%s/%s/%s/%s", rasAddress, rasPort,
+				cloud.fogbow.ras.api.http.request.Compute.PAUSE_COMPUTE_ENDPOINT, userId, provider);
+		rasResumeEndpoint = String.format("%s:%s/%s/%s/%s", rasAddress, rasPort,
+				cloud.fogbow.ras.api.http.request.Compute.RESUME_COMPUTE_ENDPOINT, userId, provider);
 		rasPurgeUserEndpoint = String.format("%s:%s/%s/%s/%s", rasAddress, rasPort,
                 cloud.fogbow.ras.api.http.request.Admin.PURGE_USER_ENDPOINT, userId, provider);
 		

@@ -71,13 +71,13 @@ public class RasClient {
 		}
 	}
 	
-	public void pauseResourcesByUser(String userId) throws FogbowException {
+	public void pauseResourcesByUser(String userId, String provider) throws FogbowException {
 		try {
 		    if (this.token == null) {
 		        this.token = getToken();
 		    }
 
-		    doPauseRequestAndCheckStatus(userId);
+		    doPauseRequestAndCheckStatus(userId, provider);
 		} catch (URISyntaxException e) {
 			throw new InvalidParameterException(e.getMessage());
 		}
@@ -92,8 +92,9 @@ public class RasClient {
         return newToken;
     }
 
-	private void doPauseRequestAndCheckStatus(String userId) throws URISyntaxException, FogbowException {
-		String endpoint = getPauseEndpoint(cloud.fogbow.ras.api.http.request.Compute.PAUSE_COMPUTE_ENDPOINT, userId);
+	private void doPauseRequestAndCheckStatus(String userId, String provider) throws URISyntaxException, FogbowException {
+		String endpoint = getPauseEndpoint(cloud.fogbow.ras.api.http.request.Compute.PAUSE_COMPUTE_ENDPOINT, 
+		        userId, provider);
 		HttpResponse response = doPauseRequest(this.token, endpoint);
 		
 		// If the token expired, authenticate and try again
@@ -108,10 +109,11 @@ public class RasClient {
 		}
 	}
 
-	private String getPauseEndpoint(String pauseApiBaseEndpoint, String userId) throws URISyntaxException {
+	private String getPauseEndpoint(String pauseApiBaseEndpoint, String userId, String provider) 
+	        throws URISyntaxException {
 		URI uri = new URI(rasAddress);
         uri = UriComponentsBuilder.fromUri(uri).port(rasPort).path(pauseApiBaseEndpoint).
-        		path("/").path(userId).build(true).toUri();
+        		path("/").path(userId).path("/").path(provider).build(true).toUri();
         return uri.toString();
 	}
 	
@@ -127,20 +129,21 @@ public class RasClient {
 		return HttpRequestClient.doGenericRequest(HttpMethod.POST, endpoint, headers, body);
 	}
 
-	public void resumeResourcesByUser(String userId) throws FogbowException {
+	public void resumeResourcesByUser(String userId, String provider) throws FogbowException {
 		try {
             if (this.token == null) {
                 this.token = getToken();
             }
             
-            doResumeRequestAndCheckStatus(userId);
+            doResumeRequestAndCheckStatus(userId, provider);
 		} catch (URISyntaxException e) {
 			throw new InvalidParameterException(e.getMessage());
 		}
 	}
 	
-	private void doResumeRequestAndCheckStatus(String userId) throws URISyntaxException, FogbowException {
-		String endpoint = getResumeEndpoint(cloud.fogbow.ras.api.http.request.Compute.RESUME_COMPUTE_ENDPOINT, userId);
+	private void doResumeRequestAndCheckStatus(String userId, String provider) throws URISyntaxException, FogbowException {
+		String endpoint = getResumeEndpoint(cloud.fogbow.ras.api.http.request.Compute.RESUME_COMPUTE_ENDPOINT, 
+		        userId, provider);
 		HttpResponse response = doResumeRequest(this.token, endpoint);
 		
 		// If the token expired, authenticate and try again
@@ -155,10 +158,11 @@ public class RasClient {
 		}
 	}
 	
-	private String getResumeEndpoint(String resumeApiBaseEndpoint, String userId) throws URISyntaxException {
+	private String getResumeEndpoint(String resumeApiBaseEndpoint, String userId, String provider) 
+	        throws URISyntaxException {
 		URI uri = new URI(rasAddress);
         uri = UriComponentsBuilder.fromUri(uri).port(rasPort).path(resumeApiBaseEndpoint).path("/").
-        		path(userId).build(true).toUri();
+        		path(userId).path("/").path(provider).build(true).toUri();
         return uri.toString();
 	}
 	

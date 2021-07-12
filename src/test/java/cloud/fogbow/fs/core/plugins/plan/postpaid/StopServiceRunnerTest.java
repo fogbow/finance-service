@@ -67,11 +67,11 @@ public class StopServiceRunnerTest {
         // User has paid. Therefore, its state must not change.
         Mockito.verify(this.user2, Mockito.never()).setStoppedResources(true);
 
-        Mockito.verify(rasClient, Mockito.times(1)).pauseResourcesByUser(ID_USER_1);
+        Mockito.verify(rasClient, Mockito.times(1)).pauseResourcesByUser(ID_USER_1, PROVIDER_USER_1);
         Mockito.verify(objectHolder).saveUser(user1);
         
         // User has paid. Therefore, must not call RasClient to pause resources.
-        Mockito.verify(rasClient, Mockito.never()).pauseResourcesByUser(ID_USER_2);
+        Mockito.verify(rasClient, Mockito.never()).pauseResourcesByUser(ID_USER_2, PROVIDER_USER_2);
         Mockito.verify(objectHolder, Mockito.never()).saveUser(user2);
     }
     
@@ -99,7 +99,8 @@ public class StopServiceRunnerTest {
         Mockito.doReturn(false).when(debtsChecker).hasPaid(ID_USER_2, PROVIDER_USER_2);
         
         rasClient = Mockito.mock(RasClient.class);
-        Mockito.doThrow(new FogbowException("message")).when(rasClient).pauseResourcesByUser(ID_USER_1);
+        Mockito.doThrow(new FogbowException("message")).when(rasClient).
+        pauseResourcesByUser(ID_USER_1, PROVIDER_USER_1);
         
         stopServiceRunner = new StopServiceRunner(PLAN_NAME, stopServiceWaitTime ,objectHolder, 
                 paymentManager, rasClient, debtsChecker);
@@ -114,10 +115,10 @@ public class StopServiceRunnerTest {
         Mockito.verify(this.user1, Mockito.never()).setStoppedResources(true);
         Mockito.verify(this.user2).setStoppedResources(true);
 
-        Mockito.verify(rasClient, Mockito.times(1)).pauseResourcesByUser(ID_USER_1);
+        Mockito.verify(rasClient, Mockito.times(1)).pauseResourcesByUser(ID_USER_1, PROVIDER_USER_1);
         Mockito.verify(objectHolder, Mockito.never()).saveUser(user1);
         
-        Mockito.verify(rasClient, Mockito.times(1)).pauseResourcesByUser(ID_USER_2);
+        Mockito.verify(rasClient, Mockito.times(1)).pauseResourcesByUser(ID_USER_2, PROVIDER_USER_2);
         Mockito.verify(objectHolder).saveUser(user2);
     }
     
@@ -197,8 +198,8 @@ public class StopServiceRunnerTest {
         Mockito.verify(this.user1, Mockito.never()).setStoppedResources(false);
         Mockito.verify(this.user2).setStoppedResources(false);
 
-        Mockito.verify(rasClient, Mockito.never()).resumeResourcesByUser(ID_USER_1);
-        Mockito.verify(rasClient, Mockito.times(1)).resumeResourcesByUser(ID_USER_2);
+        Mockito.verify(rasClient, Mockito.never()).resumeResourcesByUser(ID_USER_1, PROVIDER_USER_1);
+        Mockito.verify(rasClient, Mockito.times(1)).resumeResourcesByUser(ID_USER_2, PROVIDER_USER_2);
     }
     
     // test case: When calling the method doRun, it must get the
@@ -225,7 +226,7 @@ public class StopServiceRunnerTest {
         Mockito.doReturn(true).when(debtsChecker).hasPaid(ID_USER_2, PROVIDER_USER_2);
         
         rasClient = Mockito.mock(RasClient.class);
-        Mockito.doThrow(new FogbowException("message")).when(rasClient).resumeResourcesByUser(ID_USER_1);
+        Mockito.doThrow(new FogbowException("message")).when(rasClient).resumeResourcesByUser(ID_USER_1, PROVIDER_USER_1);
         
         stopServiceRunner = new StopServiceRunner(PLAN_NAME, stopServiceWaitTime, objectHolder, 
                 paymentManager, rasClient, debtsChecker);
@@ -240,8 +241,8 @@ public class StopServiceRunnerTest {
         Mockito.verify(this.user1, Mockito.never()).setStoppedResources(false);
         Mockito.verify(this.user2).setStoppedResources(false);
 
-        Mockito.verify(rasClient, Mockito.times(1)).resumeResourcesByUser(ID_USER_1);
-        Mockito.verify(rasClient, Mockito.times(1)).resumeResourcesByUser(ID_USER_2);
+        Mockito.verify(rasClient, Mockito.times(1)).resumeResourcesByUser(ID_USER_1, PROVIDER_USER_1);
+        Mockito.verify(rasClient, Mockito.times(1)).resumeResourcesByUser(ID_USER_2, PROVIDER_USER_2);
     }
     
     // test case: When calling the method resumeResourcesForUser, it must
@@ -259,7 +260,7 @@ public class StopServiceRunnerTest {
         stopServiceRunner.resumeResourcesForUser(user1);
 
         Mockito.verify(this.user1).setStoppedResources(false);
-        Mockito.verify(rasClient).resumeResourcesByUser(ID_USER_1);
+        Mockito.verify(rasClient).resumeResourcesByUser(ID_USER_1, PROVIDER_USER_1);
         Mockito.verify(objectHolder).saveUser(user1);
     }
     
@@ -273,7 +274,7 @@ public class StopServiceRunnerTest {
         setUpDatabaseResumeResources();
         
         rasClient = Mockito.mock(RasClient.class);
-        Mockito.doThrow(new FogbowException("message")).when(rasClient).resumeResourcesByUser(ID_USER_1);
+        Mockito.doThrow(new FogbowException("message")).when(rasClient).resumeResourcesByUser(ID_USER_1, PROVIDER_USER_1);
         
         stopServiceRunner = new StopServiceRunner(PLAN_NAME, stopServiceWaitTime, objectHolder, 
                 paymentManager, rasClient, debtsChecker);
@@ -286,7 +287,7 @@ public class StopServiceRunnerTest {
         }
         
         Mockito.verify(this.user1, Mockito.never()).setStoppedResources(false);
-        Mockito.verify(rasClient).resumeResourcesByUser(ID_USER_1);
+        Mockito.verify(rasClient).resumeResourcesByUser(ID_USER_1, PROVIDER_USER_1);
         Mockito.verify(objectHolder, Mockito.never()).saveUser(user1);
     }
     
@@ -325,9 +326,9 @@ public class StopServiceRunnerTest {
         Mockito.verify(this.user2).setStoppedResources(true);
 
         // Failed to determine whether user has paid or not.
-        Mockito.verify(rasClient, Mockito.never()).pauseResourcesByUser(ID_USER_1);
+        Mockito.verify(rasClient, Mockito.never()).pauseResourcesByUser(ID_USER_1, PROVIDER_USER_1);
         // User has not paid. Therefore, must call RasClient to pause resources.
-        Mockito.verify(rasClient, Mockito.times(1)).pauseResourcesByUser(ID_USER_2);
+        Mockito.verify(rasClient, Mockito.times(1)).pauseResourcesByUser(ID_USER_2, PROVIDER_USER_2);
     }
     
     // test case: When calling the method doRun and a ModifiedListException
@@ -359,9 +360,9 @@ public class StopServiceRunnerTest {
         // Failed to get user2. Therefore, its state must not change.
         Mockito.verify(this.user2, Mockito.never()).setStoppedResources(Mockito.anyBoolean());
 
-        Mockito.verify(rasClient, Mockito.times(1)).pauseResourcesByUser(ID_USER_1);
+        Mockito.verify(rasClient, Mockito.times(1)).pauseResourcesByUser(ID_USER_1, PROVIDER_USER_1);
         // Failed to get user2. Therefore, its state must not change.
-        Mockito.verify(rasClient, Mockito.never()).pauseResourcesByUser(ID_USER_2);
+        Mockito.verify(rasClient, Mockito.never()).pauseResourcesByUser(ID_USER_2, PROVIDER_USER_2);
     }
     
     // test case: When calling the method doRun and a InternalServerErrorException
@@ -393,9 +394,9 @@ public class StopServiceRunnerTest {
         // Failed to get user2. Therefore, its state must not change.
         Mockito.verify(this.user2, Mockito.never()).setStoppedResources(Mockito.anyBoolean());
 
-        Mockito.verify(rasClient, Mockito.times(1)).pauseResourcesByUser(ID_USER_1);
+        Mockito.verify(rasClient, Mockito.times(1)).pauseResourcesByUser(ID_USER_1, PROVIDER_USER_1);
         // Failed to get user2. Therefore, its state must not change.
-        Mockito.verify(rasClient, Mockito.never()).pauseResourcesByUser(ID_USER_2);
+        Mockito.verify(rasClient, Mockito.never()).pauseResourcesByUser(ID_USER_2, PROVIDER_USER_2);
     }
     
     private void setUpDatabase() throws InvalidParameterException, ModifiedListException, InternalServerErrorException {

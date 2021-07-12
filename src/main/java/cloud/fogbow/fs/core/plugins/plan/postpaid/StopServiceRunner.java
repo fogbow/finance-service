@@ -83,7 +83,7 @@ public class StopServiceRunner  extends StoppableRunner {
 
     private void tryToPauseResources(FinanceUser user) {
         try {
-            this.rasClient.pauseResourcesByUser(user.getId());
+            this.rasClient.pauseResourcesByUser(user.getId(), user.getProvider());
             user.setStoppedResources(true);
             this.userHolder.saveUser(user);
         } catch (FogbowException e) {
@@ -94,7 +94,7 @@ public class StopServiceRunner  extends StoppableRunner {
     
     public void resumeResourcesForUser(FinanceUser user) throws InternalServerErrorException, InvalidParameterException {
         try {
-            this.rasClient.resumeResourcesByUser(user.getId());
+            this.rasClient.resumeResourcesByUser(user.getId(), user.getProvider());
         } catch (FogbowException e) {
             throw new InternalServerErrorException(e.getMessage());
         }
@@ -104,7 +104,7 @@ public class StopServiceRunner  extends StoppableRunner {
     
     private void tryToResumeResources(FinanceUser user) {
         try {
-            this.rasClient.resumeResourcesByUser(user.getId());
+            this.rasClient.resumeResourcesByUser(user.getId(), user.getProvider());
             user.setStoppedResources(false);
             this.userHolder.saveUser(user);
         } catch (FogbowException e) {
