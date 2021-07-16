@@ -5,6 +5,7 @@ import org.apache.log4j.Logger;
 import cloud.fogbow.common.exceptions.FogbowException;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
+import cloud.fogbow.common.exceptions.NotImplementedOperationException;
 import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.InMemoryUsersHolder;
 import cloud.fogbow.fs.core.models.FinanceUser;
@@ -70,7 +71,7 @@ public class StopServiceRunner extends StoppableRunner {
                 boolean stoppedResources = user.stoppedResources();
 
                 if (!paid && !stoppedResources) {
-                    tryToPauseResources(user);
+                    tryToStopResources(user);
                 }
 
                 if (paid && stoppedResources) {
@@ -82,14 +83,22 @@ public class StopServiceRunner extends StoppableRunner {
         }
     }
 
-    private void tryToPauseResources(FinanceUser user) {
+    private void tryToStopResources(FinanceUser user) {
         try {
-            this.rasClient.pauseResourcesByUser(user.getId(), user.getProvider());
+            tryToHibernateThenTryToStop(user);
             user.setStoppedResources(true);
             this.usersHolder.saveUser(user);
         } catch (FogbowException e) {
             LOGGER.error(String.format(Messages.Log.FAILED_TO_PAUSE_USER_RESOURCES_FOR_USER, user.getId(),
                     e.getMessage()));
+        }
+    }
+
+    private void tryToHibernateThenTryToStop(FinanceUser user) throws FogbowException {
+        try {
+            this.rasClient.hibernateResourcesByUser(user.getId(), user.getProvider());
+        } catch (NotImplementedOperationException e) {
+            this.rasClient.stopResourcesByUser(user.getId(), user.getProvider());
         }
     }
     
