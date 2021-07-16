@@ -29,6 +29,7 @@ public class Messages {
 		public static final String NO_ADMIN_SPECIFIED = "No admin specified in the configuration file.";
 		public static final String NO_FINANCE_PLAN_CREATION_METHOD_PROVIDED = "No FinancePlan creation method provided in the options.";
 		public static final String NO_FINANCE_PLUGIN_SPECIFIED = "No finance plugin specified in the configuration file.";
+		public static final String OPERATION_NOT_IMPLEMENTED = "Received not implemented error code when accessing endpoint %s.";
 		public static final String UNABLE_TO_FIND_CLASS_S = "Unable to find class %s.";
 		public static final String UNABLE_TO_FIND_INVOICE = "Unable to find invoice %s.";
 		public static final String UNABLE_TO_FIND_PLAN = "Unable to find plan %s.";

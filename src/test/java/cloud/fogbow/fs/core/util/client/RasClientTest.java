@@ -18,6 +18,7 @@ import cloud.fogbow.common.constants.FogbowConstants;
 import cloud.fogbow.common.constants.HttpMethod;
 import cloud.fogbow.common.exceptions.FogbowException;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
+import cloud.fogbow.common.exceptions.NotImplementedOperationException;
 import cloud.fogbow.common.exceptions.UnauthenticatedUserException;
 import cloud.fogbow.common.exceptions.UnavailableProviderException;
 import cloud.fogbow.common.util.CryptoUtil;
@@ -43,6 +44,8 @@ public class RasClientTest {
 	private String rewrapAdminToken2 = "rewrapAdminToken2";
 	private String publicKey = "publicKey";
 	private String rasPauseEndpoint;
+	private String rasHibernateEndpoint;
+	private String rasStopEndpoint;
 	private String rasResumeEndpoint;
 	private String rasPurgeUserEndpoint;
 	private String userId = "userId";
@@ -51,6 +54,8 @@ public class RasClientTest {
 	private HashMap<String, String> headers2;
 	private HashMap<String, String> body;
 	private HttpResponse responsePause;
+	private HttpResponse responseHibernate;
+	private HttpResponse responseStop;
 	private HttpResponse responseResume;
 	private HttpResponse responsePurge;
 	
@@ -72,7 +77,21 @@ public class RasClientTest {
 	}
 	
 	// test case: When calling the method pauseResourcesByUser and the return code
-	// for the request is not 200, it must throw an UnavailableProviderException.
+    // for the request is 501, it must throw an NotImplementedOperationException.
+    @Test(expected = NotImplementedOperationException.class)
+    public void testNotImplementedPauseResourcesByUser() throws FogbowException, GeneralSecurityException {
+        setUpKeys();
+        setUpAuthentication();
+        setUpRequestAndNotImplementedResponse();
+        
+        RasClient rasClient = new RasClient(authenticationServiceClient, managerUserName, 
+                managerPassword, rasAddress, rasPort);
+        
+        rasClient.pauseResourcesByUser(userId, provider);
+    }
+	
+	// test case: When calling the method pauseResourcesByUser and the return code
+	// for the request is not 200 nor 501, it must throw an UnavailableProviderException.
 	@Test(expected = UnavailableProviderException.class)
 	public void testPauseResourcesByUserErrorReturnCode() throws FogbowException, GeneralSecurityException {
 		setUpKeys();
@@ -84,6 +103,96 @@ public class RasClientTest {
 		
 		rasClient.pauseResourcesByUser(userId, provider);
 	}
+
+	// test case: When calling the method hibernateResourcesByUser, it must set up
+    // a request properly and call the HttpRequestClient to make the request to RAS.
+    @Test
+    public void testHibernateResourcesByUser() throws FogbowException, GeneralSecurityException {
+        setUpKeys();
+        setUpAuthentication();
+        setUpRequestAndOkResponse();
+        
+        RasClient rasClient = new RasClient(authenticationServiceClient, managerUserName, 
+                managerPassword, rasAddress, rasPort);
+        
+        rasClient.hibernateResourcesByUser(userId, provider);
+        
+        PowerMockito.verifyStatic(HttpRequestClient.class);
+        HttpRequestClient.doGenericRequest(HttpMethod.POST, rasHibernateEndpoint, headers1, body);
+    }
+    
+    // test case: When calling the method hibernateResourcesByUser and the return code
+    // for the request is 501, it must throw an NotImplementedOperationException.
+    @Test(expected = NotImplementedOperationException.class)
+    public void testNotImplementedHibernateResourcesByUser() throws FogbowException, GeneralSecurityException {
+        setUpKeys();
+        setUpAuthentication();
+        setUpRequestAndNotImplementedResponse();
+        
+        RasClient rasClient = new RasClient(authenticationServiceClient, managerUserName, 
+                managerPassword, rasAddress, rasPort);
+        
+        rasClient.hibernateResourcesByUser(userId, provider);
+    }
+	
+    // test case: When calling the method hibernateResourcesByUser and the return code
+    // for the request is not 200 nor 501, it must throw an UnavailableProviderException.
+    @Test(expected = UnavailableProviderException.class)
+    public void testHibernateResourcesByUserErrorReturnCode() throws FogbowException, GeneralSecurityException {
+        setUpKeys();
+        setUpAuthentication();
+        setUpRequestAndErrorResponse();
+        
+        RasClient rasClient = new RasClient(authenticationServiceClient, managerUserName, 
+                managerPassword, rasAddress, rasPort);
+        
+        rasClient.hibernateResourcesByUser(userId, provider);
+    }
+    
+    // test case: When calling the method stopResourcesByUser, it must set up
+    // a request properly and call the HttpRequestClient to make the request to RAS.
+    @Test
+    public void testStopResourcesByUser() throws FogbowException, GeneralSecurityException {
+        setUpKeys();
+        setUpAuthentication();
+        setUpRequestAndOkResponse();
+        
+        RasClient rasClient = new RasClient(authenticationServiceClient, managerUserName, 
+                managerPassword, rasAddress, rasPort);
+        
+        rasClient.stopResourcesByUser(userId, provider);
+        
+        PowerMockito.verifyStatic(HttpRequestClient.class);
+        HttpRequestClient.doGenericRequest(HttpMethod.POST, rasStopEndpoint, headers1, body);
+    }
+    
+    // test case: When calling the method stopResourcesByUser and the return code
+    // for the request is 501, it must throw an NotImplementedOperationException.
+    @Test(expected = NotImplementedOperationException.class)
+    public void testNotImplementedStopResourcesByUser() throws FogbowException, GeneralSecurityException {
+        setUpKeys();
+        setUpAuthentication();
+        setUpRequestAndNotImplementedResponse();
+        
+        RasClient rasClient = new RasClient(authenticationServiceClient, managerUserName, 
+                managerPassword, rasAddress, rasPort);
+        
+        rasClient.stopResourcesByUser(userId, provider);
+    }
+    
+    // test case: When calling the method stopResourcesByUser and the return code
+    // for the request is not 200 nor 501, it must throw an UnavailableProviderException.
+    @Test(expected = UnavailableProviderException.class)
+    public void testStopResourcesByUserErrorReturnCode() throws FogbowException, GeneralSecurityException {
+        setUpKeys();
+        setUpAuthentication();
+        setUpRequestAndErrorResponse();
+        
+        RasClient rasClient = new RasClient(authenticationServiceClient, managerUserName, 
+                managerPassword, rasAddress, rasPort);
+        
+        rasClient.stopResourcesByUser(userId, provider);
+    }
 	
 	// test case: When calling the method resumeResourcesByUser, it must set up
 	// a request properly and call the HttpRequestClient to make the request to RAS.
@@ -265,6 +374,10 @@ public class RasClientTest {
 		
 		rasPauseEndpoint = String.format("%s:%s/%s/%s/%s", rasAddress, rasPort,
 				cloud.fogbow.ras.api.http.request.Compute.PAUSE_COMPUTE_ENDPOINT, userId, provider);
+		rasHibernateEndpoint = String.format("%s:%s/%s/%s/%s", rasAddress, rasPort,
+                cloud.fogbow.ras.api.http.request.Compute.HIBERNATE_COMPUTE_ENDPOINT, userId, provider);
+		rasStopEndpoint = String.format("%s:%s/%s/%s/%s", rasAddress, rasPort,
+                cloud.fogbow.ras.api.http.request.Compute.STOP_COMPUTE_ENDPOINT, userId, provider);
 		rasResumeEndpoint = String.format("%s:%s/%s/%s/%s", rasAddress, rasPort,
 				cloud.fogbow.ras.api.http.request.Compute.RESUME_COMPUTE_ENDPOINT, userId, provider);
 		rasPurgeUserEndpoint = String.format("%s:%s/%s/%s/%s", rasAddress, rasPort,
@@ -273,6 +386,12 @@ public class RasClientTest {
 		responsePause = Mockito.mock(HttpResponse.class);
 		Mockito.when(responsePause.getHttpCode()).thenReturn(returnCode);
 		
+		responseHibernate = Mockito.mock(HttpResponse.class);
+        Mockito.when(responseHibernate.getHttpCode()).thenReturn(returnCode);
+		
+        responseStop = Mockito.mock(HttpResponse.class);
+        Mockito.when(responseStop.getHttpCode()).thenReturn(returnCode);
+        
 		responseResume = Mockito.mock(HttpResponse.class);
 		Mockito.when(responseResume.getHttpCode()).thenReturn(returnCode);
 		
@@ -283,6 +402,10 @@ public class RasClientTest {
 		
 		BDDMockito.when(HttpRequestClient.doGenericRequest(HttpMethod.POST, rasPauseEndpoint, headers1, body)).thenReturn(responsePause);
 		BDDMockito.when(HttpRequestClient.doGenericRequest(HttpMethod.POST, rasPauseEndpoint, headers2, body)).thenReturn(responsePause);
+		BDDMockito.when(HttpRequestClient.doGenericRequest(HttpMethod.POST, rasHibernateEndpoint, headers1, body)).thenReturn(responseHibernate);
+        BDDMockito.when(HttpRequestClient.doGenericRequest(HttpMethod.POST, rasHibernateEndpoint, headers2, body)).thenReturn(responseHibernate);
+        BDDMockito.when(HttpRequestClient.doGenericRequest(HttpMethod.POST, rasStopEndpoint, headers1, body)).thenReturn(responseStop);
+        BDDMockito.when(HttpRequestClient.doGenericRequest(HttpMethod.POST, rasStopEndpoint, headers2, body)).thenReturn(responseStop);
 		BDDMockito.when(HttpRequestClient.doGenericRequest(HttpMethod.POST, rasResumeEndpoint, headers1, body)).thenReturn(responseResume);
 		BDDMockito.when(HttpRequestClient.doGenericRequest(HttpMethod.POST, rasResumeEndpoint, headers2, body)).thenReturn(responseResume);
 		BDDMockito.when(HttpRequestClient.doGenericRequest(HttpMethod.DELETE, rasPurgeUserEndpoint, headers1, body)).thenReturn(responsePurge);
@@ -294,6 +417,10 @@ public class RasClientTest {
 	}
 	
 	private void setUpRequestAndErrorResponse() throws FogbowException {
-		setUpRequestAndResponse(501);
+		setUpRequestAndResponse(500);
 	}
+	
+	private void setUpRequestAndNotImplementedResponse() throws FogbowException {
+        setUpRequestAndResponse(501);
+    }
 }

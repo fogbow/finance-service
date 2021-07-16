@@ -20,6 +20,7 @@ import cloud.fogbow.common.exceptions.ConfigurationErrorException;
 import cloud.fogbow.common.exceptions.FogbowException;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
+import cloud.fogbow.common.exceptions.NotImplementedOperationException;
 import cloud.fogbow.common.exceptions.UnavailableProviderException;
 import cloud.fogbow.common.util.CryptoUtil;
 import cloud.fogbow.common.util.ServiceAsymmetricKeysHolder;
@@ -27,6 +28,7 @@ import cloud.fogbow.common.util.connectivity.HttpRequestClient;
 import cloud.fogbow.common.util.connectivity.HttpResponse;
 import cloud.fogbow.fs.api.http.CommonKeys;
 import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
+import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.FsPublicKeysHolder;
 import cloud.fogbow.fs.core.PropertiesHolder;
 
@@ -71,6 +73,12 @@ public class RasClient {
 		}
 	}
 	
+	/*
+	 * 
+	 * PAUSE
+	 * 
+	 */
+	
 	public void pauseResourcesByUser(String userId, String provider) throws FogbowException {
 		try {
 		    if (this.token == null) {
@@ -102,12 +110,22 @@ public class RasClient {
 		    this.token = getToken();
 		    response = doPauseRequest(this.token, endpoint);
 		}
+
+        treatReturnCode(response.getHttpCode(), response.getContent(), endpoint);
+	}
+
+    private void treatReturnCode(int responseCode, String content, String endpoint)
+            throws NotImplementedOperationException, UnavailableProviderException {
+        if (responseCode == HttpStatus.SC_NOT_IMPLEMENTED) {
+            throw new NotImplementedOperationException(
+                    String.format(Messages.Exception.OPERATION_NOT_IMPLEMENTED, endpoint));
+        }
 		
-		if (response.getHttpCode() > HttpStatus.SC_OK) {
-			Throwable e = new HttpResponseException(response.getHttpCode(), response.getContent());
+		if (responseCode > HttpStatus.SC_OK) {
+			Throwable e = new HttpResponseException(responseCode, content);
 			throw new UnavailableProviderException(e.getMessage());
 		}
-	}
+    }
 
 	private String getPauseEndpoint(String pauseApiBaseEndpoint, String userId, String provider) 
 	        throws URISyntaxException {
@@ -129,6 +147,118 @@ public class RasClient {
 		return HttpRequestClient.doGenericRequest(HttpMethod.POST, endpoint, headers, body);
 	}
 
+	/*
+	 * 
+	 * HIBERNATE
+	 * 
+	 */
+	
+    public void hibernateResourcesByUser(String userId, String provider) throws FogbowException {
+        try {
+            if (this.token == null) {
+                this.token = getToken();
+            }
+
+            doHibernateRequestAndCheckStatus(userId, provider);
+        } catch (URISyntaxException e) {
+            throw new InvalidParameterException(e.getMessage());
+        }
+    }
+
+    private void doHibernateRequestAndCheckStatus(String userId, String provider)
+            throws URISyntaxException, FogbowException {
+        String endpoint = getHibernateEndpoint(cloud.fogbow.ras.api.http.request.Compute.HIBERNATE_COMPUTE_ENDPOINT, userId,
+                provider);
+        HttpResponse response = doHibernateRequest(this.token, endpoint);
+
+        // If the token expired, authenticate and try again
+        if (response.getHttpCode() == HttpStatus.SC_UNAUTHORIZED) {
+            this.token = getToken();
+            response = doHibernateRequest(this.token, endpoint);
+        }
+
+        treatReturnCode(response.getHttpCode(), response.getContent(), endpoint);
+    }
+
+    private String getHibernateEndpoint(String hibernateApiBaseEndpoint, String userId, String provider)
+            throws URISyntaxException {
+        URI uri = new URI(rasAddress);
+        uri = UriComponentsBuilder.fromUri(uri).port(rasPort).path(hibernateApiBaseEndpoint).path("/").path(userId)
+                .path("/").path(provider).build(true).toUri();
+        return uri.toString();
+    }
+
+    private HttpResponse doHibernateRequest(String token, String endpoint) throws FogbowException {
+        // header
+        HashMap<String, String> headers = new HashMap<String, String>();
+        headers.put(CommonKeys.CONTENT_TYPE_KEY, RAS_REQUEST_CONTENT_TYPE);
+        headers.put(CommonKeys.SYSTEM_USER_TOKEN_HEADER_KEY, token);
+
+        // body
+        Map<String, String> body = new HashMap<String, String>();
+
+        return HttpRequestClient.doGenericRequest(HttpMethod.POST, endpoint, headers, body);
+    }
+	
+	/*
+	 * 
+	 * STOP
+	 * 
+	 */
+	
+    public void stopResourcesByUser(String userId, String provider) throws FogbowException {
+        try {
+            if (this.token == null) {
+                this.token = getToken();
+            }
+
+            doStopRequestAndCheckStatus(userId, provider);
+        } catch (URISyntaxException e) {
+            throw new InvalidParameterException(e.getMessage());
+        }
+    }
+
+    private void doStopRequestAndCheckStatus(String userId, String provider)
+            throws URISyntaxException, FogbowException {
+        String endpoint = getStopEndpoint(cloud.fogbow.ras.api.http.request.Compute.STOP_COMPUTE_ENDPOINT, userId,
+                provider);
+        HttpResponse response = doStopRequest(this.token, endpoint);
+
+        // If the token expired, authenticate and try again
+        if (response.getHttpCode() == HttpStatus.SC_UNAUTHORIZED) {
+            this.token = getToken();
+            response = doStopRequest(this.token, endpoint);
+        }
+        
+        treatReturnCode(response.getHttpCode(), response.getContent(), endpoint);
+    }
+
+    private String getStopEndpoint(String stopApiBaseEndpoint, String userId, String provider)
+            throws URISyntaxException {
+        URI uri = new URI(rasAddress);
+        uri = UriComponentsBuilder.fromUri(uri).port(rasPort).path(stopApiBaseEndpoint).path("/").path(userId)
+                .path("/").path(provider).build(true).toUri();
+        return uri.toString();
+    }
+
+    private HttpResponse doStopRequest(String token, String endpoint) throws FogbowException {
+        // header
+        HashMap<String, String> headers = new HashMap<String, String>();
+        headers.put(CommonKeys.CONTENT_TYPE_KEY, RAS_REQUEST_CONTENT_TYPE);
+        headers.put(CommonKeys.SYSTEM_USER_TOKEN_HEADER_KEY, token);
+
+        // body
+        Map<String, String> body = new HashMap<String, String>();
+
+        return HttpRequestClient.doGenericRequest(HttpMethod.POST, endpoint, headers, body);
+    }
+	
+	/*
+	 * 
+	 * RESUME
+	 * 
+	 */
+	    
 	public void resumeResourcesByUser(String userId, String provider) throws FogbowException {
 		try {
             if (this.token == null) {
@@ -151,11 +281,8 @@ public class RasClient {
 		    this.token = getToken();
 		    response = doResumeRequest(this.token, endpoint);
 		}
-		
-		if (response.getHttpCode() > HttpStatus.SC_OK) {
-			Throwable e = new HttpResponseException(response.getHttpCode(), response.getContent());
-			throw new UnavailableProviderException(e.getMessage());
-		}
+
+		treatReturnCode(response.getHttpCode(), response.getContent(), endpoint);
 	}
 	
 	private String getResumeEndpoint(String resumeApiBaseEndpoint, String userId, String provider) 
@@ -177,6 +304,12 @@ public class RasClient {
 
 		return HttpRequestClient.doGenericRequest(HttpMethod.POST, endpoint, headers, body);
 	}
+	
+	/*
+	 * 
+	 * PURGE
+	 * 
+	 */
 	
 	public void purgeUser(String userId, String provider) throws FogbowException {
         try {
@@ -201,10 +334,7 @@ public class RasClient {
             response = doPurgeUserRequest(this.token, endpoint);
         }
         
-        if (response.getHttpCode() > HttpStatus.SC_OK) {
-            Throwable e = new HttpResponseException(response.getHttpCode(), response.getContent());
-            throw new UnavailableProviderException(e.getMessage());
-        }    
+        treatReturnCode(response.getHttpCode(), response.getContent(), endpoint); 
     }
     
     private String getPurgeUserEndpoint(String purgeUserApiBaseEndpoint, String userId, String provider) 
