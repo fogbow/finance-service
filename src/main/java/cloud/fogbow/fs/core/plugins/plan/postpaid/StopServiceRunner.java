@@ -5,11 +5,10 @@ import org.apache.log4j.Logger;
 import cloud.fogbow.common.exceptions.FogbowException;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
-import cloud.fogbow.common.exceptions.NotImplementedOperationException;
 import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.InMemoryUsersHolder;
 import cloud.fogbow.fs.core.models.FinanceUser;
-import cloud.fogbow.fs.core.plugins.DebtsPaymentChecker;
+import cloud.fogbow.fs.core.plugins.ResourcesPolicy;
 import cloud.fogbow.fs.core.util.StoppableRunner;
 import cloud.fogbow.fs.core.util.client.RasClient;
 import cloud.fogbow.fs.core.util.list.ModifiedListException;
@@ -20,18 +19,17 @@ public class StopServiceRunner  extends StoppableRunner {
     
     private String planName;
     private InMemoryUsersHolder userHolder;
-    private InvoiceManager invoiceManager;
     private RasClient rasClient;
-    private DebtsPaymentChecker debtsChecker;
+    private ResourcesPolicy resourcesPolicy;
 
-    public StopServiceRunner(String planName, long stopServiceWaitTime, InMemoryUsersHolder userHolder, 
-            InvoiceManager invoiceManager, RasClient rasClient, DebtsPaymentChecker debtsChecker) {
+    public StopServiceRunner(String planName, long stopServiceWaitTime, 
+            InMemoryUsersHolder userHolder, RasClient rasClient, 
+            ResourcesPolicy resourcesPolicy) {
         this.sleepTime = stopServiceWaitTime;
         this.userHolder = userHolder;
-        this.invoiceManager = invoiceManager;
         this.rasClient = rasClient;
         this.planName = planName;
-        this.debtsChecker = debtsChecker;
+        this.resourcesPolicy = resourcesPolicy;
     }
 
     @Override
@@ -64,44 +62,17 @@ public class StopServiceRunner  extends StoppableRunner {
     private void tryToCheckUserState(FinanceUser user) throws InternalServerErrorException {
         synchronized (user) {
             try {
-                boolean pastDebtsHaveBeenPaid = this.debtsChecker.hasPaid(user.getId(), user.getProvider());
-                boolean currentStateIsGood = this.invoiceManager.hasPaid(user.getId(), user.getProvider());
-                boolean paid = pastDebtsHaveBeenPaid && currentStateIsGood;
-                boolean stoppedResources = user.stoppedResources();
-   
-                if (!paid && !stoppedResources) {
-                    tryToStopResources(user);
-                }
-   
-                if (paid && stoppedResources) {
-                    tryToResumeResources(user);
-                }
+                resourcesPolicy.updateUserState(user);
+                userHolder.saveUser(user);
             } catch (InvalidParameterException e) {
-                LOGGER.error(String.format(Messages.Log.UNABLE_TO_FIND_USER, user.getId(), user.getProvider()));
+                LOGGER.error(
+                        String.format(Messages.Log.UNABLE_TO_FIND_USER, user.getId(), user.getProvider()));
             }
         }
     }
 
-    private void tryToStopResources(FinanceUser user) {
-        try {
-            tryToHibernateThenTryToStop(user);
-            user.setStoppedResources(true);
-            this.userHolder.saveUser(user);
-        } catch (FogbowException e) {
-            LOGGER.error(String.format(Messages.Log.FAILED_TO_PAUSE_USER_RESOURCES_FOR_USER, user.getId(), 
-                    e.getMessage()));
-        }
-    }
-    
-    private void tryToHibernateThenTryToStop(FinanceUser user) throws FogbowException {
-        try {
-            this.rasClient.hibernateResourcesByUser(user.getId(), user.getProvider());
-        } catch (NotImplementedOperationException e) {
-            this.rasClient.stopResourcesByUser(user.getId(), user.getProvider());
-        }
-    }
-    
-    public void resumeResourcesForUser(FinanceUser user) throws InternalServerErrorException, InvalidParameterException {
+    public void resumeResourcesForUser(FinanceUser user) 
+            throws InternalServerErrorException, InvalidParameterException {
         try {
             this.rasClient.resumeResourcesByUser(user.getId(), user.getProvider());
         } catch (FogbowException e) {
@@ -109,17 +80,6 @@ public class StopServiceRunner  extends StoppableRunner {
         }
         user.setStoppedResources(false);
         this.userHolder.saveUser(user);
-    }
-    
-    private void tryToResumeResources(FinanceUser user) {
-        try {
-            this.rasClient.resumeResourcesByUser(user.getId(), user.getProvider());
-            user.setStoppedResources(false);
-            this.userHolder.saveUser(user);
-        } catch (FogbowException e) {
-            LOGGER.error(String.format(Messages.Log.FAILED_TO_RESUME_USER_RESOURCES_FOR_USER, user.getId(), 
-                    e.getMessage()));
-        }
     }
     
     public void purgeUserResources(FinanceUser user) throws InternalServerErrorException {

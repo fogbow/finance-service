@@ -42,6 +42,7 @@ public class PostPaidPlanPluginTest {
     private static final String INVOICE_WAIT_TIME = "30000";
     private static final String FINANCE_PLAN_RULES_FILE_PATH = "rules_path";
     private static final String USER_BILLING_INTERVAL = "60000";
+    private static final String TIME_TO_WAIT_BEFORE_STOPPING = "100000";
     private static final String USER_ID_1 = "userId1";
     private static final String USER_ID_2 = "userId2";
     private static final String USER_NAME_1 = "userName1";
@@ -65,6 +66,8 @@ public class PostPaidPlanPluginTest {
     private long newUserBillingInterval = 20L;
     private long invoiceWaitTime = 1L;
     private long newInvoiceWaitTime = 2L;
+    private long timeToWaitBeforeStopping = 100L;
+    private long newTimeToWaitBeforeStopping = 101L;
     private InMemoryUsersHolder objectHolder;
     private JsonUtils jsonUtils;
     private FinancePolicy plan;
@@ -107,8 +110,9 @@ public class PostPaidPlanPluginTest {
         this.jsonUtils = Mockito.mock(JsonUtils.class);
         
         PostPaidPlanPlugin postPaidFinancePlugin = new PostPaidPlanPlugin(PLAN_NAME, userBillingInterval, 
-                invoiceWaitTime, objectHolder, accountingServiceClient, rasClient, paymentManager, planFactory, 
-                jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, plan, financeOptions);
+                invoiceWaitTime, timeToWaitBeforeStopping, objectHolder, accountingServiceClient, rasClient, 
+                paymentManager, planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, 
+                plan, financeOptions);
         
         assertTrue(postPaidFinancePlugin.isRegisteredUser(new SystemUser(USER_ID_1, USER_NAME_1, PROVIDER_USER_1)));
         assertTrue(postPaidFinancePlugin.isRegisteredUser(new SystemUser(USER_ID_2, USER_NAME_2, PROVIDER_USER_2)));
@@ -128,8 +132,9 @@ public class PostPaidPlanPluginTest {
         this.jsonUtils = Mockito.mock(JsonUtils.class);
         
         PostPaidPlanPlugin postPaidFinancePlugin = new PostPaidPlanPlugin(PLAN_NAME, userBillingInterval, 
-                invoiceWaitTime, objectHolder, accountingServiceClient, rasClient, paymentManager, planFactory, 
-                jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, plan, financeOptions);
+                invoiceWaitTime, timeToWaitBeforeStopping, objectHolder, accountingServiceClient, rasClient, 
+                paymentManager, planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, 
+                plan, financeOptions);
         
         assertFalse(postPaidFinancePlugin.isRegisteredUser(new SystemUser(USER_ID_1, USER_NAME_1, PROVIDER_USER_1)));
     }
@@ -146,8 +151,9 @@ public class PostPaidPlanPluginTest {
         Mockito.when(this.debtsChecker.hasPaid(USER_ID_1, PROVIDER_USER_1)).thenReturn(true);
         
         PostPaidPlanPlugin postPaidFinancePlugin = new PostPaidPlanPlugin(PLAN_NAME, userBillingInterval, 
-                invoiceWaitTime, objectHolder, accountingServiceClient, rasClient, paymentManager, planFactory, 
-                jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, plan, financeOptions);
+                invoiceWaitTime, timeToWaitBeforeStopping, objectHolder, accountingServiceClient, rasClient, 
+                paymentManager, planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, 
+                plan, financeOptions);
         
         SystemUser user = new SystemUser(USER_ID_1, USER_NAME_1, PROVIDER_USER_1);
         RasOperation operation = new RasOperation(Operation.CREATE, ResourceType.COMPUTE, USER_ID_1, PROVIDER_USER_1);
@@ -166,8 +172,10 @@ public class PostPaidPlanPluginTest {
         this.debtsChecker = Mockito.mock(DebtsPaymentChecker.class);
         Mockito.when(this.debtsChecker.hasPaid(USER_ID_1, PROVIDER_USER_1)).thenReturn(true);
         
-        PostPaidPlanPlugin postPaidFinancePlugin = new PostPaidPlanPlugin(PLAN_NAME, userBillingInterval, invoiceWaitTime, objectHolder, 
-                accountingServiceClient, rasClient, paymentManager, planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, plan, financeOptions);
+        PostPaidPlanPlugin postPaidFinancePlugin = new PostPaidPlanPlugin(PLAN_NAME, userBillingInterval, 
+                invoiceWaitTime, timeToWaitBeforeStopping, objectHolder, accountingServiceClient, rasClient, 
+                paymentManager, planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, 
+                plan, financeOptions);
         
         SystemUser user = new SystemUser(USER_ID_1, USER_NAME_1, PROVIDER_USER_1);
         RasOperation operation = new RasOperation(Operation.GET, ResourceType.COMPUTE, USER_ID_1, PROVIDER_USER_1);
@@ -186,8 +194,10 @@ public class PostPaidPlanPluginTest {
         this.debtsChecker = Mockito.mock(DebtsPaymentChecker.class);
         Mockito.when(this.debtsChecker.hasPaid(USER_ID_1, PROVIDER_USER_1)).thenReturn(true);
         
-        PostPaidPlanPlugin postPaidFinancePlugin = new PostPaidPlanPlugin(PLAN_NAME, userBillingInterval, invoiceWaitTime, objectHolder, 
-                accountingServiceClient, rasClient, paymentManager, planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, plan, financeOptions);
+        PostPaidPlanPlugin postPaidFinancePlugin = new PostPaidPlanPlugin(PLAN_NAME, userBillingInterval, 
+                invoiceWaitTime, timeToWaitBeforeStopping, objectHolder, accountingServiceClient, rasClient, 
+                paymentManager, planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, 
+                plan, financeOptions);
         
         SystemUser user = new SystemUser(USER_ID_1, USER_NAME_1, PROVIDER_USER_1);
         RasOperation operation = new RasOperation(Operation.CREATE, ResourceType.COMPUTE, USER_ID_1, PROVIDER_USER_1);
@@ -206,8 +216,10 @@ public class PostPaidPlanPluginTest {
         this.debtsChecker = Mockito.mock(DebtsPaymentChecker.class);
         Mockito.when(this.debtsChecker.hasPaid(USER_ID_1, PROVIDER_USER_1)).thenReturn(false);
         
-        PostPaidPlanPlugin postPaidFinancePlugin = new PostPaidPlanPlugin(PLAN_NAME, userBillingInterval, invoiceWaitTime, objectHolder, 
-                accountingServiceClient, rasClient, paymentManager, planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, plan, financeOptions);
+        PostPaidPlanPlugin postPaidFinancePlugin = new PostPaidPlanPlugin(PLAN_NAME, userBillingInterval, 
+                invoiceWaitTime, timeToWaitBeforeStopping, objectHolder, accountingServiceClient, rasClient, 
+                paymentManager, planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, 
+                plan, financeOptions);
         
         SystemUser user = new SystemUser(USER_ID_1, USER_NAME_1, PROVIDER_USER_1);
         RasOperation operation = new RasOperation(Operation.GET, ResourceType.COMPUTE, USER_ID_1, PROVIDER_USER_1);
@@ -226,8 +238,10 @@ public class PostPaidPlanPluginTest {
         this.debtsChecker = Mockito.mock(DebtsPaymentChecker.class);
         Mockito.when(this.debtsChecker.hasPaid(USER_ID_1, PROVIDER_USER_1)).thenReturn(false);
         
-        PostPaidPlanPlugin postPaidFinancePlugin = new PostPaidPlanPlugin(PLAN_NAME, userBillingInterval, invoiceWaitTime, objectHolder, 
-                accountingServiceClient, rasClient, paymentManager, planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, plan, financeOptions);
+        PostPaidPlanPlugin postPaidFinancePlugin = new PostPaidPlanPlugin(PLAN_NAME, userBillingInterval, 
+                invoiceWaitTime, timeToWaitBeforeStopping, objectHolder, accountingServiceClient, rasClient, 
+                paymentManager, planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, 
+                plan, financeOptions);
         
         SystemUser user = new SystemUser(USER_ID_1, USER_NAME_1, PROVIDER_USER_1);
         RasOperation operation = new RasOperation(Operation.CREATE, ResourceType.COMPUTE, USER_ID_1, PROVIDER_USER_1);
@@ -245,8 +259,10 @@ public class PostPaidPlanPluginTest {
         objectHolder = Mockito.mock(InMemoryUsersHolder.class);
         Mockito.when(objectHolder.getUserById(USER_ID_1, PROVIDER_USER_1)).thenReturn(user);
         
-        PostPaidPlanPlugin postPaidFinancePlugin = new PostPaidPlanPlugin(PLAN_NAME, userBillingInterval, invoiceWaitTime, objectHolder, 
-                accountingServiceClient, rasClient, paymentManager, planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, plan, financeOptions);
+        PostPaidPlanPlugin postPaidFinancePlugin = new PostPaidPlanPlugin(PLAN_NAME, userBillingInterval, 
+                invoiceWaitTime, timeToWaitBeforeStopping, objectHolder, accountingServiceClient, rasClient, 
+                paymentManager, planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, 
+                plan, financeOptions);
         
         
         postPaidFinancePlugin.registerUser(new SystemUser(USER_ID_1, USER_NAME_1, PROVIDER_USER_1));
@@ -267,8 +283,9 @@ public class PostPaidPlanPluginTest {
         Mockito.when(objectHolder.getUserById(USER_ID_1, PROVIDER_USER_1)).thenReturn(user);
         
         PostPaidPlanPlugin postPaidFinancePlugin = new PostPaidPlanPlugin(PLAN_NAME, userBillingInterval, 
-                invoiceWaitTime, objectHolder, accountingServiceClient, rasClient, paymentManager, 
-                planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, plan, financeOptions);
+                invoiceWaitTime, timeToWaitBeforeStopping, objectHolder, accountingServiceClient, rasClient, 
+                paymentManager, planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, 
+                plan, financeOptions);
         
         
         postPaidFinancePlugin.purgeUser(new SystemUser(USER_ID_1, USER_NAME_1, PROVIDER_USER_1));
@@ -292,8 +309,9 @@ public class PostPaidPlanPluginTest {
         this.paymentRunner = Mockito.mock(PaymentRunner.class);
         
         PostPaidPlanPlugin postPaidFinancePlugin = new PostPaidPlanPlugin(PLAN_NAME, userBillingInterval, 
-                invoiceWaitTime, objectHolder, accountingServiceClient, rasClient, paymentManager, planFactory, 
-                jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, plan, financeOptions);
+                invoiceWaitTime, timeToWaitBeforeStopping, objectHolder, accountingServiceClient, rasClient, 
+                paymentManager, planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, 
+                plan, financeOptions);
         
         postPaidFinancePlugin.changePlan(new SystemUser(USER_ID_1, USER_NAME_1, PROVIDER_USER_1), NEW_PLAN_NAME);
         
@@ -314,8 +332,9 @@ public class PostPaidPlanPluginTest {
         this.paymentRunner = Mockito.mock(PaymentRunner.class);
         
         PostPaidPlanPlugin postPaidFinancePlugin = new PostPaidPlanPlugin(PLAN_NAME, userBillingInterval, 
-                invoiceWaitTime, objectHolder, accountingServiceClient, rasClient, paymentManager, planFactory, 
-                jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, plan, financeOptions);
+                invoiceWaitTime, timeToWaitBeforeStopping, objectHolder, accountingServiceClient, rasClient, 
+                paymentManager, planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, 
+                plan, financeOptions);
         
         try {
             postPaidFinancePlugin.changePlan(new SystemUser(USER_ID_1, USER_NAME_1, PROVIDER_USER_1), NEW_PLAN_NAME);
@@ -344,8 +363,9 @@ public class PostPaidPlanPluginTest {
         Mockito.when(objectHolder.getUserById(USER_ID_1, PROVIDER_USER_1)).thenReturn(user);
         
         PostPaidPlanPlugin postPaidFinancePlugin = new PostPaidPlanPlugin(PLAN_NAME, userBillingInterval, 
-                invoiceWaitTime, objectHolder, accountingServiceClient, rasClient, paymentManager, 
-                planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, plan, financeOptions);
+                invoiceWaitTime, timeToWaitBeforeStopping, objectHolder, accountingServiceClient, rasClient, 
+                paymentManager, planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, 
+                plan, financeOptions);
         
         
         postPaidFinancePlugin.unregisterUser(new SystemUser(USER_ID_1, USER_NAME_1, PROVIDER_USER_1));
@@ -370,8 +390,9 @@ public class PostPaidPlanPluginTest {
         Mockito.when(objectHolder.getUserById(USER_ID_1, PROVIDER_USER_1)).thenReturn(user);
         
         PostPaidPlanPlugin postPaidFinancePlugin = new PostPaidPlanPlugin(PLAN_NAME, userBillingInterval, 
-                invoiceWaitTime, objectHolder, accountingServiceClient, rasClient, paymentManager, 
-                planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, plan, financeOptions);
+                invoiceWaitTime, timeToWaitBeforeStopping, objectHolder, accountingServiceClient, rasClient, 
+                paymentManager, planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, 
+                plan, financeOptions);
         
         try {
             postPaidFinancePlugin.unregisterUser(new SystemUser(USER_ID_1, USER_NAME_1, PROVIDER_USER_1));
@@ -394,8 +415,10 @@ public class PostPaidPlanPluginTest {
         Map<String, String> financeOptions = new HashMap<String, String>();
         financeOptions.put(PostPaidPlanPlugin.FINANCE_PLAN_RULES_FILE_PATH, FINANCE_PLAN_FILE_PATH);
 
-        PostPaidPlanPlugin postPaidFinancePlugin = new PostPaidPlanPlugin(PLAN_NAME, userBillingInterval, invoiceWaitTime, objectHolder, 
-                accountingServiceClient, rasClient, paymentManager, planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, plan, financeOptions);
+        PostPaidPlanPlugin postPaidFinancePlugin = new PostPaidPlanPlugin(PLAN_NAME, userBillingInterval, 
+                invoiceWaitTime, timeToWaitBeforeStopping, objectHolder, accountingServiceClient, rasClient, 
+                paymentManager, planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, 
+                plan, financeOptions);
         
         postPaidFinancePlugin.setOptions(financeOptions);
     }
@@ -410,8 +433,10 @@ public class PostPaidPlanPluginTest {
         
         objectHolder = Mockito.mock(InMemoryUsersHolder.class);
 
-        PostPaidPlanPlugin postPaidFinancePlugin = new PostPaidPlanPlugin(PLAN_NAME, userBillingInterval, invoiceWaitTime, objectHolder, 
-                accountingServiceClient, rasClient, paymentManager, planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, plan, financeOptions);
+        PostPaidPlanPlugin postPaidFinancePlugin = new PostPaidPlanPlugin(PLAN_NAME, userBillingInterval, 
+                invoiceWaitTime, timeToWaitBeforeStopping, objectHolder, accountingServiceClient, rasClient, 
+                paymentManager, planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, 
+                plan, financeOptions);
         
         postPaidFinancePlugin.setOptions(financeOptions);
     }
@@ -423,8 +448,9 @@ public class PostPaidPlanPluginTest {
     public void testSetOptionsWithPlanRulesPlanIsNotNull() throws InvalidParameterException, InternalServerErrorException {
         // set up the PostPaid plan with a not null finance plan
         PostPaidPlanPlugin postPaidFinancePlugin = new PostPaidPlanPlugin(PLAN_NAME, userBillingInterval, 
-                invoiceWaitTime, objectHolder, accountingServiceClient, rasClient, paymentManager, planFactory, 
-                this.jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, this.plan);
+                invoiceWaitTime, timeToWaitBeforeStopping, objectHolder, accountingServiceClient, rasClient, 
+                paymentManager, planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, 
+                this.plan);
         
         // verify plan options before the setOptions operation
         Map<String, String> optionsBefore = postPaidFinancePlugin.getOptions();
@@ -437,6 +463,8 @@ public class PostPaidPlanPluginTest {
         Map<String, String> newFinanceOptions = new HashMap<String, String>();
         newFinanceOptions.put(PaymentRunner.USER_BILLING_INTERVAL, String.valueOf(newUserBillingInterval));
         newFinanceOptions.put(PostPaidPlanPlugin.INVOICE_WAIT_TIME, String.valueOf(newInvoiceWaitTime));
+        newFinanceOptions.put(PostPaidPlanPlugin.TIME_TO_WAIT_BEFORE_STOPPING, 
+                String.valueOf(newTimeToWaitBeforeStopping));
         newFinanceOptions.put(PostPaidPlanPlugin.FINANCE_PLAN_RULES, NEW_RULES_JSON);
         
         // exercise
@@ -461,13 +489,16 @@ public class PostPaidPlanPluginTest {
     public void testSetOptionsWithPlanRulesPlanIsNull() throws InvalidParameterException, InternalServerErrorException {
         // set up the PostPaid plan with a null finance plan
         PostPaidPlanPlugin postPaidFinancePlugin = new PostPaidPlanPlugin(PLAN_NAME, userBillingInterval, 
-                invoiceWaitTime, objectHolder, accountingServiceClient, rasClient, paymentManager, planFactory, 
-                this.jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, null);
+                invoiceWaitTime, timeToWaitBeforeStopping, objectHolder, accountingServiceClient, rasClient, 
+                paymentManager, planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, 
+                null);
         
         // new options
         Map<String, String> newFinanceOptions = new HashMap<String, String>();
         newFinanceOptions.put(PaymentRunner.USER_BILLING_INTERVAL, String.valueOf(newUserBillingInterval));
         newFinanceOptions.put(PostPaidPlanPlugin.INVOICE_WAIT_TIME, String.valueOf(newInvoiceWaitTime));
+        newFinanceOptions.put(PostPaidPlanPlugin.TIME_TO_WAIT_BEFORE_STOPPING, 
+                String.valueOf(newTimeToWaitBeforeStopping));
         newFinanceOptions.put(PostPaidPlanPlugin.FINANCE_PLAN_RULES, NEW_RULES_JSON);
         
         // exercise
@@ -493,13 +524,16 @@ public class PostPaidPlanPluginTest {
     public void testSetOptionsWithPlanRuleFromFile() throws InvalidParameterException, InternalServerErrorException {
         // set up the PostPaid plan with a not null finance plan
         PostPaidPlanPlugin postPaidFinancePlugin = new PostPaidPlanPlugin(PLAN_NAME, userBillingInterval, 
-                invoiceWaitTime, objectHolder, accountingServiceClient, rasClient, paymentManager, planFactory, 
-                this.jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, this.plan);
+                invoiceWaitTime, timeToWaitBeforeStopping, objectHolder, accountingServiceClient, rasClient, 
+                paymentManager, planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, 
+                plan, financeOptions);
         
         // new options
         Map<String, String> newFinanceOptions = new HashMap<String, String>();
         newFinanceOptions.put(PaymentRunner.USER_BILLING_INTERVAL, String.valueOf(newUserBillingInterval));
         newFinanceOptions.put(PostPaidPlanPlugin.INVOICE_WAIT_TIME, String.valueOf(newInvoiceWaitTime));
+        newFinanceOptions.put(PostPaidPlanPlugin.TIME_TO_WAIT_BEFORE_STOPPING, 
+                String.valueOf(newTimeToWaitBeforeStopping));
         newFinanceOptions.put(PostPaidPlanPlugin.FINANCE_PLAN_RULES_FILE_PATH, FINANCE_PLAN_FILE_PATH);
         
         // exercise
@@ -523,8 +557,9 @@ public class PostPaidPlanPluginTest {
     @Test(expected = InvalidParameterException.class)
     public void testSetOptionsThrowsExceptionIfNoPlanStartUpOptionIsPassed() throws InvalidParameterException, InternalServerErrorException {
         PostPaidPlanPlugin postPaidFinancePlugin = new PostPaidPlanPlugin(PLAN_NAME, userBillingInterval, 
-                invoiceWaitTime, objectHolder, accountingServiceClient, rasClient, paymentManager, planFactory, 
-                this.jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, this.plan);
+                invoiceWaitTime, timeToWaitBeforeStopping, objectHolder, accountingServiceClient, rasClient, 
+                paymentManager, planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, 
+                plan, financeOptions);
         
         Map<String, String> optionsBefore = postPaidFinancePlugin.getOptions();
         
@@ -545,8 +580,9 @@ public class PostPaidPlanPluginTest {
     @Test
     public void testGetOptions() throws InvalidParameterException, InternalServerErrorException {
         PostPaidPlanPlugin postPaidFinancePlugin = new PostPaidPlanPlugin(PLAN_NAME, userBillingInterval, 
-                invoiceWaitTime, objectHolder, accountingServiceClient, rasClient, paymentManager, planFactory, 
-                this.jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, this.plan);
+                invoiceWaitTime, timeToWaitBeforeStopping, objectHolder, accountingServiceClient, rasClient, 
+                paymentManager, planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, 
+                this.plan);
 
         Map<String, String> options = postPaidFinancePlugin.getOptions();
         
@@ -560,7 +596,8 @@ public class PostPaidPlanPluginTest {
     // return these parameters as a Map.
     @Test
     public void testPostPaidPluginOptionsLoaderValidOptions() throws ConfigurationErrorException {
-        setUpPropertiesHolderOptions(USER_BILLING_INTERVAL, FINANCE_PLAN_RULES_FILE_PATH, INVOICE_WAIT_TIME);
+        setUpPropertiesHolderOptions(USER_BILLING_INTERVAL, FINANCE_PLAN_RULES_FILE_PATH, 
+                INVOICE_WAIT_TIME, TIME_TO_WAIT_BEFORE_STOPPING);
         
         PostPaidPluginOptionsLoader loader = new PostPaidPluginOptionsLoader();
         
@@ -575,7 +612,8 @@ public class PostPaidPlanPluginTest {
     // UserBillingInterval is missing, it must throw a ConfigurationErrorException.
     @Test(expected = ConfigurationErrorException.class)
     public void testPostPaidPluginOptionsLoaderMissingUserBillingInterval() throws ConfigurationErrorException {
-        setUpPropertiesHolderOptions(null, FINANCE_PLAN_RULES_FILE_PATH, INVOICE_WAIT_TIME);
+        setUpPropertiesHolderOptions(null, FINANCE_PLAN_RULES_FILE_PATH, 
+                INVOICE_WAIT_TIME, TIME_TO_WAIT_BEFORE_STOPPING);
         
         PostPaidPluginOptionsLoader loader = new PostPaidPluginOptionsLoader();
         
@@ -586,7 +624,8 @@ public class PostPaidPlanPluginTest {
     // FinancePlanRulesFilePath is missing, it must throw a ConfigurationErrorException. 
     @Test(expected = ConfigurationErrorException.class)
     public void testPostPaidPluginOptionsLoaderMissingFinancePlanRulesFilePath() throws ConfigurationErrorException {
-        setUpPropertiesHolderOptions(USER_BILLING_INTERVAL, null, INVOICE_WAIT_TIME);
+        setUpPropertiesHolderOptions(USER_BILLING_INTERVAL, null, 
+                INVOICE_WAIT_TIME, TIME_TO_WAIT_BEFORE_STOPPING);
         
         PostPaidPluginOptionsLoader loader = new PostPaidPluginOptionsLoader();
         
@@ -597,7 +636,20 @@ public class PostPaidPlanPluginTest {
     // InvoiceWaitTime is missing, it must throw a ConfigurationErrorException. 
     @Test(expected = ConfigurationErrorException.class)
     public void testPostPaidPluginOptionsLoaderMissingInvoiceWaitTime() throws ConfigurationErrorException {
-        setUpPropertiesHolderOptions(USER_BILLING_INTERVAL, FINANCE_PLAN_RULES_FILE_PATH, null);
+        setUpPropertiesHolderOptions(USER_BILLING_INTERVAL, FINANCE_PLAN_RULES_FILE_PATH, 
+                null, TIME_TO_WAIT_BEFORE_STOPPING);
+        
+        PostPaidPluginOptionsLoader loader = new PostPaidPluginOptionsLoader();
+        
+        loader.load();
+    }
+    
+    // test case: When calling the PostPaidPluginOptionsLoader.load method and the property
+    // TimeToWaitBeforeStopping is missing, it must throw a ConfigurationErrorException. 
+    @Test(expected = ConfigurationErrorException.class)
+    public void testPostPaidPluginOptionsLoaderMissingTimeToWaitBeforeStopping() throws ConfigurationErrorException {
+        setUpPropertiesHolderOptions(USER_BILLING_INTERVAL, FINANCE_PLAN_RULES_FILE_PATH, 
+                INVOICE_WAIT_TIME, null);
         
         PostPaidPluginOptionsLoader loader = new PostPaidPluginOptionsLoader();
         
@@ -610,12 +662,14 @@ public class PostPaidPlanPluginTest {
         financeOptions.put(PostPaidPlanPlugin.INVOICE_WAIT_TIME, String.valueOf(invoiceWaitTime));
     }
     
-    private void setUpPropertiesHolderOptions(String userBillingInterval, String financePlanRulesPath, String invoiceWaitTime) {
+    private void setUpPropertiesHolderOptions(String userBillingInterval, String financePlanRulesPath, 
+            String invoiceWaitTime, String timeToWaitBeforeStopping) {
         PropertiesHolder propertiesHolder = Mockito.mock(PropertiesHolder.class);
         
         Mockito.when(propertiesHolder.getProperty(PaymentRunner.USER_BILLING_INTERVAL)).thenReturn(userBillingInterval);
         Mockito.when(propertiesHolder.getProperty(PostPaidPlanPlugin.FINANCE_PLAN_RULES_FILE_PATH)).thenReturn(financePlanRulesPath);
         Mockito.when(propertiesHolder.getProperty(PostPaidPlanPlugin.INVOICE_WAIT_TIME)).thenReturn(invoiceWaitTime);
+        Mockito.when(propertiesHolder.getProperty(PostPaidPlanPlugin.TIME_TO_WAIT_BEFORE_STOPPING)).thenReturn(timeToWaitBeforeStopping);
         
         PowerMockito.mockStatic(PropertiesHolder.class);
         BDDMockito.given(PropertiesHolder.getInstance()).willReturn(propertiesHolder);

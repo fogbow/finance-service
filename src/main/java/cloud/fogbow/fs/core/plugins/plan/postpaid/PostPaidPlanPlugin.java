@@ -23,6 +23,7 @@ import cloud.fogbow.fs.core.models.FinancePolicy;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.plugins.DebtsPaymentChecker;
 import cloud.fogbow.fs.core.plugins.PersistablePlanPlugin;
+import cloud.fogbow.fs.core.plugins.ResourcesPolicy;
 import cloud.fogbow.fs.core.util.FinancePolicyFactory;
 import cloud.fogbow.fs.core.util.JsonUtils;
 import cloud.fogbow.fs.core.util.client.AccountingServiceClient;
@@ -45,6 +46,8 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
      * to indicate the path of the file that contains the plan configuration.
      */
     public static final String FINANCE_PLAN_RULES_FILE_PATH = "finance_plan_file_path";
+    // TODO documentation
+    public static final String TIME_TO_WAIT_BEFORE_STOPPING = "time_to_wait_before_stopping";
     /**
      * The key to use in the map passed as argument to setOptions and the constructors
      * to indicate the string that contains the plan configuration.
@@ -54,6 +57,7 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
     private static final String PLAN_NAME_COLUMN_NAME = "name";
     private static final String USER_BILLING_TIME_COLUMN_NAME = "user_billing_time";
     private static final String INVOICE_WAIT_TIME_COLUMN_NAME = "invoice_wait_time";
+    private static final String TIME_TO_WAIT_BEFORE_STOPPING_COLUMN_NAME = "time_to_wait_before_stopping";
 
     @Transient
     private Thread paymentThread;
@@ -97,6 +101,9 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
     @Column(name = INVOICE_WAIT_TIME_COLUMN_NAME)
     private long invoiceWaitTime;
     
+    @Column(name = TIME_TO_WAIT_BEFORE_STOPPING_COLUMN_NAME)
+    private long timeToWaitBeforeStopping;
+    
     @OneToOne(cascade={CascadeType.ALL})
     private FinancePolicy policy;
 
@@ -135,23 +142,25 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
         setOptions(financeOptions);
     }
     
-    PostPaidPlanPlugin(String name, long userBillingInterval, long invoiceWaitTime, InMemoryUsersHolder usersHolder, 
-            AccountingServiceClient accountingServiceClient, RasClient rasClient, InvoiceManager invoiceManager, 
-            FinancePolicyFactory planFactory, JsonUtils jsonUtils, DebtsPaymentChecker debtsChecker, PaymentRunner paymentRunner,
-            StopServiceRunner stopServiceRunner, FinancePolicy policy, Map<String, String> financeOptions) 
+    PostPaidPlanPlugin(String name, long userBillingInterval, long invoiceWaitTime, long timeToWaitBeforeStopping, 
+            InMemoryUsersHolder usersHolder, AccountingServiceClient accountingServiceClient, RasClient rasClient, 
+            InvoiceManager invoiceManager, FinancePolicyFactory planFactory, JsonUtils jsonUtils, DebtsPaymentChecker debtsChecker, 
+            PaymentRunner paymentRunner, StopServiceRunner stopServiceRunner, FinancePolicy policy, Map<String, String> financeOptions) 
                     throws InvalidParameterException, InternalServerErrorException {
-        this(name, userBillingInterval, invoiceWaitTime, usersHolder, accountingServiceClient, rasClient, invoiceManager, 
-                planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, policy);
+        this(name, userBillingInterval, invoiceWaitTime, timeToWaitBeforeStopping, usersHolder, accountingServiceClient, 
+                rasClient, invoiceManager, planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, policy);
     }
     
-    PostPaidPlanPlugin(String name, long userBillingInterval, long invoiceWaitTime, InMemoryUsersHolder usersHolder, 
-            AccountingServiceClient accountingServiceClient, RasClient rasClient, InvoiceManager invoiceManager, 
-            FinancePolicyFactory planFactory, JsonUtils jsonUtils, DebtsPaymentChecker debtsChecker, PaymentRunner paymentRunner, 
-            StopServiceRunner stopServiceRunner, FinancePolicy policy) 
+    PostPaidPlanPlugin(String name, long userBillingInterval, long invoiceWaitTime, long timeToWaitBeforeStopping, 
+            InMemoryUsersHolder usersHolder, AccountingServiceClient accountingServiceClient, RasClient rasClient, 
+            InvoiceManager invoiceManager, FinancePolicyFactory planFactory, JsonUtils jsonUtils, 
+            DebtsPaymentChecker debtsChecker, PaymentRunner paymentRunner, StopServiceRunner stopServiceRunner, 
+            FinancePolicy policy) 
                     throws InvalidParameterException, InternalServerErrorException {
         this.name = name;
         this.userBillingTime = userBillingInterval;
         this.invoiceWaitTime = invoiceWaitTime;
+        this.timeToWaitBeforeStopping = timeToWaitBeforeStopping;
         this.usersHolder = usersHolder;
         this.accountingServiceClient = accountingServiceClient;
         this.rasClient = rasClient;
@@ -171,6 +180,7 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
         
         this.userBillingTime = Long.valueOf(financeOptions.get(PaymentRunner.USER_BILLING_INTERVAL));
         this.invoiceWaitTime = Long.valueOf(financeOptions.get(INVOICE_WAIT_TIME));
+        this.timeToWaitBeforeStopping = Long.valueOf(financeOptions.get(TIME_TO_WAIT_BEFORE_STOPPING)); 
         
         setUpPlanFromOptions(financeOptions, this.planFactory);
     }
@@ -178,9 +188,11 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
     private void validateFinanceOptions(Map<String, String> financeOptions) throws InvalidParameterException {
         checkContainsProperty(financeOptions, PaymentRunner.USER_BILLING_INTERVAL);
         checkContainsProperty(financeOptions, INVOICE_WAIT_TIME);
+        checkContainsProperty(financeOptions, TIME_TO_WAIT_BEFORE_STOPPING);
         
         checkPropertyIsParsable(financeOptions.get(PaymentRunner.USER_BILLING_INTERVAL), PaymentRunner.USER_BILLING_INTERVAL);
         checkPropertyIsParsable(financeOptions.get(INVOICE_WAIT_TIME), INVOICE_WAIT_TIME);
+        checkPropertyIsParsable(financeOptions.get(TIME_TO_WAIT_BEFORE_STOPPING), TIME_TO_WAIT_BEFORE_STOPPING);
     }
 
     private void checkContainsProperty(Map<String, String> financeOptions, String property) throws InvalidParameterException {
@@ -240,6 +252,7 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
         options.put(FINANCE_PLAN_RULES, planRules);
         options.put(PaymentRunner.USER_BILLING_INTERVAL, String.valueOf(userBillingTime));
         options.put(INVOICE_WAIT_TIME, String.valueOf(invoiceWaitTime));
+        options.put(TIME_TO_WAIT_BEFORE_STOPPING, String.valueOf(timeToWaitBeforeStopping));
 
         return options;
     }
@@ -247,12 +260,15 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
     @Override
     public void startThreads() {
         if (!this.threadsAreRunning) {
+            ResourcesPolicy resourcesPolicy = new PostPaidResourcesPolicy(this.debtsChecker, 
+                    invoiceManager, this.rasClient, this.timeToWaitBeforeStopping);
+            
             this.paymentRunner = new PaymentRunner(this.name, invoiceWaitTime, userBillingTime, usersHolder, 
                     accountingServiceClient, invoiceManager);
             this.paymentThread = new Thread(paymentRunner);
             
             this.stopServiceRunner = new StopServiceRunner(this.name, invoiceWaitTime, usersHolder, 
-                    invoiceManager, rasClient, this.debtsChecker);
+                    rasClient, resourcesPolicy);
             this.stopServiceThread = new Thread(stopServiceRunner);
             
             this.paymentThread.start();
@@ -383,6 +399,7 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
             setOptionIfNotNull(options, PaymentRunner.USER_BILLING_INTERVAL);
             setOptionIfNotNull(options, FINANCE_PLAN_RULES_FILE_PATH);
             setOptionIfNotNull(options, INVOICE_WAIT_TIME);
+            setOptionIfNotNull(options, TIME_TO_WAIT_BEFORE_STOPPING);
 
             return options;
         }

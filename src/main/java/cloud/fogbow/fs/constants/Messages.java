@@ -41,6 +41,7 @@ public class Messages {
 		public static final String UNKNOWN_OPERATION_TYPE = "Unknown operation type: %s.";
 		public static final String UNKNOWN_RESOURCE_ITEM = "Unknown resource item: %s.";
 		public static final String UNKNOWN_RESOURCE_ITEM_TYPE = "Unknown resource item type: %s.";
+		public static final String UNKNOWN_USER_STATE = "Unknown user state: %s.";
 		public static final String UNMANAGED_USER = "The user %s is not managed by any finance plugin.";
 		public static final String USER_ALREADY_EXISTS = "User %s.%s already exists.";
 		public static final String USER_DOES_NOT_HAVE_ENOUGH_PERMISSION = "User does not have permission to perform operation.";

@@ -10,6 +10,8 @@ import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
@@ -44,10 +46,13 @@ public class FinanceUser implements Serializable {
      */
     private static final String STOPPED_RESOURCES_COLUMN_NAME = "stopped_resources";
     private static final String LAST_BILLING_TIME_COLUMN_NAME = "user_last_billing_time";
+    private static final String WAIT_PERIOD_BEFORE_STOPPING_RESOURCES_REFERENCE = 
+            "wait_period_before_stopping_resources_reference";
     private static final String PROPERTIES_COLUMN_NAME = "properties";
     private static final String INVOICES_COLUMN_NAME = "invoices";
     private static final String INACTIVE_SUBSCRIPTIONS_COLUMN_NAME = "inactive_subscriptions";
     private static final String LAST_SUBSCRIPTIONS_COLUMN_NAME = "last_subscriptions_debts";
+
     
     @EmbeddedId
     private UserId userId;
@@ -58,6 +63,12 @@ public class FinanceUser implements Serializable {
     @Column(name = LAST_BILLING_TIME_COLUMN_NAME)
     private Long userLastBillingTime;
     
+    @Column(name = WAIT_PERIOD_BEFORE_STOPPING_RESOURCES_REFERENCE)
+    private Long waitPeriodBeforeStoppingResourcesReference;
+    
+    @Enumerated(EnumType.STRING)
+    private UserState state;
+
     @Column(name = PROPERTIES_COLUMN_NAME)
     @ElementCollection(fetch = FetchType.EAGER)
 	private Map<String, String> properties;
@@ -97,6 +108,7 @@ public class FinanceUser implements Serializable {
 	    this.credits = credits;
 	    this.invoices = invoices;
         this.stoppedResources = false;
+        this.state = UserState.DEFAULT;
         this.activeSubscription = null;
         this.inactiveSubscriptions = new ArrayList<Subscription>();
         this.lastSubscriptionsDebts = new ArrayList<String>();
@@ -111,6 +123,7 @@ public class FinanceUser implements Serializable {
 	        SubscriptionFactory subscriptionFactory, Long userLastBillingTime, TimeUtils timeUtils) {
 	    this.userId = userId;
 	    this.stoppedResources = stoppedResources;
+	    this.state = UserState.DEFAULT;
 	    this.properties = properties;
 	    this.invoices = invoices;
 	    this.credits = credits;
@@ -130,6 +143,7 @@ public class FinanceUser implements Serializable {
 	    return this.userId.getUserId();
 	}
 
+	// TODO to be removed
 	public boolean stoppedResources() {
 		return stoppedResources;
 	}
@@ -145,6 +159,24 @@ public class FinanceUser implements Serializable {
 	public void setLastBillingTime(Long lastBillingTime) {
 	    this.userLastBillingTime = lastBillingTime;
 	}
+
+    public UserState getState() {
+        return state;
+    }
+
+    public void setState(UserState state) {
+        this.state = state;
+    }
+	
+    public long getWaitPeriodBeforeStoppingResourcesReference() {
+        return this.waitPeriodBeforeStoppingResourcesReference;
+    }
+    
+    public void setWaitPeriodBeforeStoppingResourcesReference(
+            Long waitPeriodBeforeStoppingResourcesReference) {
+        this.waitPeriodBeforeStoppingResourcesReference = 
+                waitPeriodBeforeStoppingResourcesReference;
+    }
 	
     public UserCredits getCredits() {
         return credits;
