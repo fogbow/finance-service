@@ -78,8 +78,6 @@ public class StopServiceRunner  extends StoppableRunner {
         } catch (FogbowException e) {
             throw new InternalServerErrorException(e.getMessage());
         }
-        user.setStoppedResources(false);
-        this.userHolder.saveUser(user);
     }
     
     public void purgeUserResources(FinanceUser user) throws InternalServerErrorException {

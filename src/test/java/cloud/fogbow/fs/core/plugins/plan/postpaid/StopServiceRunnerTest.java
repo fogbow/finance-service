@@ -128,9 +128,7 @@ public class StopServiceRunnerTest {
         
         stopServiceRunner.resumeResourcesForUser(user1);
 
-        Mockito.verify(this.user1).setStoppedResources(false);
         Mockito.verify(rasClient).resumeResourcesByUser(ID_USER_1, PROVIDER_USER_1);
-        Mockito.verify(objectHolder).saveUser(user1);
     }
     
     // test case: When calling the method resumeResourcesForUser and
@@ -155,9 +153,7 @@ public class StopServiceRunnerTest {
             
         }
         
-        Mockito.verify(this.user1, Mockito.never()).setStoppedResources(false);
         Mockito.verify(rasClient).resumeResourcesByUser(ID_USER_1, PROVIDER_USER_1);
-        Mockito.verify(objectHolder, Mockito.never()).saveUser(user1);
     }
     
     // test case: When calling the method doRun and a ModifiedListException

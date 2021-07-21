@@ -44,7 +44,6 @@ public class FinanceUser implements Serializable {
     /*
      * Database column names
      */
-    private static final String STOPPED_RESOURCES_COLUMN_NAME = "stopped_resources";
     private static final String LAST_BILLING_TIME_COLUMN_NAME = "user_last_billing_time";
     private static final String WAIT_PERIOD_BEFORE_STOPPING_RESOURCES_REFERENCE = 
             "wait_period_before_stopping_resources_reference";
@@ -56,10 +55,7 @@ public class FinanceUser implements Serializable {
     
     @EmbeddedId
     private UserId userId;
-    
-    @Column(name = STOPPED_RESOURCES_COLUMN_NAME)
-	private boolean stoppedResources;
-    
+
     @Column(name = LAST_BILLING_TIME_COLUMN_NAME)
     private Long userLastBillingTime;
     
@@ -107,7 +103,6 @@ public class FinanceUser implements Serializable {
 	    this.userId = new UserId(id, provider);
 	    this.credits = credits;
 	    this.invoices = invoices;
-        this.stoppedResources = false;
         this.state = UserState.DEFAULT;
         this.activeSubscription = null;
         this.inactiveSubscriptions = new ArrayList<Subscription>();
@@ -117,12 +112,11 @@ public class FinanceUser implements Serializable {
         this.userLastBillingTime = this.timeUtils.getCurrentTimeMillis();
 	}
 	
-	public FinanceUser(UserId userId, boolean stoppedResources, Map<String, String> properties, 
+	public FinanceUser(UserId userId, Map<String, String> properties, 
 	        List<Invoice> invoices, UserCredits credits, Subscription activeSubscription, 
 	        List<Subscription> inactiveSubscriptions, List<String> lastSubscriptionsDebts, 
 	        SubscriptionFactory subscriptionFactory, Long userLastBillingTime, TimeUtils timeUtils) {
 	    this.userId = userId;
-	    this.stoppedResources = stoppedResources;
 	    this.state = UserState.DEFAULT;
 	    this.properties = properties;
 	    this.invoices = invoices;
@@ -143,15 +137,6 @@ public class FinanceUser implements Serializable {
 	    return this.userId.getUserId();
 	}
 
-	// TODO to be removed
-	public boolean stoppedResources() {
-		return stoppedResources;
-	}
-
-	public void setStoppedResources(boolean stoppedResources) {
-		this.stoppedResources = stoppedResources;
-	}
-	
 	public Long getLastBillingTime() {
 	    return this.userLastBillingTime;
 	}

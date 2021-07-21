@@ -40,6 +40,7 @@ public class FinanceManager {
         objectHolder.registerFinancePlan(plan);
     }
 
+    // TODO change this operation to use a method like getUserPlugin(SystemUser)
     public boolean isAuthorized(SystemUser user, RasOperation operation) throws FogbowException {
         MultiConsumerSynchronizedList<PersistablePlanPlugin> plans = this.objectHolder.getPlans();
         boolean authorized = false;
@@ -254,6 +255,7 @@ public class FinanceManager {
         }
     }
 
+    // TODO move this operation to InMemoryFinanceObjectsHolder
     private PersistablePlanPlugin getUserPlan(SystemUser systemUser) throws InvalidParameterException, 
     InternalServerErrorException {
         PersistablePlanPlugin plan = null;

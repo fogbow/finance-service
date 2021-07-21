@@ -119,7 +119,7 @@ public class StopServiceRunnerTest {
     @Test
     public void testResumeResourcesForUser() 
             throws ModifiedListException, FogbowException {
-        setUpDatabaseResumeResources();
+        setUpDatabase();
         
         rasClient = Mockito.mock(RasClient.class);
         
@@ -128,9 +128,7 @@ public class StopServiceRunnerTest {
         
         stopServiceRunner.resumeResourcesForUser(user1);
 
-        Mockito.verify(this.user1).setStoppedResources(false);
         Mockito.verify(rasClient).resumeResourcesByUser(ID_USER_1, PROVIDER_USER_1);
-        Mockito.verify(objectHolder).saveUser(user1);
     }
     
     // test case: When calling the method resumeResourcesForUser and
@@ -140,7 +138,7 @@ public class StopServiceRunnerTest {
     @Test
     public void testResumeResourcesForUserRasClientThrowsException() 
             throws ModifiedListException, FogbowException {
-        setUpDatabaseResumeResources();
+        setUpDatabase();
         
         rasClient = Mockito.mock(RasClient.class);
         Mockito.doThrow(new FogbowException("message")).when(rasClient).
@@ -156,9 +154,7 @@ public class StopServiceRunnerTest {
             
         }
         
-        Mockito.verify(this.user1, Mockito.never()).setStoppedResources(false);
         Mockito.verify(rasClient).resumeResourcesByUser(ID_USER_1, PROVIDER_USER_1);
-        Mockito.verify(objectHolder, Mockito.never()).saveUser(user1);
     }
     
     // test case: When calling the method doRun and a ModifiedListException
@@ -252,12 +248,5 @@ public class StopServiceRunnerTest {
     private void setUpObjectHolder() {
         this.objectHolder = Mockito.mock(InMemoryUsersHolder.class);
         Mockito.when(objectHolder.getRegisteredUsersByPlan(PLAN_NAME)).thenReturn(users);
-    }
-    
-    private void setUpDatabaseResumeResources() throws InvalidParameterException, ModifiedListException, InternalServerErrorException {
-        setUpDatabase();
-        
-        Mockito.when(this.user1.stoppedResources()).thenReturn(true);
-        Mockito.when(this.user2.stoppedResources()).thenReturn(true);
     }
 }

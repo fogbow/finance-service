@@ -35,7 +35,6 @@ public class FinanceUserTest {
     private static final Long USER_LAST_BILLING_TIME = 1L;
     private FinanceUser financeUser;
     private UserId userId;
-    private boolean stoppedResources;
     private Map<String, String> properties;
     private List<Invoice> invoices;
     private UserCredits credits;
@@ -65,7 +64,7 @@ public class FinanceUserTest {
         invoices.add(invoice3);
         invoices.add(invoice4);
         
-        financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
+        financeUser = new FinanceUser(userId, properties, invoices, credits, 
                 activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
                 USER_LAST_BILLING_TIME, timeUtils);
         
@@ -85,7 +84,7 @@ public class FinanceUserTest {
         setUpInvoices();
         setUpFinanceUserData();
 
-        financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
+        financeUser = new FinanceUser(userId, properties, invoices, credits, 
                 activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
                 USER_LAST_BILLING_TIME, timeUtils);
 
@@ -105,7 +104,7 @@ public class FinanceUserTest {
         credits = Mockito.mock(UserCredits.class);
         Mockito.when(credits.getCreditsValue()).thenReturn(10.51);
         
-        financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
+        financeUser = new FinanceUser(userId, properties, invoices, credits, 
                 activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
                 USER_LAST_BILLING_TIME, timeUtils);
         
@@ -125,7 +124,7 @@ public class FinanceUserTest {
         credits = Mockito.mock(UserCredits.class);
         Mockito.when(credits.getCreditsValue()).thenReturn(0.0);
         
-        financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
+        financeUser = new FinanceUser(userId, properties, invoices, credits, 
                 activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
                 USER_LAST_BILLING_TIME, timeUtils);
 
@@ -145,7 +144,7 @@ public class FinanceUserTest {
         credits = Mockito.mock(UserCredits.class);
         Mockito.when(credits.getCreditsValue()).thenReturn(-1.113);
         
-        financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
+        financeUser = new FinanceUser(userId, properties, invoices, credits, 
                 activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
                 USER_LAST_BILLING_TIME, timeUtils);
 
@@ -161,7 +160,7 @@ public class FinanceUserTest {
             throws InvalidParameterException, InternalServerErrorException {
         setUpInvoices();
         
-        financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
+        financeUser = new FinanceUser(userId, properties, invoices, credits, 
                 activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
                 USER_LAST_BILLING_TIME, timeUtils);
         
@@ -185,7 +184,7 @@ public class FinanceUserTest {
         financeState.put(INVOICE_ID_1, InvoiceState.PAID.getValue());
         financeState.put(INVOICE_ID_2, InvoiceState.DEFAULTING.getValue());
 
-        financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
+        financeUser = new FinanceUser(userId, properties, invoices, credits, 
                 activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
                 USER_LAST_BILLING_TIME, timeUtils);
 
@@ -220,7 +219,7 @@ public class FinanceUserTest {
         this.lastSubscriptionsDebts.add(invoice1.getInvoiceId());
         this.lastSubscriptionsDebts.add(invoice2.getInvoiceId());
         
-        financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
+        financeUser = new FinanceUser(userId, properties, invoices, credits, 
                 activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
                 USER_LAST_BILLING_TIME, timeUtils);
         
@@ -245,7 +244,7 @@ public class FinanceUserTest {
         financeState.put(FinanceUser.CREDITS_TO_ADD, "10.5");
         
         
-        financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
+        financeUser = new FinanceUser(userId, properties, invoices, credits, 
                 activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
                 USER_LAST_BILLING_TIME, timeUtils);
         
@@ -266,7 +265,7 @@ public class FinanceUserTest {
         Map<String, String> financeState = new HashMap<String, String>();
         financeState.put(FinanceUser.PROPERTY_TYPE_KEY, FinanceUser.CREDITS_PROPERTY_TYPE);
         
-        financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
+        financeUser = new FinanceUser(userId, properties, invoices, credits, 
                 activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
                 USER_LAST_BILLING_TIME, timeUtils);
         
@@ -285,7 +284,7 @@ public class FinanceUserTest {
         financeState.put(FinanceUser.CREDITS_TO_ADD, "invalidproperty");
         
         
-        financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
+        financeUser = new FinanceUser(userId, properties, invoices, credits, 
                 activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
                 USER_LAST_BILLING_TIME, timeUtils);
         
@@ -303,7 +302,7 @@ public class FinanceUserTest {
         financeState.put(FinanceUser.CREDITS_TO_ADD, "10.5");
         
         
-        financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
+        financeUser = new FinanceUser(userId, properties, invoices, credits, 
                 activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
                 USER_LAST_BILLING_TIME, timeUtils);
         
@@ -322,7 +321,7 @@ public class FinanceUserTest {
         financeState.put(FinanceUser.CREDITS_TO_ADD, "10.5");
         
         
-        financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
+        financeUser = new FinanceUser(userId, properties, invoices, credits, 
                 activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
                 USER_LAST_BILLING_TIME, timeUtils);
         
@@ -335,7 +334,7 @@ public class FinanceUserTest {
     public void testSubscribeToPlan() throws InvalidParameterException {
         setUpFinanceUserData();
 
-        financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
+        financeUser = new FinanceUser(userId, properties, invoices, credits, 
                 null, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
                 USER_LAST_BILLING_TIME, timeUtils);
         
@@ -350,7 +349,7 @@ public class FinanceUserTest {
     public void testSubscribeToPlanAlreadySubscribed() throws InvalidParameterException {
         this.activeSubscription = Mockito.mock(Subscription.class);
         
-        financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
+        financeUser = new FinanceUser(userId, properties, invoices, credits, 
                 this.activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, 
                 subscriptionFactory, USER_LAST_BILLING_TIME, timeUtils);
 
@@ -363,7 +362,7 @@ public class FinanceUserTest {
     public void testUnsubscribe() throws InvalidParameterException {
         setUpFinanceUserData();
 
-        financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
+        financeUser = new FinanceUser(userId, properties, invoices, credits, 
                 activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
                 USER_LAST_BILLING_TIME, timeUtils);
         
@@ -380,7 +379,7 @@ public class FinanceUserTest {
     public void testUnsubscribeNotSubscribedToPlan() throws InvalidParameterException {
         setUpFinanceUserData();
         
-        financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
+        financeUser = new FinanceUser(userId, properties, invoices, credits, 
                 null, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
                 USER_LAST_BILLING_TIME, timeUtils);
         
@@ -393,7 +392,7 @@ public class FinanceUserTest {
     public void testIsSubscribedUserIsNotSubscribed() {
         setUpFinanceUserData();
         
-        financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
+        financeUser = new FinanceUser(userId, properties, invoices, credits, 
                 null, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
                 USER_LAST_BILLING_TIME, timeUtils);
         
@@ -406,7 +405,7 @@ public class FinanceUserTest {
     public void testIsSubscribedUserIsSubscribed() {
         setUpFinanceUserData();
         
-        financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
+        financeUser = new FinanceUser(userId, properties, invoices, credits, 
                 activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory,
                 USER_LAST_BILLING_TIME, timeUtils);
         
@@ -419,7 +418,7 @@ public class FinanceUserTest {
     public void testGetFinancePluginNameUserIsSubscribed() {
         setUpFinanceUserData();
         
-        financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
+        financeUser = new FinanceUser(userId, properties, invoices, credits, 
                 activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
                 USER_LAST_BILLING_TIME, timeUtils);
         
@@ -432,7 +431,7 @@ public class FinanceUserTest {
     public void testGetFinancePluginNameUserIsNotSubscribed() {
         setUpFinanceUserData();
         
-        financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
+        financeUser = new FinanceUser(userId, properties, invoices, credits, 
                 null, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
                 USER_LAST_BILLING_TIME, timeUtils);
         
@@ -450,7 +449,7 @@ public class FinanceUserTest {
         invoices.add(invoice2);
         invoices.add(invoice3);
         
-        financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
+        financeUser = new FinanceUser(userId, properties, invoices, credits, 
                 activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory, 
                 USER_LAST_BILLING_TIME, timeUtils);
         
@@ -469,7 +468,7 @@ public class FinanceUserTest {
         invoices.add(invoice2);
         invoices.add(invoice3);
         
-        financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
+        financeUser = new FinanceUser(userId, properties, invoices, credits, 
                 activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory,
                 USER_LAST_BILLING_TIME, timeUtils);
         
@@ -485,7 +484,7 @@ public class FinanceUserTest {
         
         invoices.add(invoice2);
         
-        financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
+        financeUser = new FinanceUser(userId, properties, invoices, credits, 
                 activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory,
                 USER_LAST_BILLING_TIME, timeUtils);
         
@@ -501,7 +500,7 @@ public class FinanceUserTest {
         setUpInvoices();
         setUpFinanceUserData();
         
-        financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
+        financeUser = new FinanceUser(userId, properties, invoices, credits, 
                 activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory,
                 USER_LAST_BILLING_TIME, timeUtils);
         
@@ -516,7 +515,7 @@ public class FinanceUserTest {
         setUpInvoices();
         setUpFinanceUserData();
         
-        financeUser = new FinanceUser(userId, stoppedResources, properties, invoices, credits, 
+        financeUser = new FinanceUser(userId, properties, invoices, credits, 
                 activeSubscription, inactiveSubscriptions, lastSubscriptionsDebts, subscriptionFactory,
                 USER_LAST_BILLING_TIME, timeUtils);
         
@@ -554,7 +553,6 @@ public class FinanceUserTest {
 
     private void setUpFinanceUserData() {
         userId = new UserId(USER_ID_1, USER_PROVIDER_1);
-        stoppedResources = false;
         properties = new HashMap<String, String>();
         invoices = new ArrayList<Invoice>();
         lastSubscriptionsDebts = Mockito.mock(ArrayList.class);
