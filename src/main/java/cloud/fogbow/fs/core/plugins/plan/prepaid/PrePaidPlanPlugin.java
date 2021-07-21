@@ -47,7 +47,11 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
      * to indicate the path of the file that contains the plan configuration.
      */
     public static final String FINANCE_PLAN_RULES_FILE_PATH = "finance_plan_file_path";
-    // TODO documentation
+    /**
+     * The key to use in the map passed as argument to setOptions and the constructors
+     * to indicate the time to wait before stopping user resources, after the plan evaluating
+     * the user financial state as not good.
+     */
     public static final String TIME_TO_WAIT_BEFORE_STOPPING = "time_to_wait_before_stopping";
     /**
      * The key to use in the map passed as argument to setOptions and the constructors

@@ -3,7 +3,6 @@ package cloud.fogbow.fs.core.models;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.constants.Messages;
 
-// TODO test
 public enum UserState {
     DEFAULT("DEFAULT"),
     WAITING_FOR_STOP("WAITING_FOR_STOP"),

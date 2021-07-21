@@ -14,7 +14,6 @@ import cloud.fogbow.fs.core.util.client.RasClient;
 import cloud.fogbow.fs.core.util.list.ModifiedListException;
 import cloud.fogbow.fs.core.util.list.MultiConsumerSynchronizedList;
 
-// TODO update documentation
 public class StopServiceRunnerTest {
     private static final String ID_USER_1 = "userId1";
     private static final String ID_USER_2 = "userId2";
@@ -31,7 +30,8 @@ public class StopServiceRunnerTest {
     private MultiConsumerSynchronizedList<FinanceUser> users;
     private ResourcesPolicy resourcesPolicy;
     
-    // TODO documentation
+    // test case: When calling the method doRun, for each user in the users list, it 
+    // must call the method updateUserState of the ResourcesPolicy.
     @Test
     public void testCheckingUserState() 
             throws InvalidParameterException, InternalServerErrorException, ModifiedListException {
@@ -51,7 +51,9 @@ public class StopServiceRunnerTest {
         Mockito.verify(this.resourcesPolicy).updateUserState(user2);
     }
 
-    // TODO documentation
+    // test case: When calling the method doRun, for each user in the users list, it 
+    // must call the method updateUserState of the ResourcesPolicy. If the call to updateUserState
+    // throws an InvalidParameterException, it must continue the iteration over the users list.
     @Test
     public void testCheckingUserStateResourcesPolicyThrowsException() 
             throws InvalidParameterException, InternalServerErrorException, ModifiedListException {

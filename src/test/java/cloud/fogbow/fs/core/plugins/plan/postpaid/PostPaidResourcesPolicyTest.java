@@ -46,7 +46,9 @@ public class PostPaidResourcesPolicyTest {
         Mockito.when(user.getWaitPeriodBeforeStoppingResourcesReference()).thenReturn(WAITING_PERIOD_REFERENCE);
     }
     
-    // TODO documentation
+    // test case: When calling the method updateUserState, if the state of the user passed as argument
+    // is DEFAULT and the user has not paid past debts, then the method must change the user state 
+    // to WAITING_FOR_STOP and set the period to wait reference.
     @Test
     public void testUpdateUserStateUserHasNotPaidPastDebts() 
             throws InternalServerErrorException, InvalidParameterException {
@@ -62,7 +64,9 @@ public class PostPaidResourcesPolicyTest {
         Mockito.verify(user).setState(UserState.WAITING_FOR_STOP);
     }
     
-    // TODO documentation
+    // test case: When calling the method updateUserState, if the state of the user passed as argument
+    // is DEFAULT and the user has not paid current debts, then the method must change the user state to 
+    // WAITING_FOR_STOP and set the period to wait reference.
     @Test
     public void testUpdateUserStateUserHasNotPaidCurrentDebts() 
             throws InternalServerErrorException, InvalidParameterException {
@@ -78,7 +82,8 @@ public class PostPaidResourcesPolicyTest {
         Mockito.verify(user).setState(UserState.WAITING_FOR_STOP);
     }
     
-    // TODO documentation
+    // test case: When calling the method updateUserState, if the state of the user passed as argument
+    // is DEFAULT and the user has paid debts, then the method must not change the user state.
     @Test
     public void testUpdateUserStateUserHasPaidDebts() 
             throws InternalServerErrorException, InvalidParameterException {
@@ -94,7 +99,8 @@ public class PostPaidResourcesPolicyTest {
         Mockito.verify(user, Mockito.never()).setState(Mockito.any(UserState.class));
     }
     
-    // TODO documentation
+    // test case: When calling the method updateUserState, if the state of the user passed as argument
+    // is WAITING_FOR_STOP and the user has paid debts, then the method must change the user state to DEFAULT.
     @Test
     public void testUpdateUserStateWaitingForStopAndUserHasPaid() 
             throws InternalServerErrorException, InvalidParameterException {
@@ -110,7 +116,9 @@ public class PostPaidResourcesPolicyTest {
         Mockito.verify(user).setState(UserState.DEFAULT);
     }
 
-    // TODO documentation
+    // test case: When calling the method updateUserState, if the state of the user passed as argument
+    // is WAITING_FOR_STOP, the user has not paid debts and the wait period has not passed, then the method 
+    // must not change the user state.
     @Test
     public void testUpdateUserStateWaitingForStopAndWaitPeriodHasNotPassed() 
             throws InternalServerErrorException, InvalidParameterException {
@@ -126,7 +134,9 @@ public class PostPaidResourcesPolicyTest {
         Mockito.verify(user, Mockito.never()).setState(Mockito.any(UserState.class));
     }
 
-    // TODO documentation
+    // test case: When calling the method updateUserState, if the state of the user passed as argument
+    // is WAITING_FOR_STOP, the user has not paid debts and the wait period has passed, then the method 
+    // must change the user state to STOPPING.
     @Test
     public void testUpdateUserStateWaitingForStopAndWaitPeriodHasPassed() 
             throws InternalServerErrorException, InvalidParameterException {
@@ -142,7 +152,9 @@ public class PostPaidResourcesPolicyTest {
         Mockito.verify(user).setState(UserState.STOPPING);
     }
     
-    // TODO documentation
+    // test case: When calling the method updateUserState, if the state of the user passed as argument
+    // is STOPPING and the user has not paid debts, then the method must call the RasClient to hibernate
+    // the user resources. If the operation is successful, then the method must change the user state to STOPPED. 
     @Test
     public void testUpdateUserStateStoppingUserResources() throws FogbowException {
         setUpUser(UserState.STOPPING);
@@ -156,7 +168,10 @@ public class PostPaidResourcesPolicyTest {
         Mockito.verify(rasClient).hibernateResourcesByUser(USER_ID, PROVIDER);
     }
     
-    // TODO documentation
+    // test case: When calling the method updateUserState, if the state of the user passed as argument
+    // is STOPPING and the user has not paid debts, then the method must call the RasClient to hibernate
+    // the user resources. If the hibernate operation is not available, then the method must stop the user
+    // resources. If the stop operation is successful, then the method must change the user state to STOPPED.
     @Test
     public void testUpdateUserStateStoppingUserResourcesHibernateNotAvailable() 
             throws FogbowException {
@@ -174,7 +189,9 @@ public class PostPaidResourcesPolicyTest {
         Mockito.verify(rasClient).stopResourcesByUser(USER_ID, PROVIDER);
     }
     
-    // TODO documentation
+    // test case: When calling the method updateUserState, if the state of the user passed as argument
+    // is STOPPING and the user has not paid debts, then the method must call the RasClient to hibernate
+    // the user resources. If the hibernate operation fails, then the method must not change the user state.
     @Test
     public void testUpdateUserStateStoppingUserResourcesHibernateFails() throws FogbowException {
         setUpUser(UserState.STOPPING);
@@ -190,7 +207,10 @@ public class PostPaidResourcesPolicyTest {
         Mockito.verify(rasClient, Mockito.never()).stopResourcesByUser(USER_ID, PROVIDER);
     }
     
-    // TODO documentation
+    // test case: When calling the method updateUserState, if the state of the user passed as argument
+    // is STOPPING and the user has not paid debts, then the method must call the RasClient to hibernate
+    // the user resources. If the hibernate operation is not available, then the method must stop the user
+    // resources. If the stop operation is not successful, then the method must not change the user state.
     @Test
     public void testUpdateUserStateStoppingUserResourcesStopFails() throws FogbowException {
         setUpUser(UserState.STOPPING);
@@ -207,7 +227,8 @@ public class PostPaidResourcesPolicyTest {
         Mockito.verify(rasClient).stopResourcesByUser(USER_ID, PROVIDER);
     }
     
-    // TODO documentation
+    // test case: When calling the method updateUserState, if the state of the user passed as argument
+    // is STOPPING and the user has paid debts, then the method must change the user state to DEFAULT. 
     @Test
     public void testUpdateUserStateStoppingUserResourcesUserHasPaid() throws FogbowException {
         setUpUser(UserState.STOPPING);
@@ -220,7 +241,8 @@ public class PostPaidResourcesPolicyTest {
         Mockito.verify(user).setState(UserState.DEFAULT);
     }
     
-    // TODO documentation
+    // test case: When calling the method updateUserState, if the state of the user passed as argument
+    // is STOPPED and the user has not paid debts, then the method must not change the user state.
     @Test
     public void testUpdateUserStateStoppedAndUserHasNotPaid() throws FogbowException {
         setUpUser(UserState.STOPPED);
@@ -233,7 +255,8 @@ public class PostPaidResourcesPolicyTest {
         Mockito.verify(user, Mockito.never()).setState(Mockito.any(UserState.class));
     }
     
-    // TODO documentation
+    // test case: When calling the method updateUserState, if the state of the user passed as argument
+    // is STOPPED and the user has paid debts, then the method must change the user state to RESUMING.
     @Test
     public void testUpdateUserStateStoppedAndUserHasPaid() throws FogbowException {
         setUpUser(UserState.STOPPED);
@@ -246,7 +269,9 @@ public class PostPaidResourcesPolicyTest {
         Mockito.verify(user).setState(UserState.RESUMING);
     }
     
-    // TODO documentation
+    // test case: When calling the method updateUserState, if the state of the user passed as argument
+    // is RESUMING and the user has paid debts, then the method must call the RasClient to resume the user
+    // resources. If the operation is successful, then the method must change the user state to DEFAULT.
     @Test
     public void testUpdateUserStateResumingResources() throws FogbowException {
         setUpUser(UserState.RESUMING);
@@ -260,7 +285,9 @@ public class PostPaidResourcesPolicyTest {
         Mockito.verify(user).setState(UserState.DEFAULT);
     }
     
-    // TODO documentation
+    // test case: When calling the method updateUserState, if the state of the user passed as argument
+    // is RESUMING and the user has paid debts, then the method must call the RasClient to resume the user
+    // resources. If the operation is not successful, then the method must not change the user state.
     @Test
     public void testUpdateUserStateResumingResourcesFails() throws FogbowException {
         setUpUser(UserState.RESUMING);
@@ -275,7 +302,8 @@ public class PostPaidResourcesPolicyTest {
         Mockito.verify(user, Mockito.never()).setState(Mockito.any(UserState.class));
     }
     
-    // TODO documentation
+    // test case: When calling the method updateUserState, if the state of the user passed as argument
+    // is RESUMING and the user has not paid debts, then the method must change the user state to STOPPED.
     @Test
     public void testUpdateUserStateResumingResourcesUserHasNotPaid() throws FogbowException {
         setUpUser(UserState.RESUMING);
@@ -289,7 +317,8 @@ public class PostPaidResourcesPolicyTest {
         Mockito.verify(user).setState(UserState.STOPPED);
     }
     
-    // TODO documentation
+    // test case: When calling the method updateUserState, if the state of the user passed as argument
+    // is null, then the method must throw an InternalServerErrorException.
     @Test(expected = InternalServerErrorException.class)
     public void testUpdateUserStateUserHasInvalidState()
             throws InternalServerErrorException, InvalidParameterException {
