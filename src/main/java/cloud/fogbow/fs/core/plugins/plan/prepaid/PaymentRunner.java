@@ -6,10 +6,10 @@ import org.apache.log4j.Logger;
 
 import cloud.fogbow.common.exceptions.FogbowException;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
+import cloud.fogbow.common.util.StoppableRunner;
 import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.InMemoryUsersHolder;
 import cloud.fogbow.fs.core.models.FinanceUser;
-import cloud.fogbow.fs.core.util.StoppableRunner;
 import cloud.fogbow.fs.core.util.TimeUtils;
 import cloud.fogbow.fs.core.util.accounting.Record;
 import cloud.fogbow.fs.core.util.client.AccountingServiceClient;
@@ -26,9 +26,9 @@ public class PaymentRunner extends StoppableRunner {
 	
     public PaymentRunner(String planName, long creditsDeductionWaitTime, InMemoryUsersHolder usersHolder,
             AccountingServiceClient accountingServiceClient, CreditsManager paymentManager) {
+        super(creditsDeductionWaitTime);
         this.planName = planName;
         this.timeUtils = new TimeUtils();
-        this.sleepTime = creditsDeductionWaitTime;
         this.accountingServiceClient = accountingServiceClient;
         this.paymentManager = paymentManager;
         this.usersHolder = usersHolder;
@@ -37,9 +37,9 @@ public class PaymentRunner extends StoppableRunner {
     public PaymentRunner(String planName, long creditsDeductionWaitTime, InMemoryUsersHolder usersHolder,
             AccountingServiceClient accountingServiceClient, CreditsManager paymentManager, 
             TimeUtils timeUtils) {
+        super(creditsDeductionWaitTime);
         this.planName = planName;
         this.timeUtils = timeUtils;
-        this.sleepTime = creditsDeductionWaitTime;
         this.accountingServiceClient = accountingServiceClient;
         this.paymentManager = paymentManager;
         this.usersHolder = usersHolder;
@@ -65,8 +65,6 @@ public class PaymentRunner extends StoppableRunner {
         } finally {
 	        registeredUsers.stopIterating(consumerId);
 	    }
-        
-		checkIfMustStop();
 	}
 
     private void tryToRunPaymentForUser(FinanceUser user) {

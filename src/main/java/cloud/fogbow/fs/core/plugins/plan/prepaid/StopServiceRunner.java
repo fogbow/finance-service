@@ -5,11 +5,11 @@ import org.apache.log4j.Logger;
 import cloud.fogbow.common.exceptions.FogbowException;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
+import cloud.fogbow.common.util.StoppableRunner;
 import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.InMemoryUsersHolder;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.plugins.ResourcesPolicy;
-import cloud.fogbow.fs.core.util.StoppableRunner;
 import cloud.fogbow.fs.core.util.client.RasClient;
 import cloud.fogbow.fs.core.util.list.ModifiedListException;
 import cloud.fogbow.fs.core.util.list.MultiConsumerSynchronizedList;
@@ -25,8 +25,8 @@ public class StopServiceRunner extends StoppableRunner {
     public StopServiceRunner(String planName, long stopServiceWaitTime, 
             InMemoryUsersHolder usersHolder, RasClient rasClient, 
             ResourcesPolicy resourcesPolicy) {
+        super(stopServiceWaitTime);
         this.planName = planName;
-        this.sleepTime = stopServiceWaitTime;
         this.usersHolder = usersHolder;
         this.rasClient = rasClient;
         this.resourcesPolicy = resourcesPolicy;
@@ -56,8 +56,6 @@ public class StopServiceRunner extends StoppableRunner {
         } finally {
 	        registeredUsers.stopIterating(consumerId);
 	    }
-		
-		checkIfMustStop();
 	}
 
     private void tryToCheckUserState(FinanceUser user) throws InternalServerErrorException {

@@ -7,10 +7,10 @@ import org.apache.log4j.Logger;
 import cloud.fogbow.common.exceptions.FogbowException;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
+import cloud.fogbow.common.util.StoppableRunner;
 import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.InMemoryUsersHolder;
 import cloud.fogbow.fs.core.models.FinanceUser;
-import cloud.fogbow.fs.core.util.StoppableRunner;
 import cloud.fogbow.fs.core.util.TimeUtils;
 import cloud.fogbow.fs.core.util.accounting.Record;
 import cloud.fogbow.fs.core.util.client.AccountingServiceClient;
@@ -33,9 +33,9 @@ public class PaymentRunner extends StoppableRunner {
     
     public PaymentRunner(String name, long invoiceWaitTime, long billingInterval, InMemoryUsersHolder userHolder,
             AccountingServiceClient accountingServiceClient, InvoiceManager invoiceManager) {
+        super(invoiceWaitTime);
         this.planName = name;
         this.timeUtils = new TimeUtils();
-        this.sleepTime = invoiceWaitTime;
         this.billingInterval = billingInterval;
         this.accountingServiceClient = accountingServiceClient;
         this.invoiceGenerator = invoiceManager;
@@ -45,8 +45,8 @@ public class PaymentRunner extends StoppableRunner {
     public PaymentRunner(String name, long invoiceWaitTime, long billingInterval, InMemoryUsersHolder userHolder,
             AccountingServiceClient accountingServiceClient, InvoiceManager invoiceManager, 
             TimeUtils timeUtils) {
+        super(invoiceWaitTime);
         this.planName = name;
-        this.sleepTime = invoiceWaitTime;
         this.billingInterval = billingInterval;
         this.userHolder = userHolder;
         this.accountingServiceClient = accountingServiceClient;
@@ -74,8 +74,6 @@ public class PaymentRunner extends StoppableRunner {
         } finally {
             registeredUsers.stopIterating(consumerId);
         }
-
-        checkIfMustStop();
     }
     
     public void runLastPaymentForUser(String userId, String provider) throws InternalServerErrorException, InvalidParameterException {
