@@ -15,6 +15,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import cloud.fogbow.accs.api.http.response.Record;
+import cloud.fogbow.accs.api.http.response.AccsApiUtils;
 import cloud.fogbow.as.core.util.TokenProtector;
 import cloud.fogbow.common.constants.FogbowConstants;
 import cloud.fogbow.common.constants.HttpMethod;
@@ -32,8 +34,6 @@ import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
 import cloud.fogbow.fs.core.FsPublicKeysHolder;
 import cloud.fogbow.fs.core.PropertiesHolder;
 import cloud.fogbow.fs.core.util.TimeUtils;
-import cloud.fogbow.fs.core.util.accounting.Record;
-import cloud.fogbow.fs.core.util.accounting.RecordUtils;
 
 public class AccountingServiceClient {
     /**
@@ -62,7 +62,7 @@ public class AccountingServiceClient {
 	private String accountingServicePort;
 	private String localProvider;
 	private String publicKeyString;
-	private RecordUtils recordUtil;
+	private AccsApiUtils recordUtil;
 	private TimeUtils timeUtils;
 	private String token;
 	
@@ -73,12 +73,12 @@ public class AccountingServiceClient {
 				PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.MANAGER_PASSWORD_KEY),
 				PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.ACCS_URL_KEY),
 				PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.ACCS_PORT_KEY),
-				new RecordUtils(), new TimeUtils());
+				new AccsApiUtils(), new TimeUtils());
 	}
 	
 	public AccountingServiceClient(AuthenticationServiceClient authenticationServiceClient, 
 			String localProvider, String managerUserName, String managerPassword, 
-			String accountingServiceAddress, String accountingServicePort, RecordUtils recordUtil, 
+			String accountingServiceAddress, String accountingServicePort, AccsApiUtils recordUtil, 
 			TimeUtils timeUtils) 
 					throws ConfigurationErrorException {
 		this.authenticationServiceClient = authenticationServiceClient;

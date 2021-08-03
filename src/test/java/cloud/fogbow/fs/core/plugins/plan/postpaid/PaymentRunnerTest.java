@@ -7,13 +7,13 @@ import java.util.List;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import cloud.fogbow.accs.api.http.response.Record;
 import cloud.fogbow.common.exceptions.FogbowException;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.core.InMemoryUsersHolder;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.util.TimeUtils;
-import cloud.fogbow.fs.core.util.accounting.Record;
 import cloud.fogbow.fs.core.util.client.AccountingServiceClient;
 import cloud.fogbow.fs.core.util.list.ModifiedListException;
 import cloud.fogbow.fs.core.util.list.MultiConsumerSynchronizedList;

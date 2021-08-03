@@ -15,8 +15,6 @@ public class Messages {
 		public static final String INVALID_FINANCE_STATE_PROPERTY = "Invalid value '%s' for finance state property '%s'.";
 		public static final String INVALID_NUMBER_OF_COMPUTE_ITEM_FIELDS = "Invalid number of compute item fields.";
 		public static final String INVALID_NUMBER_OF_VOLUME_ITEM_FIELDS = "Invalid number of volume item fields.";
-		public static final String INVALID_RECORD_PROPERTY = "Invalid record property: %s.";
-		public static final String INVALID_RECORD_TYPE = "Invalid record type: %s.";
 		public static final String INVALID_TIME_USED = "Invalid time used for item %s: %f.";
 		public static final String INVALID_VALUE_TO_PAY = "Invalid value to pay for item %s: %f.";
 		public static final String INVALID_VOLUME_ITEM_FIELD = "Invalid volume item field.";

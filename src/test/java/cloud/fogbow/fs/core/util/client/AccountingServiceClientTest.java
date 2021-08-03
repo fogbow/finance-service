@@ -20,6 +20,8 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import cloud.fogbow.accs.api.http.response.Record;
+import cloud.fogbow.accs.api.http.response.AccsApiUtils;
 import cloud.fogbow.as.core.util.TokenProtector;
 import cloud.fogbow.common.constants.FogbowConstants;
 import cloud.fogbow.common.constants.HttpMethod;
@@ -35,8 +37,6 @@ import cloud.fogbow.common.util.connectivity.HttpResponse;
 import cloud.fogbow.fs.api.http.CommonKeys;
 import cloud.fogbow.fs.core.FsPublicKeysHolder;
 import cloud.fogbow.fs.core.util.TimeUtils;
-import cloud.fogbow.fs.core.util.accounting.Record;
-import cloud.fogbow.fs.core.util.accounting.RecordUtils;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ HttpRequestClient.class, ServiceAsymmetricKeysHolder.class, 
@@ -70,7 +70,7 @@ public class AccountingServiceClientTest {
 	private Map<String, String> headers2;
 	private Map<String, String> body;
 	private String accsUrl;
-	private RecordUtils recordUtils;
+	private AccsApiUtils recordUtils;
 	private Record recordCompute1;
 	private Record recordCompute2;
 	private Record recordVolume;
@@ -217,7 +217,7 @@ public class AccountingServiceClientTest {
 	            cloud.fogbow.accs.constants.SystemConstants.COMPLETE_DATE_FORMAT, endTime)).
 	            thenReturn(requestEndDate);
 	    
-		this.recordUtils = Mockito.mock(RecordUtils.class);
+		this.recordUtils = Mockito.mock(AccsApiUtils.class);
 		
 		Mockito.when(this.recordUtils.getRecordsFromString(responseContent)).thenReturn(response);
 
