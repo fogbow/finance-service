@@ -1,6 +1,7 @@
 package cloud.fogbow.fs.core.plugins.plan.postpaid;
 
 import java.util.List;
+import java.util.Map;
 
 import cloud.fogbow.accs.api.http.response.Record;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
@@ -12,6 +13,7 @@ import cloud.fogbow.fs.core.models.Invoice;
 import cloud.fogbow.fs.core.models.InvoiceState;
 import cloud.fogbow.fs.core.models.ResourceItem;
 import cloud.fogbow.fs.core.util.accounting.RecordUtils;
+import cloud.fogbow.ras.core.models.orders.OrderState;
 
 public class InvoiceManager {
     private InMemoryUsersHolder userHolder;
@@ -110,10 +112,14 @@ public class InvoiceManager {
             Long paymentStartTime, Long paymentEndTime) throws InternalServerErrorException {
         try {
             ResourceItem resourceItem = resourceItemFactory.getItemFromRecord(record);
-            Double valueToPayPerTimeUnit = plan.getItemFinancialValue(resourceItem);
-            Double timeUsed = resourceItemFactory.getTimeFromRecord(record, paymentStartTime, paymentEndTime);
+            Map<OrderState, Double> timeSpentOnStates = resourceItemFactory.getTimeFromRecordPerState(record, paymentStartTime, paymentEndTime);
             
-            invoiceBuilder.addItem(resourceItem, valueToPayPerTimeUnit, timeUsed);
+            for (OrderState state : timeSpentOnStates.keySet()) {
+            	Double valueToPayPerTimeUnit = plan.getItemFinancialValue(resourceItem, state);
+            	Double timeUsed = timeSpentOnStates.get(state);
+            	invoiceBuilder.addItem(resourceItem, state, valueToPayPerTimeUnit, timeUsed);
+            }
+            
         } catch (InvalidParameterException e) {
             throw new InternalServerErrorException(e.getMessage());
         }

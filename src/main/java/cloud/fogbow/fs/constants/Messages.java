@@ -37,7 +37,7 @@ public class Messages {
 		public static final String UNKNOWN_FINANCE_PROPERTY = "Unknown finance property: %s.";
 		public static final String UNKNOWN_INVOICE_STATE = "Unknown invoice state: %s.";
 		public static final String UNKNOWN_OPERATION_TYPE = "Unknown operation type: %s.";
-		public static final String UNKNOWN_RESOURCE_ITEM = "Unknown resource item: %s.";
+		public static final String UNKNOWN_RESOURCE_ITEM = "Unknown resource item: %s - %s.";
 		public static final String UNKNOWN_RESOURCE_ITEM_TYPE = "Unknown resource item type: %s.";
 		public static final String UNKNOWN_USER_STATE = "Unknown user state: %s.";
 		public static final String UNMANAGED_USER = "The user %s is not managed by any finance plugin.";

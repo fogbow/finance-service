@@ -4,6 +4,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import org.junit.Assert;
@@ -21,6 +22,7 @@ import cloud.fogbow.fs.core.models.ResourceItem;
 import cloud.fogbow.fs.core.models.UserCredits;
 import cloud.fogbow.fs.core.models.VolumeItem;
 import cloud.fogbow.fs.core.util.accounting.RecordUtils;
+import cloud.fogbow.ras.core.models.orders.OrderState;
 
 public class CreditsManagerTest {
     private static final String USER_ID1 = "userId1";
@@ -33,6 +35,10 @@ public class CreditsManagerTest {
     private static final Long PAYMENT_END_TIME = 100L;
     private static final Double VALUE_ITEM_1 = 10.0;
     private static final Double VALUE_ITEM_2 = 5.0;
+	private static final Double ITEM_1_TIME_ON_STATE_1 = 10.0;
+	private static final Double ITEM_1_TIME_ON_STATE_2 = 11.0;
+	private static final Double ITEM_2_TIME_ON_STATE_1 = 12.0;
+	private static final Double ITEM_2_TIME_ON_STATE_2 = 13.0;
     private InMemoryUsersHolder objectHolder;
     private RecordUtils recordUtils;
     private UserCredits userCredits1;
@@ -47,6 +53,10 @@ public class CreditsManagerTest {
     private Record record2;
     private ResourceItem resourceItem1;
     private ResourceItem resourceItem2;
+	private OrderState state1 = OrderState.FULFILLED;
+	private OrderState state2 = OrderState.CLOSED;
+	private HashMap<OrderState, Double> timePerStateItem1;
+	private HashMap<OrderState, Double> timePerStateItem2;
     
     // test case: When calling the hasPaid method, if the given 
     // user has a credits value equal to zero or positive, it 
@@ -89,8 +99,9 @@ public class CreditsManagerTest {
         
         creditsManager.startPaymentProcess(USER_ID1, PROVIDER1, PAYMENT_START_TIME, PAYMENT_END_TIME, records);
         
-        Mockito.verify(userCredits1).deduct(resourceItem1, VALUE_ITEM_1, new Double(PAYMENT_END_TIME - PAYMENT_START_TIME));
-        Mockito.verify(userCredits1).deduct(resourceItem2, VALUE_ITEM_2, new Double(PAYMENT_END_TIME - PAYMENT_START_TIME));
+        Mockito.verify(userCredits1).deduct(resourceItem1, VALUE_ITEM_1, ITEM_1_TIME_ON_STATE_2);
+        Mockito.verify(userCredits1).deduct(resourceItem2, VALUE_ITEM_2, ITEM_2_TIME_ON_STATE_1);
+        Mockito.verify(userCredits1).deduct(resourceItem2, VALUE_ITEM_2, ITEM_2_TIME_ON_STATE_2);
         Mockito.verify(financeUser1).setLastBillingTime(PAYMENT_END_TIME);
         Mockito.verify(objectHolder).saveUser(financeUser1);
     }
@@ -160,8 +171,8 @@ public class CreditsManagerTest {
         setUpRecords();
 
         this.policy = Mockito.mock(FinancePolicy.class);
-        Mockito.when(policy.getItemFinancialValue(resourceItem1)).thenThrow(new InvalidParameterException());
-        Mockito.when(policy.getItemFinancialValue(resourceItem2)).thenThrow(new InvalidParameterException());
+        Mockito.when(policy.getItemFinancialValue(resourceItem1, state1)).thenThrow(new InvalidParameterException());
+        Mockito.when(policy.getItemFinancialValue(resourceItem2, state2)).thenThrow(new InvalidParameterException());
         
         setUpDatabase();
         
@@ -190,16 +201,25 @@ public class CreditsManagerTest {
         this.recordUtils = Mockito.mock(RecordUtils.class);
         Mockito.when(recordUtils.getItemFromRecord(record1)).thenReturn(resourceItem1);
         Mockito.when(recordUtils.getItemFromRecord(record2)).thenReturn(resourceItem2);
-        Mockito.when(recordUtils.getTimeFromRecord(record1, PAYMENT_START_TIME, PAYMENT_END_TIME)).
-        thenReturn(new Double(PAYMENT_END_TIME - PAYMENT_START_TIME));
-        Mockito.when(recordUtils.getTimeFromRecord(record2, PAYMENT_START_TIME, PAYMENT_END_TIME)).
-        thenReturn(new Double(PAYMENT_END_TIME - PAYMENT_START_TIME));
+
+        this.timePerStateItem1 = new HashMap<OrderState, Double>();
+        timePerStateItem1.put(state1, ITEM_1_TIME_ON_STATE_1);
+        timePerStateItem1.put(state2, ITEM_1_TIME_ON_STATE_2);
+        
+        this.timePerStateItem2 = new HashMap<OrderState, Double>();
+        timePerStateItem2.put(state1, ITEM_2_TIME_ON_STATE_1);
+        timePerStateItem2.put(state2, ITEM_2_TIME_ON_STATE_2);
+        
+        Mockito.when(this.recordUtils.getTimeFromRecordPerState(record1, PAYMENT_START_TIME, PAYMENT_END_TIME)).thenReturn(timePerStateItem1);
+        Mockito.when(this.recordUtils.getTimeFromRecordPerState(record2, PAYMENT_START_TIME, PAYMENT_END_TIME)).thenReturn(timePerStateItem2);
     }
     
     private void setUpPlan() throws InvalidParameterException {
         this.policy = Mockito.mock(FinancePolicy.class);
-        Mockito.when(policy.getItemFinancialValue(resourceItem1)).thenReturn(VALUE_ITEM_1);
-        Mockito.when(policy.getItemFinancialValue(resourceItem2)).thenReturn(VALUE_ITEM_2);
+        Mockito.when(this.policy.getItemFinancialValue(resourceItem1, state1)).thenReturn(VALUE_ITEM_1);
+        Mockito.when(this.policy.getItemFinancialValue(resourceItem1, state2)).thenReturn(VALUE_ITEM_1);
+        Mockito.when(this.policy.getItemFinancialValue(resourceItem2, state1)).thenReturn(VALUE_ITEM_2);
+        Mockito.when(this.policy.getItemFinancialValue(resourceItem2, state2)).thenReturn(VALUE_ITEM_2);
     }
     
     private void setUpDatabase() throws InvalidParameterException, InternalServerErrorException {
@@ -216,6 +236,5 @@ public class CreditsManagerTest {
         Mockito.when(objectHolder.getUserById(USER_ID1, PROVIDER1)).thenReturn(financeUser1);
         Mockito.when(objectHolder.getUserById(USER_ID2, PROVIDER2)).thenReturn(financeUser2);
         Mockito.when(objectHolder.getUserById(USER_ID3, PROVIDER3)).thenReturn(financeUser3);
-//        Mockito.when(objectHolder.getOrDefaultFinancePlan(plan)).thenReturn(financePlan);
     }
 }

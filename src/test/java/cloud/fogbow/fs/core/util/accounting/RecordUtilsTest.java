@@ -3,16 +3,22 @@ package cloud.fogbow.fs.core.util.accounting;
 import static org.junit.Assert.assertEquals;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.junit.Test;
 import org.mockito.Mockito;
 
 import cloud.fogbow.accs.api.http.response.Record;
+import cloud.fogbow.accs.core.models.OrderStateHistory;
 import cloud.fogbow.accs.core.models.specs.ComputeSpec;
 import cloud.fogbow.accs.core.models.specs.VolumeSpec;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.core.models.ComputeItem;
 import cloud.fogbow.fs.core.models.VolumeItem;
+import cloud.fogbow.ras.core.models.orders.OrderState;
 
 public class RecordUtilsTest {
 
@@ -27,6 +33,8 @@ public class RecordUtilsTest {
     private Timestamp startTimeTimestamp;
     private Timestamp endTimeTimestamp;
     private RecordUtils recordUtils;
+	private OrderStateHistory stateHistory;
+	private Map<Timestamp, cloud.fogbow.accs.core.models.orders.OrderState> history;
     
     // test case 1: record start = payment start and record end = payment end
     
@@ -290,8 +298,143 @@ public class RecordUtilsTest {
         Mockito.when(this.record.getResourceType()).thenReturn("unknowntype");
 
         this.recordUtils.getItemFromRecord(this.record);
-    }    
- 
+    }
+    
+    // TODO documentation
+    @Test
+    public void testGetTimeFromRecordPerState() throws InvalidParameterException {
+    	this.paymentStartTime = 100L;
+        this.paymentEndTime = 200L;
+
+        this.history = getHistory(getTimestamps(this.paymentStartTime - 10, 
+        										this.paymentStartTime + 20, 
+        										this.paymentStartTime + 50, 
+        										this.paymentEndTime + 10), 
+        						  getOrderStates(cloud.fogbow.accs.core.models.orders.OrderState.FULFILLED, 
+        								  		 cloud.fogbow.accs.core.models.orders.OrderState.PAUSED, 
+        								  		 cloud.fogbow.accs.core.models.orders.OrderState.STOPPED, 
+        								  		 cloud.fogbow.accs.core.models.orders.OrderState.HIBERNATED));
+    	setUpRecords();
+    	
+        this.recordUtils = new RecordUtils();
+        
+    	Map<OrderState, Double> response = this.recordUtils.getTimeFromRecordPerState(record, paymentStartTime, paymentEndTime);
+    	
+    	assertEquals(3, response.size());
+    	assertEquals(new Double(20.0), response.get(OrderState.FULFILLED));
+    	assertEquals(new Double(30.0), response.get(OrderState.PAUSED));
+    	assertEquals(new Double(50.0), response.get(OrderState.STOPPED));
+    }
+    
+    // TODO documentation
+    @Test
+    public void testGetTimeFromRecordPerStateNoStateChangeBeforeStartTime() throws InvalidParameterException {
+    	this.paymentStartTime = 100L;
+        this.paymentEndTime = 200L;
+
+        this.history = getHistory(getTimestamps(this.paymentStartTime, 
+        										this.paymentEndTime), 
+        						  getOrderStates(cloud.fogbow.accs.core.models.orders.OrderState.FULFILLED, 
+        								  		 cloud.fogbow.accs.core.models.orders.OrderState.PAUSED));
+    	setUpRecords();
+    	
+        this.recordUtils = new RecordUtils();
+        
+    	Map<OrderState, Double> response = this.recordUtils.getTimeFromRecordPerState(record, paymentStartTime, paymentEndTime);
+    	
+    	assertEquals(1, response.size());
+    	assertEquals(new Double(100.0), response.get(OrderState.FULFILLED));
+    }
+    
+    // TODO documentation
+    @Test
+    public void testGetTimeFromRecordPerStateNoStateChangeInThePeriod() throws InvalidParameterException {
+    	this.paymentStartTime = 100L;
+        this.paymentEndTime = 200L;
+
+        this.history = getHistory(getTimestamps(this.paymentStartTime - 10, 
+        										this.paymentEndTime + 10), 
+        						  getOrderStates(cloud.fogbow.accs.core.models.orders.OrderState.FULFILLED, 
+        								  		 cloud.fogbow.accs.core.models.orders.OrderState.PAUSED));
+    	setUpRecords();
+    	
+        this.recordUtils = new RecordUtils();
+        
+    	Map<OrderState, Double> response = this.recordUtils.getTimeFromRecordPerState(record, paymentStartTime, paymentEndTime);
+    	
+    	assertEquals(1, response.size());
+    	assertEquals(new Double(100.0), response.get(OrderState.FULFILLED));
+    }
+    
+    // TODO documentation
+    @Test
+    public void testGetTimeFromRecordPerStateRepeatedStates() throws InvalidParameterException {
+    	this.paymentStartTime = 100L;
+        this.paymentEndTime = 200L;
+
+        this.history = getHistory(getTimestamps(this.paymentStartTime - 10, 
+												this.paymentStartTime + 20, 
+												this.paymentStartTime + 50, 
+												this.paymentEndTime + 10), 
+        						  getOrderStates(cloud.fogbow.accs.core.models.orders.OrderState.FULFILLED, 
+        								  		 cloud.fogbow.accs.core.models.orders.OrderState.PAUSED, 
+        								  		 cloud.fogbow.accs.core.models.orders.OrderState.FULFILLED, 
+        								  		 cloud.fogbow.accs.core.models.orders.OrderState.HIBERNATED));
+        
+    	setUpRecords();
+    	
+        this.recordUtils = new RecordUtils();
+        
+    	Map<OrderState, Double> response = this.recordUtils.getTimeFromRecordPerState(record, paymentStartTime, paymentEndTime);
+    	
+    	assertEquals(2, response.size());
+    	assertEquals(new Double(70.0), response.get(OrderState.FULFILLED));
+    	assertEquals(new Double(30.0), response.get(OrderState.PAUSED));
+    }
+    
+    private void setUpRecords() {
+    	this.stateHistory = Mockito.mock(OrderStateHistory.class);
+    	Mockito.when(this.stateHistory.getHistory()).thenReturn(history);
+    	
+    	this.record = Mockito.mock(Record.class);
+    	Mockito.when(this.record.getStartTime()).thenReturn(startTimeTimestamp);
+        Mockito.when(this.record.getEndTime()).thenReturn(endTimeTimestamp);
+        Mockito.when(this.record.getStateHistory()).thenReturn(stateHistory);
+    }
+
+    private Map<Timestamp, cloud.fogbow.accs.core.models.orders.OrderState> getHistory(List<Timestamp> timestamps, 
+    		List<cloud.fogbow.accs.core.models.orders.OrderState> states) {
+    	Map<Timestamp, cloud.fogbow.accs.core.models.orders.OrderState> history = new HashMap<>();
+    	
+    	for (int i = 0; i < timestamps.size(); i++) {
+    		history.put(timestamps.get(i), states.get(i));
+    	}
+    	
+    	return history;
+    }
+
+    private List<Timestamp> getTimestamps(Long ... timeValues) {
+    	List<Timestamp> timestampList = new ArrayList<Timestamp>();
+
+    	for (Long timeValue : timeValues) {
+    		timestampList.add(new Timestamp(timeValue));
+    	}
+    	
+    	return timestampList;
+    }
+    
+    private List<cloud.fogbow.accs.core.models.orders.OrderState>
+    getOrderStates(cloud.fogbow.accs.core.models.orders.OrderState ... states) {
+    	List<cloud.fogbow.accs.core.models.orders.OrderState> stateList = 
+    			new ArrayList<>();
+    	
+    	for (cloud.fogbow.accs.core.models.orders.OrderState state : states) {
+    		stateList.add(state);
+    	}
+    	
+    	return stateList;
+    }
+    	
     private void setUpNormalRecordTimes() {
         this.startTimeTimestamp = new Timestamp(RECORD_START_TIME);
         this.endTimeTimestamp = new Timestamp(RECORD_END_TIME);

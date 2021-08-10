@@ -14,6 +14,7 @@ import cloud.fogbow.fs.core.models.Invoice;
 import cloud.fogbow.fs.core.models.InvoiceState;
 import cloud.fogbow.fs.core.models.ResourceItem;
 import cloud.fogbow.fs.core.models.VolumeItem;
+import cloud.fogbow.ras.core.models.orders.OrderState;
 
 public class InvoiceBuilderTest {
     private static final String USER_ID_1 = "userId1";
@@ -31,6 +32,9 @@ public class InvoiceBuilderTest {
     private static final int SIZE_ITEM_3 = 130;
     private static final Double VALUE_ITEM_3 = 5.0;
     private static final Double TIME_USED_ITEM_3 = 4.0;
+	private static final OrderState STATE_1 = OrderState.FULFILLED;
+	private static final OrderState STATE_2 = OrderState.CLOSED;
+	private static final OrderState STATE_3 = OrderState.PAUSED;
 
     // test case: When calling the buildInvoice method, 
     // it must create a new Invoice object, considering the
@@ -45,9 +49,9 @@ public class InvoiceBuilderTest {
         
         invoiceBuilder.setUserId(USER_ID_1);
         invoiceBuilder.setProviderId(PROVIDER_ID_1);
-        invoiceBuilder.addItem(resourceItem1, VALUE_ITEM_1, TIME_USED_ITEM_1);
-        invoiceBuilder.addItem(resourceItem2, VALUE_ITEM_2, TIME_USED_ITEM_2);
-        invoiceBuilder.addItem(resourceItem3, VALUE_ITEM_3, TIME_USED_ITEM_3);
+        invoiceBuilder.addItem(resourceItem1, STATE_1, VALUE_ITEM_1, TIME_USED_ITEM_1);
+        invoiceBuilder.addItem(resourceItem2, STATE_2, VALUE_ITEM_2, TIME_USED_ITEM_2);
+        invoiceBuilder.addItem(resourceItem3, STATE_3, VALUE_ITEM_3, TIME_USED_ITEM_3);
         Invoice invoice = invoiceBuilder.buildInvoice();
         
         List<Double> possibleValues = new ArrayList<Double>();
@@ -101,7 +105,7 @@ public class InvoiceBuilderTest {
         
         invoiceBuilder.setUserId(USER_ID_1);
         invoiceBuilder.setProviderId(PROVIDER_ID_1);
-        invoiceBuilder.addItem(resourceItem1, VALUE_ITEM_1, TIME_USED_ITEM_1);
+        invoiceBuilder.addItem(resourceItem1, STATE_1, VALUE_ITEM_1, TIME_USED_ITEM_1);
         Invoice invoice1 = invoiceBuilder.buildInvoice();
         
         assertEquals(USER_ID_1, invoice1.getUserId());

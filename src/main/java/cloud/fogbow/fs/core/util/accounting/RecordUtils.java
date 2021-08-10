@@ -1,8 +1,14 @@
 package cloud.fogbow.fs.core.util.accounting;
 
 import java.sql.Timestamp;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.NavigableMap;
+import java.util.TreeMap;
 
 import cloud.fogbow.accs.api.http.response.Record;
+import cloud.fogbow.accs.core.models.OrderStateHistory;
 import cloud.fogbow.accs.core.models.specs.ComputeSpec;
 import cloud.fogbow.accs.core.models.specs.VolumeSpec;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
@@ -10,6 +16,7 @@ import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.models.ComputeItem;
 import cloud.fogbow.fs.core.models.ResourceItem;
 import cloud.fogbow.fs.core.models.VolumeItem;
+import cloud.fogbow.ras.core.models.orders.OrderState;
 
 
 public class RecordUtils {
@@ -63,4 +70,98 @@ public class RecordUtils {
         
         return item;
     }
+
+    // TODO documentation
+	public Map<OrderState, Double> getTimeFromRecordPerState(Record record, Long paymentStartTime,
+			Long paymentEndTime) throws InvalidParameterException {
+		OrderStateHistory orderHistory = record.getStateHistory();
+		Map<Timestamp, cloud.fogbow.accs.core.models.orders.OrderState> accsHistory = orderHistory.getHistory();
+
+		Map<Timestamp, OrderState> history = convertAccountingStateToRasState(accsHistory);
+		NavigableMap<Timestamp, OrderState> filteredHistory = filterStatesByPeriod(history, paymentStartTime, paymentEndTime);
+		Iterator<Timestamp> timestampsIterator = filteredHistory.navigableKeySet().iterator();
+		
+		Timestamp periodLowerLimit = null;
+		Timestamp periodHigherLimit = null;
+		periodHigherLimit = timestampsIterator.next();
+		
+		Map<OrderState, Double> timePerState = new HashMap<OrderState, Double>();
+		
+		do {
+			periodLowerLimit = periodHigherLimit;
+			periodHigherLimit = timestampsIterator.next();
+			processPeriod(filteredHistory, timePerState, periodLowerLimit, periodHigherLimit);
+		} while (timestampsIterator.hasNext());
+		
+		return timePerState;
+	}
+	
+	private void processPeriod(NavigableMap<Timestamp, OrderState> filteredHistory, 
+			Map<OrderState, Double> timePerState, Timestamp periodLowerLimit, Timestamp periodHigherLimit) {
+		OrderState state = filteredHistory.get(periodLowerLimit);
+		Long periodLength = periodHigherLimit.getTime() - periodLowerLimit.getTime();
+		
+		if (!timePerState.containsKey(state)) {
+			timePerState.put(state, 0.0);
+		}
+		
+		Double currentTotalTime = timePerState.get(state);
+		timePerState.put(state, currentTotalTime + periodLength);
+	}
+
+	private Map<Timestamp, OrderState> convertAccountingStateToRasState(
+			Map<Timestamp, cloud.fogbow.accs.core.models.orders.OrderState> accsHistory) throws InvalidParameterException {
+		Map<Timestamp, OrderState> convertedMap = new HashMap<Timestamp, OrderState>();
+		
+		for (Timestamp key : accsHistory.keySet()) {
+			cloud.fogbow.accs.core.models.orders.OrderState accsState = accsHistory.get(key);
+			convertedMap.put(key, OrderState.fromValue(accsState.getRepr()));
+		}
+		
+		return convertedMap;
+	}	
+
+	private NavigableMap<Timestamp, OrderState> filterStatesByPeriod(Map<Timestamp, OrderState> history, Long paymentStartTime,
+			Long paymentEndTime) throws InvalidParameterException {
+		Timestamp lowerLimit = getHighestTimestampBeforeTime(history, paymentStartTime);
+		Timestamp higherLimit = getHighestTimestampBeforeTime(history, paymentEndTime);
+		
+		if (lowerLimit == null) {
+			// TODO test
+			// TODO add message
+			throw new InvalidParameterException();
+		} else {
+			TreeMap<Timestamp, OrderState> filteredState = new TreeMap<Timestamp, OrderState>();
+			OrderState startState = history.get(lowerLimit);
+			OrderState endState = history.get(higherLimit);
+			
+			filteredState.put(new Timestamp(paymentStartTime), startState);
+			filteredState.put(new Timestamp(paymentEndTime), endState);
+			
+			for (Timestamp timestamp : history.keySet()) {
+				if (timestamp.getTime() >= paymentStartTime 
+						&& timestamp.getTime() <= paymentEndTime) {
+					filteredState.put(timestamp, history.get(timestamp));
+				}
+			}
+			
+			return filteredState;
+		}
+	}
+
+	private Timestamp getHighestTimestampBeforeTime(Map<Timestamp, OrderState> history, Long time) {
+		Timestamp highestTimestamp = null;
+		
+		for (Timestamp timestamp : history.keySet()) {
+			if (timestamp.getTime() <= time) {
+				if (highestTimestamp == null) {
+					highestTimestamp = timestamp;
+				} else if (timestamp.getTime() > highestTimestamp.getTime()) {
+				    highestTimestamp = timestamp;
+				}
+			}
+		}
+		
+		return highestTimestamp;
+	}
 }

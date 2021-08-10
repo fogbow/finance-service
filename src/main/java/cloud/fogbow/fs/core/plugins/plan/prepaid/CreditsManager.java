@@ -1,6 +1,7 @@
 package cloud.fogbow.fs.core.plugins.plan.prepaid;
 
 import java.util.List;
+import java.util.Map;
 
 import cloud.fogbow.accs.api.http.response.Record;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
@@ -11,6 +12,7 @@ import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.models.ResourceItem;
 import cloud.fogbow.fs.core.models.UserCredits;
 import cloud.fogbow.fs.core.util.accounting.RecordUtils;
+import cloud.fogbow.ras.core.models.orders.OrderState;
 
 public class CreditsManager {
     private RecordUtils recordUtils;
@@ -47,19 +49,19 @@ public class CreditsManager {
                 UserCredits credits = user.getCredits();
                 
                 for (Record record : records) {
-                    ResourceItem resourceItem;
-                    Double valueToPayPerTimeUnit;
+					try {
+						ResourceItem resourceItem = recordUtils.getItemFromRecord(record);
+						Map<OrderState, Double> timeSpentOnStates = recordUtils.getTimeFromRecordPerState(record,
+								paymentStartTime, paymentEndTime);
 
-                    try {
-                        resourceItem = recordUtils.getItemFromRecord(record);
-                        valueToPayPerTimeUnit = policy.getItemFinancialValue(resourceItem);
-                    } catch (InvalidParameterException e) {
-                        throw new InternalServerErrorException(e.getMessage());
-                    }
-
-                    Double timeUsed = recordUtils.getTimeFromRecord(record, paymentStartTime, paymentEndTime);
-
-                    credits.deduct(resourceItem, valueToPayPerTimeUnit, timeUsed);
+						for (OrderState state : timeSpentOnStates.keySet()) {
+							Double valueToPayPerTimeUnit = policy.getItemFinancialValue(resourceItem, state);
+							Double timeUsed = timeSpentOnStates.get(state);
+							credits.deduct(resourceItem, valueToPayPerTimeUnit, timeUsed);
+						}
+					} catch (InvalidParameterException e) {
+						throw new InternalServerErrorException(e.getMessage());
+					}                	
                 }
 
                 user.setLastBillingTime(paymentEndTime);

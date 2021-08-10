@@ -13,9 +13,11 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.springframework.data.util.Pair;
 
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.core.util.TestUtils;
+import cloud.fogbow.ras.core.models.orders.OrderState;
 
 public class InvoiceTest {
 
@@ -28,10 +30,12 @@ public class InvoiceTest {
     private static final Double RESOURCE_ITEM_2_VALUE = 10.3;
     private static final Long START_TIME = 1L;
     private static final Long END_TIME = 10L;
+	private static final OrderState STATE_1 = OrderState.FULFILLED;
+	private static final OrderState STATE_2 = OrderState.PAUSED;
     
-    private Map<ResourceItem, Double> invoiceItems;
+    private Map<Pair<ResourceItem, OrderState>, Double> invoiceItems;
     private Double invoiceTotal;
-    private Set<ResourceItem> itemsSet;
+    private Set<Pair<ResourceItem, OrderState>> itemsSet;
 
     @Before
     public void setUp() {
@@ -40,7 +44,7 @@ public class InvoiceTest {
     
     @Test
     public void testToStringWithNoInvoiceItems() {
-        invoiceItems = new HashMap<ResourceItem, Double>();
+        invoiceItems = new HashMap<Pair<ResourceItem, OrderState>, Double>();
         invoiceTotal = 0.0;
         
         
@@ -60,9 +64,9 @@ public class InvoiceTest {
         
         
         String expected = String.format("{\"id\":\"%s\", \"userId\":\"%s\", \"providerId\":\"%s\", \"state\":\"WAITING\"," + 
-        " \"invoiceItems\":{%s:%.3f,%s:%.3f}, \"invoiceTotal\":%.3f, \"startTime\":1, \"endTime\":10}", INVOICE_ID, 
-                USER_ID, PROVIDER_ID, RESOURCE_ITEM_1_STRING, RESOURCE_ITEM_1_VALUE, 
-                RESOURCE_ITEM_2_STRING, RESOURCE_ITEM_2_VALUE, invoiceTotal);
+        " \"invoiceItems\":{%s-%s:%.3f,%s-%s:%.3f}, \"invoiceTotal\":%.3f, \"startTime\":1, \"endTime\":10}", INVOICE_ID, 
+                USER_ID, PROVIDER_ID, RESOURCE_ITEM_1_STRING, STATE_1.getValue(), RESOURCE_ITEM_1_VALUE, 
+                RESOURCE_ITEM_2_STRING, STATE_2.getValue(), RESOURCE_ITEM_2_VALUE, invoiceTotal);
         
         assertEquals(expected, invoice.toString());
     }
@@ -159,15 +163,18 @@ public class InvoiceTest {
         Mockito.when(resourceItem2.toString()).thenReturn(RESOURCE_ITEM_2_STRING);
         
         // This code assures a certain order of resource items is used in the string generation
-        Iterator<ResourceItem> iterator = new TestUtils().getIterator(Arrays.asList(resourceItem1, resourceItem2));
+        Iterator<Pair<ResourceItem, OrderState>> iterator = 
+        		new TestUtils().getIterator(Arrays.asList(
+        				Pair.of(resourceItem1, STATE_1),
+        				Pair.of(resourceItem2, STATE_2)));
         
         itemsSet = Mockito.mock(HashSet.class);
         Mockito.when(itemsSet.iterator()).thenReturn(iterator);
         
         invoiceItems = Mockito.mock(HashMap.class);
         Mockito.when(invoiceItems.keySet()).thenReturn(itemsSet);
-        Mockito.when(invoiceItems.get(resourceItem1)).thenReturn(RESOURCE_ITEM_1_VALUE);
-        Mockito.when(invoiceItems.get(resourceItem2)).thenReturn(RESOURCE_ITEM_2_VALUE);
+        Mockito.when(invoiceItems.get(Pair.of(resourceItem1, STATE_1))).thenReturn(RESOURCE_ITEM_1_VALUE);
+        Mockito.when(invoiceItems.get(Pair.of(resourceItem2, STATE_2))).thenReturn(RESOURCE_ITEM_2_VALUE);
 
         invoiceTotal = RESOURCE_ITEM_1_VALUE + RESOURCE_ITEM_2_VALUE;
     }

@@ -19,10 +19,13 @@ import javax.persistence.PostLoad;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import org.springframework.data.util.Pair;
+
 import com.google.common.annotations.VisibleForTesting;
 
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.constants.Messages;
+import cloud.fogbow.ras.core.models.orders.OrderState;
 
 @Entity
 @Table(name = "finance_policy_table")
@@ -31,13 +34,14 @@ public class FinancePolicy {
 	public static final String PLAN_FIELDS_SEPARATOR = "-";
 	public static final String ITEM_FIELDS_SEPARATOR = ",";
 	public static final int RESOURCE_TYPE_FIELD_INDEX = 0;
+	public static final int ORDER_STATE_FIELD_INDEX = 1;
 	public static final String COMPUTE_RESOURCE_TYPE = "compute";
-	public static final int COMPUTE_VCPU_FIELD_INDEX = 1;
-	public static final int COMPUTE_RAM_FIELD_INDEX = 2;
-	public static final int COMPUTE_VALUE_FIELD_INDEX = 3;
+	public static final int COMPUTE_VCPU_FIELD_INDEX = 2;
+	public static final int COMPUTE_RAM_FIELD_INDEX = 3;
+	public static final int COMPUTE_VALUE_FIELD_INDEX = 4;
 	public static final String VOLUME_RESOURCE_TYPE = "volume";
-	public static final int VOLUME_SIZE_FIELD_INDEX = 1;
-	public static final int VOLUME_VALUE_FIELD_INDEX = 2;
+	public static final int VOLUME_SIZE_FIELD_INDEX = 2;
+	public static final int VOLUME_VALUE_FIELD_INDEX = 3;
 	
 	private static final String FINANCE_PLAN_ID_COLUMN_NAME = "finance_plan_id";
     private static final String FINANCE_PLAN_ITEMS_COLUMN_NAME = "finance_plan_items";
@@ -59,7 +63,7 @@ public class FinancePolicy {
     // in a List, we keep this copy of the plan data for 
     // access operations.
 	@Transient
-	private Map<ResourceItem, Double> policy;
+	private Map<Pair<ResourceItem, OrderState>, Double> policy;
 	
 	public FinancePolicy() {
 	    
@@ -73,11 +77,11 @@ public class FinancePolicy {
     }
     
     @VisibleForTesting
-    Map<ResourceItem, Double> getPlanFromDatabaseItems(List<FinanceRule> databaseItems) {
-        Map<ResourceItem, Double> plan = new HashMap<ResourceItem, Double>();
+    Map<Pair<ResourceItem, OrderState>, Double> getPlanFromDatabaseItems(List<FinanceRule> databaseItems) {
+        Map<Pair<ResourceItem, OrderState>, Double> plan = new HashMap<Pair<ResourceItem, OrderState>, Double>();
         
         for (FinanceRule item : databaseItems) {
-            plan.put(item.getItem(), item.getValue());
+            plan.put(Pair.of(item.getItem(), item.getOrderState()), item.getValue());
         }
         
         return plan;
@@ -85,7 +89,7 @@ public class FinancePolicy {
 	
     public FinancePolicy(String planName, String planPath) throws InvalidParameterException {
     	Map<String, String> planInfo = getPlanFromFile(planPath);
-    	Map<ResourceItem, Double> plan = validatePlanInfo(planInfo);
+    	Map<Pair<ResourceItem, OrderState>, Double> plan = validatePlanInfo(planInfo);
     	this.items = getDatabaseItems(plan);
     	
 		this.name = planName;
@@ -118,24 +122,24 @@ public class FinancePolicy {
         }
     }
     
-	private List<FinanceRule> getDatabaseItems(Map<ResourceItem, Double> inMemoryPlan) {
+	private List<FinanceRule> getDatabaseItems(Map<Pair<ResourceItem, OrderState>, Double> inMemoryPlan) {
 	    List<FinanceRule> databasePlanItems = new ArrayList<FinanceRule>();
 	    
-	    for (ResourceItem item : inMemoryPlan.keySet()) {
-	        databasePlanItems.add(new FinanceRule(item, inMemoryPlan.get(item)));
+	    for (Pair<ResourceItem, OrderState> item : inMemoryPlan.keySet()) {
+	        databasePlanItems.add(new FinanceRule(item.getFirst(), item.getSecond(), inMemoryPlan.get(item)));
 	    }
 	    
         return databasePlanItems;
     }
 	
     public FinancePolicy(String planName, Map<String, String> planInfo) throws InvalidParameterException {
-		Map<ResourceItem, Double> plan = validatePlanInfo(planInfo);
+    	Map<Pair<ResourceItem, OrderState>, Double> plan = validatePlanInfo(planInfo);
 		this.name = planName;
 		this.policy = plan;
 		this.items = getDatabaseItems(plan);
 	}
     
-    FinancePolicy(Map<ResourceItem, Double> plan) {
+    FinancePolicy(Map<Pair<ResourceItem, OrderState>, Double> plan) {
         this.policy = plan;
     }
     
@@ -143,8 +147,8 @@ public class FinancePolicy {
 		return name;
 	}
 
-	private Map<ResourceItem, Double> validatePlanInfo(Map<String, String> planInfo) throws InvalidParameterException {
-		Map<ResourceItem, Double> plan = new HashMap<ResourceItem, Double>();
+	private Map<Pair<ResourceItem, OrderState>, Double> validatePlanInfo(Map<String, String> planInfo) throws InvalidParameterException {
+		Map<Pair<ResourceItem, OrderState>, Double> plan = new HashMap<Pair<ResourceItem, OrderState>, Double>();
 
 			for (String itemKey : planInfo.keySet()) {
 				String[] fields = planInfo.get(itemKey).split(ITEM_FIELDS_SEPARATOR);
@@ -161,7 +165,7 @@ public class FinancePolicy {
 		return plan;
 	}
 
-	private void extractComputeItem(Map<ResourceItem, Double> plan, String[] fields) 
+	private void extractComputeItem(Map<Pair<ResourceItem, OrderState>, Double> plan, String[] fields) 
 			throws InvalidParameterException {
 		try {
 			validateComputeFieldsLength(fields);
@@ -173,7 +177,9 @@ public class FinancePolicy {
 			
 			validateItemValue(value);
 			
-			plan.put(newItem, value);
+			OrderState state = OrderState.fromValue(fields[ORDER_STATE_FIELD_INDEX]);
+			
+			plan.put(Pair.of(newItem, state), value);
 		} catch (NumberFormatException e) {
 			throw new InvalidParameterException(Messages.Exception.INVALID_COMPUTE_ITEM_FIELD);
 		}
@@ -186,12 +192,12 @@ public class FinancePolicy {
 	}
 
 	private void validateComputeFieldsLength(String[] fields) throws InvalidParameterException {
-		if (fields.length != 4) {
+		if (fields.length != 5) {
 			throw new InvalidParameterException(Messages.Exception.INVALID_NUMBER_OF_COMPUTE_ITEM_FIELDS);
 		}
 	}
 	
-	private void extractVolumeItem(Map<ResourceItem, Double> plan, String[] fields) 
+	private void extractVolumeItem(Map<Pair<ResourceItem, OrderState>, Double> plan, String[] fields) 
 			throws InvalidParameterException {
 		try {
 			validateVolumeFieldsLength(fields);
@@ -202,14 +208,16 @@ public class FinancePolicy {
 			
 			validateItemValue(value);
 			
-			plan.put(newItem, value);
+			OrderState state = OrderState.fromValue(fields[ORDER_STATE_FIELD_INDEX]);
+
+			plan.put(Pair.of(newItem, state), value);
 		} catch (NumberFormatException e) {
 			throw new InvalidParameterException(Messages.Exception.INVALID_VOLUME_ITEM_FIELD);
 		}
 	}
 
 	private void validateVolumeFieldsLength(String[] fields) throws InvalidParameterException {
-		if (fields.length != 3) {
+		if (fields.length != 4) {
 			throw new InvalidParameterException(Messages.Exception.INVALID_NUMBER_OF_VOLUME_ITEM_FIELDS);
 		}
 	}
@@ -223,9 +231,12 @@ public class FinancePolicy {
         List<String> financePlanItemsStrings = new ArrayList<String>();
         Integer ruleIndex = 0;
         
-        for (ResourceItem item : this.policy.keySet()) {
+        for (Pair<ResourceItem, OrderState> item : this.policy.keySet()) {
             financePlanItemsStrings.add(
-                    String.format("%s:[%s,%s]", String.valueOf(ruleIndex), item.toString(), String.valueOf(this.policy.get(item))));
+                    String.format("%s:[%s,%s,%s]", String.valueOf(ruleIndex), 
+                    		item.getFirst().toString(),
+                    		item.getSecond().getValue(),
+                    		String.valueOf(this.policy.get(item))));
             ruleIndex++;
         }
         
@@ -234,26 +245,28 @@ public class FinancePolicy {
 
 	private Map<String, String> generateRulesRepr() {
         Map<String, String> rulesRepr = new HashMap<String, String>();
-	    
-        for (ResourceItem item : this.policy.keySet()) {
-            rulesRepr.put(item.toString(), String.valueOf(this.policy.get(item)));
+
+        for (Pair<ResourceItem, OrderState> item : this.policy.keySet()) {
+        	String rulesReprKey = String.format("%s-%s", item.getFirst().toString(),
+        			item.getSecond().getValue());
+            rulesRepr.put(rulesReprKey, String.valueOf(this.policy.get(item)));
         }
         
         return rulesRepr;
     }
 
 	public void update(Map<String, String> planInfo) throws InvalidParameterException {
-		Map<ResourceItem, Double> newPlan = validatePlanInfo(planInfo);
+		Map<Pair<ResourceItem, OrderState>, Double> newPlan = validatePlanInfo(planInfo);
 		this.policy = newPlan;
 		this.items = getDatabaseItems(newPlan);
 	}
 
-	public Double getItemFinancialValue(ResourceItem resourceItem) throws InvalidParameterException {
-		if (policy.containsKey(resourceItem)) { 
-			return policy.get(resourceItem);	
+	public Double getItemFinancialValue(ResourceItem resourceItem, OrderState orderState) throws InvalidParameterException {
+		if (policy.containsKey(Pair.of(resourceItem, orderState))) { 
+			return policy.get(Pair.of(resourceItem, orderState));	
 		}
 		
 		throw new InvalidParameterException(String.format(Messages.Exception.UNKNOWN_RESOURCE_ITEM, 
-				resourceItem.toString()));
+				resourceItem.toString(), orderState.getValue()));
 	}
 }

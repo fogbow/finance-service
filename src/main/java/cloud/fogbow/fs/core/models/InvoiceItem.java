@@ -9,6 +9,8 @@ import javax.persistence.Id;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
+import cloud.fogbow.ras.core.models.orders.OrderState;
+
 @Entity
 @Table(name = "invoice_items_table")
 public class InvoiceItem {
@@ -23,6 +25,9 @@ public class InvoiceItem {
     @Column
     private Double value;
     
+    @Column
+    private OrderState orderState;
+    
     public InvoiceItem() {
         
     }
@@ -32,7 +37,13 @@ public class InvoiceItem {
         this.value = value;
     }
     
-    public ResourceItem getItem() {
+    public InvoiceItem(ResourceItem item, OrderState state, Double value) {
+    	this.item = item;
+    	this.setOrderState(state);
+        this.value = value;
+	}
+
+	public ResourceItem getItem() {
         return item;
     }
 
@@ -47,4 +58,12 @@ public class InvoiceItem {
     public void setValue(Double value) {
         this.value = value;
     }
+
+	public OrderState getOrderState() {
+		return orderState;
+	}
+
+	public void setOrderState(OrderState orderState) {
+		this.orderState = orderState;
+	}
 }

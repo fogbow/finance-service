@@ -210,6 +210,7 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
         try {
             Long.valueOf(property);
         } catch (NumberFormatException e) {
+        	// TODO test
             throw new InvalidParameterException(
                     String.format(Messages.Exception.INVALID_FINANCE_OPTION, property, propertyName));
         }
@@ -221,6 +222,7 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
         } else if (financeOptions.containsKey(FINANCE_PLAN_RULES_FILE_PATH))  {
             setUpPlanFromRulesFile(financeOptions.get(FINANCE_PLAN_RULES_FILE_PATH), planFactory);
         } else {
+        	// TODO test
             throw new InvalidParameterException(Messages.Exception.NO_FINANCE_PLAN_CREATION_METHOD_PROVIDED);
         }
     }

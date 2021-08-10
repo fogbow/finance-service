@@ -15,8 +15,11 @@ import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
+import org.springframework.data.util.Pair;
+
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.constants.Messages;
+import cloud.fogbow.ras.core.models.orders.OrderState;
 
 @Entity
 @Table(name = "invoice_table")
@@ -63,7 +66,7 @@ public class Invoice {
     }
     
 	public Invoice(String invoiceId, String userId, String providerId, 
-			Long startTime, Long endTime, Map<ResourceItem, Double> items, 
+			Long startTime, Long endTime, Map<Pair<ResourceItem, OrderState>, Double> items, 
 			Double invoiceTotal) {
 		this.invoiceId = invoiceId;
 		this.userId = userId;
@@ -75,8 +78,8 @@ public class Invoice {
 		
 		this.invoiceItems = new ArrayList<InvoiceItem>();
 		
-		for (ResourceItem item : items.keySet()) {
-		    invoiceItems.add(new InvoiceItem(item, items.get(item)));
+		for (Pair<ResourceItem, OrderState> item : items.keySet()) {
+		    invoiceItems.add(new InvoiceItem(item.getFirst(), item.getSecond(), items.get(item)));
 		}
 	}
 
@@ -199,8 +202,9 @@ public class Invoice {
 		
 		for (InvoiceItem invoiceItem : invoiceItems) {
             String itemString = invoiceItem.getItem().toString();
+            String orderStateString = invoiceItem.getOrderState().getValue();
             String valueString = String.format("%.3f", invoiceItem.getValue());
-            String itemValuePairString = itemString + ":" + valueString;
+            String itemValuePairString = itemString + "-" + orderStateString + ":" + valueString;
             invoiceItemsStringList.add(itemValuePairString);
 		}
 		
