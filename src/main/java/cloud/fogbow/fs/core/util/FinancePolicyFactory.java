@@ -7,13 +7,13 @@ import cloud.fogbow.fs.core.models.FinancePolicy;
 
 public class FinancePolicyFactory {
     
-    public FinancePolicy createFinancePolicy(String planName, Map<String, String> planInfo) 
+    public FinancePolicy createFinancePolicy(String planName, Double defaultResourceValue, Map<String, String> planInfo) 
             throws InvalidParameterException {
-        return new FinancePolicy(planName, planInfo); 
+        return new FinancePolicy(planName, defaultResourceValue, planInfo); 
     }
     
-    public FinancePolicy createFinancePolicy(String planName, String planInfoFilePath) 
+    public FinancePolicy createFinancePolicy(String planName, Double defaultResourceValue, String planInfoFilePath) 
             throws InvalidParameterException {
-        return new FinancePolicy(planName, planInfoFilePath); 
+        return new FinancePolicy(planName, defaultResourceValue, planInfoFilePath); 
     }
 }

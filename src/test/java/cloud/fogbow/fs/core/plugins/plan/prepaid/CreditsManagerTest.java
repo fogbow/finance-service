@@ -160,33 +160,6 @@ public class CreditsManagerTest {
         Mockito.verify(userCredits1, Mockito.never()).deduct(Mockito.any(), Mockito.any(), Mockito.any());
     }
     
-    // test case: When calling the startPaymentProcess method and 
-    // the FinancePlan throws an exception when getting the financial value 
-    // of a resource item, it must catch the exception and throw an
-    // InternalServerErrorException.
-    @Test
-    public void testStartPaymentProcessErrorOnGettingItemFinancialValue() throws InvalidParameterException, InternalServerErrorException {
-        this.userCredits1 = Mockito.mock(UserCredits.class);
-        
-        setUpRecords();
-
-        this.policy = Mockito.mock(FinancePolicy.class);
-        Mockito.when(policy.getItemFinancialValue(resourceItem1, state1)).thenThrow(new InvalidParameterException());
-        Mockito.when(policy.getItemFinancialValue(resourceItem2, state2)).thenThrow(new InvalidParameterException());
-        
-        setUpDatabase();
-        
-        CreditsManager creditsManager = new CreditsManager(objectHolder, policy, recordUtils);
-        
-        try {
-            creditsManager.startPaymentProcess(USER_ID1, PROVIDER1, PAYMENT_START_TIME, PAYMENT_END_TIME, records);            
-            Assert.fail("startPaymentProcess is expected to throw exception.");
-        } catch (InternalServerErrorException e) {
-        }
-        
-        Mockito.verify(userCredits1, Mockito.never()).deduct(Mockito.any(), Mockito.any(), Mockito.any());
-    }
-    
     private void setUpRecords() throws InvalidParameterException {
         record1 = Mockito.mock(Record.class);
         record2 = Mockito.mock(Record.class);

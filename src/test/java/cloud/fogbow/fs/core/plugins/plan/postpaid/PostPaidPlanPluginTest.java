@@ -58,6 +58,8 @@ public class PostPaidPlanPluginTest {
     private static final String NEW_RULES_STRING = "newRulesString";
     private static final String FINANCE_PLAN_FILE_PATH = "financeplanfilepath";
     private static final String NEW_PLAN_NAME = "newPlanName";
+    private static final Double DEFAULT_RESOURCE_VALUE = 10.0;
+    private static final Double NEW_DEFAULT_RESOURCE_VALUE = 12.0;
     private AccountingServiceClient accountingServiceClient;
     private RasClient rasClient;
     private InvoiceManager paymentManager;
@@ -466,6 +468,7 @@ public class PostPaidPlanPluginTest {
         newFinanceOptions.put(PostPaidPlanPlugin.TIME_TO_WAIT_BEFORE_STOPPING, 
                 String.valueOf(newTimeToWaitBeforeStopping));
         newFinanceOptions.put(PostPaidPlanPlugin.FINANCE_PLAN_RULES, NEW_RULES_JSON);
+        newFinanceOptions.put(PostPaidPlanPlugin.FINANCE_PLAN_DEFAULT_RESOURCE_VALUE, String.valueOf(NEW_DEFAULT_RESOURCE_VALUE));
         
         // exercise
         postPaidFinancePlugin.setOptions(newFinanceOptions);
@@ -500,6 +503,7 @@ public class PostPaidPlanPluginTest {
         newFinanceOptions.put(PostPaidPlanPlugin.TIME_TO_WAIT_BEFORE_STOPPING, 
                 String.valueOf(newTimeToWaitBeforeStopping));
         newFinanceOptions.put(PostPaidPlanPlugin.FINANCE_PLAN_RULES, NEW_RULES_JSON);
+        newFinanceOptions.put(PostPaidPlanPlugin.FINANCE_PLAN_DEFAULT_RESOURCE_VALUE, String.valueOf(NEW_DEFAULT_RESOURCE_VALUE));
         
         // exercise
         postPaidFinancePlugin.setOptions(newFinanceOptions);
@@ -513,7 +517,7 @@ public class PostPaidPlanPluginTest {
         assertEquals(NEW_RULES_STRING, optionsAfter.get(PostPaidPlanPlugin.FINANCE_PLAN_RULES));
         
         // created a new plan using the rules passed as argument
-        Mockito.verify(this.planFactory).createFinancePolicy(PLAN_NAME, newRulesMap);
+        Mockito.verify(this.planFactory).createFinancePolicy(PLAN_NAME, NEW_DEFAULT_RESOURCE_VALUE, newRulesMap);
     }
     
     // test case: When calling the setOptions method, if the finance options map passed
@@ -535,6 +539,7 @@ public class PostPaidPlanPluginTest {
         newFinanceOptions.put(PostPaidPlanPlugin.TIME_TO_WAIT_BEFORE_STOPPING, 
                 String.valueOf(newTimeToWaitBeforeStopping));
         newFinanceOptions.put(PostPaidPlanPlugin.FINANCE_PLAN_RULES_FILE_PATH, FINANCE_PLAN_FILE_PATH);
+        newFinanceOptions.put(PostPaidPlanPlugin.FINANCE_PLAN_DEFAULT_RESOURCE_VALUE, String.valueOf(NEW_DEFAULT_RESOURCE_VALUE));
         
         // exercise
         postPaidFinancePlugin.setOptions(newFinanceOptions);
@@ -548,7 +553,7 @@ public class PostPaidPlanPluginTest {
         assertEquals(NEW_RULES_STRING, optionsAfter.get(PostPaidPlanPlugin.FINANCE_PLAN_RULES));
         
         // created a new plan using the finance plan file path passed as argument
-        Mockito.verify(this.planFactory).createFinancePolicy(PLAN_NAME, FINANCE_PLAN_FILE_PATH);
+        Mockito.verify(this.planFactory).createFinancePolicy(PLAN_NAME, NEW_DEFAULT_RESOURCE_VALUE, FINANCE_PLAN_FILE_PATH);
     }
     
     // test case: When calling the setOptions method, if the finance options map passed
@@ -597,7 +602,7 @@ public class PostPaidPlanPluginTest {
     @Test
     public void testPostPaidPluginOptionsLoaderValidOptions() throws ConfigurationErrorException {
         setUpPropertiesHolderOptions(USER_BILLING_INTERVAL, FINANCE_PLAN_RULES_FILE_PATH, 
-                INVOICE_WAIT_TIME, TIME_TO_WAIT_BEFORE_STOPPING);
+                INVOICE_WAIT_TIME, TIME_TO_WAIT_BEFORE_STOPPING, String.valueOf(DEFAULT_RESOURCE_VALUE));
         
         PostPaidPluginOptionsLoader loader = new PostPaidPluginOptionsLoader();
         
@@ -613,7 +618,7 @@ public class PostPaidPlanPluginTest {
     @Test(expected = ConfigurationErrorException.class)
     public void testPostPaidPluginOptionsLoaderMissingUserBillingInterval() throws ConfigurationErrorException {
         setUpPropertiesHolderOptions(null, FINANCE_PLAN_RULES_FILE_PATH, 
-                INVOICE_WAIT_TIME, TIME_TO_WAIT_BEFORE_STOPPING);
+                INVOICE_WAIT_TIME, TIME_TO_WAIT_BEFORE_STOPPING, String.valueOf(DEFAULT_RESOURCE_VALUE));
         
         PostPaidPluginOptionsLoader loader = new PostPaidPluginOptionsLoader();
         
@@ -625,7 +630,7 @@ public class PostPaidPlanPluginTest {
     @Test(expected = ConfigurationErrorException.class)
     public void testPostPaidPluginOptionsLoaderMissingFinancePlanRulesFilePath() throws ConfigurationErrorException {
         setUpPropertiesHolderOptions(USER_BILLING_INTERVAL, null, 
-                INVOICE_WAIT_TIME, TIME_TO_WAIT_BEFORE_STOPPING);
+                INVOICE_WAIT_TIME, TIME_TO_WAIT_BEFORE_STOPPING, String.valueOf(DEFAULT_RESOURCE_VALUE));
         
         PostPaidPluginOptionsLoader loader = new PostPaidPluginOptionsLoader();
         
@@ -637,7 +642,7 @@ public class PostPaidPlanPluginTest {
     @Test(expected = ConfigurationErrorException.class)
     public void testPostPaidPluginOptionsLoaderMissingInvoiceWaitTime() throws ConfigurationErrorException {
         setUpPropertiesHolderOptions(USER_BILLING_INTERVAL, FINANCE_PLAN_RULES_FILE_PATH, 
-                null, TIME_TO_WAIT_BEFORE_STOPPING);
+                null, TIME_TO_WAIT_BEFORE_STOPPING, String.valueOf(DEFAULT_RESOURCE_VALUE));
         
         PostPaidPluginOptionsLoader loader = new PostPaidPluginOptionsLoader();
         
@@ -649,7 +654,19 @@ public class PostPaidPlanPluginTest {
     @Test(expected = ConfigurationErrorException.class)
     public void testPostPaidPluginOptionsLoaderMissingTimeToWaitBeforeStopping() throws ConfigurationErrorException {
         setUpPropertiesHolderOptions(USER_BILLING_INTERVAL, FINANCE_PLAN_RULES_FILE_PATH, 
-                INVOICE_WAIT_TIME, null);
+                INVOICE_WAIT_TIME, null, String.valueOf(DEFAULT_RESOURCE_VALUE));
+        
+        PostPaidPluginOptionsLoader loader = new PostPaidPluginOptionsLoader();
+        
+        loader.load();
+    }
+    
+    // test case: When calling the PostPaidPluginOptionsLoader.load method and the property
+    // DefaultResourceValue is missing, it must throw a ConfigurationErrorException. 
+    @Test(expected = ConfigurationErrorException.class)
+    public void testPostPaidPluginOptionsLoaderMissingDefaultResourceValue() throws ConfigurationErrorException {
+        setUpPropertiesHolderOptions(USER_BILLING_INTERVAL, FINANCE_PLAN_RULES_FILE_PATH, 
+                INVOICE_WAIT_TIME, TIME_TO_WAIT_BEFORE_STOPPING, null);
         
         PostPaidPluginOptionsLoader loader = new PostPaidPluginOptionsLoader();
         
@@ -660,16 +677,18 @@ public class PostPaidPlanPluginTest {
         financeOptions = new HashMap<String, String>();
         financeOptions.put(PaymentRunner.USER_BILLING_INTERVAL, String.valueOf(userBillingInterval));
         financeOptions.put(PostPaidPlanPlugin.INVOICE_WAIT_TIME, String.valueOf(invoiceWaitTime));
+        financeOptions.put(PostPaidPlanPlugin.FINANCE_PLAN_DEFAULT_RESOURCE_VALUE, String.valueOf(DEFAULT_RESOURCE_VALUE));
     }
     
     private void setUpPropertiesHolderOptions(String userBillingInterval, String financePlanRulesPath, 
-            String invoiceWaitTime, String timeToWaitBeforeStopping) {
+            String invoiceWaitTime, String timeToWaitBeforeStopping, String defaultResourceValue) {
         PropertiesHolder propertiesHolder = Mockito.mock(PropertiesHolder.class);
         
         Mockito.when(propertiesHolder.getProperty(PaymentRunner.USER_BILLING_INTERVAL)).thenReturn(userBillingInterval);
         Mockito.when(propertiesHolder.getProperty(PostPaidPlanPlugin.FINANCE_PLAN_RULES_FILE_PATH)).thenReturn(financePlanRulesPath);
         Mockito.when(propertiesHolder.getProperty(PostPaidPlanPlugin.INVOICE_WAIT_TIME)).thenReturn(invoiceWaitTime);
         Mockito.when(propertiesHolder.getProperty(PostPaidPlanPlugin.TIME_TO_WAIT_BEFORE_STOPPING)).thenReturn(timeToWaitBeforeStopping);
+        Mockito.when(propertiesHolder.getProperty(PostPaidPlanPlugin.FINANCE_PLAN_DEFAULT_RESOURCE_VALUE)).thenReturn(defaultResourceValue);
         
         PowerMockito.mockStatic(PropertiesHolder.class);
         BDDMockito.given(PropertiesHolder.getInstance()).willReturn(propertiesHolder);
@@ -688,7 +707,7 @@ public class PostPaidPlanPluginTest {
         Mockito.when(this.jsonUtils.fromJson(NEW_RULES_JSON, Map.class)).thenReturn(newRulesMap);
         
         this.planFactory = Mockito.mock(FinancePolicyFactory.class);
-        Mockito.when(this.planFactory.createFinancePolicy(PLAN_NAME, newRulesMap)).thenReturn(newPlan);
-        Mockito.when(this.planFactory.createFinancePolicy(PLAN_NAME, FINANCE_PLAN_FILE_PATH)).thenReturn(newPlan);
+        Mockito.when(this.planFactory.createFinancePolicy(PLAN_NAME, NEW_DEFAULT_RESOURCE_VALUE, newRulesMap)).thenReturn(newPlan);
+        Mockito.when(this.planFactory.createFinancePolicy(PLAN_NAME, NEW_DEFAULT_RESOURCE_VALUE, FINANCE_PLAN_FILE_PATH)).thenReturn(newPlan);
     }
 }

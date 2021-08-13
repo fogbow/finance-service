@@ -50,6 +50,7 @@ public class FinancePolicyTest {
     private static final String VOLUME_ITEM_2_TO_STRING = "volume2ToString";
     private static final OrderState STATE_1 = OrderState.FULFILLED;
     private static final OrderState STATE_2 = OrderState.CLOSED;
+    private static final Double DEFAULT_RESOURCE_VALUE = 0.0001;
 	private HashMap<String, String> policyInfo;
     private ComputeItem computeItem1BeforeUpdate;
     private ComputeItem computeItem2BeforeUpdate;
@@ -62,7 +63,7 @@ public class FinancePolicyTest {
 	public void testConstructorValidPlanInfo() throws InvalidParameterException {
 		setUpPolicyInfo();
 		
-		FinancePolicy policy = new FinancePolicy(PLAN_NAME, policyInfo);
+		FinancePolicy policy = new FinancePolicy(PLAN_NAME, DEFAULT_RESOURCE_VALUE, policyInfo);
 		
 		ResourceItem computeItem1 = new ComputeItem(COMPUTE_1_VCPU, COMPUTE_1_RAM);
 		ResourceItem computeItem2 = new ComputeItem(COMPUTE_2_VCPU, COMPUTE_2_RAM);
@@ -90,7 +91,7 @@ public class FinancePolicyTest {
 		setUpPolicyInfo(computeItemString1, getValidCompute2String(),
 				getValidVolume1String(), getValidVolume2String());
 		
-		new FinancePolicy(PLAN_NAME, policyInfo);
+		new FinancePolicy(PLAN_NAME, DEFAULT_RESOURCE_VALUE, policyInfo);
 	}
 	
 	// test case: When creating a FinancePolicy object and one of the compute items 
@@ -108,7 +109,7 @@ public class FinancePolicyTest {
 		setUpPolicyInfo(computeItemString1, getValidCompute2String(),
 				getValidVolume1String(), getValidVolume2String());
 		
-		new FinancePolicy(PLAN_NAME, policyInfo);
+		new FinancePolicy(PLAN_NAME, DEFAULT_RESOURCE_VALUE, policyInfo);
 	}
 	
 	// test case: When creating a FinancePolicy object and one of the compute items 
@@ -125,7 +126,7 @@ public class FinancePolicyTest {
 		setUpPolicyInfo(computeItemString1, getValidCompute2String(),
 				getValidVolume1String(), getValidVolume2String());
 		
-		new FinancePolicy(PLAN_NAME, policyInfo);
+		new FinancePolicy(PLAN_NAME, DEFAULT_RESOURCE_VALUE, policyInfo);
 	}
 	
     // test case: When creating a FinancePolicy object and one of the compute items 
@@ -144,7 +145,7 @@ public class FinancePolicyTest {
 		setUpPolicyInfo(computeItemString1, getValidCompute2String(),
 				getValidVolume1String(), getValidVolume2String());
 		
-		new FinancePolicy(PLAN_NAME, policyInfo);
+		new FinancePolicy(PLAN_NAME, DEFAULT_RESOURCE_VALUE, policyInfo);
 	}
 	
     // test case: When creating a FinancePolicy object and one of the compute items 
@@ -163,7 +164,7 @@ public class FinancePolicyTest {
 		setUpPolicyInfo(computeItemString1, getValidCompute2String(),
 				getValidVolume1String(), getValidVolume2String());
 		
-		new FinancePolicy(PLAN_NAME, policyInfo);
+		new FinancePolicy(PLAN_NAME, DEFAULT_RESOURCE_VALUE, policyInfo);
 	}
 	
 	// test case: When creating a FinancePolicy object and one of the compute items 
@@ -181,7 +182,7 @@ public class FinancePolicyTest {
 		setUpPolicyInfo(computeItemString1, getValidCompute2String(),
 				getValidVolume1String(), getValidVolume2String());
 		
-		new FinancePolicy(PLAN_NAME, policyInfo);
+		new FinancePolicy(PLAN_NAME, DEFAULT_RESOURCE_VALUE, policyInfo);
 	}
 	
     // test case: When creating a FinancePolicy object and one of the compute items 
@@ -200,7 +201,7 @@ public class FinancePolicyTest {
 		setUpPolicyInfo(computeItemString1, getValidCompute2String(),
 				getValidVolume1String(), getValidVolume2String());
 		
-		new FinancePolicy(PLAN_NAME, policyInfo);
+		new FinancePolicy(PLAN_NAME, DEFAULT_RESOURCE_VALUE, policyInfo);
 	}
 	
 	// test case: When creating a FinancePolicy object and one of the compute items 
@@ -218,7 +219,7 @@ public class FinancePolicyTest {
 		setUpPolicyInfo(computeItemString1, getValidCompute2String(),
 				getValidVolume1String(), getValidVolume2String());
 		
-		new FinancePolicy(PLAN_NAME, policyInfo);
+		new FinancePolicy(PLAN_NAME, DEFAULT_RESOURCE_VALUE, policyInfo);
 	}
 	
     // test case: When creating a FinancePolicy object and one of the compute items 
@@ -237,7 +238,7 @@ public class FinancePolicyTest {
 		setUpPolicyInfo(computeItemString1, getValidCompute2String(),
 				getValidVolume1String(), getValidVolume2String());
 		
-		new FinancePolicy(PLAN_NAME, policyInfo);
+		new FinancePolicy(PLAN_NAME, DEFAULT_RESOURCE_VALUE, policyInfo);
 	}
 	
 	// test case: When creating a FinancePolicy object and one of the volume items 
@@ -255,7 +256,7 @@ public class FinancePolicyTest {
 		setUpPolicyInfo(getValidCompute1String(), getValidCompute2String(),
 				volumeItemString, getValidVolume2String());
 		
-		new FinancePolicy(PLAN_NAME, policyInfo);
+		new FinancePolicy(PLAN_NAME, DEFAULT_RESOURCE_VALUE, policyInfo);
 	}
 	
     // test case: When creating a FinancePolicy object and one of the volume items 
@@ -274,7 +275,7 @@ public class FinancePolicyTest {
 		setUpPolicyInfo(getValidCompute1String(), getValidCompute2String(),
 				volumeItemString, getValidVolume2String());
 		
-		new FinancePolicy(PLAN_NAME, policyInfo);
+		new FinancePolicy(PLAN_NAME, DEFAULT_RESOURCE_VALUE, policyInfo);
 	}
 	
 	// test case: When creating a FinancePolicy object and one of the volume items 
@@ -292,7 +293,7 @@ public class FinancePolicyTest {
 		setUpPolicyInfo(getValidCompute1String(), getValidCompute2String(),
 				volumeItemString, getValidVolume2String());
 		
-		new FinancePolicy(PLAN_NAME, policyInfo);
+		new FinancePolicy(PLAN_NAME, DEFAULT_RESOURCE_VALUE, policyInfo);
 	}
 	
 	// test case: When creating a FinancePolicy object and one of the volume items 
@@ -309,7 +310,7 @@ public class FinancePolicyTest {
 		setUpPolicyInfo(getValidCompute1String(), getValidCompute2String(),
 				volumeItemString, getValidVolume2String());
 		
-		new FinancePolicy(PLAN_NAME, policyInfo);
+		new FinancePolicy(PLAN_NAME, DEFAULT_RESOURCE_VALUE, policyInfo);
 	}
 	
 	// test case: When creating a FinancePolicy object and one of the volume items 
@@ -328,7 +329,7 @@ public class FinancePolicyTest {
 		setUpPolicyInfo(getValidCompute1String(), getValidCompute2String(),
 				volumeItemString, getValidVolume2String());
 		
-		new FinancePolicy(PLAN_NAME, policyInfo);
+		new FinancePolicy(PLAN_NAME, DEFAULT_RESOURCE_VALUE, policyInfo);
 	}
 	
 	// test case: When creating a FinancePolicy object and one of the volume items 
@@ -347,19 +348,19 @@ public class FinancePolicyTest {
 		setUpPolicyInfo(getValidCompute1String(), getValidCompute2String(),
 				volumeItemString, getValidVolume2String());
 		
-		new FinancePolicy(PLAN_NAME, policyInfo);
+		new FinancePolicy(PLAN_NAME, DEFAULT_RESOURCE_VALUE, policyInfo);
 	}
 	
 	// test case: When calling the getItemFinanceValue method and the item is not 
-	// known by the financial plan, it must throw an InvalidParameterException.
-	@Test(expected = InvalidParameterException.class)
+	// known by the financial plan, it must return the default resource value.
+	@Test
 	public void testGetItemFinancialValueItemDoesNotExist() throws InvalidParameterException {
 		setUpPolicyInfo();
 		
-		FinancePolicy plan = new FinancePolicy(PLAN_NAME, policyInfo);
+		FinancePolicy plan = new FinancePolicy(PLAN_NAME, DEFAULT_RESOURCE_VALUE, policyInfo);
 		ResourceItem unknownItem1 = new ComputeItem(UNKNOWN_ITEM_VCPU, UNKNOWN_ITEM_RAM);
 		
-		plan.getItemFinancialValue(unknownItem1, STATE_1);
+		assertEquals(DEFAULT_RESOURCE_VALUE, plan.getItemFinancialValue(unknownItem1, STATE_1));
 	}
 	
 	// test case: When creating a FinancePolicy object using a file as data source, 
@@ -367,7 +368,7 @@ public class FinancePolicyTest {
     // set up the FinancePolicy object correctly.
     @Test
     public void testConstructorReadPlanFromFile() throws InvalidParameterException {
-        FinancePolicy plan = new FinancePolicy(PLAN_NAME, "src/test/resources/private/test_plan.txt");
+        FinancePolicy plan = new FinancePolicy(PLAN_NAME, DEFAULT_RESOURCE_VALUE, "src/test/resources/private/test_plan.txt");
         
         ResourceItem computeItem1 = new ComputeItem(COMPUTE_1_VCPU, COMPUTE_1_RAM);
         ResourceItem computeItem2 = new ComputeItem(COMPUTE_2_VCPU, COMPUTE_2_RAM);
@@ -384,7 +385,7 @@ public class FinancePolicyTest {
     // the data source file does not exist, the constructor must throw an InvalidParameterException.
     @Test(expected = InvalidParameterException.class)
     public void testConstructorDataSourceFileDoesNotExist() throws InvalidParameterException {
-        new FinancePolicy(PLAN_NAME, "unknown_file.txt");
+        new FinancePolicy(PLAN_NAME, DEFAULT_RESOURCE_VALUE, "unknown_file.txt");
     }
     
     // test case: When calling the getRulesAsMap method, it must return a Map containing representations 
@@ -399,7 +400,7 @@ public class FinancePolicyTest {
         ResourceItem volumeItem1 = new VolumeItem(VOLUME_1_SIZE);
         ResourceItem volumeItem2 = new VolumeItem(VOLUME_2_SIZE);
         
-        FinancePolicy plan = new FinancePolicy(PLAN_NAME, policyInfo);
+        FinancePolicy plan = new FinancePolicy(PLAN_NAME, DEFAULT_RESOURCE_VALUE, policyInfo);
         
         Map<String, String> returnedMap = plan.getRulesAsMap();
 
@@ -481,7 +482,7 @@ public class FinancePolicyTest {
         Mockito.when(planItems.get(Pair.of(volumeItem1, STATE_1))).thenReturn(VOLUME_1_VALUE);
         Mockito.when(planItems.get(Pair.of(volumeItem2, STATE_2))).thenReturn(VOLUME_2_VALUE);
         
-        FinancePolicy plan = new FinancePolicy(planItems);
+        FinancePolicy plan = new FinancePolicy(DEFAULT_RESOURCE_VALUE, planItems);
         
         String result = plan.toString();
         
@@ -506,7 +507,7 @@ public class FinancePolicyTest {
         ResourceItem volumeItem1 = new VolumeItem(VOLUME_1_SIZE);
         ResourceItem volumeItem2 = new VolumeItem(VOLUME_2_SIZE);
 
-        FinancePolicy policy = new FinancePolicy(planItems);
+        FinancePolicy policy = new FinancePolicy(DEFAULT_RESOURCE_VALUE, planItems);
         
         // check plan state before update
         assertPlanDoesNotContainItem(policy, computeItem1, STATE_1);
@@ -546,7 +547,7 @@ public class FinancePolicyTest {
         
         Map<Pair<ResourceItem, OrderState>, Double> planItems = setUpItemsBeforeUpdate();
         
-        FinancePolicy policy = new FinancePolicy(planItems);
+        FinancePolicy policy = new FinancePolicy(DEFAULT_RESOURCE_VALUE, planItems);
         
         policy.update(policyInfo);
     }
@@ -568,7 +569,7 @@ public class FinancePolicyTest {
         
         Map<Pair<ResourceItem, OrderState>, Double> planItems = setUpItemsBeforeUpdate();
         
-        FinancePolicy policy = new FinancePolicy(planItems);
+        FinancePolicy policy = new FinancePolicy(DEFAULT_RESOURCE_VALUE, planItems);
         
         policy.update(policyInfo);
     }
@@ -589,7 +590,7 @@ public class FinancePolicyTest {
         
         Map<Pair<ResourceItem, OrderState>, Double> planItems = setUpItemsBeforeUpdate();
         
-        FinancePolicy policy = new FinancePolicy(planItems);
+        FinancePolicy policy = new FinancePolicy(DEFAULT_RESOURCE_VALUE, planItems);
         
         policy.update(policyInfo);
     }
@@ -612,7 +613,7 @@ public class FinancePolicyTest {
         
         Map<Pair<ResourceItem, OrderState>, Double> planItems = setUpItemsBeforeUpdate();
         
-        FinancePolicy policy = new FinancePolicy(planItems);
+        FinancePolicy policy = new FinancePolicy(DEFAULT_RESOURCE_VALUE, planItems);
         
         policy.update(policyInfo);
     }
@@ -635,7 +636,7 @@ public class FinancePolicyTest {
         
         Map<Pair<ResourceItem, OrderState>, Double> planItems = setUpItemsBeforeUpdate();
         
-        FinancePolicy policy = new FinancePolicy(planItems);
+        FinancePolicy policy = new FinancePolicy(DEFAULT_RESOURCE_VALUE, planItems);
         
         policy.update(policyInfo);
     }
@@ -657,7 +658,7 @@ public class FinancePolicyTest {
         
         Map<Pair<ResourceItem, OrderState>, Double> planItems = setUpItemsBeforeUpdate();
         
-        FinancePolicy policy = new FinancePolicy(planItems);
+        FinancePolicy policy = new FinancePolicy(DEFAULT_RESOURCE_VALUE, planItems);
         
         policy.update(policyInfo);
     }
@@ -680,7 +681,7 @@ public class FinancePolicyTest {
         
         Map<Pair<ResourceItem, OrderState>, Double> planItems = setUpItemsBeforeUpdate();
         
-        FinancePolicy policy = new FinancePolicy(planItems);
+        FinancePolicy policy = new FinancePolicy(DEFAULT_RESOURCE_VALUE, planItems);
         
         policy.update(policyInfo);
     }
@@ -702,7 +703,7 @@ public class FinancePolicyTest {
         
         Map<Pair<ResourceItem, OrderState>, Double> planItems = setUpItemsBeforeUpdate();
         
-        FinancePolicy policy = new FinancePolicy(planItems);
+        FinancePolicy policy = new FinancePolicy(DEFAULT_RESOURCE_VALUE, planItems);
         
         policy.update(policyInfo);
     }
@@ -725,7 +726,7 @@ public class FinancePolicyTest {
         
         Map<Pair<ResourceItem, OrderState>, Double> planItems = setUpItemsBeforeUpdate();
         
-        FinancePolicy policy = new FinancePolicy(planItems);
+        FinancePolicy policy = new FinancePolicy(DEFAULT_RESOURCE_VALUE, planItems);
         
         policy.update(policyInfo);
     }
@@ -747,7 +748,7 @@ public class FinancePolicyTest {
         
         Map<Pair<ResourceItem, OrderState>, Double> planItems = setUpItemsBeforeUpdate();
         
-        FinancePolicy policy = new FinancePolicy(planItems);
+        FinancePolicy policy = new FinancePolicy(DEFAULT_RESOURCE_VALUE, planItems);
         
         policy.update(policyInfo);
     }
@@ -770,7 +771,7 @@ public class FinancePolicyTest {
         
         Map<Pair<ResourceItem, OrderState>, Double> planItems = setUpItemsBeforeUpdate();
         
-        FinancePolicy policy = new FinancePolicy(planItems);
+        FinancePolicy policy = new FinancePolicy(DEFAULT_RESOURCE_VALUE, planItems);
         
         policy.update(policyInfo);
     }
@@ -792,7 +793,7 @@ public class FinancePolicyTest {
         
         Map<Pair<ResourceItem, OrderState>, Double> planItems = setUpItemsBeforeUpdate();
         
-        FinancePolicy policy = new FinancePolicy(planItems);
+        FinancePolicy policy = new FinancePolicy(DEFAULT_RESOURCE_VALUE, planItems);
         
         policy.update(policyInfo);
     }
@@ -813,7 +814,7 @@ public class FinancePolicyTest {
         
         Map<Pair<ResourceItem, OrderState>, Double> planItems = setUpItemsBeforeUpdate();
         
-        FinancePolicy policy = new FinancePolicy(planItems);
+        FinancePolicy policy = new FinancePolicy(DEFAULT_RESOURCE_VALUE, planItems);
         
         policy.update(policyInfo);
     }
@@ -836,7 +837,7 @@ public class FinancePolicyTest {
         
         Map<Pair<ResourceItem, OrderState>, Double> planItems = setUpItemsBeforeUpdate();
         
-        FinancePolicy policy = new FinancePolicy(planItems);
+        FinancePolicy policy = new FinancePolicy(DEFAULT_RESOURCE_VALUE, planItems);
         
         policy.update(policyInfo);
     }
@@ -857,7 +858,7 @@ public class FinancePolicyTest {
         setUpPolicyInfo(getValidCompute1String(), getValidCompute2String(),
                 volumeItemString, getValidVolume2String());
         
-        new FinancePolicy(PLAN_NAME, policyInfo);
+        new FinancePolicy(PLAN_NAME, DEFAULT_RESOURCE_VALUE, policyInfo);
     }
 
     private Map<Pair<ResourceItem, OrderState>, Double> setUpItemsBeforeUpdate() {
@@ -891,13 +892,8 @@ public class FinancePolicyTest {
         return planItems;
     }
 
-    private void assertPlanDoesNotContainItem(FinancePolicy plan, ResourceItem item, OrderState state) {
-        try {
-            plan.getItemFinancialValue(item, state);
-            Assert.fail("Expected to throw InvalidParameterException.");
-        } catch (InvalidParameterException e) {
-            
-        }
+    private void assertPlanDoesNotContainItem(FinancePolicy plan, ResourceItem item, OrderState state) throws InvalidParameterException {
+        Assert.assertEquals(DEFAULT_RESOURCE_VALUE, plan.getItemFinancialValue(item, state));
     }
     
 	private void setUpPolicyInfo() {

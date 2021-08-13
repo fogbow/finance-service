@@ -45,10 +45,14 @@ public class FinancePolicy {
 	
 	private static final String FINANCE_PLAN_ID_COLUMN_NAME = "finance_plan_id";
     private static final String FINANCE_PLAN_ITEMS_COLUMN_NAME = "finance_plan_items";
+    private static final String DEFAULT_RESOURCE_VALUE_COLUMN_NAME = "default_resource_value_column_name";
 
     @Column(name = FINANCE_PLAN_ID_COLUMN_NAME)
 	@Id
 	private String name;
+    
+    @Column(name = DEFAULT_RESOURCE_VALUE_COLUMN_NAME)
+    private Double defaultResourceValue;
 	
     // Persisting a Map with complex keys tends
     // to lead to some problems. Thus, we keep the
@@ -87,12 +91,13 @@ public class FinancePolicy {
         return plan;
     }
 	
-    public FinancePolicy(String planName, String planPath) throws InvalidParameterException {
+    public FinancePolicy(String planName, Double defaultResourceValue, String planPath) throws InvalidParameterException {
     	Map<String, String> planInfo = getPlanFromFile(planPath);
     	Map<Pair<ResourceItem, OrderState>, Double> plan = validatePlanInfo(planInfo);
     	this.items = getDatabaseItems(plan);
     	
 		this.name = planName;
+		this.defaultResourceValue = defaultResourceValue;
 		this.policy = plan;
     }
     
@@ -132,14 +137,16 @@ public class FinancePolicy {
         return databasePlanItems;
     }
 	
-    public FinancePolicy(String planName, Map<String, String> planInfo) throws InvalidParameterException {
+    public FinancePolicy(String planName, Double defaultResourceValue, Map<String, String> planInfo) throws InvalidParameterException {
     	Map<Pair<ResourceItem, OrderState>, Double> plan = validatePlanInfo(planInfo);
 		this.name = planName;
+		this.defaultResourceValue = defaultResourceValue;
 		this.policy = plan;
 		this.items = getDatabaseItems(plan);
 	}
     
-    FinancePolicy(Map<Pair<ResourceItem, OrderState>, Double> plan) {
+    FinancePolicy(Double defaultResourceValue, Map<Pair<ResourceItem, OrderState>, Double> plan) {
+        this.defaultResourceValue = defaultResourceValue;
         this.policy = plan;
     }
     
@@ -264,9 +271,8 @@ public class FinancePolicy {
 	public Double getItemFinancialValue(ResourceItem resourceItem, OrderState orderState) throws InvalidParameterException {
 		if (policy.containsKey(Pair.of(resourceItem, orderState))) { 
 			return policy.get(Pair.of(resourceItem, orderState));	
+		} else {
+		    return this.defaultResourceValue;
 		}
-		
-		throw new InvalidParameterException(String.format(Messages.Exception.UNKNOWN_RESOURCE_ITEM, 
-				resourceItem.toString(), orderState.getValue()));
 	}
 }

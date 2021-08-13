@@ -57,6 +57,8 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
      * to indicate the string that contains the plan configuration.
      */
     public static final String FINANCE_PLAN_RULES = "financeplan";
+    // TODO documentation
+    public static final String FINANCE_PLAN_DEFAULT_RESOURCE_VALUE = "finance_plan_default_resource_value";
     
     private static final String PLAN_NAME_COLUMN_NAME = "name";
     private static final String USER_BILLING_TIME_COLUMN_NAME = "user_billing_time";
@@ -193,10 +195,12 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
         checkContainsProperty(financeOptions, PaymentRunner.USER_BILLING_INTERVAL);
         checkContainsProperty(financeOptions, INVOICE_WAIT_TIME);
         checkContainsProperty(financeOptions, TIME_TO_WAIT_BEFORE_STOPPING);
+        checkContainsProperty(financeOptions, FINANCE_PLAN_DEFAULT_RESOURCE_VALUE);
         
-        checkPropertyIsParsable(financeOptions.get(PaymentRunner.USER_BILLING_INTERVAL), PaymentRunner.USER_BILLING_INTERVAL);
-        checkPropertyIsParsable(financeOptions.get(INVOICE_WAIT_TIME), INVOICE_WAIT_TIME);
-        checkPropertyIsParsable(financeOptions.get(TIME_TO_WAIT_BEFORE_STOPPING), TIME_TO_WAIT_BEFORE_STOPPING);
+        checkPropertyIsParsableAsLong(financeOptions.get(PaymentRunner.USER_BILLING_INTERVAL), PaymentRunner.USER_BILLING_INTERVAL);
+        checkPropertyIsParsableAsLong(financeOptions.get(INVOICE_WAIT_TIME), INVOICE_WAIT_TIME);
+        checkPropertyIsParsableAsLong(financeOptions.get(TIME_TO_WAIT_BEFORE_STOPPING), TIME_TO_WAIT_BEFORE_STOPPING);
+        checkPropertyIsParsableAsDouble(financeOptions.get(FINANCE_PLAN_DEFAULT_RESOURCE_VALUE), FINANCE_PLAN_DEFAULT_RESOURCE_VALUE);
     }
 
     private void checkContainsProperty(Map<String, String> financeOptions, String property) throws InvalidParameterException {
@@ -206,7 +210,7 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
         }
     }
     
-    private void checkPropertyIsParsable(String property, String propertyName) throws InvalidParameterException {
+    private void checkPropertyIsParsableAsLong(String property, String propertyName) throws InvalidParameterException {
         try {
             Long.valueOf(property);
         } catch (NumberFormatException e) {
@@ -216,23 +220,36 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
         }
     }
     
-    private void setUpPlanFromOptions(Map<String, String> financeOptions, FinancePolicyFactory planFactory) throws InvalidParameterException {
+    private void checkPropertyIsParsableAsDouble(String property, String propertyName) throws InvalidParameterException {
+        try {
+            Double.valueOf(property);
+        } catch (NumberFormatException e) {
+            // TODO test
+            throw new InvalidParameterException(
+                    String.format(Messages.Exception.INVALID_FINANCE_OPTION, property, propertyName));
+        }
+    }
+    
+    private void setUpPlanFromOptions(Map<String, String> financeOptions, 
+            FinancePolicyFactory planFactory) throws InvalidParameterException {
         if (financeOptions.containsKey(FINANCE_PLAN_RULES)) {
-            setUpPlanFromRulesString(financeOptions.get(FINANCE_PLAN_RULES), planFactory);
+            setUpPlanFromRulesString(financeOptions.get(FINANCE_PLAN_RULES), 
+                    Double.valueOf(financeOptions.get(FINANCE_PLAN_DEFAULT_RESOURCE_VALUE)), planFactory);
         } else if (financeOptions.containsKey(FINANCE_PLAN_RULES_FILE_PATH))  {
-            setUpPlanFromRulesFile(financeOptions.get(FINANCE_PLAN_RULES_FILE_PATH), planFactory);
+            setUpPlanFromRulesFile(financeOptions.get(FINANCE_PLAN_RULES_FILE_PATH), 
+                    Double.valueOf(financeOptions.get(FINANCE_PLAN_DEFAULT_RESOURCE_VALUE)), planFactory);
         } else {
         	// TODO test
             throw new InvalidParameterException(Messages.Exception.NO_FINANCE_PLAN_CREATION_METHOD_PROVIDED);
         }
     }
 
-    private void setUpPlanFromRulesString(String rulesString, FinancePolicyFactory planFactory)
+    private void setUpPlanFromRulesString(String rulesString, Double defaultResourceValue, FinancePolicyFactory planFactory)
             throws InvalidParameterException {
         Map<String, String> planInfo = this.jsonUtils.fromJson(rulesString, Map.class);
         
         if (this.policy == null) {
-            this.policy = planFactory.createFinancePolicy(this.name, planInfo);
+            this.policy = planFactory.createFinancePolicy(this.name, defaultResourceValue, planInfo);
         } else {
             synchronized(this.policy) {
                 this.policy.update(planInfo);
@@ -240,9 +257,9 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
         }
     }
     
-    private void setUpPlanFromRulesFile(String financePlanFilePath, FinancePolicyFactory planFactory)
+    private void setUpPlanFromRulesFile(String financePlanFilePath, Double defaultResourceValue, FinancePolicyFactory planFactory)
             throws InvalidParameterException {
-        this.policy = planFactory.createFinancePolicy(this.name, financePlanFilePath);
+        this.policy = planFactory.createFinancePolicy(this.name, defaultResourceValue, financePlanFilePath);
     }
     
     @Override
@@ -406,6 +423,7 @@ public class PostPaidPlanPlugin extends PersistablePlanPlugin {
             setOptionIfNotNull(options, FINANCE_PLAN_RULES_FILE_PATH);
             setOptionIfNotNull(options, INVOICE_WAIT_TIME);
             setOptionIfNotNull(options, TIME_TO_WAIT_BEFORE_STOPPING);
+            setOptionIfNotNull(options, FINANCE_PLAN_DEFAULT_RESOURCE_VALUE);
 
             return options;
         }
