@@ -31,13 +31,24 @@ public class FinancePolicyTest {
 	private static final int COMPUTE_1_VCPU = 2;
 	private static final int COMPUTE_1_RAM = 4;
 	private static final Double COMPUTE_1_VALUE = 5.0;
+	private static final Double ONE_SECOND_IN_MILLISECONDS = 1000.0;
+	private static final Double ONE_MINUTE_IN_MILLISECONDS = 60 * 1000.0;
+	private static final Double ONE_HOUR_IN_MILLISECONDS = 60 * 60 * 1000.0;
+	private static final String COMPUTE_1_TIME_UNIT = FinancePolicy.SECONDS;
+	private static final Double COMPUTE_1_VALUE_FACTOR = ONE_SECOND_IN_MILLISECONDS;
 	private static final int COMPUTE_2_VCPU = 4;
 	private static final int COMPUTE_2_RAM = 8;
 	private static final Double COMPUTE_2_VALUE = 9.0;
+	private static final String COMPUTE_2_TIME_UNIT = FinancePolicy.MINUTES;
+	private static final Double COMPUTE_2_VALUE_FACTOR = ONE_MINUTE_IN_MILLISECONDS;
 	private static final int VOLUME_1_SIZE = 50;
 	private static final Double VOLUME_1_VALUE = 2.0;
+	private static final String VOLUME_1_TIME_UNIT = FinancePolicy.HOURS;
+	private static final Double VOLUME_1_VALUE_FACTOR = ONE_HOUR_IN_MILLISECONDS;
 	private static final int VOLUME_2_SIZE = 10;
 	private static final Double VOLUME_2_VALUE = 0.3;
+	private static final String VOLUME_2_TIME_UNIT = FinancePolicy.MILLISECONDS;
+	private static final Double VOLUME_2_VALUE_FACTOR = 1.0;
 	private static final int UNKNOWN_ITEM_VCPU = 1;
 	private static final int UNKNOWN_ITEM_RAM = 1;
 	private static final Double COMPUTE_1_VALUE_BEFORE_UPDATE = COMPUTE_1_VALUE + 1;
@@ -70,10 +81,14 @@ public class FinancePolicyTest {
 		ResourceItem volumeItem1 = new VolumeItem(VOLUME_1_SIZE);
 		ResourceItem volumeItem2 = new VolumeItem(VOLUME_2_SIZE);
 		
-		assertEquals(COMPUTE_1_VALUE, policy.getItemFinancialValue(computeItem1, STATE_1));
-		assertEquals(COMPUTE_2_VALUE, policy.getItemFinancialValue(computeItem2, STATE_2));
-		assertEquals(VOLUME_1_VALUE, policy.getItemFinancialValue(volumeItem1, STATE_1));
-		assertEquals(VOLUME_2_VALUE, policy.getItemFinancialValue(volumeItem2, STATE_2));
+		assertEquals(new Double(COMPUTE_1_VALUE / COMPUTE_1_VALUE_FACTOR), 
+		        policy.getItemFinancialValue(computeItem1, STATE_1));
+		assertEquals(new Double(COMPUTE_2_VALUE / COMPUTE_2_VALUE_FACTOR), 
+		        policy.getItemFinancialValue(computeItem2, STATE_2));
+		assertEquals(new Double(VOLUME_1_VALUE / VOLUME_1_VALUE_FACTOR), 
+		        policy.getItemFinancialValue(volumeItem1, STATE_1));
+		assertEquals(new Double(VOLUME_2_VALUE / VOLUME_2_VALUE_FACTOR), 
+		        policy.getItemFinancialValue(volumeItem2, STATE_2));
 	}
 	
 	// test case: When creating a FinancePolicy object and one of the plan items
@@ -85,7 +100,8 @@ public class FinancePolicyTest {
 		computeItemValues1[FinancePolicy.ORDER_STATE_FIELD_INDEX] = STATE_1.getValue();
 		computeItemValues1[FinancePolicy.COMPUTE_VCPU_FIELD_INDEX] = String.valueOf(COMPUTE_1_VCPU);
 		computeItemValues1[FinancePolicy.COMPUTE_RAM_FIELD_INDEX] = String.valueOf(COMPUTE_1_RAM);
-		computeItemValues1[FinancePolicy.COMPUTE_VALUE_FIELD_INDEX] = String.valueOf(COMPUTE_1_VALUE);
+		computeItemValues1[FinancePolicy.COMPUTE_VALUE_FIELD_INDEX] = String.valueOf(COMPUTE_1_VALUE) + 
+		        FinancePolicy.VALUE_TIME_UNIT_SEPARATOR + COMPUTE_1_TIME_UNIT;
 		String computeItemString1 = String.join(FinancePolicy.ITEM_FIELDS_SEPARATOR, computeItemValues1);
 		
 		setUpPolicyInfo(computeItemString1, getValidCompute2String(),
@@ -158,7 +174,7 @@ public class FinancePolicyTest {
 		computeItemValues1[FinancePolicy.ORDER_STATE_FIELD_INDEX] = STATE_1.getValue();
 		computeItemValues1[FinancePolicy.COMPUTE_VCPU_FIELD_INDEX] = String.valueOf(COMPUTE_1_VCPU);
 		computeItemValues1[FinancePolicy.COMPUTE_RAM_FIELD_INDEX] = String.valueOf(COMPUTE_1_RAM);
-		computeItemValues1[FinancePolicy.COMPUTE_VALUE_FIELD_INDEX] = "-10.0";
+		computeItemValues1[FinancePolicy.COMPUTE_VALUE_FIELD_INDEX] =  "-10.0" + "/" + COMPUTE_1_TIME_UNIT ;
 		String computeItemString1 = String.join(FinancePolicy.ITEM_FIELDS_SEPARATOR, computeItemValues1);
 
 		setUpPolicyInfo(computeItemString1, getValidCompute2String(),
@@ -166,6 +182,25 @@ public class FinancePolicyTest {
 		
 		new FinancePolicy(PLAN_NAME, DEFAULT_RESOURCE_VALUE, policyInfo);
 	}
+	
+	// test case: When creating a FinancePolicy object and one of the compute items
+	// definitions passed as argument contains an invalid time unit for the compute value, the
+	// constructor must throw an InvalidParameterException.
+    @Test(expected = InvalidParameterException.class)
+    public void testConstructorInvalidPlanInfoInvalidComputeValueTimeUnit() throws InvalidParameterException {
+        String[] computeItemValues1 = new String[5];
+        computeItemValues1[FinancePolicy.RESOURCE_TYPE_FIELD_INDEX] = FinancePolicy.COMPUTE_RESOURCE_TYPE;
+        computeItemValues1[FinancePolicy.ORDER_STATE_FIELD_INDEX] = STATE_1.getValue();
+        computeItemValues1[FinancePolicy.COMPUTE_VCPU_FIELD_INDEX] = String.valueOf(COMPUTE_1_VCPU);
+        computeItemValues1[FinancePolicy.COMPUTE_RAM_FIELD_INDEX] = String.valueOf(COMPUTE_1_RAM);
+        computeItemValues1[FinancePolicy.COMPUTE_VALUE_FIELD_INDEX] = String.valueOf(COMPUTE_1_VALUE) + 
+                FinancePolicy.VALUE_TIME_UNIT_SEPARATOR + "invalidtimeunit";
+        String computeItemString1 = String.join(FinancePolicy.ITEM_FIELDS_SEPARATOR, computeItemValues1);
+
+        setUpPolicyInfo(computeItemString1, getValidCompute2String(), getValidVolume1String(), getValidVolume2String());
+
+        new FinancePolicy(PLAN_NAME, DEFAULT_RESOURCE_VALUE, policyInfo);
+    }
 	
 	// test case: When creating a FinancePolicy object and one of the compute items 
     // definitions passed as argument contains an empty compute vCPU, the constructor
@@ -176,7 +211,8 @@ public class FinancePolicyTest {
 		computeItemValues1[FinancePolicy.RESOURCE_TYPE_FIELD_INDEX] = FinancePolicy.COMPUTE_RESOURCE_TYPE;
 		computeItemValues1[FinancePolicy.ORDER_STATE_FIELD_INDEX] = STATE_1.getValue();
 		computeItemValues1[FinancePolicy.COMPUTE_RAM_FIELD_INDEX] = String.valueOf(COMPUTE_1_RAM);
-		computeItemValues1[FinancePolicy.COMPUTE_VALUE_FIELD_INDEX] = String.valueOf(COMPUTE_1_VALUE);
+		computeItemValues1[FinancePolicy.COMPUTE_VALUE_FIELD_INDEX] = String.valueOf(COMPUTE_1_VALUE) + 
+                FinancePolicy.VALUE_TIME_UNIT_SEPARATOR + COMPUTE_1_TIME_UNIT;
 		String computeItemString1 = String.join(FinancePolicy.ITEM_FIELDS_SEPARATOR, computeItemValues1);
 
 		setUpPolicyInfo(computeItemString1, getValidCompute2String(),
@@ -195,7 +231,8 @@ public class FinancePolicyTest {
 		computeItemValues1[FinancePolicy.ORDER_STATE_FIELD_INDEX] = STATE_1.getValue();
 		computeItemValues1[FinancePolicy.COMPUTE_VCPU_FIELD_INDEX] = "unparsablevcpu";
 		computeItemValues1[FinancePolicy.COMPUTE_RAM_FIELD_INDEX] = String.valueOf(COMPUTE_1_RAM);
-		computeItemValues1[FinancePolicy.COMPUTE_VALUE_FIELD_INDEX] = String.valueOf(COMPUTE_1_VALUE);
+		computeItemValues1[FinancePolicy.COMPUTE_VALUE_FIELD_INDEX] = String.valueOf(COMPUTE_1_VALUE) + 
+                FinancePolicy.VALUE_TIME_UNIT_SEPARATOR + COMPUTE_1_TIME_UNIT;
 		String computeItemString1 = String.join(FinancePolicy.ITEM_FIELDS_SEPARATOR, computeItemValues1);
 
 		setUpPolicyInfo(computeItemString1, getValidCompute2String(),
@@ -213,7 +250,8 @@ public class FinancePolicyTest {
 		computeItemValues1[FinancePolicy.RESOURCE_TYPE_FIELD_INDEX] = FinancePolicy.COMPUTE_RESOURCE_TYPE;
 		computeItemValues1[FinancePolicy.ORDER_STATE_FIELD_INDEX] = STATE_1.getValue();
 		computeItemValues1[FinancePolicy.COMPUTE_VCPU_FIELD_INDEX] = String.valueOf(COMPUTE_1_VCPU);
-		computeItemValues1[FinancePolicy.COMPUTE_VALUE_FIELD_INDEX] = String.valueOf(COMPUTE_1_VALUE);
+		computeItemValues1[FinancePolicy.COMPUTE_VALUE_FIELD_INDEX] = String.valueOf(COMPUTE_1_VALUE) + 
+                FinancePolicy.VALUE_TIME_UNIT_SEPARATOR + COMPUTE_1_TIME_UNIT;
 		String computeItemString1 = String.join(FinancePolicy.ITEM_FIELDS_SEPARATOR, computeItemValues1);
 
 		setUpPolicyInfo(computeItemString1, getValidCompute2String(),
@@ -232,7 +270,8 @@ public class FinancePolicyTest {
 		computeItemValues1[FinancePolicy.ORDER_STATE_FIELD_INDEX] = STATE_1.getValue();
 		computeItemValues1[FinancePolicy.COMPUTE_VCPU_FIELD_INDEX] = String.valueOf(COMPUTE_1_VCPU);
 		computeItemValues1[FinancePolicy.COMPUTE_RAM_FIELD_INDEX] = "unparsableram";
-		computeItemValues1[FinancePolicy.COMPUTE_VALUE_FIELD_INDEX] = String.valueOf(COMPUTE_1_VALUE);
+		computeItemValues1[FinancePolicy.COMPUTE_VALUE_FIELD_INDEX] = String.valueOf(COMPUTE_1_VALUE) + 
+                FinancePolicy.VALUE_TIME_UNIT_SEPARATOR + COMPUTE_1_TIME_UNIT;
 		String computeItemString1 = String.join(FinancePolicy.ITEM_FIELDS_SEPARATOR, computeItemValues1);
 
 		setUpPolicyInfo(computeItemString1, getValidCompute2String(),
@@ -249,7 +288,8 @@ public class FinancePolicyTest {
 		String[] volumeItemValues = new String[4];
 		volumeItemValues[FinancePolicy.RESOURCE_TYPE_FIELD_INDEX] = FinancePolicy.VOLUME_RESOURCE_TYPE;
 		volumeItemValues[FinancePolicy.ORDER_STATE_FIELD_INDEX] = STATE_1.getValue();
-		volumeItemValues[FinancePolicy.VOLUME_VALUE_FIELD_INDEX] = String.valueOf(VOLUME_1_VALUE);
+		volumeItemValues[FinancePolicy.VOLUME_VALUE_FIELD_INDEX] = String.valueOf(VOLUME_1_VALUE) + 
+                FinancePolicy.VALUE_TIME_UNIT_SEPARATOR + VOLUME_1_TIME_UNIT;
 		
 		String volumeItemString = String.join(FinancePolicy.ITEM_FIELDS_SEPARATOR, volumeItemValues);
 
@@ -268,7 +308,8 @@ public class FinancePolicyTest {
 		volumeItemValues[FinancePolicy.RESOURCE_TYPE_FIELD_INDEX] = FinancePolicy.VOLUME_RESOURCE_TYPE;
 		volumeItemValues[FinancePolicy.ORDER_STATE_FIELD_INDEX] = STATE_1.getValue();
 		volumeItemValues[FinancePolicy.VOLUME_SIZE_FIELD_INDEX] = String.valueOf("unparsablesize");
-		volumeItemValues[FinancePolicy.VOLUME_VALUE_FIELD_INDEX] = String.valueOf(VOLUME_1_VALUE);
+		volumeItemValues[FinancePolicy.VOLUME_VALUE_FIELD_INDEX] = String.valueOf(VOLUME_1_VALUE) + 
+                FinancePolicy.VALUE_TIME_UNIT_SEPARATOR + VOLUME_1_TIME_UNIT;
 		
 		String volumeItemString = String.join(FinancePolicy.ITEM_FIELDS_SEPARATOR, volumeItemValues);
 
@@ -351,6 +392,26 @@ public class FinancePolicyTest {
 		new FinancePolicy(PLAN_NAME, DEFAULT_RESOURCE_VALUE, policyInfo);
 	}
 	
+    // test case: When creating a FinancePolicy object and one of the volume items
+    // definitions passed as argument contains an invalid time unit for the volume value, the
+    // constructor must throw an InvalidParameterException.
+    @Test(expected = InvalidParameterException.class)
+    public void testConstructorInvalidPlanInfoInvalidVolumeValueTimeUnit() throws InvalidParameterException {
+        String[] volumeItemValues = new String[4];
+        volumeItemValues[FinancePolicy.RESOURCE_TYPE_FIELD_INDEX] = FinancePolicy.VOLUME_RESOURCE_TYPE;
+        volumeItemValues[FinancePolicy.ORDER_STATE_FIELD_INDEX] = STATE_1.getValue();
+        volumeItemValues[FinancePolicy.VOLUME_SIZE_FIELD_INDEX] = String.valueOf(VOLUME_1_SIZE);
+        volumeItemValues[FinancePolicy.VOLUME_VALUE_FIELD_INDEX] = String.valueOf(VOLUME_1_VALUE) + 
+                FinancePolicy.VALUE_TIME_UNIT_SEPARATOR + "invalidtimeunit";
+        
+        String volumeItemString = String.join(FinancePolicy.ITEM_FIELDS_SEPARATOR, volumeItemValues);
+
+        setUpPolicyInfo(getValidCompute1String(), getValidCompute2String(),
+                volumeItemString, getValidVolume2String());
+        
+        new FinancePolicy(PLAN_NAME, DEFAULT_RESOURCE_VALUE, policyInfo);
+    }
+	
 	// test case: When calling the getItemFinanceValue method and the item is not 
 	// known by the financial plan, it must return the default resource value.
 	@Test
@@ -368,17 +429,22 @@ public class FinancePolicyTest {
     // set up the FinancePolicy object correctly.
     @Test
     public void testConstructorReadPlanFromFile() throws InvalidParameterException {
-        FinancePolicy plan = new FinancePolicy(PLAN_NAME, DEFAULT_RESOURCE_VALUE, "src/test/resources/private/test_plan.txt");
+        FinancePolicy plan = new FinancePolicy(PLAN_NAME, DEFAULT_RESOURCE_VALUE, 
+                "src/test/resources/private/test_plan.txt");
         
         ResourceItem computeItem1 = new ComputeItem(COMPUTE_1_VCPU, COMPUTE_1_RAM);
         ResourceItem computeItem2 = new ComputeItem(COMPUTE_2_VCPU, COMPUTE_2_RAM);
         ResourceItem volumeItem1 = new VolumeItem(VOLUME_1_SIZE);
         ResourceItem volumeItem2 = new VolumeItem(VOLUME_2_SIZE);
 
-        assertEquals(COMPUTE_1_VALUE, plan.getItemFinancialValue(computeItem1, STATE_1));
-        assertEquals(COMPUTE_2_VALUE, plan.getItemFinancialValue(computeItem2, STATE_2));
-        assertEquals(VOLUME_1_VALUE, plan.getItemFinancialValue(volumeItem1, STATE_1));
-        assertEquals(VOLUME_2_VALUE, plan.getItemFinancialValue(volumeItem2, STATE_2));
+        assertEquals(new Double(COMPUTE_1_VALUE / COMPUTE_1_VALUE_FACTOR), 
+                plan.getItemFinancialValue(computeItem1, STATE_1));
+        assertEquals(new Double(COMPUTE_2_VALUE / COMPUTE_2_VALUE_FACTOR), 
+                plan.getItemFinancialValue(computeItem2, STATE_2));
+        assertEquals(new Double(VOLUME_1_VALUE / VOLUME_1_VALUE_FACTOR), 
+                plan.getItemFinancialValue(volumeItem1, STATE_1));
+        assertEquals(new Double(VOLUME_2_VALUE / VOLUME_2_VALUE_FACTOR), 
+                plan.getItemFinancialValue(volumeItem2, STATE_2));
     }
     
     // test case: When creating a FinancePolicy object using a file as data source and
@@ -405,22 +471,22 @@ public class FinancePolicyTest {
         Map<String, String> returnedMap = plan.getRulesAsMap();
 
         assertEquals(4, returnedMap.size());
-        
+
         String keyCompute1 = String.format("%s-%s", computeItem1.toString(), STATE_1.getValue());
         assertTrue(returnedMap.containsKey(keyCompute1));
-        assertEquals(String.valueOf(COMPUTE_1_VALUE), returnedMap.get(keyCompute1));
+        assertEquals(String.valueOf(COMPUTE_1_VALUE / COMPUTE_1_VALUE_FACTOR), returnedMap.get(keyCompute1));
         
         String keyCompute2 = String.format("%s-%s", computeItem2.toString(), STATE_2.getValue());
         assertTrue(returnedMap.containsKey(keyCompute2));
-        assertEquals(String.valueOf(COMPUTE_2_VALUE), returnedMap.get(keyCompute2));
+        assertEquals(String.valueOf(COMPUTE_2_VALUE / COMPUTE_2_VALUE_FACTOR), returnedMap.get(keyCompute2));
 
         String keyVolume1 = String.format("%s-%s", volumeItem1.toString(), STATE_1.getValue());
         assertTrue(returnedMap.containsKey(keyVolume1));
-        assertEquals(String.valueOf(VOLUME_1_VALUE), returnedMap.get(keyVolume1));
+        assertEquals(String.valueOf(VOLUME_1_VALUE / VOLUME_1_VALUE_FACTOR), returnedMap.get(keyVolume1));
         
         String keyVolume2 = String.format("%s-%s", volumeItem2.toString(), STATE_2.getValue());
         assertTrue(returnedMap.containsKey(keyVolume2));
-        assertEquals(String.valueOf(VOLUME_2_VALUE), returnedMap.get(keyVolume2));
+        assertEquals(String.valueOf(VOLUME_2_VALUE / VOLUME_2_VALUE_FACTOR), returnedMap.get(keyVolume2));
     }
     
     // test case: When calling the getPlanFromDatabaseItems method, it must return a Map of 
@@ -441,7 +507,7 @@ public class FinancePolicyTest {
         items.add(new FinanceRule(volumeItem1, STATE_1, VOLUME_1_VALUE));
         items.add(new FinanceRule(volumeItem2, STATE_2, VOLUME_2_VALUE));
         
-        Map<Pair<ResourceItem, OrderState>, Double> returnedPlan = plan.getPlanFromDatabaseItems(items);
+        Map<Pair<ResourceItem, OrderState>, Double> returnedPlan = plan.getPolicyFromDatabaseItems(items);
         
         assertEquals(4, returnedPlan.size());
         
@@ -524,11 +590,17 @@ public class FinancePolicyTest {
         assertPlanDoesNotContainItem(policy, volumeItem1BeforeUpdate, STATE_1);
         assertPlanDoesNotContainItem(policy, volumeItem2BeforeUpdate, STATE_2);
         
-        assertEquals(COMPUTE_1_VALUE, policy.getItemFinancialValue(computeItem1, STATE_1));
-        assertEquals(COMPUTE_2_VALUE, policy.getItemFinancialValue(computeItem2, STATE_2));
-        assertEquals(VOLUME_1_VALUE, policy.getItemFinancialValue(volumeItem1, STATE_1));
-        assertEquals(VOLUME_2_VALUE, policy.getItemFinancialValue(volumeItem2, STATE_2));
+        assertEquals(new Double(COMPUTE_1_VALUE / COMPUTE_1_VALUE_FACTOR), 
+                policy.getItemFinancialValue(computeItem1, STATE_1));
+        assertEquals(new Double(COMPUTE_2_VALUE / COMPUTE_2_VALUE_FACTOR), 
+                policy.getItemFinancialValue(computeItem2, STATE_2));
+        assertEquals(new Double(VOLUME_1_VALUE / VOLUME_1_VALUE_FACTOR), 
+                policy.getItemFinancialValue(volumeItem1, STATE_1));
+        assertEquals(new Double(VOLUME_2_VALUE / VOLUME_2_VALUE_FACTOR), 
+                policy.getItemFinancialValue(volumeItem2, STATE_2));
     }
+    
+    // TODO update the policy.update tests
     
     // test case: When calling the update method and one of the plan items
     // is of an unknown type, the constructor must throw an InvalidParameterException.
@@ -912,39 +984,41 @@ public class FinancePolicyTest {
 	}
 
 	private String getValidCompute2String() {
-		return getComputeString(COMPUTE_2_VCPU, COMPUTE_2_RAM, COMPUTE_2_VALUE, STATE_2);
+		return getComputeString(COMPUTE_2_VCPU, COMPUTE_2_RAM, COMPUTE_2_VALUE, COMPUTE_2_TIME_UNIT, STATE_2);
 	}
 
 	private String getValidCompute1String() {
-		return getComputeString(COMPUTE_1_VCPU, COMPUTE_1_RAM, COMPUTE_1_VALUE, STATE_1);
+		return getComputeString(COMPUTE_1_VCPU, COMPUTE_1_RAM, COMPUTE_1_VALUE, COMPUTE_1_TIME_UNIT, STATE_1);
 	}
 	
-	private String getComputeString(int vcpu, int ram, double value, OrderState orderState) {
+	private String getComputeString(int vcpu, int ram, double value, String timeUnit, OrderState orderState) {
 		String[] computeItemValues = new String[5];
 		computeItemValues[FinancePolicy.RESOURCE_TYPE_FIELD_INDEX] = FinancePolicy.COMPUTE_RESOURCE_TYPE;
 		computeItemValues[FinancePolicy.ORDER_STATE_FIELD_INDEX] = orderState.getValue(); 
 		computeItemValues[FinancePolicy.COMPUTE_VCPU_FIELD_INDEX] = String.valueOf(vcpu);
 		computeItemValues[FinancePolicy.COMPUTE_RAM_FIELD_INDEX] = String.valueOf(ram);
-		computeItemValues[FinancePolicy.COMPUTE_VALUE_FIELD_INDEX] = String.valueOf(value);
+		computeItemValues[FinancePolicy.COMPUTE_VALUE_FIELD_INDEX] = String.valueOf(value) + 
+		        FinancePolicy.VALUE_TIME_UNIT_SEPARATOR + timeUnit;
 		
 		String computeItemString = String.join(FinancePolicy.ITEM_FIELDS_SEPARATOR, computeItemValues);
 		return computeItemString;
 	}
 	
 	private String getValidVolume1String() {
-		return getValidVolumeString(VOLUME_1_SIZE, VOLUME_1_VALUE, STATE_1);
+		return getValidVolumeString(VOLUME_1_SIZE, VOLUME_1_VALUE, VOLUME_1_TIME_UNIT, STATE_1);
 	}
 	
 	private String getValidVolume2String() {
-		return getValidVolumeString(VOLUME_2_SIZE, VOLUME_2_VALUE, STATE_2);
+		return getValidVolumeString(VOLUME_2_SIZE, VOLUME_2_VALUE, VOLUME_2_TIME_UNIT, STATE_2);
 	}
 	
-	private String getValidVolumeString(int size, double value, OrderState orderState) {
+	private String getValidVolumeString(int size, double value, String timeUnit, OrderState orderState) {
 		String[] volumeItemValues = new String[4];
 		volumeItemValues[FinancePolicy.RESOURCE_TYPE_FIELD_INDEX] = FinancePolicy.VOLUME_RESOURCE_TYPE;
 		volumeItemValues[FinancePolicy.ORDER_STATE_FIELD_INDEX] = orderState.getValue();
 		volumeItemValues[FinancePolicy.VOLUME_SIZE_FIELD_INDEX] = String.valueOf(size);
-		volumeItemValues[FinancePolicy.VOLUME_VALUE_FIELD_INDEX] = String.valueOf(value);
+		volumeItemValues[FinancePolicy.VOLUME_VALUE_FIELD_INDEX] = String.valueOf(value) + 
+		        FinancePolicy.VALUE_TIME_UNIT_SEPARATOR + timeUnit;
 		
 		String volumeItemString = String.join(FinancePolicy.ITEM_FIELDS_SEPARATOR, volumeItemValues);
 		return volumeItemString;

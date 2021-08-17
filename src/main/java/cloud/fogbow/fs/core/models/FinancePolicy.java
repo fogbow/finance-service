@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.concurrent.TimeUnit;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -31,8 +32,15 @@ import cloud.fogbow.ras.core.models.orders.OrderState;
 @Table(name = "finance_policy_table")
 public class FinancePolicy {
 
-	public static final String PLAN_FIELDS_SEPARATOR = "-";
+    public static final String PLAN_FIELDS_SEPARATOR = "-";
 	public static final String ITEM_FIELDS_SEPARATOR = ",";
+	public static final String VALUE_TIME_UNIT_SEPARATOR = "/";
+	
+	public static final String MILLISECONDS = "ms";
+	public static final String SECONDS = "s";
+	public static final String MINUTES = "m";
+	public static final String HOURS = "h";
+
 	public static final int RESOURCE_TYPE_FIELD_INDEX = 0;
 	public static final int ORDER_STATE_FIELD_INDEX = 1;
 	public static final String COMPUTE_RESOURCE_TYPE = "compute";
@@ -73,22 +81,22 @@ public class FinancePolicy {
 	    
 	}
 	
-	// This method is used to repopulate the FinancePlan internal map
+	// This method is used to repopulate the FinancePolicy internal map
 	// with the data loaded from the database.
     @PostLoad
     private void startUp() {
-        policy = getPlanFromDatabaseItems(items);
+        policy = getPolicyFromDatabaseItems(items);
     }
     
     @VisibleForTesting
-    Map<Pair<ResourceItem, OrderState>, Double> getPlanFromDatabaseItems(List<FinanceRule> databaseItems) {
-        Map<Pair<ResourceItem, OrderState>, Double> plan = new HashMap<Pair<ResourceItem, OrderState>, Double>();
+    Map<Pair<ResourceItem, OrderState>, Double> getPolicyFromDatabaseItems(List<FinanceRule> databaseItems) {
+        Map<Pair<ResourceItem, OrderState>, Double> policy = new HashMap<Pair<ResourceItem, OrderState>, Double>();
         
         for (FinanceRule item : databaseItems) {
-            plan.put(Pair.of(item.getItem(), item.getOrderState()), item.getValue());
+            policy.put(Pair.of(item.getItem(), item.getOrderState()), item.getValue());
         }
         
-        return plan;
+        return policy;
     }
 	
     public FinancePolicy(String planName, Double defaultResourceValue, String planPath) throws InvalidParameterException {
@@ -179,20 +187,45 @@ public class FinancePolicy {
 			
 			int vCPU = Integer.parseInt(fields[COMPUTE_VCPU_FIELD_INDEX]);
 			int ram = Integer.parseInt(fields[COMPUTE_RAM_FIELD_INDEX]);
-			double value = Double.parseDouble(fields[COMPUTE_VALUE_FIELD_INDEX]);
-			ResourceItem newItem = new ComputeItem(vCPU, ram);
-			
+			String valueFieldsString = fields[COMPUTE_VALUE_FIELD_INDEX];
+			Double value = getValueFromValueString(valueFieldsString);
 			validateItemValue(value);
-			
 			OrderState state = OrderState.fromValue(fields[ORDER_STATE_FIELD_INDEX]);
 			
+			ResourceItem newItem = new ComputeItem(vCPU, ram);
 			plan.put(Pair.of(newItem, state), value);
 		} catch (NumberFormatException e) {
 			throw new InvalidParameterException(Messages.Exception.INVALID_COMPUTE_ITEM_FIELD);
 		}
 	}
+	
+	private Double getValueFromValueString(String valueFieldsString) throws InvalidParameterException {
+        String[] valueFields = valueFieldsString.split(VALUE_TIME_UNIT_SEPARATOR);
+        validateValueFieldsLength(valueFields);
+        String valueString = valueFields[0];
+        String valueTimeUnitString = valueFields[1];
+        
+        TimeUnit valueTimeUnit = getTimeUnitFromString(valueTimeUnitString);
+        Double baseValue = Double.parseDouble(valueString);
+        return convertValueToValuePerMilliseconds(baseValue, valueTimeUnit);
+	}
 
-	private void validateItemValue(double value) throws InvalidParameterException {
+    private TimeUnit getTimeUnitFromString(String valueTimeUnitString) throws InvalidParameterException {
+        switch(valueTimeUnitString) {
+            case MILLISECONDS: return TimeUnit.MILLISECONDS;
+            case SECONDS: return TimeUnit.SECONDS;
+            case MINUTES: return TimeUnit.MINUTES;
+            case HOURS: return TimeUnit.HOURS;
+        }
+        
+        throw new InvalidParameterException(Messages.Exception.INVALID_RESOURCE_ITEM_VALUE_TIME_UNIT);
+    }
+
+    private Double convertValueToValuePerMilliseconds(Double baseValue, TimeUnit valueTimeUnit) {
+	    return baseValue/new Double(valueTimeUnit.toMillis(1L));
+    }
+
+    private void validateItemValue(double value) throws InvalidParameterException {
 		if (value < 0) {
 			throw new InvalidParameterException(Messages.Exception.NEGATIVE_RESOURCE_ITEM_VALUE);
 		}
@@ -203,6 +236,12 @@ public class FinancePolicy {
 			throw new InvalidParameterException(Messages.Exception.INVALID_NUMBER_OF_COMPUTE_ITEM_FIELDS);
 		}
 	}
+
+    private void validateValueFieldsLength(String[] valueFields) throws InvalidParameterException {
+        if (valueFields.length != 2) {
+            throw new InvalidParameterException(Messages.Exception.INVALID_NUMBER_OF_RESOURCE_ITEM_VALUE_FIELDS);
+        }
+    }
 	
 	private void extractVolumeItem(Map<Pair<ResourceItem, OrderState>, Double> plan, String[] fields) 
 			throws InvalidParameterException {
@@ -210,13 +249,12 @@ public class FinancePolicy {
 			validateVolumeFieldsLength(fields);
 			
 			int size = Integer.parseInt(fields[VOLUME_SIZE_FIELD_INDEX]);
-			double value = Double.parseDouble(fields[VOLUME_VALUE_FIELD_INDEX]);
+			String valueFieldsString = fields[VOLUME_VALUE_FIELD_INDEX];
+            Double value = getValueFromValueString(valueFieldsString);
+            validateItemValue(value);
+            OrderState state = OrderState.fromValue(fields[ORDER_STATE_FIELD_INDEX]);
+            
 			ResourceItem newItem = new VolumeItem(size);
-			
-			validateItemValue(value);
-			
-			OrderState state = OrderState.fromValue(fields[ORDER_STATE_FIELD_INDEX]);
-
 			plan.put(Pair.of(newItem, state), value);
 		} catch (NumberFormatException e) {
 			throw new InvalidParameterException(Messages.Exception.INVALID_VOLUME_ITEM_FIELD);
