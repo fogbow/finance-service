@@ -30,6 +30,7 @@ import cloud.fogbow.common.util.CryptoUtil;
 import cloud.fogbow.common.util.ServiceAsymmetricKeysHolder;
 import cloud.fogbow.fs.core.models.OperationType;
 import cloud.fogbow.fs.core.plugins.authorization.FsOperation;
+import cloud.fogbow.fs.core.util.FinanceDataProtector;
 import cloud.fogbow.fs.core.util.SynchronizationManager;
 import cloud.fogbow.ras.core.models.RasOperation;
 
@@ -64,6 +65,7 @@ public class ApplicationFacadeTest {
 	
 	private String property = "property";
 	private String propertyValue = "propertyValue";
+	private String encryptedPropertyValue = "encryptedPropertyValue";
 	
 	private String newPlanName = "newPlanName";
 	private String newPlanPlugin = "newPlanPlugin";
@@ -73,6 +75,8 @@ public class ApplicationFacadeTest {
 	private String planToRemove = "planToRemove";
 	
 	private String newPolicy = "newPolicy";
+	
+	private String publicKey = "publicKey";
 	
 	private FsPublicKeysHolder keysHolder;
 	private RSAPublicKey asPublicKey;
@@ -87,6 +91,7 @@ public class ApplicationFacadeTest {
 	private FsOperation operation;
 	private AuthorizationPlugin<FsOperation> authorizationPlugin;
     private RasOperation rasOperation;
+    private FinanceDataProtector financeDataProtector;
 
 	// test case: When calling the addUser method, it must authorize the 
 	// operation and call the FinanceManager. Also, it must start and finish 
@@ -485,7 +490,7 @@ public class ApplicationFacadeTest {
 	}
 	
     // test case: When calling the getFinanceStateProperty method, it must authorize the
-    // operation and call the FinanceManager. Also, it must start and finish
+    // operation and call the FinanceManager. Also, it must encrypt the result and start and finish
     // operations correctly using the SynchronizationManager.
 	@Test
     public void testGetFinanceStateProperty() throws FogbowException {
@@ -498,9 +503,10 @@ public class ApplicationFacadeTest {
         thenReturn(propertyValue);
         
         String returnedProperty = ApplicationFacade.getInstance().getFinanceStateProperty(adminToken, 
-                userIdToChange, userProviderToChange, property);
+                userIdToChange, userProviderToChange, property, publicKey);
         
-        assertEquals(propertyValue, returnedProperty);
+        assertEquals(encryptedPropertyValue, returnedProperty);
+        Mockito.verify(financeDataProtector, Mockito.times(1)).encrypt(propertyValue, publicKey);
         Mockito.verify(synchronizationManager, Mockito.times(1)).startOperation();
         Mockito.verify(synchronizationManager, Mockito.times(1)).finishOperation();
         Mockito.verify(authorizationPlugin, Mockito.times(1)).isAuthorized(systemUser, operation);
@@ -521,7 +527,7 @@ public class ApplicationFacadeTest {
         
         try {
             ApplicationFacade.getInstance().getFinanceStateProperty(adminToken, 
-                    userIdToChange, userProviderToChange, property);
+                    userIdToChange, userProviderToChange, property, publicKey);
             Assert.fail("getFinanceStateProperty is expected to throw exception.");
         } catch (FogbowException e) {
         }
@@ -973,13 +979,17 @@ public class ApplicationFacadeTest {
         AuthorizationPluginInstantiator.getAuthorizationPlugin();
     }
 	
-	private void setUpApplicationFacade() {
+	private void setUpApplicationFacade() throws InternalServerErrorException {
 		this.financeManager = Mockito.mock(FinanceManager.class);
 		this.synchronizationManager = Mockito.mock(SynchronizationManager.class);
+		this.financeDataProtector = Mockito.mock(FinanceDataProtector.class);
+		
+		Mockito.when(this.financeDataProtector.encrypt(propertyValue, publicKey)).thenReturn(encryptedPropertyValue);
         
         ApplicationFacade.getInstance().setAuthorizationPlugin(authorizationPlugin);
         ApplicationFacade.getInstance().setFinanceManager(financeManager);
         ApplicationFacade.getInstance().setSynchronizationManager(synchronizationManager);
+        ApplicationFacade.getInstance().setFinanceDataProtector(financeDataProtector);
 	}
 
 	private void setUpPublicKeysHolder() throws FogbowException {

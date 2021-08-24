@@ -20,6 +20,7 @@ import cloud.fogbow.common.util.ServiceAsymmetricKeysHolder;
 import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.models.OperationType;
 import cloud.fogbow.fs.core.plugins.authorization.FsOperation;
+import cloud.fogbow.fs.core.util.FinanceDataProtector;
 import cloud.fogbow.fs.core.util.SynchronizationManager;
 import cloud.fogbow.ras.core.models.RasOperation;
 
@@ -29,6 +30,7 @@ public class ApplicationFacade {
 	private FinanceManager financeManager;
 	private AuthorizationPlugin<FsOperation> authorizationPlugin;
 	private SynchronizationManager synchronizationManager;
+	private FinanceDataProtector financeDataProtector;
 	
 	private ApplicationFacade() {
 		
@@ -51,6 +53,10 @@ public class ApplicationFacade {
 	
     public void setAuthorizationPlugin(AuthorizationPlugin<FsOperation> authorizationPlugin) {
         this.authorizationPlugin = authorizationPlugin;
+    }
+    
+    public void setFinanceDataProtector(FinanceDataProtector financeDataProtector) {
+        this.financeDataProtector = financeDataProtector;
     }
 
 	public String getPublicKey() throws InternalServerErrorException {
@@ -202,14 +208,16 @@ public class ApplicationFacade {
 		}
 	}
 	
-	public String getFinanceStateProperty(String userToken, String userId, String provider, String property) throws FogbowException {
+	public String getFinanceStateProperty(String userToken, String userId, String provider, String property, String publicKey) 
+	        throws FogbowException {
 		LOGGER.info(String.format(Messages.Log.GETTING_FINANCE_STATE, userId, provider, property));
 		
 		authenticateAndAuthorize(userToken, new FsOperation(OperationType.GET_FINANCE_STATE));
 		synchronizationManager.startOperation();
 
 		try {
-			return this.financeManager.getFinanceStateProperty(new SystemUser(userId, userId, provider), property);
+		    String propertyValue = this.financeManager.getFinanceStateProperty(new SystemUser(userId, userId, provider), property);
+		    return this.financeDataProtector.encrypt(propertyValue, publicKey);
 		} finally {
 			synchronizationManager.finishOperation();
 		}

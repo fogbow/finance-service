@@ -6,6 +6,7 @@ public class Messages {
 	    public static final String CANNOT_ADD_NEGATIVE_CREDITS = "Cannot add negative credits value.";
 	    public static final String CANNOT_CHANGE_INVOICE_STATE = "Cannot change invoice state from '%s' to '%s'.";
 	    public static final String CANNOT_REMOVE_DEFAULT_FINANCE_PLAN = "Cannot remove default finance plan.";
+	    public static final String ERROR_READING_PRIVATE_KEY_FILE = "Error reading private key file.";
 	    public static final String FINANCE_PLAN_ALREADY_EXISTS = "Finance plan '%s' already exists.";
 	    public static final String FINANCE_PLAN_HAS_REGISTERED_USERS = "Finance plan '%s' has registered users.";
 		public static final String GENERIC_EXCEPTION_S = "Operation returned error: %s.";

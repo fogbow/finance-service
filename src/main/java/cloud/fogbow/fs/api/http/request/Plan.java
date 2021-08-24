@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import cloud.fogbow.common.exceptions.FogbowException;
 import cloud.fogbow.fs.api.parameters.FinanceOptions;
+import cloud.fogbow.fs.api.parameters.PublicKey;
 import cloud.fogbow.fs.constants.SystemConstants;
 import cloud.fogbow.fs.core.ApplicationFacade;
 
@@ -43,8 +44,10 @@ public class Plan {
 			@PathVariable String userId,
 			@PathVariable String provider,
 			@PathVariable String property,
-			@RequestHeader(value = SystemConstants.SYSTEM_USER_TOKEN_HEADER_KEY) String systemUserToken) throws FogbowException {
-		String propertyValue = ApplicationFacade.getInstance().getFinanceStateProperty(systemUserToken, userId, provider, property);
+			@RequestHeader(value = SystemConstants.SYSTEM_USER_TOKEN_HEADER_KEY) String systemUserToken, 
+			@RequestBody PublicKey publicKey) throws FogbowException {
+		String propertyValue = ApplicationFacade.getInstance().getFinanceStateProperty(systemUserToken, userId, provider, 
+		        property, publicKey.getPublicKey());
 		return new ResponseEntity<String>(propertyValue, HttpStatus.OK);
 	}
 	
