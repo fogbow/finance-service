@@ -72,7 +72,7 @@ public class Admin {
     }
     
     // TODO documentation
-    @RequestMapping(value = "/user/unregister/{userId}/{provider}", method = RequestMethod.DELETE)
+    @RequestMapping(value = "/user/unregister/{userId}/{provider:.+}", method = RequestMethod.DELETE)
     public ResponseEntity<Boolean> unregisterUser(
             @PathVariable String userId,
             @PathVariable String provider,
@@ -82,7 +82,7 @@ public class Admin {
     }
     
     // TODO documentation
-    @RequestMapping(value = "/user/{userId}/{provider}", method = RequestMethod.DELETE)
+    @RequestMapping(value = "/user/{userId}/{provider:.+}", method = RequestMethod.DELETE)
     public ResponseEntity<Boolean> removeUser(
             @PathVariable String userId,
             @PathVariable String provider,

@@ -21,7 +21,7 @@ public class User {
 	public static final String USER_ENDPOINT = SystemConstants.SERVICE_BASE_ENDPOINT + "user";
 
 	// TODO documentation
-	@RequestMapping(value = "/{planName}", method = RequestMethod.POST)
+	@RequestMapping(value = "/{planName:.+}", method = RequestMethod.POST)
     public ResponseEntity<Boolean> registerSelf(
             @PathVariable String planName,
             @RequestHeader(value = SystemConstants.SYSTEM_USER_TOKEN_HEADER_KEY) String systemUserToken) throws FogbowException {
@@ -38,7 +38,7 @@ public class User {
     }
     
     // TODO documentation
-    @RequestMapping(value = "/{planName}", method = RequestMethod.PUT)
+    @RequestMapping(value = "/{planName:.+}", method = RequestMethod.PUT)
     public ResponseEntity<Boolean> changeSelfPlan(
             @PathVariable String planName,
             @RequestHeader(value = SystemConstants.SYSTEM_USER_TOKEN_HEADER_KEY) String systemUserToken) throws FogbowException {

@@ -29,7 +29,7 @@ public class Plan {
 	
 	// TODO documentation
 	// TODO fix issue with dots in userId or provider
-	@RequestMapping(value = PLAN_USER_SUFFIX + "/{userId}/{provider}", method = RequestMethod.PUT)
+	@RequestMapping(value = PLAN_USER_SUFFIX + "/{userId}/{provider:.+}", method = RequestMethod.PUT)
 	public ResponseEntity<Boolean> updateFinanceState(
 			@PathVariable String userId,
 			@PathVariable String provider,
@@ -40,7 +40,7 @@ public class Plan {
 	}
 	
 	// TODO documentation
-	@RequestMapping(value = PLAN_USER_SUFFIX + "/{userId}/{provider}/{property}", method = RequestMethod.GET)
+	@RequestMapping(value = PLAN_USER_SUFFIX + "/{userId}/{provider}/{property:.+}", method = RequestMethod.GET)
 	public ResponseEntity<String> getFinanceStateProperty(
 			@PathVariable String userId,
 			@PathVariable String provider,
@@ -63,7 +63,7 @@ public class Plan {
 	}
 	
 	// TODO documentation
-	@RequestMapping(value = "/{planName}", method = RequestMethod.GET)
+	@RequestMapping(value = "/{planName:.+}", method = RequestMethod.GET)
 	public ResponseEntity<cloud.fogbow.fs.api.http.response.FinancePlan> getFinancePlan(
 			@PathVariable String planName,
 			@RequestHeader(value = SystemConstants.SYSTEM_USER_TOKEN_HEADER_KEY) String systemUserToken) throws FogbowException {
@@ -73,7 +73,7 @@ public class Plan {
 	}
 	
 	// TODO documentation
-    @RequestMapping(value = "/{planName}", method = RequestMethod.PUT)
+    @RequestMapping(value = "/{planName:.+}", method = RequestMethod.PUT)
     public ResponseEntity<Boolean> changeFinancePlanOptions(
             @PathVariable String planName,
             @RequestHeader(value = SystemConstants.SYSTEM_USER_TOKEN_HEADER_KEY) String systemUserToken,
@@ -83,7 +83,7 @@ public class Plan {
     }
 
 	// TODO documentation
-	@RequestMapping(value = "/{planName}", method = RequestMethod.DELETE)
+	@RequestMapping(value = "/{planName:.+}", method = RequestMethod.DELETE)
 	public ResponseEntity<Boolean> removeFinancePlan(
 			@PathVariable String planName,
 			@RequestHeader(value = SystemConstants.SYSTEM_USER_TOKEN_HEADER_KEY) String systemUserToken) throws FogbowException {
