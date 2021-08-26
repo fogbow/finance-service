@@ -1,5 +1,6 @@
 package cloud.fogbow.fs.api.parameters;
 
+// TODO documentation
 public class User {
 	private String userId;
 	private String provider;

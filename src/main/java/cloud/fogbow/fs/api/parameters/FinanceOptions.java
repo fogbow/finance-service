@@ -2,6 +2,7 @@ package cloud.fogbow.fs.api.parameters;
 
 import java.util.HashMap;
 
+// TODO documentation
 public class FinanceOptions {
     private HashMap<String, String> financeOptions;
 

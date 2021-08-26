@@ -28,7 +28,6 @@ public class Plan {
 	public static final String PLAN_USER_SUFFIX = "/user";
 	
 	// TODO documentation
-	// TODO fix issue with dots in userId or provider
 	@RequestMapping(value = PLAN_USER_SUFFIX + "/{userId}/{provider:.+}", method = RequestMethod.PUT)
 	public ResponseEntity<Boolean> updateFinanceState(
 			@PathVariable String userId,

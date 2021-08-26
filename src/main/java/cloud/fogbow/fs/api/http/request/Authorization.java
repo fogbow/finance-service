@@ -15,6 +15,8 @@ import cloud.fogbow.fs.constants.ApiDocumentation;
 import cloud.fogbow.fs.constants.SystemConstants;
 import cloud.fogbow.fs.core.ApplicationFacade;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
 @CrossOrigin
 @RestController
@@ -23,9 +25,10 @@ import io.swagger.annotations.Api;
 public class Authorization {
 	public static final String AUTHORIZED_ENDPOINT = SystemConstants.SERVICE_BASE_ENDPOINT + "authorized";
 
-	// TODO documentation
+	@ApiOperation(value = ApiDocumentation.Authorization.IS_AUTHORIZED)
     @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<RemoteAuthorizationResponse> isAuthorized(
+            @ApiParam(value = ApiDocumentation.Authorization.IS_AUTHORIZED_REQUEST_BODY)
             @RequestBody AuthorizableUser user) throws FogbowException {
         boolean authorized = ApplicationFacade.getInstance().isAuthorized(user.getUserToken(), user.getOperation());
         return new ResponseEntity<RemoteAuthorizationResponse>(new RemoteAuthorizationResponse(authorized), HttpStatus.OK);

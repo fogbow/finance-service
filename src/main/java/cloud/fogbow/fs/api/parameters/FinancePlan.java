@@ -2,6 +2,7 @@ package cloud.fogbow.fs.api.parameters;
 
 import java.util.Map;
 
+// TODO documentation
 public class FinancePlan {
 	private String pluginClassName;
 	private String financePlanName;

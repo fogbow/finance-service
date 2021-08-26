@@ -1,5 +1,6 @@
 package cloud.fogbow.fs.api.http.response;
 
+// TODO documentation
 public class PublicKey {
     private String publicKey;
 

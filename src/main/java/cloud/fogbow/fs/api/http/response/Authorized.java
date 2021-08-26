@@ -2,6 +2,7 @@ package cloud.fogbow.fs.api.http.response;
 
 import java.util.Map;
 
+// TODO documentation
 public class Authorized {
 
     public static final String AUTHORIZATION_RESPONSE_AUTHORIZED_FIELD = "authorized";

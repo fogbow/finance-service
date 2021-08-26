@@ -2,6 +2,7 @@ package cloud.fogbow.fs.api.http.response;
 
 import java.util.Map;
 
+// TODO documentation
 public class FinancePlan {
     private String planName;
     private Map<String, String> planInfo;

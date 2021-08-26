@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 
 import cloud.fogbow.ras.core.models.RasOperation;
 
+// TODO documentation
 public class AuthorizableUser {
 	private String userToken;
 	private String operation;

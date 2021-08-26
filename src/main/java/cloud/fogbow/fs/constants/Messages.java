@@ -86,6 +86,7 @@ public class Messages {
 		public static final String RELOADING_PUBLIC_KEYS_HOLDER = "Reloading public keys holder.";
 		public static final String REMOVING_FINANCE_PLAN = "Removing finance plan: %s.";
 		public static final String UNREGISTERING_SELF = "Unregistering self: user '%s', provider '%s'.";
+		public static final String RECEIVING_RELOAD_CONFIGURATION_REQUEST = "Received reload configuration request.";
 		public static final String REMOVING_USER = "Removing user '%s', provider '%s'.";
 		public static final String SETTING_POLICY = "Setting policy.";
 		public static final String STOPPING_FINANCE_PLUGINS = "Stopping finance plugins.";
