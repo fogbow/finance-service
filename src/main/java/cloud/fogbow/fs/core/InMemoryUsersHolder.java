@@ -14,9 +14,9 @@ import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.plugins.plan.prepaid.UserCreditsFactory;
 import cloud.fogbow.fs.core.util.FinanceUserFactory;
-import cloud.fogbow.fs.core.util.list.ModifiedListException;
 import cloud.fogbow.fs.core.util.list.MultiConsumerSynchronizedList;
 import cloud.fogbow.fs.core.util.list.MultiConsumerSynchronizedListFactory;
+import cloud.fogbow.fs.core.util.list.MultiConsumerSynchronizedListIteratorBuilder;
 
 public class InMemoryUsersHolder {
     private DatabaseManager databaseManager;
@@ -173,14 +173,18 @@ public class InMemoryUsersHolder {
         FinanceUser userToReturn = null;
         
         for (String pluginName : usersByPlugin.keySet()) {
-            userToReturn = getUserByIdAndPlugin(id, provider, pluginName);
+            try {
+                userToReturn = getUserByIdAndPlugin(id, provider, pluginName);
+            } catch (InvalidParameterException e) {
+                
+            }
 
             if (userToReturn != null) {
                 return userToReturn;
             }
         }
         
-        userToReturn = getUnregisteredUser(id, provider);
+        userToReturn = getUserFromList(id, provider, inactiveUsers);
         
         if (userToReturn != null) {
             return userToReturn;
@@ -189,67 +193,29 @@ public class InMemoryUsersHolder {
         throw new InvalidParameterException(String.format(Messages.Exception.UNABLE_TO_FIND_USER, id, provider));
     }
 
-    private FinanceUser getUnregisteredUser(String id, String provider) 
-            throws InternalServerErrorException, InvalidParameterException {
-        Integer consumerId = this.inactiveUsers.startIterating();
-        FinanceUser userToReturn = null;
-
-        while (true) {
-            try {
-                userToReturn = getUserFromList(id, provider, this.inactiveUsers, consumerId);
-                this.inactiveUsers.stopIterating(consumerId);
-                break;
-            } catch (ModifiedListException e) {
-                consumerId = this.inactiveUsers.startIterating();
-            } catch (Exception e) {
-                this.inactiveUsers.stopIterating(consumerId);
-                throw e;
-            }
-        }
-
-        return userToReturn;
-    }
-
     private FinanceUser getUserByIdAndPlugin(String id, String provider, String pluginName)
             throws InternalServerErrorException, InvalidParameterException {
         MultiConsumerSynchronizedList<FinanceUser> users = usersByPlugin.get(pluginName);
-        Integer consumerId = users.startIterating();
-        FinanceUser userToReturn = null;
-
-        while (true) {
-            try {
-                userToReturn = getUserFromList(id, provider, users, consumerId);
-                users.stopIterating(consumerId);
-                break;
-            } catch (ModifiedListException e) {
-                users = usersByPlugin.get(pluginName);
-                consumerId = users.startIterating();
-            } catch (Exception e) {
-                users.stopIterating(consumerId);
-                throw e;
-            }
-        }
-
-        return userToReturn;
-    }
-
-    private FinanceUser getUserFromList(String id, String provider, MultiConsumerSynchronizedList<FinanceUser> users,
-            Integer consumerId) throws ModifiedListException, InternalServerErrorException {
-        FinanceUser item = users.getNext(consumerId);
-        FinanceUser userToReturn = null;
-
-        while (item != null) {
-            if (item.getId().equals(id) && item.getProvider().equals(provider)) {
-                userToReturn = item;
-                break;
-            }
-
-            item = users.getNext(consumerId);
-        }
-
-        return userToReturn;
+        return getUserFromList(id, provider, users);
     }
     
+    private FinanceUser getUserFromList(String id, String provider, 
+            MultiConsumerSynchronizedList<FinanceUser> list) throws InternalServerErrorException, InvalidParameterException {
+        MultiConsumerSynchronizedListIteratorBuilder<FinanceUser> iteratorBuilder = 
+                new MultiConsumerSynchronizedListIteratorBuilder<>();
+        
+        return iteratorBuilder
+        .processList(list)
+        .usingAsArgs(id, provider)
+        .usingAsPredicate((user, args) -> {
+            String userId = (String) args.get(0);
+            String userProvider = (String) args.get(1);
+            
+            return user.getId().equals(userId) && user.getProvider().equals(userProvider);
+        })
+        .select();
+    }
+
     public MultiConsumerSynchronizedList<FinanceUser> getRegisteredUsersByPlan(String pluginName) {
         if (this.usersByPlugin.containsKey(pluginName)) {
             return this.usersByPlugin.get(pluginName);

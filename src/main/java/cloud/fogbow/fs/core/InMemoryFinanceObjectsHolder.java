@@ -6,12 +6,13 @@ import java.util.Map;
 import cloud.fogbow.common.exceptions.ConfigurationErrorException;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
+import cloud.fogbow.common.models.SystemUser;
 import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.datastore.DatabaseManager;
 import cloud.fogbow.fs.core.plugins.PersistablePlanPlugin;
-import cloud.fogbow.fs.core.util.list.ModifiedListException;
 import cloud.fogbow.fs.core.util.list.MultiConsumerSynchronizedList;
 import cloud.fogbow.fs.core.util.list.MultiConsumerSynchronizedListFactory;
+import cloud.fogbow.fs.core.util.list.MultiConsumerSynchronizedListIteratorBuilder;
 
 public class InMemoryFinanceObjectsHolder {
     private DatabaseManager databaseManager;
@@ -76,44 +77,35 @@ public class InMemoryFinanceObjectsHolder {
     }
 
     public PersistablePlanPlugin getFinancePlan(String pluginName) throws InternalServerErrorException, InvalidParameterException {
-        Integer consumerId = financePlans.startIterating();
-        PersistablePlanPlugin planToReturn = null;
-
-        while (true) {
-            try {
-                planToReturn = tryToGetPlanFromList(pluginName, consumerId);
-                financePlans.stopIterating(consumerId);
-                break;
-            } catch (ModifiedListException e) {
-                consumerId = financePlans.startIterating();
-            } catch (Exception e) {
-                financePlans.stopIterating(consumerId);
-                throw e;
-            }
-        }
-
-        if (planToReturn != null) {
-            return planToReturn;
-        }
-
-        throw new InvalidParameterException(String.format(Messages.Exception.UNABLE_TO_FIND_PLAN, pluginName));
+        MultiConsumerSynchronizedList<PersistablePlanPlugin> plans = this.financePlans;
+        MultiConsumerSynchronizedListIteratorBuilder<PersistablePlanPlugin> iteratorBuilder = 
+                new MultiConsumerSynchronizedListIteratorBuilder<>();
+        
+        return iteratorBuilder
+        .processList(plans)
+        .usingAsArgs(pluginName)
+        .usingAsErrorMessage(String.format(Messages.Exception.UNABLE_TO_FIND_PLAN, pluginName))
+        .usingAsPredicate((plan, args) -> {
+            String pluginNameToTest = (String) args.get(0);
+            return plan.getName().equals(pluginNameToTest);
+        })
+        .select();
     }
-
-    private PersistablePlanPlugin tryToGetPlanFromList(String pluginName, Integer consumerId)
-            throws ModifiedListException, InternalServerErrorException {
-        PersistablePlanPlugin item = financePlans.getNext(consumerId);
-        PersistablePlanPlugin planToReturn = null;
-
-        while (item != null) {
-            if (item.getName().equals(pluginName)) {
-                planToReturn = item;
-                break;
-            }
-
-            item = financePlans.getNext(consumerId);
-        }
-
-        return planToReturn;
+    
+    public PersistablePlanPlugin getUserPlan(SystemUser systemUser) throws InvalidParameterException, InternalServerErrorException {
+        MultiConsumerSynchronizedList<PersistablePlanPlugin> plans = this.financePlans;
+        MultiConsumerSynchronizedListIteratorBuilder<PersistablePlanPlugin> iteratorBuilder = 
+                new MultiConsumerSynchronizedListIteratorBuilder<>();
+        
+        return iteratorBuilder
+        .processList(plans)
+        .usingAsArgs(systemUser)
+        .usingAsErrorMessage(String.format(Messages.Exception.UNMANAGED_USER, systemUser.getId()))
+        .usingAsPredicate((plan, args) -> {
+            SystemUser user = (SystemUser) args.get(0);
+            return plan.isRegisteredUser(user);
+        })
+        .select();
     }
     
     private void checkIfPluginExists(String name) throws InternalServerErrorException, InvalidParameterException {

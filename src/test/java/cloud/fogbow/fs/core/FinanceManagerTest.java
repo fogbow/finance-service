@@ -159,7 +159,7 @@ public class FinanceManagerTest {
 
 	// test case: When calling the isAuthorized method passing a SystemUser which
 	// is not managed by any finance plan, it must throw an InvalidParameterException.
-	@Test
+	@Test(expected = InvalidParameterException.class)
 	public void testIsAuthorizedUserIsNotManaged() throws FogbowException, ModifiedListException {
 		setUpFinancePluginUnmanagedUser();
 		setUpAuthentication();
@@ -186,14 +186,13 @@ public class FinanceManagerTest {
 	}
 	
 	// test case: When calling the isAuthorized method and the plugin throws an exception
-	// when checking the user authorization, it must stop the iteration over the plugin list
-	// and rethrow the exception.
+	// when checking the user authorization, it must rethrow the exception.
 	@Test
 	public void testIsAuthorizedPluginThrowsException() throws FogbowException, ModifiedListException {
 	    setUpFinancePlugin();
         setUpAuthentication();
         
-        Mockito.when(this.plan1.isRegisteredUser(systemUser1)).
+        Mockito.when(this.plan1.isAuthorized(systemUser1, operation1)).
         thenThrow(new InternalServerErrorException());
         
         FinanceManager financeManager = new FinanceManager(objectHolder);
@@ -204,8 +203,6 @@ public class FinanceManagerTest {
         } catch (InternalServerErrorException e) {
             
         }
-        
-        Mockito.verify(this.plugins).stopIterating(Mockito.anyInt());
 	}
 	
 	// test case: When calling the getFinanceStateProperty method passing a SystemUser, 
@@ -246,18 +243,6 @@ public class FinanceManagerTest {
 		Mockito.verify(this.plan2, Mockito.times(1)).registerUser(Mockito.any(SystemUser.class));
 	}
 	
-	// test case: When calling the addUser method and the FinanceManager
-	// does not know the finance plan, it must throw an InvalidParameterException.
-	@Test(expected = InvalidParameterException.class)
-	public void testAddUserUnknownPlugin() throws FogbowException, ModifiedListException {
-		setUpFinancePlugin();
-		
-		FinanceManager financeManager = new FinanceManager(objectHolder);
-		
-		financeManager.addUser(new SystemUser(USER_ID_TO_ADD_1, USER_ID_TO_ADD_1, 
-		        PROVIDER_USER_TO_ADD_1), UNKNOWN_PLUGIN_NAME);
-	}
-	
 	// test case: When calling the addUser method, if the finance plans list throws a 
     // ModifiedListException while searching for the correct finance plan, the method must
     // restart the iteration over the finance plans list.
@@ -285,8 +270,8 @@ public class FinanceManagerTest {
 	public void testRemoveUser() throws FogbowException, ModifiedListException {
 	    setUpFinancePlugin();
 	    
-	    Mockito.when(this.plan1.isRegisteredUser(systemUser1)).thenReturn(false);
-	    Mockito.when(this.plan2.isRegisteredUser(systemUser1)).thenReturn(false);
+	    Mockito.when(this.objectHolder.getUserPlan(systemUser1)).thenThrow(new InvalidParameterException());
+	    Mockito.when(this.objectHolder.getUserPlan(systemUser2)).thenThrow(new InvalidParameterException());
 	    
 	    FinanceManager financeManager = new FinanceManager(objectHolder);
 	    
@@ -636,17 +621,11 @@ public class FinanceManagerTest {
 
         plugins = Mockito.mock(MultiConsumerSynchronizedList.class);
         this.plan1 = Mockito.mock(PersistablePlanPlugin.class);
-        Mockito.when(this.plan1.isRegisteredUser(systemUser1)).thenReturn(true);
-        Mockito.when(this.plan1.isRegisteredUser(systemUser2)).thenReturn(false);
-        Mockito.when(this.plan1.isRegisteredUser(systemUser3)).thenReturn(true);
         Mockito.when(this.plan1.isAuthorized(systemUser1, operation1)).thenReturn(true);
         Mockito.when(this.plan1.isAuthorized(systemUser3, operation3)).thenReturn(false);
         Mockito.when(this.plan1.getName()).thenReturn(PLUGIN_1_NAME);
         
         this.plan2 = Mockito.mock(PersistablePlanPlugin.class);
-        Mockito.when(this.plan2.isRegisteredUser(systemUser1)).thenReturn(false);
-        Mockito.when(this.plan2.isRegisteredUser(systemUser2)).thenReturn(true);
-        Mockito.when(this.plan2.isRegisteredUser(systemUser3)).thenReturn(false);
         Mockito.when(this.plan2.isAuthorized(systemUser2, operation2)).thenReturn(true);
         Mockito.when(this.plan2.getName()).thenReturn(PLUGIN_2_NAME);
         
@@ -667,10 +646,14 @@ public class FinanceManagerTest {
         Mockito.when(this.objectHolder.getInMemoryUsersHolder()).thenReturn(this.usersHolder);
         
         Mockito.when(this.objectHolder.getPlans()).thenReturn(plugins);
+        Mockito.when(this.objectHolder.getUserPlan(systemUser1)).thenReturn(plan1);
+        Mockito.when(this.objectHolder.getUserPlan(systemUser2)).thenReturn(plan2);
+        Mockito.when(this.objectHolder.getUserPlan(systemUser3)).thenReturn(plan1);
         Mockito.when(this.objectHolder.getFinancePlan(PLUGIN_1_NAME)).thenReturn(this.plan1);
         Mockito.when(this.objectHolder.getFinancePlan(PLUGIN_2_NAME)).thenReturn(this.plan2);
+        Mockito.when(this.objectHolder.getFinancePlan(UNKNOWN_PLUGIN_NAME)).thenThrow(new InvalidParameterException());
         Mockito.when(plugins.startIterating()).thenReturn(0);
-        Mockito.when(plugins.getNext(Mockito.anyInt())).thenReturn(this.plan1, this.plan2, null);
+        Mockito.when(plugins.getNext(Mockito.anyInt())).thenReturn(this.plan1, this.plan2, null, this.plan1, this.plan2, null);
         Mockito.when(plugins.isEmpty()).thenReturn(false);
 	}
 	
@@ -695,7 +678,8 @@ public class FinanceManagerTest {
         
         Mockito.when(this.objectHolder.getPlans()).thenReturn(plugins);
         Mockito.when(plugins.startIterating()).thenReturn(0);
-        Mockito.when(plugins.getNext(Mockito.anyInt())).thenReturn(this.plan1, this.plan2, null);
+        Mockito.when(this.objectHolder.getUserPlan(Mockito.any())).thenThrow(new InvalidParameterException());
+        Mockito.when(plugins.getNext(Mockito.anyInt())).thenReturn(this.plan1, this.plan2, null, this.plan1, this.plan2, null);
         Mockito.when(plugins.isEmpty()).thenReturn(false);
 	}
 	
