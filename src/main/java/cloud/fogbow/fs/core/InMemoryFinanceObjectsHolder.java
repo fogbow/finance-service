@@ -92,6 +92,7 @@ public class InMemoryFinanceObjectsHolder {
         .select();
     }
     
+    // TODO test
     public PersistablePlanPlugin getUserPlan(SystemUser systemUser) throws InvalidParameterException, InternalServerErrorException {
         MultiConsumerSynchronizedList<PersistablePlanPlugin> plans = this.financePlans;
         MultiConsumerSynchronizedListIteratorBuilder<PersistablePlanPlugin> iteratorBuilder = 
