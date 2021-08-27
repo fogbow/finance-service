@@ -1,0 +1,16 @@
+compute1_FULFILLED-compute,FULFILLED,1,2,0.0005/s
+compute1_PAUSED-compute,PAUSED,1,2,0.0002/s
+compute1_CLOSED-compute,CLOSED,1,2,0.0000/s
+compute1_OPEN-compute,OPEN,1,2,0.0000/s
+compute1_STOPPED-compute,STOPPED,1,2,0.00005/s
+compute2_FULFILLED-compute,FULFILLED,2,4,0.001/s
+compute2_PAUSED-compute,PAUSED,2,4,0.0005/s
+compute2_CLOSED-compute,CLOSED,2,4,0.0000/s
+compute2_OPEN-compute,OPEN,2,4,0.0000/s
+compute2_STOPPED-compute,STOPPED,2,4,0.0001/s
+volume1_FULFILLED-volume,FULFILLED,100,0.000001/m
+volume1_CLOSED-volume,CLOSED,100,0.000000/m
+volume1_OPEN-volume,OPEN,100,0.000000/m
+volume2_FULFILLED-volume,FULFILLED,150,0.000002/m
+volume2_CLOSED-volume,CLOSED,150,0.000000/m
+volume2_OPEN-volume,OPEN,150,0.000000/m
