@@ -2,8 +2,13 @@ package cloud.fogbow.fs.api.parameters;
 
 import java.util.HashMap;
 
-// TODO documentation
+import cloud.fogbow.fs.constants.ApiDocumentation;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
+@ApiModel
 public class FinanceOptions {
+    @ApiModelProperty(required = true, example = ApiDocumentation.Model.PLAN_INFO) 
     private HashMap<String, String> financeOptions;
 
     public FinanceOptions() {

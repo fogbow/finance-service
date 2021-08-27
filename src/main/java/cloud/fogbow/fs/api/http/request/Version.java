@@ -8,21 +8,24 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import cloud.fogbow.common.constants.ApiDocumentation;
 import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.constants.SystemConstants;
 import cloud.fogbow.fs.core.util.BuildNumberHolder;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
-// TODO documentation
 @CrossOrigin
 @RestController
 @RequestMapping(value = Version.ENDPOINT)
+@Api(description = ApiDocumentation.Version.API)
 public class Version {
 
     public static final String ENDPOINT = SystemConstants.SERVICE_BASE_ENDPOINT + "version";
 
     private final Logger LOGGER = Logger.getLogger(Version.class);
 
-    // TODO documentation
+    @ApiOperation(value = ApiDocumentation.Version.GET_OPERATION)
     @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<cloud.fogbow.fs.api.http.response.Version> getVersion() {
         LOGGER.info(Messages.Log.RECEIVING_GET_VERSION);

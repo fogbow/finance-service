@@ -1,9 +1,14 @@
 package cloud.fogbow.fs.api.parameters;
 
-// TODO documentation
+import cloud.fogbow.fs.constants.ApiDocumentation;
+import io.swagger.annotations.ApiModelProperty;
+
 public class User {
+    @ApiModelProperty(required = true, example = ApiDocumentation.Model.USER_ID)
 	private String userId;
+    @ApiModelProperty(required = true, example = ApiDocumentation.Model.PROVIDER_ID)
 	private String provider;
+    @ApiModelProperty(required = true, example = ApiDocumentation.Model.PLAN_NAME)
 	private String financePlanName;
 	
 	public User() {

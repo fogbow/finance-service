@@ -1,7 +1,10 @@
 package cloud.fogbow.fs.api.http.response;
 
-// TODO documentation
+import cloud.fogbow.common.constants.ApiDocumentation;
+import io.swagger.annotations.ApiModelProperty;
+
 public class PublicKey {
+    @ApiModelProperty(position = 0, example = ApiDocumentation.Model.PUBLIC_KEY)
     private String publicKey;
 
     public PublicKey() {}

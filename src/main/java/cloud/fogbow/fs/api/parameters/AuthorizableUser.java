@@ -2,11 +2,16 @@ package cloud.fogbow.fs.api.parameters;
 
 import com.google.gson.Gson;
 
+import cloud.fogbow.fs.constants.ApiDocumentation;
 import cloud.fogbow.ras.core.models.RasOperation;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 
-// TODO documentation
+@ApiModel
 public class AuthorizableUser {
+    @ApiModelProperty(required = true, example = ApiDocumentation.Model.USER_TOKEN)
 	private String userToken;
+    @ApiModelProperty(required = true, example = ApiDocumentation.Model.OPERATION)
 	private String operation;
 	
 	public AuthorizableUser() {
