@@ -70,7 +70,7 @@ public class PaymentRunner extends StoppableRunner {
     private void tryToRunPaymentForUser(FinanceUser user) {
         synchronized (user) {
             long billingTime = this.timeUtils.getCurrentTimeMillis();
-            long lastBillingTime = user.getLastBillingTime();// getUserLastBillingTime(user);
+            long lastBillingTime = user.getLastBillingTime();
 
             tryToDeductCreditsForUser(user, billingTime, lastBillingTime);
         }

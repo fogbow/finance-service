@@ -18,6 +18,9 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
+
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.util.SubscriptionFactory;
@@ -67,11 +70,13 @@ public class FinanceUser implements Serializable {
 
     @Column(name = PROPERTIES_COLUMN_NAME)
     @ElementCollection(fetch = FetchType.EAGER)
+    @LazyCollection(LazyCollectionOption.FALSE)
 	private Map<String, String> properties;
     
     @Column(name = INVOICES_COLUMN_NAME)
     @ElementCollection(fetch = FetchType.EAGER)
     @OneToMany(cascade={CascadeType.ALL})
+    @LazyCollection(LazyCollectionOption.FALSE)
 	private List<Invoice> invoices;
     
     @OneToOne(cascade={CascadeType.ALL})
@@ -82,11 +87,13 @@ public class FinanceUser implements Serializable {
     
     @Column(name = INACTIVE_SUBSCRIPTIONS_COLUMN_NAME)
     @ElementCollection(fetch = FetchType.EAGER)
+    @LazyCollection(LazyCollectionOption.FALSE)
     @OneToMany(cascade={CascadeType.ALL})
     private List<Subscription> inactiveSubscriptions;
     
     @Column(name = LAST_SUBSCRIPTIONS_COLUMN_NAME)
     @ElementCollection(fetch = FetchType.EAGER)
+    @LazyCollection(LazyCollectionOption.FALSE)
     private List<String> lastSubscriptionsDebts;
     
     @Transient

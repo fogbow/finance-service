@@ -3,11 +3,17 @@ package cloud.fogbow.fs.core.models;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
 
 import cloud.fogbow.ras.core.models.orders.OrderState;
 
@@ -19,13 +25,15 @@ public class InvoiceItem {
     @Column(nullable = false, unique = true)
     private Long id;
     
-    @OneToOne(cascade={CascadeType.ALL})
+    @OneToOne(cascade={CascadeType.ALL}, fetch = FetchType.EAGER)
+    @LazyCollection(LazyCollectionOption.FALSE)
     private ResourceItem item;
     
     @Column
     private Double value;
     
     @Column
+    @Enumerated(EnumType.STRING)
     private OrderState orderState;
     
     public InvoiceItem() {

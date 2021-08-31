@@ -76,6 +76,7 @@ public class AccountingServiceClient {
 				new AccsApiUtils(), new TimeUtils());
 	}
 	
+	// TODO add parameters validation
 	public AccountingServiceClient(AuthenticationServiceClient authenticationServiceClient, 
 			String localProvider, String managerUserName, String managerPassword, 
 			String accountingServiceAddress, String accountingServicePort, AccsApiUtils recordUtil, 

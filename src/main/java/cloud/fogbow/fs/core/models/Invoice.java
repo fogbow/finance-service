@@ -15,6 +15,8 @@ import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
 import org.springframework.data.util.Pair;
 
 import cloud.fogbow.common.exceptions.InvalidParameterException;
@@ -50,6 +52,7 @@ public class Invoice {
     @Column(name = INVOICE_ITEMS_COLUMN_NAME)
     @ElementCollection(fetch = FetchType.EAGER)
     @OneToMany(cascade={CascadeType.ALL})
+    @LazyCollection(LazyCollectionOption.FALSE)
     private List<InvoiceItem> invoiceItems;
     
     @Column(name = INVOICE_TOTAL_COLUMN_NAME)

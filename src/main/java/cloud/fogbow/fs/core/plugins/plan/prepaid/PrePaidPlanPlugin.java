@@ -381,6 +381,9 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
         this.accountingServiceClient = new AccountingServiceClient();
         this.rasClient = new RasClient();
         this.threadsAreRunning = false;
+        this.planFactory = new FinancePolicyFactory();
+        this.jsonUtils = new JsonUtils();
+        this.debtsChecker = new DebtsPaymentChecker(usersHolder);
         
         this.creditsManager = new CreditsManager(this.usersHolder, policy);
     }
