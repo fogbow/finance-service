@@ -213,7 +213,6 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
         try {
             Long.valueOf(property);
         } catch (NumberFormatException e) {
-        	// TODO test
             throw new InvalidParameterException(
                     String.format(Messages.Exception.INVALID_FINANCE_OPTION, property, propertyName));
         }
@@ -223,7 +222,6 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
         try {
             Double.valueOf(property);
         } catch (NumberFormatException e) {
-            // TODO test
             throw new InvalidParameterException(
                     String.format(Messages.Exception.INVALID_FINANCE_OPTION, property, propertyName));
         }
@@ -237,7 +235,6 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
             setUpPlanFromRulesFile(financeOptions.get(FINANCE_PLAN_RULES_FILE_PATH),
                     Double.valueOf(financeOptions.get(FINANCE_PLAN_DEFAULT_RESOURCE_VALUE)), planFactory);
         } else {
-        	// TODO test
             throw new InvalidParameterException(Messages.Exception.NO_FINANCE_PLAN_CREATION_METHOD_PROVIDED);
         }
     }

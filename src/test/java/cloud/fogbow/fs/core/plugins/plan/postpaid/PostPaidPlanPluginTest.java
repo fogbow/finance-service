@@ -43,6 +43,7 @@ public class PostPaidPlanPluginTest {
     private static final String FINANCE_PLAN_RULES_FILE_PATH = "rules_path";
     private static final String USER_BILLING_INTERVAL = "60000";
     private static final String TIME_TO_WAIT_BEFORE_STOPPING = "100000";
+    private static final String FINANCE_PLAN_DEFAULT_RESOURCE_VALUE = "1.0";
     private static final String USER_ID_1 = "userId1";
     private static final String USER_ID_2 = "userId2";
     private static final String USER_NAME_1 = "userName1";
@@ -424,14 +425,54 @@ public class PostPaidPlanPluginTest {
         
         postPaidFinancePlugin.setOptions(financeOptions);
     }
+
+    // test case: When calling the setOptions method and the finance options map 
+    // contains no finance plan creation method, it must throw an InvalidParameterException.
+    @Test(expected = InvalidParameterException.class)
+    public void testSetOptionsNoFinancePlanCreationMethod() throws InvalidParameterException, InternalServerErrorException {
+        financeOptions.put(PaymentRunner.USER_BILLING_INTERVAL, USER_BILLING_INTERVAL);
+        financeOptions.put(PostPaidPlanPlugin.TIME_TO_WAIT_BEFORE_STOPPING, TIME_TO_WAIT_BEFORE_STOPPING);
+        financeOptions.put(PostPaidPlanPlugin.FINANCE_PLAN_DEFAULT_RESOURCE_VALUE, FINANCE_PLAN_DEFAULT_RESOURCE_VALUE);
+        
+        objectHolder = Mockito.mock(InMemoryUsersHolder.class);
+
+        PostPaidPlanPlugin postPaidFinancePlugin = new PostPaidPlanPlugin(PLAN_NAME, userBillingInterval, 
+                invoiceWaitTime, timeToWaitBeforeStopping, objectHolder, accountingServiceClient, rasClient, 
+                paymentManager, planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, 
+                plan, financeOptions);
+        
+        postPaidFinancePlugin.setOptions(financeOptions);
+    }
     
     // test case: When calling the setOptions method and the finance options map 
     // contains an invalid value for a required financial option, it must throw an
     // InvalidParameterException.
     @Test(expected = InvalidParameterException.class)
-    public void testSetOptionsInvalidOption() throws InvalidParameterException, InternalServerErrorException {
+    public void testSetOptionsUnparsableOptionAsLong() throws InvalidParameterException, InternalServerErrorException {
         financeOptions.put(PaymentRunner.USER_BILLING_INTERVAL, "invalidoption");
         financeOptions.put(PostPaidPlanPlugin.FINANCE_PLAN_RULES_FILE_PATH, FINANCE_PLAN_FILE_PATH);
+        financeOptions.put(PostPaidPlanPlugin.TIME_TO_WAIT_BEFORE_STOPPING, TIME_TO_WAIT_BEFORE_STOPPING);
+        financeOptions.put(PostPaidPlanPlugin.FINANCE_PLAN_DEFAULT_RESOURCE_VALUE, FINANCE_PLAN_DEFAULT_RESOURCE_VALUE);
+        
+        objectHolder = Mockito.mock(InMemoryUsersHolder.class);
+
+        PostPaidPlanPlugin postPaidFinancePlugin = new PostPaidPlanPlugin(PLAN_NAME, userBillingInterval, 
+                invoiceWaitTime, timeToWaitBeforeStopping, objectHolder, accountingServiceClient, rasClient, 
+                paymentManager, planFactory, jsonUtils, debtsChecker, paymentRunner, stopServiceRunner, 
+                plan, financeOptions);
+        
+        postPaidFinancePlugin.setOptions(financeOptions);
+    }
+    
+    // test case: When calling the setOptions method and the finance options map 
+    // contains an invalid value for a required financial option, it must throw an
+    // InvalidParameterException.
+    @Test(expected = InvalidParameterException.class)
+    public void testSetOptionsUnparsableOptionAsDouble() throws InvalidParameterException, InternalServerErrorException {
+        financeOptions.put(PaymentRunner.USER_BILLING_INTERVAL, USER_BILLING_INTERVAL);
+        financeOptions.put(PostPaidPlanPlugin.FINANCE_PLAN_RULES_FILE_PATH, FINANCE_PLAN_FILE_PATH);
+        financeOptions.put(PostPaidPlanPlugin.TIME_TO_WAIT_BEFORE_STOPPING, TIME_TO_WAIT_BEFORE_STOPPING);
+        financeOptions.put(PostPaidPlanPlugin.FINANCE_PLAN_DEFAULT_RESOURCE_VALUE, "invalidoption");
         
         objectHolder = Mockito.mock(InMemoryUsersHolder.class);
 

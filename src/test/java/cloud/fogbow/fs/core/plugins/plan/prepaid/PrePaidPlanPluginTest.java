@@ -26,6 +26,7 @@ import cloud.fogbow.fs.core.PropertiesHolder;
 import cloud.fogbow.fs.core.models.FinancePolicy;
 import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.plugins.DebtsPaymentChecker;
+import cloud.fogbow.fs.core.plugins.plan.postpaid.PostPaidPlanPlugin;
 import cloud.fogbow.fs.core.plugins.plan.prepaid.PrePaidPlanPlugin.PrePaidPluginOptionsLoader;
 import cloud.fogbow.fs.core.util.FinancePolicyFactory;
 import cloud.fogbow.fs.core.util.JsonUtils;
@@ -57,6 +58,9 @@ public class PrePaidPlanPluginTest {
     private static final Double DEFAULT_RESOURCE_VALUE = 12.0;
     private static final Double NEW_DEFAULT_RESOURCE_VALUE = 14.0;
     private static final String FINANCE_PLAN_FILE_PATH = "financeplanfilepath";
+    private static final String TIME_TO_WAIT_BEFORE_STOPPING = "100000";
+    private static final String DEFAULT_RESOURCE_VALUE_STRING = "1.0";
+    private static final String CREDITS_DEDUCTION_WAIT_TIME = "100";
     private InMemoryUsersHolder objectHolder;
     private AccountingServiceClient accountingServiceClient;
     private RasClient rasClient;
@@ -444,6 +448,9 @@ public class PrePaidPlanPluginTest {
         prePaidFinancePlugin.setOptions(financeOptions);
     }
     
+    // test case: When calling the setOptions method and the finance options map 
+    // does not contain some required financial option, it must throw an
+    // InvalidParameterException.
     @Test(expected = InvalidParameterException.class)
     public void testSetOptionsMissingOption() throws InvalidParameterException, InternalServerErrorException {
         Map<String, String> financeOptions = new HashMap<String, String>();
@@ -456,11 +463,50 @@ public class PrePaidPlanPluginTest {
         prePaidFinancePlugin.setOptions(financeOptions);
     }
     
+    // test case: When calling the setOptions method and the finance options map 
+    // contains no finance plan creation method, it must throw an InvalidParameterException.
     @Test(expected = InvalidParameterException.class)
-    public void testSetOptionsInvalidOption() throws InvalidParameterException, InternalServerErrorException {
+    public void testSetOptionsNoFinancePlanCreationMethod() throws InvalidParameterException, InternalServerErrorException {
+        Map<String, String> financeOptions = new HashMap<String, String>();
+        financeOptions.put(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME, CREDITS_DEDUCTION_WAIT_TIME);
+        financeOptions.put(PostPaidPlanPlugin.TIME_TO_WAIT_BEFORE_STOPPING, TIME_TO_WAIT_BEFORE_STOPPING);
+        financeOptions.put(PostPaidPlanPlugin.FINANCE_PLAN_DEFAULT_RESOURCE_VALUE, DEFAULT_RESOURCE_VALUE_STRING);
+        
+        PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(PLAN_NAME, creditsDeductionWaitTime, timeToWaitBeforeStopping, objectHolder, 
+                accountingServiceClient, rasClient, paymentManager, planFactory, jsonUtils, debtsChecker, paymentRunner, 
+                stopServiceRunner, this.policy);
+        
+        prePaidFinancePlugin.setOptions(financeOptions);
+    }
+    
+    // test case: When calling the setOptions method and the finance options map 
+    // contains an invalid value for a required financial option, it must throw an
+    // InvalidParameterException.
+    @Test(expected = InvalidParameterException.class)
+    public void testSetOptionsUnparsableOptionAsLong() throws InvalidParameterException, InternalServerErrorException {
         Map<String, String> financeOptions = new HashMap<String, String>();
         financeOptions.put(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME, "invalidoption");
         financeOptions.put(PrePaidPlanPlugin.FINANCE_PLAN_RULES_FILE_PATH, FINANCE_PLAN_FILE_PATH);
+        financeOptions.put(PostPaidPlanPlugin.TIME_TO_WAIT_BEFORE_STOPPING, TIME_TO_WAIT_BEFORE_STOPPING);
+        financeOptions.put(PostPaidPlanPlugin.FINANCE_PLAN_DEFAULT_RESOURCE_VALUE, DEFAULT_RESOURCE_VALUE_STRING);
+        
+        PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(PLAN_NAME, creditsDeductionWaitTime, timeToWaitBeforeStopping, objectHolder, 
+                accountingServiceClient, rasClient, paymentManager, planFactory, jsonUtils, debtsChecker, paymentRunner, 
+                stopServiceRunner, this.policy);
+        
+        prePaidFinancePlugin.setOptions(financeOptions);
+    }
+    
+    // test case: When calling the setOptions method and the finance options map 
+    // contains an invalid value for a required financial option, it must throw an
+    // InvalidParameterException.
+    @Test(expected = InvalidParameterException.class)
+    public void testSetOptionsUnparsableOptionAsDouble() throws InvalidParameterException, InternalServerErrorException {
+        Map<String, String> financeOptions = new HashMap<String, String>();
+        financeOptions.put(PrePaidPlanPlugin.CREDITS_DEDUCTION_WAIT_TIME, CREDITS_DEDUCTION_WAIT_TIME);
+        financeOptions.put(PrePaidPlanPlugin.FINANCE_PLAN_RULES_FILE_PATH, FINANCE_PLAN_FILE_PATH);
+        financeOptions.put(PostPaidPlanPlugin.TIME_TO_WAIT_BEFORE_STOPPING, TIME_TO_WAIT_BEFORE_STOPPING);
+        financeOptions.put(PostPaidPlanPlugin.FINANCE_PLAN_DEFAULT_RESOURCE_VALUE, "invalidoption");
         
         PrePaidPlanPlugin prePaidFinancePlugin = new PrePaidPlanPlugin(PLAN_NAME, creditsDeductionWaitTime, timeToWaitBeforeStopping, objectHolder, 
                 accountingServiceClient, rasClient, paymentManager, planFactory, jsonUtils, debtsChecker, paymentRunner, 
