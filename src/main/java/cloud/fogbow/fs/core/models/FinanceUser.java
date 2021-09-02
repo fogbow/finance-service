@@ -31,18 +31,46 @@ import cloud.fogbow.fs.core.util.TimeUtils;
 public class FinanceUser implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    // TODO documentation
-
     /*
      * Finance state
      */
+    
+    /**
+     * The key to use in the map passed as argument to the updateFinanceState method
+     * to indicate the type of property to update. Possible values are 
+     * {@link cloud.fogbow.fs.core.models.FinanceUser.INVOICE_PROPERTY_TYPE} and 
+     *  {@link cloud.fogbow.fs.core.models.FinanceUser.CREDITS_PROPERTY_TYPE}
+     */
     public static final String PROPERTY_TYPE_KEY = "PROPERTY_TYPE";
+    /**
+     * The value to use in the map passed as argument to the updateFinanceState method
+     * to indicate that the map must be used to update the invoices states.
+     */
     public static final String INVOICE_PROPERTY_TYPE = "INVOICE";
-    public static final String ALL_USER_INVOICES_PROPERTY_NAME = "ALL_USER_INVOICES";
-    public static final String INVOICES_SEPARATOR = ",";
+    /**
+     * The value to use in the map passed as argument to the updateFinanceState method
+     * to indicate that the map must be used to update the credits state.
+     */
     public static final String CREDITS_PROPERTY_TYPE = "CREDITS";
-    public static final String USER_CREDITS = "USER_CREDITS";
+    /**
+     * The key to use in the map passed as argument to the updateFinanceState method
+     * to indicate the amount of credits to add to the user.
+     */
     public static final String CREDITS_TO_ADD = "CREDITS_TO_ADD";
+    /**
+     * The property to pass as argument to the getFinanceState method to
+     * indicate that the method must return a representation of all the user's invoices.
+     */
+    public static final String ALL_USER_INVOICES_PROPERTY_NAME = "ALL_USER_INVOICES";
+    /**
+     * The separator of invoices representations.
+     */
+    public static final String INVOICES_SEPARATOR = ",";
+    /**
+     * The property to pass as argument to the getFinanceState method to
+     * indicate that the method must return a representation of the user credits.
+     */
+    public static final String USER_CREDITS = "USER_CREDITS";
 
     /*
      * Database column names
@@ -54,7 +82,6 @@ public class FinanceUser implements Serializable {
     private static final String INVOICES_COLUMN_NAME = "invoices";
     private static final String INACTIVE_SUBSCRIPTIONS_COLUMN_NAME = "inactive_subscriptions";
     private static final String LAST_SUBSCRIPTIONS_COLUMN_NAME = "last_subscriptions_debts";
-
     
     @EmbeddedId
     private UserId userId;
