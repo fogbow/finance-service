@@ -31,6 +31,7 @@ import cloud.fogbow.fs.core.util.list.ModifiedListException;
 import cloud.fogbow.fs.core.util.list.MultiConsumerSynchronizedList;
 import cloud.fogbow.ras.core.models.RasOperation;
 
+// TODO update this test to use mocked list iterators
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({PropertiesHolder.class, FsPublicKeysHolder.class,
     AuthenticationUtil.class, PlanPluginInstantiator.class})

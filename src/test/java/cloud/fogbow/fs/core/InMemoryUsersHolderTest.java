@@ -24,6 +24,7 @@ import cloud.fogbow.fs.core.util.list.ModifiedListException;
 import cloud.fogbow.fs.core.util.list.MultiConsumerSynchronizedList;
 import cloud.fogbow.fs.core.util.list.MultiConsumerSynchronizedListFactory;
 
+// TODO update this test to use mocked list iterators
 public class InMemoryUsersHolderTest {
     private static final String USER_ID_1 = "userId1";
     private static final String PROVIDER_ID_1 = "providerId1";

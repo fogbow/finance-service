@@ -24,6 +24,7 @@ import cloud.fogbow.fs.core.util.list.ModifiedListException;
 import cloud.fogbow.fs.core.util.list.MultiConsumerSynchronizedList;
 import cloud.fogbow.fs.core.util.list.MultiConsumerSynchronizedListFactory;
 
+// TODO update this test to use mocked list iterators
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({PropertiesHolder.class})
 public class InMemoryFinanceObjectsHolderTest {

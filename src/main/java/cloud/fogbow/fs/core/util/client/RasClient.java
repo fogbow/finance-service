@@ -48,6 +48,7 @@ public class RasClient {
 	private String rasPort;
     private String token;
 	
+    // TODO add parameters validation
 	public RasClient() throws ConfigurationErrorException {
 		this(new AuthenticationServiceClient(),
 				PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.MANAGER_USERNAME_KEY),

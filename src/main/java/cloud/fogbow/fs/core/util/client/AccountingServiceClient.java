@@ -15,12 +15,13 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import cloud.fogbow.accs.api.http.response.Record;
 import cloud.fogbow.accs.api.http.response.AccsApiUtils;
+import cloud.fogbow.accs.api.http.response.Record;
 import cloud.fogbow.as.core.util.TokenProtector;
 import cloud.fogbow.common.constants.FogbowConstants;
 import cloud.fogbow.common.constants.HttpMethod;
 import cloud.fogbow.common.exceptions.ConfigurationErrorException;
+import cloud.fogbow.common.exceptions.FatalErrorException;
 import cloud.fogbow.common.exceptions.FogbowException;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
@@ -31,6 +32,7 @@ import cloud.fogbow.common.util.connectivity.HttpRequestClient;
 import cloud.fogbow.common.util.connectivity.HttpResponse;
 import cloud.fogbow.fs.api.http.CommonKeys;
 import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
+import cloud.fogbow.fs.constants.Messages;
 import cloud.fogbow.fs.core.FsPublicKeysHolder;
 import cloud.fogbow.fs.core.PropertiesHolder;
 import cloud.fogbow.fs.core.util.TimeUtils;
@@ -67,21 +69,30 @@ public class AccountingServiceClient {
 	private String token;
 	
 	public AccountingServiceClient() throws ConfigurationErrorException {
-		this(new AuthenticationServiceClient(),
-				PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.PROVIDER_ID_KEY),
-				PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.MANAGER_USERNAME_KEY),
-				PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.MANAGER_PASSWORD_KEY),
-				PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.ACCS_URL_KEY),
-				PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.ACCS_PORT_KEY),
-				new AccsApiUtils(), new TimeUtils());
+		this(new AuthenticationServiceClient(), new AccsApiUtils(), new TimeUtils());
 	}
 	
-	// TODO add parameters validation
+	public AccountingServiceClient(AuthenticationServiceClient authenticationServiceClient, 
+	        AccsApiUtils recordUtil, TimeUtils timeUtils) throws ConfigurationErrorException, FatalErrorException {
+	    this(authenticationServiceClient, PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.PROVIDER_ID_KEY),
+                PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.MANAGER_USERNAME_KEY),
+                PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.MANAGER_PASSWORD_KEY),
+                PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.ACCS_URL_KEY),
+                PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.ACCS_PORT_KEY), 
+                recordUtil, timeUtils);
+	}
+	
 	public AccountingServiceClient(AuthenticationServiceClient authenticationServiceClient, 
 			String localProvider, String managerUserName, String managerPassword, 
 			String accountingServiceAddress, String accountingServicePort, AccsApiUtils recordUtil, 
 			TimeUtils timeUtils) 
 					throws ConfigurationErrorException {
+	    checkNotNull(localProvider, ConfigurationPropertyKeys.PROVIDER_ID_KEY);
+	    checkNotNull(managerUserName, ConfigurationPropertyKeys.MANAGER_USERNAME_KEY);
+	    checkNotNull(managerPassword, ConfigurationPropertyKeys.MANAGER_PASSWORD_KEY);
+	    checkNotNull(accountingServiceAddress, ConfigurationPropertyKeys.ACCS_URL_KEY);
+	    checkNotNull(accountingServicePort, ConfigurationPropertyKeys.ACCS_PORT_KEY);
+	    
 		this.authenticationServiceClient = authenticationServiceClient;
 		this.localProvider = localProvider;
 		this.managerUserName = managerUserName;
@@ -100,6 +111,13 @@ public class AccountingServiceClient {
 		}
 	}
 	
+    private void checkNotNull(String parameter, String parameterName) throws ConfigurationErrorException {
+        if (parameter == null) {
+            throw new ConfigurationErrorException(String.format(Messages.Exception.INVALID_CONFIGURATION_VALUE, 
+                    parameterName, parameter));
+        }
+    }
+
     public List<Record> getUserRecords(String userId, String requester, long startTime, long endTime) throws FogbowException {
         try {
             String requestStartDate = this.timeUtils.toDate(

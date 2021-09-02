@@ -58,7 +58,11 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
      * to indicate the string that contains the plan configuration.
      */
     public static final String FINANCE_PLAN_RULES = "financeplan";
-    // TODO documentation
+    /**
+     * The key to use in the map passed as argument to setOptions and the constructors
+     * to indicate the string that contains the default resource value, used when the policy
+     * does not specify a value for a certain resource.
+     */
     public static final String FINANCE_PLAN_DEFAULT_RESOURCE_VALUE = "finance_plan_default_resource_value";
     
     private static final String PLAN_NAME_COLUMN_NAME = "name";

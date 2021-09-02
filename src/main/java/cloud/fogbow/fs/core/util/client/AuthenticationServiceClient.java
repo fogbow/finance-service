@@ -60,6 +60,7 @@ public class AuthenticationServiceClient {
 	
 	private String asTokenEndpoint;
 
+	// TODO add parameters validation
 	public AuthenticationServiceClient() throws ConfigurationErrorException {
         this(PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.AS_URL_KEY), 
 			 PropertiesHolder.getInstance().getProperty(ConfigurationPropertyKeys.AS_PORT_KEY));

@@ -20,11 +20,12 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import cloud.fogbow.accs.api.http.response.Record;
 import cloud.fogbow.accs.api.http.response.AccsApiUtils;
+import cloud.fogbow.accs.api.http.response.Record;
 import cloud.fogbow.as.core.util.TokenProtector;
 import cloud.fogbow.common.constants.FogbowConstants;
 import cloud.fogbow.common.constants.HttpMethod;
+import cloud.fogbow.common.exceptions.ConfigurationErrorException;
 import cloud.fogbow.common.exceptions.FogbowException;
 import cloud.fogbow.common.exceptions.InternalServerErrorException;
 import cloud.fogbow.common.exceptions.InvalidParameterException;
@@ -35,15 +36,17 @@ import cloud.fogbow.common.util.ServiceAsymmetricKeysHolder;
 import cloud.fogbow.common.util.connectivity.HttpRequestClient;
 import cloud.fogbow.common.util.connectivity.HttpResponse;
 import cloud.fogbow.fs.api.http.CommonKeys;
+import cloud.fogbow.fs.constants.ConfigurationPropertyKeys;
 import cloud.fogbow.fs.core.FsPublicKeysHolder;
+import cloud.fogbow.fs.core.PropertiesHolder;
 import cloud.fogbow.fs.core.util.TimeUtils;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ HttpRequestClient.class, ServiceAsymmetricKeysHolder.class, 
-	FsPublicKeysHolder.class, TokenProtector.class, CryptoUtil.class })
+	FsPublicKeysHolder.class, TokenProtector.class, CryptoUtil.class, 
+	PropertiesHolder.class })
 public class AccountingServiceClientTest {
-	
-	// authentication fields
+    // authentication fields
 	private AuthenticationServiceClient authenticationServiceClient;
 	private String publicKey = "publicKey";
 	private String localProvider = "localProvider";
@@ -81,6 +84,7 @@ public class AccountingServiceClientTest {
 	private int errorCode = 500;
 	private int expiredTokenCode = 401;
     private TimeUtils timeUtils;
+    private PropertiesHolder propertiesHolder;
 
 	// test case: When calling the method getUserRecords, it must set up 
 	// the request correctly and return only compute and volume records.
@@ -144,6 +148,96 @@ public class AccountingServiceClientTest {
         PowerMockito.verifyStatic(HttpRequestClient.class, Mockito.times(1));
         HttpRequestClient.doGenericRequest(HttpMethod.GET, accsUrl, headers1, body);
         HttpRequestClient.doGenericRequest(HttpMethod.GET, accsUrl, headers2, body);
+	}
+	
+	// test case: When creating a new AccountingServiceClient instance, the constructor must read
+	// the configuration parameters properly.
+	@Test
+	public void testConstructor() 
+	        throws FogbowException, GeneralSecurityException {
+	    setUpKeys();
+	    setUpConfiguration(localProvider, managerUserName, managerPassword, accountingServiceAddress, accountingServicePort);
+
+	    new AccountingServiceClient(authenticationServiceClient, recordUtils, timeUtils);
+	    
+	    Mockito.verify(propertiesHolder).getProperty(ConfigurationPropertyKeys.PROVIDER_ID_KEY);
+	    Mockito.verify(propertiesHolder).getProperty(ConfigurationPropertyKeys.MANAGER_USERNAME_KEY);
+	    Mockito.verify(propertiesHolder).getProperty(ConfigurationPropertyKeys.MANAGER_PASSWORD_KEY);
+	    Mockito.verify(propertiesHolder).getProperty(ConfigurationPropertyKeys.ACCS_URL_KEY);
+	    Mockito.verify(propertiesHolder).getProperty(ConfigurationPropertyKeys.ACCS_PORT_KEY);
+	}
+	
+	// test case: When creating a new AccountingServiceClient instance, if the providerId is null, 
+	// the constructor must throw a ConfigurationErrorException.
+	@Test(expected = ConfigurationErrorException.class)
+    public void testConstructorThrowsConfigurationErrorExceptionIfProviderIdIsNull() 
+            throws FogbowException, GeneralSecurityException {
+        setUpKeys();
+        setUpConfiguration(null, managerUserName, managerPassword, accountingServiceAddress,
+                accountingServicePort);
+
+        new AccountingServiceClient(authenticationServiceClient, recordUtils, timeUtils);
+    }
+    
+	// test case: When creating a new AccountingServiceClient instance, if the managerUserName is null, 
+    // the constructor must throw a ConfigurationErrorException.
+    @Test(expected = ConfigurationErrorException.class)
+    public void testConstructorThrowsConfigurationErrorExceptionIfManagerUsernameIsNull()
+            throws FogbowException, GeneralSecurityException {
+        setUpKeys();
+        setUpConfiguration(localProvider, null, managerPassword, accountingServiceAddress,
+                accountingServicePort);
+
+        new AccountingServiceClient(authenticationServiceClient, recordUtils, timeUtils);
+    }
+    
+    // test case: When creating a new AccountingServiceClient instance, if the managerPassword is null, 
+    // the constructor must throw a ConfigurationErrorException.
+    @Test(expected = ConfigurationErrorException.class)
+    public void testConstructorThrowsConfigurationErrorExceptionIfManagerPasswordIsNull()
+            throws FogbowException, GeneralSecurityException {
+        setUpKeys();
+        setUpConfiguration(localProvider, managerUserName, null, accountingServiceAddress,
+                accountingServicePort);
+
+        new AccountingServiceClient(authenticationServiceClient, recordUtils, timeUtils);
+    }
+    
+    // test case: When creating a new AccountingServiceClient instance, if the accountingServiceAddress is null, 
+    // the constructor must throw a ConfigurationErrorException.
+    @Test(expected = ConfigurationErrorException.class)
+    public void testConstructorThrowsConfigurationErrorExceptionIfAccountingServiceAddressIsNull() 
+            throws FogbowException, GeneralSecurityException {
+        setUpKeys();
+        setUpConfiguration(localProvider, managerUserName, managerPassword, null,
+                accountingServicePort);
+
+        new AccountingServiceClient(authenticationServiceClient, recordUtils, timeUtils);
+    }
+    
+    // test case: When creating a new AccountingServiceClient instance, if the accountingServicePort is null, 
+    // the constructor must throw a ConfigurationErrorException.
+    @Test(expected = ConfigurationErrorException.class)
+    public void testConstructorThrowsConfigurationErrorExceptionIfAccountingServicePortIsNull()
+            throws FogbowException, GeneralSecurityException {
+        setUpKeys();
+        setUpConfiguration(localProvider, managerUserName, managerPassword, accountingServiceAddress,
+                null);
+
+        new AccountingServiceClient(authenticationServiceClient, recordUtils, timeUtils);
+    }
+	
+	private void setUpConfiguration(String localProvider, String managerUserName, 
+	        String managerPassword, String accountingServiceAddress, String accountingServicePort) {
+	    this.propertiesHolder = Mockito.mock(PropertiesHolder.class);
+        Mockito.when(propertiesHolder.getProperty(ConfigurationPropertyKeys.PROVIDER_ID_KEY)).thenReturn(localProvider);
+        Mockito.when(propertiesHolder.getProperty(ConfigurationPropertyKeys.MANAGER_USERNAME_KEY)).thenReturn(managerUserName);
+        Mockito.when(propertiesHolder.getProperty(ConfigurationPropertyKeys.MANAGER_PASSWORD_KEY)).thenReturn(managerPassword);
+        Mockito.when(propertiesHolder.getProperty(ConfigurationPropertyKeys.ACCS_URL_KEY)).thenReturn(accountingServiceAddress);
+        Mockito.when(propertiesHolder.getProperty(ConfigurationPropertyKeys.ACCS_PORT_KEY)).thenReturn(accountingServicePort);
+        
+        PowerMockito.mockStatic(PropertiesHolder.class);
+        BDDMockito.given(PropertiesHolder.getInstance()).willReturn(propertiesHolder);
 	}
 	
 	private void setUpKeys() throws InternalServerErrorException, FogbowException, UnauthenticatedUserException,
