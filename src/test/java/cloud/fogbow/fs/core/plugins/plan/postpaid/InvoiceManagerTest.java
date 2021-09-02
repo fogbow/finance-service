@@ -3,11 +3,13 @@ package cloud.fogbow.fs.core.plugins.plan.postpaid;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.NavigableMap;
+import java.util.TreeMap;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -22,12 +24,11 @@ import cloud.fogbow.fs.core.models.FinanceUser;
 import cloud.fogbow.fs.core.models.Invoice;
 import cloud.fogbow.fs.core.models.InvoiceState;
 import cloud.fogbow.fs.core.models.VolumeItem;
+import cloud.fogbow.fs.core.util.TimeUtils;
 import cloud.fogbow.fs.core.util.accounting.RecordUtils;
 import cloud.fogbow.ras.core.models.orders.OrderState;
 
 public class InvoiceManagerTest {
-    private static final double ITEM_1_TIME = 5.0;
-    private static final double ITEM_2_TIME = 1.1;
     private static final double ITEM_1_VALUE = 10.0;
     private static final double ITEM_2_VALUE = 5.0;
     private static final int VOLUME_ITEM_SIZE = 100;
@@ -43,12 +44,16 @@ public class InvoiceManagerTest {
     private static final String INVOICE_2_JSON_REPR = "invoice2json";
     private static final String INVOICE_3_JSON_REPR = "invoice3json";
     private static final String INVOICE_4_JSON_REPR = "invoice4json";
-	private static final Double ITEM_1_TIME_ON_STATE_1 = 20.0;
-	private static final Double ITEM_1_TIME_ON_STATE_2 = 30.0;
-	private static final Double ITEM_2_TIME_ON_STATE_1 = 15.0;
-	private static final Double ITEM_2_TIME_ON_STATE_2 = 35.0;
+	private static final Long ITEM_1_TIME_ON_STATE_1 = 20L;
+	private static final Long ITEM_1_TIME_ON_STATE_2 = 30L;
+	private static final Long ITEM_2_TIME_ON_STATE_1 = 15L;
+	private static final Long ITEM_2_TIME_ON_STATE_2 = 35L;
+    private static final TimeUnit ITEM_1_TIME_UNIT_1 = TimeUnit.MILLISECONDS;
+    private static final TimeUnit ITEM_1_TIME_UNIT_2 = TimeUnit.SECONDS;
+    private static final TimeUnit ITEM_2_TIME_UNIT_1 = TimeUnit.MINUTES;
+    private static final TimeUnit ITEM_2_TIME_UNIT_2 = TimeUnit.HOURS;
     private Long invoiceStartTime = 0L;
-    private Long invoiceEndTime = 100L;
+    private Long invoiceEndTime = 50L;
     private InMemoryUsersHolder objectHolder;
     private RecordUtils resourceItemFactory;
     private InvoiceBuilder invoiceBuilder;
@@ -64,8 +69,9 @@ public class InvoiceManagerTest {
     private Invoice invoiceToAdd;
 	private OrderState state1 = OrderState.FULFILLED;
 	private OrderState state2 = OrderState.CLOSED;
-	private Map<OrderState, Double> timePerStateItem1;
-	private HashMap<OrderState, Double> timePerStateItem2;
+	private NavigableMap<Timestamp, OrderState> timePerStateItem1;
+	private NavigableMap<Timestamp, OrderState> timePerStateItem2;
+	private TimeUtils timeUtils;
     
     // test case: When calling the generateInvoiceForUser method, it must
     // collect the user records and generate an Invoice using a 
@@ -75,16 +81,16 @@ public class InvoiceManagerTest {
         setUpInvoiceData();
         
         InvoiceManager invoiceManager = new InvoiceManager(objectHolder, resourceItemFactory, 
-                invoiceBuilder, financePlan);
+                invoiceBuilder, financePlan, timeUtils);
         
         invoiceManager.generateInvoiceForUser(USER_ID_1, PROVIDER_ID_1, invoiceStartTime, invoiceEndTime, this.records);
         
         Mockito.verify(this.invoiceBuilder).setUserId(USER_ID_1);
         Mockito.verify(this.invoiceBuilder).setProviderId(PROVIDER_ID_1);
-        Mockito.verify(this.invoiceBuilder).addItem(item1, state1, ITEM_1_VALUE, ITEM_1_TIME_ON_STATE_1);
-        Mockito.verify(this.invoiceBuilder).addItem(item1, state2, ITEM_1_VALUE, ITEM_1_TIME_ON_STATE_2);
-        Mockito.verify(this.invoiceBuilder).addItem(item2, state1, ITEM_2_VALUE, ITEM_2_TIME_ON_STATE_1);
-        Mockito.verify(this.invoiceBuilder).addItem(item2, state2, ITEM_2_VALUE, ITEM_2_TIME_ON_STATE_2);
+        Mockito.verify(this.invoiceBuilder).addItem(item1, state1, ITEM_1_VALUE, new Double(ITEM_1_TIME_ON_STATE_1));
+        Mockito.verify(this.invoiceBuilder).addItem(item2, state1, ITEM_2_VALUE, new Double(ITEM_2_TIME_ON_STATE_1));
+        Mockito.verify(this.invoiceBuilder).addItem(item2, state2, ITEM_2_VALUE, new Double(ITEM_2_TIME_ON_STATE_2));
+        Mockito.verify(this.invoiceBuilder).addItem(item1, state2, ITEM_1_VALUE, new Double(ITEM_1_TIME_ON_STATE_2));
         Mockito.verify(this.invoiceBuilder).setStartTime(invoiceStartTime);
         Mockito.verify(this.invoiceBuilder).setEndTime(invoiceEndTime);
         Mockito.verify(this.objectHolder).getUserById(USER_ID_1, PROVIDER_ID_1);
@@ -103,7 +109,8 @@ public class InvoiceManagerTest {
         setUpDataStructures();
         setUpErrorResourceItemFactory();
         
-        InvoiceManager invoiceManager = new InvoiceManager(objectHolder, resourceItemFactory, invoiceBuilder, financePlan);
+        InvoiceManager invoiceManager = new InvoiceManager(objectHolder, resourceItemFactory, invoiceBuilder, 
+                financePlan, timeUtils);
         
         invoiceManager.generateInvoiceForUser(USER_ID_1, PROVIDER_ID_1, invoiceStartTime, invoiceEndTime, this.records);
     }
@@ -118,7 +125,8 @@ public class InvoiceManagerTest {
         setUpDataStructures();
         setUpErrorFinancePlan();
         
-        InvoiceManager invoiceManager = new InvoiceManager(objectHolder, resourceItemFactory, invoiceBuilder, financePlan);
+        InvoiceManager invoiceManager = new InvoiceManager(objectHolder, resourceItemFactory, invoiceBuilder, 
+                financePlan, timeUtils);
         
         invoiceManager.generateInvoiceForUser(USER_ID_1, PROVIDER_ID_1, invoiceStartTime, invoiceEndTime, this.records);
     }
@@ -131,16 +139,16 @@ public class InvoiceManagerTest {
         setUpInvoiceData();
         
         InvoiceManager invoiceManager = new InvoiceManager(objectHolder, resourceItemFactory, 
-                invoiceBuilder, financePlan);
+                invoiceBuilder, financePlan, timeUtils);
         
         invoiceManager.generateLastInvoiceForUser(USER_ID_1, PROVIDER_ID_1, invoiceStartTime, invoiceEndTime, this.records);
         
         Mockito.verify(this.invoiceBuilder).setUserId(USER_ID_1);
         Mockito.verify(this.invoiceBuilder).setProviderId(PROVIDER_ID_1);
-        Mockito.verify(this.invoiceBuilder).addItem(item1, state1, ITEM_1_VALUE, ITEM_1_TIME_ON_STATE_1);
-        Mockito.verify(this.invoiceBuilder).addItem(item1, state2, ITEM_1_VALUE, ITEM_1_TIME_ON_STATE_2);
-        Mockito.verify(this.invoiceBuilder).addItem(item2, state1, ITEM_2_VALUE, ITEM_2_TIME_ON_STATE_1);
-        Mockito.verify(this.invoiceBuilder).addItem(item2, state2, ITEM_2_VALUE, ITEM_2_TIME_ON_STATE_2);
+        Mockito.verify(this.invoiceBuilder).addItem(item1, state1, ITEM_1_VALUE, new Double(ITEM_1_TIME_ON_STATE_1));
+        Mockito.verify(this.invoiceBuilder).addItem(item1, state2, ITEM_1_VALUE, new Double(ITEM_1_TIME_ON_STATE_2));
+        Mockito.verify(this.invoiceBuilder).addItem(item2, state1, ITEM_2_VALUE, new Double(ITEM_2_TIME_ON_STATE_1));
+        Mockito.verify(this.invoiceBuilder).addItem(item2, state2, ITEM_2_VALUE, new Double(ITEM_2_TIME_ON_STATE_2));
         Mockito.verify(this.invoiceBuilder).setStartTime(invoiceStartTime);
         Mockito.verify(this.invoiceBuilder).setEndTime(invoiceEndTime);
         Mockito.verify(this.objectHolder).getUserById(USER_ID_1, PROVIDER_ID_1);
@@ -159,7 +167,8 @@ public class InvoiceManagerTest {
         setUpDataStructures();
         setUpErrorResourceItemFactory();
         
-        InvoiceManager invoiceManager = new InvoiceManager(objectHolder, resourceItemFactory, invoiceBuilder, financePlan);
+        InvoiceManager invoiceManager = new InvoiceManager(objectHolder, resourceItemFactory, 
+                invoiceBuilder, financePlan, timeUtils);
         
         invoiceManager.generateLastInvoiceForUser(USER_ID_1, PROVIDER_ID_1, invoiceStartTime, invoiceEndTime, this.records);
     }
@@ -174,7 +183,8 @@ public class InvoiceManagerTest {
         setUpDataStructures();
         setUpErrorFinancePlan();
         
-        InvoiceManager invoiceManager = new InvoiceManager(objectHolder, resourceItemFactory, invoiceBuilder, financePlan);
+        InvoiceManager invoiceManager = new InvoiceManager(objectHolder, resourceItemFactory, 
+                invoiceBuilder, financePlan, timeUtils);
         
         invoiceManager.generateLastInvoiceForUser(USER_ID_1, PROVIDER_ID_1, invoiceStartTime, invoiceEndTime, this.records);
     }
@@ -186,7 +196,8 @@ public class InvoiceManagerTest {
     public void testHasPaid() throws InvalidParameterException, InternalServerErrorException {
         setUpInvoiceData();
         
-        InvoiceManager invoiceManager = new InvoiceManager(objectHolder, resourceItemFactory, invoiceBuilder, financePlan);
+        InvoiceManager invoiceManager = new InvoiceManager(objectHolder, resourceItemFactory, 
+                invoiceBuilder, financePlan, timeUtils);
         
         // user1's invoices are: invoice1 (WAITING) and invoice2 (PAID)
         // user2's invoices are: invoice3 (PAID) and invoice4 (DEFAULTING)
@@ -206,16 +217,16 @@ public class InvoiceManagerTest {
         setUpResourceItemFactory();
         setUpDatabaseManager();
         setUpInvoiceBuilder();
+        setUpTimeUtils();
     }
     
     private void setUpErrorResourceItemFactory() throws InvalidParameterException, InternalServerErrorException {
         setUpFinancePlan();
+        setUpTimeUtils();
 
         this.resourceItemFactory = Mockito.mock(RecordUtils.class);
         Mockito.when(this.resourceItemFactory.getItemFromRecord(record1)).thenThrow(new InvalidParameterException());
-        Mockito.when(this.resourceItemFactory.getTimeFromRecord(record1, invoiceStartTime, invoiceEndTime)).thenReturn(ITEM_1_TIME);
         Mockito.when(this.resourceItemFactory.getItemFromRecord(record2)).thenReturn(item2);
-        Mockito.when(this.resourceItemFactory.getTimeFromRecord(record2, invoiceStartTime, invoiceEndTime)).thenReturn(ITEM_2_TIME);
         
         setUpDatabaseManager();
         setUpInvoiceBuilder();
@@ -224,11 +235,14 @@ public class InvoiceManagerTest {
     private void setUpErrorFinancePlan() throws InvalidParameterException, InternalServerErrorException {
         this.financePlan = Mockito.mock(FinancePolicy.class);
         Mockito.when(this.financePlan.getItemFinancialValue(item1, state1)).thenThrow(new InvalidParameterException());
+        Mockito.when(this.financePlan.getItemFinancialTimeUnit(item1, state1)).thenReturn(ITEM_1_TIME_UNIT_1);
         Mockito.when(this.financePlan.getItemFinancialValue(item2, state2)).thenReturn(ITEM_2_VALUE);
+        Mockito.when(this.financePlan.getItemFinancialTimeUnit(item2, state2)).thenReturn(ITEM_2_TIME_UNIT_1);
 
         setUpResourceItemFactory();
         setUpDatabaseManager();
         setUpInvoiceBuilder();
+        setUpTimeUtils();
     }
     
     private void setUpInvoiceBuilder() {
@@ -267,16 +281,20 @@ public class InvoiceManagerTest {
         Mockito.when(this.resourceItemFactory.getItemFromRecord(record1)).thenReturn(item1);
         Mockito.when(this.resourceItemFactory.getItemFromRecord(record2)).thenReturn(item2);
         
-        this.timePerStateItem1 = new HashMap<OrderState, Double>();
-        timePerStateItem1.put(state1, ITEM_1_TIME_ON_STATE_1);
-        timePerStateItem1.put(state2, ITEM_1_TIME_ON_STATE_2);
+        this.timePerStateItem1 = new TreeMap<Timestamp, OrderState>();
+        timePerStateItem1.put(new Timestamp(invoiceStartTime), state1);
+        timePerStateItem1.put(new Timestamp(invoiceStartTime + ITEM_1_TIME_ON_STATE_1), state2);
+        timePerStateItem1.put(new Timestamp(invoiceEndTime), state2);
         
-        this.timePerStateItem2 = new HashMap<OrderState, Double>();
-        timePerStateItem2.put(state1, ITEM_2_TIME_ON_STATE_1);
-        timePerStateItem2.put(state2, ITEM_2_TIME_ON_STATE_2);
+        this.timePerStateItem2 = new TreeMap<Timestamp, OrderState>();
+        timePerStateItem2.put(new Timestamp(invoiceStartTime), state1);
+        timePerStateItem2.put(new Timestamp(invoiceStartTime + ITEM_2_TIME_ON_STATE_1), state2);
+        timePerStateItem2.put(new Timestamp(invoiceEndTime), state2);
         
-        Mockito.when(this.resourceItemFactory.getTimeFromRecordPerState(record1, invoiceStartTime, invoiceEndTime)).thenReturn(timePerStateItem1);
-        Mockito.when(this.resourceItemFactory.getTimeFromRecordPerState(record2, invoiceStartTime, invoiceEndTime)).thenReturn(timePerStateItem2);
+        Mockito.when(this.resourceItemFactory.getRecordStateHistoryOnPeriod(record1, invoiceStartTime, invoiceEndTime)).
+            thenReturn(this.timePerStateItem1);
+        Mockito.when(this.resourceItemFactory.getRecordStateHistoryOnPeriod(record2, invoiceStartTime, invoiceEndTime)).
+            thenReturn(this.timePerStateItem2);
     }
 
     private void setUpFinancePlan() throws InvalidParameterException {
@@ -285,6 +303,10 @@ public class InvoiceManagerTest {
         Mockito.when(this.financePlan.getItemFinancialValue(item1, state2)).thenReturn(ITEM_1_VALUE);
         Mockito.when(this.financePlan.getItemFinancialValue(item2, state1)).thenReturn(ITEM_2_VALUE);
         Mockito.when(this.financePlan.getItemFinancialValue(item2, state2)).thenReturn(ITEM_2_VALUE);
+        Mockito.when(this.financePlan.getItemFinancialTimeUnit(item1, state1)).thenReturn(ITEM_1_TIME_UNIT_1);
+        Mockito.when(this.financePlan.getItemFinancialTimeUnit(item1, state2)).thenReturn(ITEM_1_TIME_UNIT_2);
+        Mockito.when(this.financePlan.getItemFinancialTimeUnit(item2, state1)).thenReturn(ITEM_2_TIME_UNIT_1);
+        Mockito.when(this.financePlan.getItemFinancialTimeUnit(item2, state2)).thenReturn(ITEM_2_TIME_UNIT_2);
     }
 
     private void setUpDataStructures() throws InvalidParameterException {
@@ -303,5 +325,14 @@ public class InvoiceManagerTest {
         this.user3 = Mockito.mock(FinanceUser.class);
         
         this.invoiceToAdd = Mockito.mock(Invoice.class);
+    }
+    
+    private void setUpTimeUtils() throws InvalidParameterException {
+        this.timeUtils = Mockito.mock(TimeUtils.class);
+        
+        Mockito.when(this.timeUtils.roundUpTimePeriod(20L, ITEM_1_TIME_UNIT_1)).thenReturn(20L);
+        Mockito.when(this.timeUtils.roundUpTimePeriod(30L, ITEM_1_TIME_UNIT_2)).thenReturn(30L);
+        Mockito.when(this.timeUtils.roundUpTimePeriod(15L, ITEM_2_TIME_UNIT_1)).thenReturn(15L);
+        Mockito.when(this.timeUtils.roundUpTimePeriod(35L, ITEM_2_TIME_UNIT_2)).thenReturn(35L);
     }
 }

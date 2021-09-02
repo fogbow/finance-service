@@ -318,12 +318,13 @@ public class RecordUtilsTest {
     	
         this.recordUtils = new RecordUtils();
         
-    	Map<OrderState, Double> response = this.recordUtils.getTimeFromRecordPerState(record, paymentStartTime, paymentEndTime);
+    	Map<Timestamp, OrderState> response = this.recordUtils.getRecordStateHistoryOnPeriod(record, paymentStartTime, paymentEndTime);
     	
-    	assertEquals(3, response.size());
-    	assertEquals(new Double(20.0), response.get(OrderState.FULFILLED));
-    	assertEquals(new Double(30.0), response.get(OrderState.PAUSED));
-    	assertEquals(new Double(50.0), response.get(OrderState.STOPPED));
+    	assertEquals(4, response.size());
+    	assertEquals(OrderState.FULFILLED, response.get(new Timestamp(this.paymentStartTime)));
+    	assertEquals(OrderState.PAUSED, response.get(new Timestamp(this.paymentStartTime + 20)));
+    	assertEquals(OrderState.STOPPED, response.get(new Timestamp(this.paymentStartTime + 50)));
+    	assertEquals(OrderState.STOPPED, response.get(new Timestamp(this.paymentEndTime)));
     }
     
     // TODO documentation
@@ -340,10 +341,11 @@ public class RecordUtilsTest {
     	
         this.recordUtils = new RecordUtils();
         
-    	Map<OrderState, Double> response = this.recordUtils.getTimeFromRecordPerState(record, paymentStartTime, paymentEndTime);
+        Map<Timestamp, OrderState> response = this.recordUtils.getRecordStateHistoryOnPeriod(record, paymentStartTime, paymentEndTime);
     	
-    	assertEquals(1, response.size());
-    	assertEquals(new Double(100.0), response.get(OrderState.FULFILLED));
+    	assertEquals(2, response.size());
+    	assertEquals(OrderState.FULFILLED, response.get(new Timestamp(this.paymentStartTime)));
+    	assertEquals(OrderState.FULFILLED, response.get(new Timestamp(this.paymentEndTime)));
     }
     
     // TODO documentation
@@ -360,10 +362,11 @@ public class RecordUtilsTest {
     	
         this.recordUtils = new RecordUtils();
         
-    	Map<OrderState, Double> response = this.recordUtils.getTimeFromRecordPerState(record, paymentStartTime, paymentEndTime);
+        Map<Timestamp, OrderState> response = this.recordUtils.getRecordStateHistoryOnPeriod(record, paymentStartTime, paymentEndTime);
     	
-    	assertEquals(1, response.size());
-    	assertEquals(new Double(100.0), response.get(OrderState.FULFILLED));
+    	assertEquals(2, response.size());
+    	assertEquals(OrderState.FULFILLED, response.get(new Timestamp(this.paymentStartTime)));
+    	assertEquals(OrderState.FULFILLED, response.get(new Timestamp(this.paymentEndTime)));
     }
     
     // TODO documentation
@@ -385,11 +388,13 @@ public class RecordUtilsTest {
     	
         this.recordUtils = new RecordUtils();
         
-    	Map<OrderState, Double> response = this.recordUtils.getTimeFromRecordPerState(record, paymentStartTime, paymentEndTime);
+        Map<Timestamp, OrderState> response = this.recordUtils.getRecordStateHistoryOnPeriod(record, paymentStartTime, paymentEndTime);
     	
-    	assertEquals(2, response.size());
-    	assertEquals(new Double(70.0), response.get(OrderState.FULFILLED));
-    	assertEquals(new Double(30.0), response.get(OrderState.PAUSED));
+    	assertEquals(4, response.size());
+    	assertEquals(OrderState.FULFILLED, response.get(new Timestamp(this.paymentStartTime)));
+    	assertEquals(OrderState.PAUSED, response.get(new Timestamp(this.paymentStartTime + 20)));
+    	assertEquals(OrderState.FULFILLED, response.get(new Timestamp(this.paymentStartTime + 50)));
+    	assertEquals(OrderState.FULFILLED, response.get(new Timestamp(this.paymentEndTime)));
     }
     
     private void setUpRecords() {

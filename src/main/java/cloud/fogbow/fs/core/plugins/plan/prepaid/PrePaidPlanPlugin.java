@@ -290,8 +290,21 @@ public class PrePaidPlanPlugin extends PersistablePlanPlugin {
             this.paymentThread.start();
             this.stopServiceThread.start();
             
-            while (!this.paymentRunner.isActive());
-            while (!this.stopServiceRunner.isActive());
+            while (!this.paymentRunner.isActive()) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            
+            while (!this.stopServiceRunner.isActive()) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
             
             this.threadsAreRunning = true;
         }

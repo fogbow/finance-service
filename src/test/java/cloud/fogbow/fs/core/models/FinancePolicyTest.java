@@ -10,11 +10,11 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.springframework.data.util.Pair;
 
 import cloud.fogbow.common.exceptions.InvalidParameterException;
 import cloud.fogbow.fs.core.util.TestUtils;
@@ -22,7 +22,6 @@ import cloud.fogbow.ras.core.models.orders.OrderState;
 
 // TODO review empty fields tests
 public class FinancePolicyTest {
-
 	private static final String ITEM_ID1 = "1";
 	private static final String ITEM_ID2 = "2";
 	private static final String ITEM_ID3 = "3";
@@ -31,24 +30,17 @@ public class FinancePolicyTest {
 	private static final int COMPUTE_1_VCPU = 2;
 	private static final int COMPUTE_1_RAM = 4;
 	private static final Double COMPUTE_1_VALUE = 5.0;
-	private static final Double ONE_SECOND_IN_MILLISECONDS = 1000.0;
-	private static final Double ONE_MINUTE_IN_MILLISECONDS = 60 * 1000.0;
-	private static final Double ONE_HOUR_IN_MILLISECONDS = 60 * 60 * 1000.0;
 	private static final String COMPUTE_1_TIME_UNIT = FinancePolicy.SECONDS;
-	private static final Double COMPUTE_1_VALUE_FACTOR = ONE_SECOND_IN_MILLISECONDS;
 	private static final int COMPUTE_2_VCPU = 4;
 	private static final int COMPUTE_2_RAM = 8;
 	private static final Double COMPUTE_2_VALUE = 9.0;
 	private static final String COMPUTE_2_TIME_UNIT = FinancePolicy.MINUTES;
-	private static final Double COMPUTE_2_VALUE_FACTOR = ONE_MINUTE_IN_MILLISECONDS;
 	private static final int VOLUME_1_SIZE = 50;
 	private static final Double VOLUME_1_VALUE = 2.0;
 	private static final String VOLUME_1_TIME_UNIT = FinancePolicy.HOURS;
-	private static final Double VOLUME_1_VALUE_FACTOR = ONE_HOUR_IN_MILLISECONDS;
 	private static final int VOLUME_2_SIZE = 10;
 	private static final Double VOLUME_2_VALUE = 0.3;
 	private static final String VOLUME_2_TIME_UNIT = FinancePolicy.MILLISECONDS;
-	private static final Double VOLUME_2_VALUE_FACTOR = 1.0;
 	private static final int UNKNOWN_ITEM_VCPU = 1;
 	private static final int UNKNOWN_ITEM_RAM = 1;
 	private static final Double COMPUTE_1_VALUE_BEFORE_UPDATE = COMPUTE_1_VALUE + 1;
@@ -81,14 +73,10 @@ public class FinancePolicyTest {
 		ResourceItem volumeItem1 = new VolumeItem(VOLUME_1_SIZE);
 		ResourceItem volumeItem2 = new VolumeItem(VOLUME_2_SIZE);
 		
-		assertEquals(new Double(COMPUTE_1_VALUE / COMPUTE_1_VALUE_FACTOR), 
-		        policy.getItemFinancialValue(computeItem1, STATE_1));
-		assertEquals(new Double(COMPUTE_2_VALUE / COMPUTE_2_VALUE_FACTOR), 
-		        policy.getItemFinancialValue(computeItem2, STATE_2));
-		assertEquals(new Double(VOLUME_1_VALUE / VOLUME_1_VALUE_FACTOR), 
-		        policy.getItemFinancialValue(volumeItem1, STATE_1));
-		assertEquals(new Double(VOLUME_2_VALUE / VOLUME_2_VALUE_FACTOR), 
-		        policy.getItemFinancialValue(volumeItem2, STATE_2));
+		assertEquals(COMPUTE_1_VALUE, policy.getItemFinancialValue(computeItem1, STATE_1));
+		assertEquals(COMPUTE_2_VALUE, policy.getItemFinancialValue(computeItem2, STATE_2));
+		assertEquals(VOLUME_1_VALUE, policy.getItemFinancialValue(volumeItem1, STATE_1));
+		assertEquals(VOLUME_2_VALUE, policy.getItemFinancialValue(volumeItem2, STATE_2));
 	}
 	
 	// test case: When creating a FinancePolicy object and one of the plan items
@@ -437,14 +425,10 @@ public class FinancePolicyTest {
         ResourceItem volumeItem1 = new VolumeItem(VOLUME_1_SIZE);
         ResourceItem volumeItem2 = new VolumeItem(VOLUME_2_SIZE);
 
-        assertEquals(new Double(COMPUTE_1_VALUE / COMPUTE_1_VALUE_FACTOR), 
-                plan.getItemFinancialValue(computeItem1, STATE_1));
-        assertEquals(new Double(COMPUTE_2_VALUE / COMPUTE_2_VALUE_FACTOR), 
-                plan.getItemFinancialValue(computeItem2, STATE_2));
-        assertEquals(new Double(VOLUME_1_VALUE / VOLUME_1_VALUE_FACTOR), 
-                plan.getItemFinancialValue(volumeItem1, STATE_1));
-        assertEquals(new Double(VOLUME_2_VALUE / VOLUME_2_VALUE_FACTOR), 
-                plan.getItemFinancialValue(volumeItem2, STATE_2));
+        assertEquals(COMPUTE_1_VALUE, plan.getItemFinancialValue(computeItem1, STATE_1));
+        assertEquals(COMPUTE_2_VALUE, plan.getItemFinancialValue(computeItem2, STATE_2));
+        assertEquals(VOLUME_1_VALUE, plan.getItemFinancialValue(volumeItem1, STATE_1));
+        assertEquals(VOLUME_2_VALUE, plan.getItemFinancialValue(volumeItem2, STATE_2));
     }
     
     // test case: When creating a FinancePolicy object using a file as data source and
@@ -473,24 +457,28 @@ public class FinancePolicyTest {
         assertEquals(4, returnedMap.size());
 
         String keyCompute1 = String.format("%s-%s", computeItem1.toString(), STATE_1.getValue());
+        String valueCompute1 = String.format("%s-%s", String.valueOf(COMPUTE_1_VALUE), String.valueOf(TimeUnit.SECONDS)); 
         assertTrue(returnedMap.containsKey(keyCompute1));
-        assertEquals(String.valueOf(COMPUTE_1_VALUE / COMPUTE_1_VALUE_FACTOR), returnedMap.get(keyCompute1));
+        assertEquals(valueCompute1, returnedMap.get(keyCompute1));
         
         String keyCompute2 = String.format("%s-%s", computeItem2.toString(), STATE_2.getValue());
+        String valueCompute2 = String.format("%s-%s", String.valueOf(COMPUTE_2_VALUE), String.valueOf(TimeUnit.MINUTES));
         assertTrue(returnedMap.containsKey(keyCompute2));
-        assertEquals(String.valueOf(COMPUTE_2_VALUE / COMPUTE_2_VALUE_FACTOR), returnedMap.get(keyCompute2));
+        assertEquals(valueCompute2, returnedMap.get(keyCompute2));
 
         String keyVolume1 = String.format("%s-%s", volumeItem1.toString(), STATE_1.getValue());
+        String valueVolume1 = String.format("%s-%s", String.valueOf(VOLUME_1_VALUE), String.valueOf(TimeUnit.HOURS));
         assertTrue(returnedMap.containsKey(keyVolume1));
-        assertEquals(String.valueOf(VOLUME_1_VALUE / VOLUME_1_VALUE_FACTOR), returnedMap.get(keyVolume1));
+        assertEquals(valueVolume1, returnedMap.get(keyVolume1));
         
         String keyVolume2 = String.format("%s-%s", volumeItem2.toString(), STATE_2.getValue());
+        String valueVolume2 = String.format("%s-%s", String.valueOf(VOLUME_2_VALUE), String.valueOf(TimeUnit.MILLISECONDS));
         assertTrue(returnedMap.containsKey(keyVolume2));
-        assertEquals(String.valueOf(VOLUME_2_VALUE / VOLUME_2_VALUE_FACTOR), returnedMap.get(keyVolume2));
+        assertEquals(valueVolume2, returnedMap.get(keyVolume2));
     }
     
     // test case: When calling the getPlanFromDatabaseItems method, it must return a Map of 
-    // resource item specification to resource item value. The map must contain a 
+    // finance rule context to finance rule value. The map must contain a 
     // mapping for each element contained in the list passed as argument.
     @Test
     public void testGetPlanFromDatabaseItems() throws InvalidParameterException {
@@ -502,19 +490,33 @@ public class FinancePolicyTest {
         ResourceItem volumeItem2 = new VolumeItem(VOLUME_2_SIZE);
         
         List<FinanceRule> items = new ArrayList<FinanceRule>();
-        items.add(new FinanceRule(computeItem1, STATE_1, COMPUTE_1_VALUE));
-        items.add(new FinanceRule(computeItem2, STATE_2, COMPUTE_2_VALUE));
-        items.add(new FinanceRule(volumeItem1, STATE_1, VOLUME_1_VALUE));
-        items.add(new FinanceRule(volumeItem2, STATE_2, VOLUME_2_VALUE));
+        FinanceRuleContext contextComputeItem1 = new FinanceRuleContext(computeItem1, STATE_1);
+        FinanceRuleContext contextComputeItem2 = new FinanceRuleContext(computeItem2, STATE_2);
+        FinanceRuleContext contextVolumeItem1 = new FinanceRuleContext(volumeItem1, STATE_1);
+        FinanceRuleContext contextVolumeItem2 = new FinanceRuleContext(volumeItem2, STATE_2);
         
-        Map<Pair<ResourceItem, OrderState>, Double> returnedPlan = plan.getPolicyFromDatabaseItems(items);
+        FinanceRuleValue valueComputeItem1 = new FinanceRuleValue(COMPUTE_1_VALUE, TimeUnit.SECONDS);
+        FinanceRuleValue valueComputeItem2 = new FinanceRuleValue(COMPUTE_2_VALUE, TimeUnit.MINUTES);
+        FinanceRuleValue valueVolumeItem1 = new FinanceRuleValue(VOLUME_1_VALUE, TimeUnit.HOURS);
+        FinanceRuleValue valueVolumeItem2 = new FinanceRuleValue(VOLUME_2_VALUE, TimeUnit.MILLISECONDS);
+                
+        items.add(new FinanceRule(contextComputeItem1, valueComputeItem1));
+        items.add(new FinanceRule(contextComputeItem2, valueComputeItem2));
+        items.add(new FinanceRule(contextVolumeItem1, valueVolumeItem1));
+        items.add(new FinanceRule(contextVolumeItem2, valueVolumeItem2));
+        
+        Map<FinanceRuleContext, FinanceRuleValue> returnedPlan = plan.getPolicyFromDatabaseItems(items);
         
         assertEquals(4, returnedPlan.size());
         
-        assertEquals(COMPUTE_1_VALUE, returnedPlan.get(Pair.of(computeItem1, STATE_1)));
-        assertEquals(COMPUTE_2_VALUE, returnedPlan.get(Pair.of(computeItem2, STATE_2)));
-        assertEquals(VOLUME_1_VALUE, returnedPlan.get(Pair.of(volumeItem1, STATE_1)));
-        assertEquals(VOLUME_2_VALUE, returnedPlan.get(Pair.of(volumeItem2, STATE_2)));
+        assertEquals(COMPUTE_1_VALUE, returnedPlan.get(new FinanceRuleContext(computeItem1, STATE_1)).getValue());
+        assertEquals(TimeUnit.SECONDS, returnedPlan.get(new FinanceRuleContext(computeItem1, STATE_1)).getTimeUnit());
+        assertEquals(COMPUTE_2_VALUE, returnedPlan.get(new FinanceRuleContext(computeItem2, STATE_2)).getValue());
+        assertEquals(TimeUnit.MINUTES, returnedPlan.get(new FinanceRuleContext(computeItem2, STATE_2)).getTimeUnit());
+        assertEquals(VOLUME_1_VALUE, returnedPlan.get(new FinanceRuleContext(volumeItem1, STATE_1)).getValue());
+        assertEquals(TimeUnit.HOURS, returnedPlan.get(new FinanceRuleContext(volumeItem1, STATE_1)).getTimeUnit());
+        assertEquals(VOLUME_2_VALUE, returnedPlan.get(new FinanceRuleContext(volumeItem2, STATE_2)).getValue());
+        assertEquals(TimeUnit.MILLISECONDS, returnedPlan.get(new FinanceRuleContext(volumeItem2, STATE_2)).getTimeUnit());
     }
     
     // test case: When calling the toString method, it must generate and 
@@ -532,31 +534,42 @@ public class FinancePolicyTest {
         Mockito.when(volumeItem1.toString()).thenReturn(VOLUME_ITEM_1_TO_STRING);
         Mockito.when(volumeItem2.toString()).thenReturn(VOLUME_ITEM_2_TO_STRING);
 
-        Iterator<Pair<ResourceItem, OrderState>> iterator = new TestUtils().getIterator(
-                Arrays.asList(Pair.of(computeItem1, STATE_1), 
-                		      Pair.of(computeItem2, STATE_2),
-                		      Pair.of(volumeItem1, STATE_1), 
-                			  Pair.of(volumeItem2, STATE_2)));
+        Iterator<FinanceRuleContext> iterator = new TestUtils().getIterator(
+                Arrays.asList(new FinanceRuleContext(computeItem1, STATE_1), 
+                              new FinanceRuleContext(computeItem2, STATE_2),
+                              new FinanceRuleContext(volumeItem1, STATE_1), 
+                              new FinanceRuleContext(volumeItem2, STATE_2)));
         
-        HashSet<Pair<ResourceItem, OrderState>> itemsSet = Mockito.mock(HashSet.class);
+        HashSet<FinanceRuleContext> itemsSet = Mockito.mock(HashSet.class);
         Mockito.when(itemsSet.iterator()).thenReturn(iterator);
         
-        Map<Pair<ResourceItem, OrderState>, Double> planItems = Mockito.mock(HashMap.class);
+        Map<FinanceRuleContext, FinanceRuleValue> planItems = Mockito.mock(HashMap.class);
         Mockito.when(planItems.keySet()).thenReturn(itemsSet);
-        Mockito.when(planItems.get(Pair.of(computeItem1, STATE_1))).thenReturn(COMPUTE_1_VALUE);
-        Mockito.when(planItems.get(Pair.of(computeItem2, STATE_2))).thenReturn(COMPUTE_2_VALUE);
-        Mockito.when(planItems.get(Pair.of(volumeItem1, STATE_1))).thenReturn(VOLUME_1_VALUE);
-        Mockito.when(planItems.get(Pair.of(volumeItem2, STATE_2))).thenReturn(VOLUME_2_VALUE);
+        Mockito.when(planItems.get(new FinanceRuleContext(computeItem1, STATE_1))).thenReturn(new FinanceRuleValue(COMPUTE_1_VALUE, TimeUnit.SECONDS));
+        Mockito.when(planItems.get(new FinanceRuleContext(computeItem2, STATE_2))).thenReturn(new FinanceRuleValue(COMPUTE_2_VALUE, TimeUnit.MINUTES));
+        Mockito.when(planItems.get(new FinanceRuleContext(volumeItem1, STATE_1))).thenReturn(new FinanceRuleValue(VOLUME_1_VALUE, TimeUnit.HOURS));
+        Mockito.when(planItems.get(new FinanceRuleContext(volumeItem2, STATE_2))).thenReturn(new FinanceRuleValue(VOLUME_2_VALUE, TimeUnit.MILLISECONDS));
+        
+        Mockito.when(planItems.keySet()).thenReturn(itemsSet);
+        Mockito.when(planItems.get(new FinanceRuleContext(computeItem1, STATE_1))).
+            thenReturn(new FinanceRuleValue(COMPUTE_1_VALUE, TimeUnit.SECONDS));
+        Mockito.when(planItems.get(new FinanceRuleContext(computeItem2, STATE_2))).
+            thenReturn(new FinanceRuleValue(COMPUTE_2_VALUE, TimeUnit.MINUTES));
+        Mockito.when(planItems.get(new FinanceRuleContext(volumeItem1, STATE_1))).
+            thenReturn(new FinanceRuleValue(VOLUME_1_VALUE, TimeUnit.HOURS));
+        Mockito.when(planItems.get(new FinanceRuleContext(volumeItem2, STATE_2))).
+            thenReturn(new FinanceRuleValue(VOLUME_2_VALUE, TimeUnit.MILLISECONDS));
+        
         
         FinancePolicy plan = new FinancePolicy(DEFAULT_RESOURCE_VALUE, planItems);
         
         String result = plan.toString();
         
-        String expectedString = String.format("{0:[%s,%s,%s],1:[%s,%s,%s],2:[%s,%s,%s],3:[%s,%s,%s]}", 
-                COMPUTE_ITEM_1_TO_STRING, STATE_1.getValue(), String.valueOf(COMPUTE_1_VALUE), 
-                COMPUTE_ITEM_2_TO_STRING, STATE_2.getValue(), String.valueOf(COMPUTE_2_VALUE), 
-                VOLUME_ITEM_1_TO_STRING, STATE_1.getValue(), String.valueOf(VOLUME_1_VALUE), 
-                VOLUME_ITEM_2_TO_STRING, STATE_2.getValue(), String.valueOf(VOLUME_2_VALUE));
+        String expectedString = String.format("{0:[%s,%s,%s,%s],1:[%s,%s,%s,%s],2:[%s,%s,%s,%s],3:[%s,%s,%s,%s]}", 
+                COMPUTE_ITEM_1_TO_STRING, STATE_1.getValue(), String.valueOf(COMPUTE_1_VALUE), String.valueOf(TimeUnit.SECONDS), 
+                COMPUTE_ITEM_2_TO_STRING, STATE_2.getValue(), String.valueOf(COMPUTE_2_VALUE), String.valueOf(TimeUnit.MINUTES),
+                VOLUME_ITEM_1_TO_STRING, STATE_1.getValue(), String.valueOf(VOLUME_1_VALUE), String.valueOf(TimeUnit.HOURS),
+                VOLUME_ITEM_2_TO_STRING, STATE_2.getValue(), String.valueOf(VOLUME_2_VALUE), String.valueOf(TimeUnit.MILLISECONDS));
         
         assertEquals(expectedString, result);
     }
@@ -565,7 +578,7 @@ public class FinancePolicyTest {
     public void testUpdateValidPlanInfo() throws InvalidParameterException {
         setUpPolicyInfo();
         // get items before update
-        Map<Pair<ResourceItem, OrderState>, Double> planItems = setUpItemsBeforeUpdate();
+        Map<FinanceRuleContext, FinanceRuleValue> planItems = setUpItemsBeforeUpdate();
         
         // set up items after update
         ResourceItem computeItem1 = new ComputeItem(COMPUTE_1_VCPU, COMPUTE_1_RAM);
@@ -590,14 +603,10 @@ public class FinancePolicyTest {
         assertPlanDoesNotContainItem(policy, volumeItem1BeforeUpdate, STATE_1);
         assertPlanDoesNotContainItem(policy, volumeItem2BeforeUpdate, STATE_2);
         
-        assertEquals(new Double(COMPUTE_1_VALUE / COMPUTE_1_VALUE_FACTOR), 
-                policy.getItemFinancialValue(computeItem1, STATE_1));
-        assertEquals(new Double(COMPUTE_2_VALUE / COMPUTE_2_VALUE_FACTOR), 
-                policy.getItemFinancialValue(computeItem2, STATE_2));
-        assertEquals(new Double(VOLUME_1_VALUE / VOLUME_1_VALUE_FACTOR), 
-                policy.getItemFinancialValue(volumeItem1, STATE_1));
-        assertEquals(new Double(VOLUME_2_VALUE / VOLUME_2_VALUE_FACTOR), 
-                policy.getItemFinancialValue(volumeItem2, STATE_2));
+        assertEquals(COMPUTE_1_VALUE, policy.getItemFinancialValue(computeItem1, STATE_1));
+        assertEquals(COMPUTE_2_VALUE, policy.getItemFinancialValue(computeItem2, STATE_2));
+        assertEquals(VOLUME_1_VALUE, policy.getItemFinancialValue(volumeItem1, STATE_1));
+        assertEquals(VOLUME_2_VALUE, policy.getItemFinancialValue(volumeItem2, STATE_2));
     }
     
     // TODO update the policy.update tests
@@ -617,7 +626,7 @@ public class FinancePolicyTest {
         setUpPolicyInfo(computeItemString1, getValidCompute2String(),
                 getValidVolume1String(), getValidVolume2String());
         
-        Map<Pair<ResourceItem, OrderState>, Double> planItems = setUpItemsBeforeUpdate();
+        Map<FinanceRuleContext, FinanceRuleValue> planItems = setUpItemsBeforeUpdate();
         
         FinancePolicy policy = new FinancePolicy(DEFAULT_RESOURCE_VALUE, planItems);
         
@@ -639,7 +648,7 @@ public class FinancePolicyTest {
         setUpPolicyInfo(computeItemString1, getValidCompute2String(),
                 getValidVolume1String(), getValidVolume2String());
         
-        Map<Pair<ResourceItem, OrderState>, Double> planItems = setUpItemsBeforeUpdate();
+        Map<FinanceRuleContext, FinanceRuleValue> planItems = setUpItemsBeforeUpdate();
         
         FinancePolicy policy = new FinancePolicy(DEFAULT_RESOURCE_VALUE, planItems);
         
@@ -660,7 +669,7 @@ public class FinancePolicyTest {
         setUpPolicyInfo(computeItemString1, getValidCompute2String(),
                 getValidVolume1String(), getValidVolume2String());
         
-        Map<Pair<ResourceItem, OrderState>, Double> planItems = setUpItemsBeforeUpdate();
+        Map<FinanceRuleContext, FinanceRuleValue> planItems = setUpItemsBeforeUpdate();
         
         FinancePolicy policy = new FinancePolicy(DEFAULT_RESOURCE_VALUE, planItems);
         
@@ -683,7 +692,7 @@ public class FinancePolicyTest {
         setUpPolicyInfo(computeItemString1, getValidCompute2String(),
                 getValidVolume1String(), getValidVolume2String());
         
-        Map<Pair<ResourceItem, OrderState>, Double> planItems = setUpItemsBeforeUpdate();
+        Map<FinanceRuleContext, FinanceRuleValue> planItems = setUpItemsBeforeUpdate();
         
         FinancePolicy policy = new FinancePolicy(DEFAULT_RESOURCE_VALUE, planItems);
         
@@ -706,7 +715,7 @@ public class FinancePolicyTest {
         setUpPolicyInfo(computeItemString1, getValidCompute2String(),
                 getValidVolume1String(), getValidVolume2String());
         
-        Map<Pair<ResourceItem, OrderState>, Double> planItems = setUpItemsBeforeUpdate();
+        Map<FinanceRuleContext, FinanceRuleValue> planItems = setUpItemsBeforeUpdate();
         
         FinancePolicy policy = new FinancePolicy(DEFAULT_RESOURCE_VALUE, planItems);
         
@@ -728,7 +737,7 @@ public class FinancePolicyTest {
         setUpPolicyInfo(computeItemString1, getValidCompute2String(),
                 getValidVolume1String(), getValidVolume2String());
         
-        Map<Pair<ResourceItem, OrderState>, Double> planItems = setUpItemsBeforeUpdate();
+        Map<FinanceRuleContext, FinanceRuleValue> planItems = setUpItemsBeforeUpdate();
         
         FinancePolicy policy = new FinancePolicy(DEFAULT_RESOURCE_VALUE, planItems);
         
@@ -751,7 +760,7 @@ public class FinancePolicyTest {
         setUpPolicyInfo(computeItemString1, getValidCompute2String(),
                 getValidVolume1String(), getValidVolume2String());
         
-        Map<Pair<ResourceItem, OrderState>, Double> planItems = setUpItemsBeforeUpdate();
+        Map<FinanceRuleContext, FinanceRuleValue> planItems = setUpItemsBeforeUpdate();
         
         FinancePolicy policy = new FinancePolicy(DEFAULT_RESOURCE_VALUE, planItems);
         
@@ -773,7 +782,7 @@ public class FinancePolicyTest {
         setUpPolicyInfo(computeItemString1, getValidCompute2String(),
                 getValidVolume1String(), getValidVolume2String());
         
-        Map<Pair<ResourceItem, OrderState>, Double> planItems = setUpItemsBeforeUpdate();
+        Map<FinanceRuleContext, FinanceRuleValue> planItems = setUpItemsBeforeUpdate();
         
         FinancePolicy policy = new FinancePolicy(DEFAULT_RESOURCE_VALUE, planItems);
         
@@ -796,7 +805,7 @@ public class FinancePolicyTest {
         setUpPolicyInfo(computeItemString1, getValidCompute2String(),
                 getValidVolume1String(), getValidVolume2String());
         
-        Map<Pair<ResourceItem, OrderState>, Double> planItems = setUpItemsBeforeUpdate();
+        Map<FinanceRuleContext, FinanceRuleValue> planItems = setUpItemsBeforeUpdate();
         
         FinancePolicy policy = new FinancePolicy(DEFAULT_RESOURCE_VALUE, planItems);
         
@@ -818,7 +827,7 @@ public class FinancePolicyTest {
         setUpPolicyInfo(getValidCompute1String(), getValidCompute2String(),
                 volumeItemString, getValidVolume2String());
         
-        Map<Pair<ResourceItem, OrderState>, Double> planItems = setUpItemsBeforeUpdate();
+        Map<FinanceRuleContext, FinanceRuleValue> planItems = setUpItemsBeforeUpdate();
         
         FinancePolicy policy = new FinancePolicy(DEFAULT_RESOURCE_VALUE, planItems);
         
@@ -841,7 +850,7 @@ public class FinancePolicyTest {
         setUpPolicyInfo(getValidCompute1String(), getValidCompute2String(),
                 volumeItemString, getValidVolume2String());
         
-        Map<Pair<ResourceItem, OrderState>, Double> planItems = setUpItemsBeforeUpdate();
+        Map<FinanceRuleContext, FinanceRuleValue> planItems = setUpItemsBeforeUpdate();
         
         FinancePolicy policy = new FinancePolicy(DEFAULT_RESOURCE_VALUE, planItems);
         
@@ -863,7 +872,7 @@ public class FinancePolicyTest {
         setUpPolicyInfo(getValidCompute1String(), getValidCompute2String(),
                 volumeItemString, getValidVolume2String());
         
-        Map<Pair<ResourceItem, OrderState>, Double> planItems = setUpItemsBeforeUpdate();
+        Map<FinanceRuleContext, FinanceRuleValue> planItems = setUpItemsBeforeUpdate();
         
         FinancePolicy policy = new FinancePolicy(DEFAULT_RESOURCE_VALUE, planItems);
         
@@ -884,7 +893,7 @@ public class FinancePolicyTest {
         setUpPolicyInfo(getValidCompute1String(), getValidCompute2String(),
                 volumeItemString, getValidVolume2String());
         
-        Map<Pair<ResourceItem, OrderState>, Double> planItems = setUpItemsBeforeUpdate();
+        Map<FinanceRuleContext, FinanceRuleValue> planItems = setUpItemsBeforeUpdate();
         
         FinancePolicy policy = new FinancePolicy(DEFAULT_RESOURCE_VALUE, planItems);
         
@@ -907,7 +916,7 @@ public class FinancePolicyTest {
         setUpPolicyInfo(getValidCompute1String(), getValidCompute2String(),
                 volumeItemString, getValidVolume2String());
         
-        Map<Pair<ResourceItem, OrderState>, Double> planItems = setUpItemsBeforeUpdate();
+        Map<FinanceRuleContext, FinanceRuleValue> planItems = setUpItemsBeforeUpdate();
         
         FinancePolicy policy = new FinancePolicy(DEFAULT_RESOURCE_VALUE, planItems);
         
@@ -933,7 +942,7 @@ public class FinancePolicyTest {
         new FinancePolicy(PLAN_NAME, DEFAULT_RESOURCE_VALUE, policyInfo);
     }
 
-    private Map<Pair<ResourceItem, OrderState>, Double> setUpItemsBeforeUpdate() {
+    private Map<FinanceRuleContext, FinanceRuleValue> setUpItemsBeforeUpdate() {
         // set up items before update
         computeItem1BeforeUpdate = Mockito.mock(ComputeItem.class);
         computeItem2BeforeUpdate = Mockito.mock(ComputeItem.class);
@@ -946,21 +955,25 @@ public class FinancePolicyTest {
         Mockito.when(volumeItem2BeforeUpdate.toString()).thenReturn(VOLUME_ITEM_2_TO_STRING);
 
         // This code assures a certain order of resource items is used in the string generation
-        Iterator<Pair<ResourceItem, OrderState>> iterator = new TestUtils().getIterator(
-                Arrays.asList(Pair.of(computeItem1BeforeUpdate, STATE_1), 
-                		      Pair.of(computeItem2BeforeUpdate, STATE_2),
-                              Pair.of(volumeItem1BeforeUpdate, STATE_1), 
-                              Pair.of(volumeItem2BeforeUpdate, STATE_2)));
+        Iterator<FinanceRuleContext> iterator = new TestUtils().getIterator(
+                Arrays.asList(new FinanceRuleContext(computeItem1BeforeUpdate, STATE_1), 
+                              new FinanceRuleContext(computeItem2BeforeUpdate, STATE_2),
+                              new FinanceRuleContext(volumeItem1BeforeUpdate, STATE_1), 
+                              new FinanceRuleContext(volumeItem2BeforeUpdate, STATE_2)));
         
-        HashSet<Pair<ResourceItem, OrderState>> itemsSet = Mockito.mock(HashSet.class);
+        HashSet<FinanceRuleContext> itemsSet = Mockito.mock(HashSet.class);
         Mockito.when(itemsSet.iterator()).thenReturn(iterator);
         
-        Map<Pair<ResourceItem, OrderState>, Double> planItems = Mockito.mock(HashMap.class);
+        Map<FinanceRuleContext, FinanceRuleValue> planItems = Mockito.mock(HashMap.class);
         Mockito.when(planItems.keySet()).thenReturn(itemsSet);
-        Mockito.when(planItems.get(Pair.of(computeItem1BeforeUpdate, STATE_1))).thenReturn(COMPUTE_1_VALUE_BEFORE_UPDATE);
-        Mockito.when(planItems.get(Pair.of(computeItem2BeforeUpdate, STATE_2))).thenReturn(COMPUTE_2_VALUE_BEFORE_UPDATE);
-        Mockito.when(planItems.get(Pair.of(volumeItem1BeforeUpdate, STATE_1))).thenReturn(VOLUME_1_VALUE_BEFORE_UPDATE);
-        Mockito.when(planItems.get(Pair.of(volumeItem2BeforeUpdate, STATE_2))).thenReturn(VOLUME_2_VALUE_BEFORE_UPDATE);
+        Mockito.when(planItems.get(new FinanceRuleContext(computeItem1BeforeUpdate, STATE_1))).
+            thenReturn(new FinanceRuleValue(COMPUTE_1_VALUE_BEFORE_UPDATE, TimeUnit.SECONDS));
+        Mockito.when(planItems.get(new FinanceRuleContext(computeItem2BeforeUpdate, STATE_2))).
+            thenReturn(new FinanceRuleValue(COMPUTE_2_VALUE_BEFORE_UPDATE, TimeUnit.MINUTES));
+        Mockito.when(planItems.get(new FinanceRuleContext(volumeItem1BeforeUpdate, STATE_1))).
+            thenReturn(new FinanceRuleValue(VOLUME_1_VALUE_BEFORE_UPDATE, TimeUnit.HOURS));
+        Mockito.when(planItems.get(new FinanceRuleContext(volumeItem2BeforeUpdate, STATE_2))).
+            thenReturn(new FinanceRuleValue(VOLUME_2_VALUE_BEFORE_UPDATE, TimeUnit.MILLISECONDS));
         return planItems;
     }
 

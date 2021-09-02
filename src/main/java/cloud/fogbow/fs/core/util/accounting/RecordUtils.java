@@ -24,6 +24,7 @@ public class RecordUtils {
 	public RecordUtils() {
 	}
 	
+	@Deprecated
     public Double getTimeFromRecord(Record record, Long paymentStartTime, Long paymentEndTime) {
         Timestamp endTimeTimestamp = record.getEndTime();
         Long recordStartTime = record.getStartTime().getTime();
@@ -71,6 +72,15 @@ public class RecordUtils {
         return item;
     }
 
+    public NavigableMap<Timestamp, OrderState> getRecordStateHistoryOnPeriod(Record record, Long paymentStartTime,
+            Long paymentEndTime) throws InvalidParameterException {
+        OrderStateHistory orderHistory = record.getStateHistory();
+        Map<Timestamp, cloud.fogbow.accs.core.models.orders.OrderState> accsHistory = orderHistory.getHistory();
+
+        Map<Timestamp, OrderState> history = convertAccountingStateToRasState(accsHistory);
+        return filterStatesByPeriod(history, paymentStartTime, paymentEndTime);        
+    }
+    
     // TODO documentation
 	public Map<OrderState, Double> getTimeFromRecordPerState(Record record, Long paymentStartTime,
 			Long paymentEndTime) throws InvalidParameterException {
@@ -123,7 +133,7 @@ public class RecordUtils {
 
 	private NavigableMap<Timestamp, OrderState> filterStatesByPeriod(Map<Timestamp, OrderState> history, Long paymentStartTime,
 			Long paymentEndTime) throws InvalidParameterException {
-		Timestamp lowerLimit = getHighestTimestampBeforeTime(history, paymentStartTime);
+		Timestamp lowerLimit = getLowerLimit(history, paymentStartTime);
 		Timestamp higherLimit = getHighestTimestampBeforeTime(history, paymentEndTime);
 		
 		if (lowerLimit == null) {
@@ -140,7 +150,7 @@ public class RecordUtils {
 			
 			for (Timestamp timestamp : history.keySet()) {
 				if (timestamp.getTime() >= paymentStartTime 
-						&& timestamp.getTime() <= paymentEndTime) {
+						&& timestamp.getTime() < paymentEndTime) {
 					filteredState.put(timestamp, history.get(timestamp));
 				}
 			}
@@ -149,11 +159,21 @@ public class RecordUtils {
 		}
 	}
 
+	// if the first state of a resource is mapped to a timestamp exactly equal to the payment start time, 
+	// then it is the lower limit time of the payment.
+    private Timestamp getLowerLimit(Map<Timestamp, OrderState> history, Long paymentStartTime) {
+		if (history.containsKey(new Timestamp(paymentStartTime))) {
+		    return new Timestamp(paymentStartTime);
+		} else {
+		    return getHighestTimestampBeforeTime(history, paymentStartTime);
+		}
+    }
+
 	private Timestamp getHighestTimestampBeforeTime(Map<Timestamp, OrderState> history, Long time) {
 		Timestamp highestTimestamp = null;
 		
 		for (Timestamp timestamp : history.keySet()) {
-			if (timestamp.getTime() <= time) {
+			if (timestamp.getTime() < time) {
 				if (highestTimestamp == null) {
 					highestTimestamp = timestamp;
 				} else if (timestamp.getTime() > highestTimestamp.getTime()) {
