@@ -25,8 +25,6 @@ public class RecordUtilsTest {
     private Record record;
     private Long paymentStartTime;
     private Long paymentEndTime;
-    private static final long RECORD_START_TIME = 100;
-    private static final long RECORD_END_TIME = 200;
     private static final int COMPUTE_VCPU = 1;
     private static final int COMPUTE_RAM = 2;
     private static final int VOLUME_SIZE = 50;
@@ -35,219 +33,6 @@ public class RecordUtilsTest {
     private RecordUtils recordUtils;
 	private OrderStateHistory stateHistory;
 	private Map<Timestamp, cloud.fogbow.accs.core.models.orders.OrderState> history;
-    
-    // test case 1: record start = payment start and record end = payment end
-    
-    // In this case, the record time is the difference between the 
-    // payment end and start times.
-    @Test
-    public void testGetTimeFromRecordCase1() {
-        setUpNormalRecordTimes();
-        
-        paymentStartTime = 100L;
-        paymentEndTime = 200L;
-        
-        assertEquals(new Double(paymentEndTime - paymentStartTime), 
-                recordUtils.getTimeFromRecord(record, paymentStartTime, paymentEndTime));
-    }
-
-    // test case 2: record start < payment start and record end = payment end
-    
-    // In this case, the record time is the difference between the 
-    // payment end and start times.
-    @Test
-    public void testGetTimeFromRecordCase2() {
-        setUpNormalRecordTimes();
-        
-        paymentStartTime = 150L;
-        paymentEndTime = 200L;
-        
-        assertEquals(new Double(50.0), 
-                recordUtils.getTimeFromRecord(record, paymentStartTime, paymentEndTime));
-    }
-    
-    // test case 3: record start > payment start and record end = payment end 
-    
-    // In this case, the record time is the difference between the 
-    // payment end time and the record start time.
-    @Test
-    public void testGetTimeFromRecordCase3() {
-        setUpNormalRecordTimes();
-        
-        paymentStartTime = 50L;
-        paymentEndTime = 200L;
-        
-        assertEquals(new Double(100.0), 
-                recordUtils.getTimeFromRecord(record, paymentStartTime, paymentEndTime));
-    }
-    
-    // test case 4: record start = payment start and record end < payment end
-    
-    // In this case, the record time is the difference between the record end time
-    // and the payment start time.
-    @Test
-    public void testGetTimeFromRecordCase4() {
-        setUpNormalRecordTimes();
-
-        paymentStartTime = 100L;
-        paymentEndTime = 250L;
-        
-        assertEquals(new Double(100.0), 
-                recordUtils.getTimeFromRecord(record, paymentStartTime, paymentEndTime));
-    }
-    
-    // test case 5: record start < payment start and record end < payment end
-    
-    // In this case, the record time is the difference between the record end time and 
-    // the payment start time.
-    @Test
-    public void testGetTimeFromRecordCase5() {
-        setUpNormalRecordTimes();
-        
-        paymentStartTime = 150L;
-        paymentEndTime = 250L;
-        
-        assertEquals(new Double(50.0), 
-                recordUtils.getTimeFromRecord(record, paymentStartTime, paymentEndTime));
-    }
-    
-    // test case 6: record start > payment start and record end < payment end
-    
-    // In this case, the record time is the difference between the record end time
-    // and the record start time.
-    @Test
-    public void testGetTimeFromRecordCase6() {
-        setUpNormalRecordTimes();
-
-        paymentStartTime = 50L;
-        paymentEndTime = 250L;
-        
-        assertEquals(new Double(100.0), 
-                recordUtils.getTimeFromRecord(record, paymentStartTime, paymentEndTime));
-    }
-    
-    // test case 7 (NORMAL): record start = payment start and record end > payment end
-    
-    // Record end time is after the payment end time. Normally, in this case,
-    // the record endTime field is null, since the record has not ended yet and, thus, 
-    // its end time is unknown by the Accounting Service.
-    
-    // In this case, the record time is the difference between the payment end time and
-    // the payment start time.
-    @Test
-    public void testGetTimeFromRecordCase7() {
-        setUpNullRecordEndTime();
-        
-        paymentStartTime = 100L;
-        paymentEndTime = 150L;
-        
-        assertEquals(new Double(50.0), 
-                recordUtils.getTimeFromRecord(record, paymentStartTime, paymentEndTime));
-    }
-
-    // test case 8 (NORMAL): record start < payment start and record end > payment end
-    
-    // Record end time is after the payment end time. Normally, in this case,
-    // the record endTime field is null, since the record has not ended yet and, thus, 
-    // its end time is unknown by the Accounting Service.
-    
-    // In this case, the record time is the difference between the payment end time and
-    // the payment start time.
-    @Test
-    public void testGetTimeFromRecordCase8() {
-        setUpNullRecordEndTime();
-        
-        paymentStartTime = 150L;
-        paymentEndTime = 180L;
-        
-        assertEquals(new Double(30.0), 
-                recordUtils.getTimeFromRecord(record, paymentStartTime, paymentEndTime));
-    }
-    
-    // test case 9 (NORMAL): record start > payment start and record end > payment end
-    
-    // Record end time is after the payment end time. Normally, in this case,
-    // the record endTime field is null, since the record has not ended yet and, thus, 
-    // its end time is unknown by the Accounting Service.
-    
-    // In this case, the record time is the difference between the payment end time and
-    // the record start time.
-    @Test
-    public void testGetTimeFromRecordCase9() {
-        setUpNullRecordEndTime();
-        
-        paymentStartTime = 50L;
-        paymentEndTime = 150L;
-        
-        assertEquals(new Double(50.0), 
-                recordUtils.getTimeFromRecord(record, paymentStartTime, paymentEndTime));
-    }
-    
-    // test case 10 (RARE): record start = payment start and record end > payment end
-
-    // Record end time is after the payment end time. Normally, in this case,
-    // the record endTime field is null, since the record has not ended yet and, thus, 
-    // its end time is unknown by the Accounting Service. However, it is possible that
-    // the record ends after the payment end time is set and before the getRecord request
-    // reaches the Accounting Service. In this case, the record has ended, its endTime
-    // field is not null and its end time is after the payment end time.
-    
-    // In this case, the record time is the difference between the payment end time and
-    // the payment start time.
-    @Test
-    public void testGetTimeFromRecordCase10() {
-        setUpNormalRecordTimes();
-
-        paymentStartTime = 100L;
-        paymentEndTime = 150L;
-        
-        assertEquals(new Double(50.0), 
-                recordUtils.getTimeFromRecord(record, paymentStartTime, paymentEndTime));
-    }
-    
-    // test case 11 (RARE): record start < payment start and record end > payment end
-    
-    // Record end time is after the payment end time. Normally, in this case,
-    // the record endTime field is null, since the record has not ended yet and, thus, 
-    // its end time is unknown by the Accounting Service. However, it is possible that
-    // the record ends after the payment end time is set and before the getRecord request
-    // reaches the Accounting Service. In this case, the record has ended, its endTime
-    // field is not null and its end time is after the payment end time.
-    
-    // In this case, the record time is the difference between the payment end time and
-    // the payment start time.
-    @Test
-    public void testGetTimeFromRecordCase11() {
-        setUpNormalRecordTimes();
-
-        paymentStartTime = 150L;
-        paymentEndTime = 180L;
-        
-        assertEquals(new Double(30.0), 
-                recordUtils.getTimeFromRecord(record, paymentStartTime, paymentEndTime));
-    }
-    
-    // test case 12 (RARE): record start > payment start and record end > payment end
-    
-    // Record end time is after the payment end time. Normally, in this case,
-    // the record endTime field is null, since the record has not ended yet and, thus, 
-    // its end time is unknown by the Accounting Service. However, it is possible that
-    // the record ends after the payment end time is set and before the getRecord request
-    // reaches the Accounting Service. In this case, the record has ended, its endTime
-    // field is not null and its end time is after the payment end time.
-    
-    // In this case, the record time is the difference between the payment end time and
-    // the record start time.
-    @Test
-    public void testGetTimeFromRecordCase12() {
-        setUpNormalRecordTimes();
-
-        paymentStartTime = 50L;
-        paymentEndTime = 150L;
-        
-        assertEquals(new Double(50.0), 
-                recordUtils.getTimeFromRecord(record, paymentStartTime, paymentEndTime));
-    }
     
     // test case: When calling the getItemFromRecord method passing a ComputeRecord, it must
     // extract the compute spec and build a ComputeItem correctly.
@@ -300,7 +85,11 @@ public class RecordUtilsTest {
         this.recordUtils.getItemFromRecord(this.record);
     }
     
-    // TODO documentation
+    // test case: When calling the getRecordStateHistoryOnPeriod method, it must
+    // return only the state changes in the period passed as argument. The returned map must
+    // have at least two entries. The entry with key timestamp == paymentStartTime must contain the 
+    // state where the Record was in the beginning of the period. The entry with 
+    // timestamp == paymentEndTime must contain the state where the Record was in the end of the period.
     @Test
     public void testGetTimeFromRecordPerState() throws InvalidParameterException {
     	this.paymentStartTime = 100L;
@@ -326,8 +115,7 @@ public class RecordUtilsTest {
     	assertEquals(OrderState.STOPPED, response.get(new Timestamp(this.paymentStartTime + 50)));
     	assertEquals(OrderState.STOPPED, response.get(new Timestamp(this.paymentEndTime)));
     }
-    
-    // TODO documentation
+
     @Test
     public void testGetTimeFromRecordPerStateNoStateChangeBeforeStartTime() throws InvalidParameterException {
     	this.paymentStartTime = 100L;
@@ -347,8 +135,7 @@ public class RecordUtilsTest {
     	assertEquals(OrderState.FULFILLED, response.get(new Timestamp(this.paymentStartTime)));
     	assertEquals(OrderState.FULFILLED, response.get(new Timestamp(this.paymentEndTime)));
     }
-    
-    // TODO documentation
+
     @Test
     public void testGetTimeFromRecordPerStateNoStateChangeInThePeriod() throws InvalidParameterException {
     	this.paymentStartTime = 100L;
@@ -368,8 +155,14 @@ public class RecordUtilsTest {
     	assertEquals(OrderState.FULFILLED, response.get(new Timestamp(this.paymentStartTime)));
     	assertEquals(OrderState.FULFILLED, response.get(new Timestamp(this.paymentEndTime)));
     }
-    
-    // TODO documentation
+
+    // test case: When calling the getRecordStateHistoryOnPeriod method, it must
+    // return only the state changes in the period passed as argument. The returned map must
+    // have at least two entries. The entry with key timestamp == paymentStartTime must contain the 
+    // state where the Record was in the beginning of the period. The entry with 
+    // timestamp == paymentEndTime must contain the state where the Record was in the end of the period.
+    // If a state appears more than once in the period passed as argument, then the returned map
+    // must contain at least the same number of entries. 
     @Test
     public void testGetTimeFromRecordPerStateRepeatedStates() throws InvalidParameterException {
     	this.paymentStartTime = 100L;
@@ -395,6 +188,28 @@ public class RecordUtilsTest {
     	assertEquals(OrderState.PAUSED, response.get(new Timestamp(this.paymentStartTime + 20)));
     	assertEquals(OrderState.FULFILLED, response.get(new Timestamp(this.paymentStartTime + 50)));
     	assertEquals(OrderState.FULFILLED, response.get(new Timestamp(this.paymentEndTime)));
+    }
+    
+    // test case: When calling the getRecordStateHistoryOnPeriod method, if the state history of 
+    // the Record passed as parameter contains no state change before or on the paymentStartTime, then
+    // it is impossible to determine the Record state in the beginning of the payment period. Thus, 
+    // the method must throw an InvalidParameterException.
+    @Test(expected = InvalidParameterException.class)
+    public void testGetRecordStateHistoryOnPeriodInvalidStateHistory() throws InvalidParameterException {
+        this.paymentStartTime = 100L;
+        this.paymentEndTime = 200L;
+
+        this.history = getHistory(getTimestamps(this.paymentStartTime + 20, 
+                                                this.paymentStartTime + 50, 
+                                                this.paymentEndTime + 10), 
+                                  getOrderStates(cloud.fogbow.accs.core.models.orders.OrderState.PAUSED, 
+                                                 cloud.fogbow.accs.core.models.orders.OrderState.FULFILLED, 
+                                                 cloud.fogbow.accs.core.models.orders.OrderState.HIBERNATED));
+        
+        setUpRecords();
+        
+        this.recordUtils = new RecordUtils();
+        this.recordUtils.getRecordStateHistoryOnPeriod(record, paymentStartTime, paymentEndTime);
     }
     
     private void setUpRecords() {
@@ -438,27 +253,5 @@ public class RecordUtilsTest {
     	}
     	
     	return stateList;
-    }
-    	
-    private void setUpNormalRecordTimes() {
-        this.startTimeTimestamp = new Timestamp(RECORD_START_TIME);
-        this.endTimeTimestamp = new Timestamp(RECORD_END_TIME);
-        
-        this.record = Mockito.mock(Record.class);
-        Mockito.when(this.record.getStartTime()).thenReturn(startTimeTimestamp);
-        Mockito.when(this.record.getEndTime()).thenReturn(endTimeTimestamp);
-        
-        this.recordUtils = new RecordUtils();
-    }
-    
-    private void setUpNullRecordEndTime() {
-        this.startTimeTimestamp = new Timestamp(RECORD_START_TIME);
-        this.endTimeTimestamp = new Timestamp(RECORD_END_TIME);
-        
-        this.record = Mockito.mock(Record.class);
-        Mockito.when(this.record.getStartTime()).thenReturn(startTimeTimestamp);
-        Mockito.when(this.record.getEndTime()).thenReturn(null);
-        
-        this.recordUtils = new RecordUtils();
     }
 }

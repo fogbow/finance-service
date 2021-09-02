@@ -17,6 +17,7 @@ public class Messages {
 		public static final String INVALID_NUMBER_OF_COMPUTE_ITEM_FIELDS = "Invalid number of compute item fields.";
 		public static final String INVALID_NUMBER_OF_RESOURCE_ITEM_VALUE_FIELDS = "Invalid number of resource item value fields.";
 		public static final String INVALID_NUMBER_OF_VOLUME_ITEM_FIELDS = "Invalid number of volume item fields.";
+		public static final String INVALID_RECORD_HISTORY = "Invalid record history.";
 		public static final String INVALID_RESOURCE_ITEM_VALUE_TIME_UNIT = "Invalid time unit for resource item value.";
 		public static final String INVALID_TIME_UNIT = "Invalid time unit: %s.";
 		public static final String INVALID_TIME_USED = "Invalid time used for item %s: %f.";

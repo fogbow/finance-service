@@ -2,7 +2,6 @@ package cloud.fogbow.fs.core.util.accounting;
 
 import java.sql.Timestamp;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
@@ -20,39 +19,6 @@ import cloud.fogbow.ras.core.models.orders.OrderState;
 
 
 public class RecordUtils {
-
-	public RecordUtils() {
-	}
-	
-	@Deprecated
-    public Double getTimeFromRecord(Record record, Long paymentStartTime, Long paymentEndTime) {
-        Timestamp endTimeTimestamp = record.getEndTime();
-        Long recordStartTime = record.getStartTime().getTime();
-        Long startTime = Math.max(paymentStartTime, recordStartTime);
-        Long endTime = null;
-        Long totalTime = null;
-        
-        // if endTimeTimestamp is null, then the record has not ended yet. Therefore, we use
-        // paymentEndTime as end time
-        if (endTimeTimestamp == null) {
-            endTime = paymentEndTime;
-        } else {
-            Long recordEndTime = endTimeTimestamp.getTime();
-            // if the record end time is before the payment end time, then the record has 
-            // already ended when the getRecords request was performed. 
-            // Therefore, we use the record end time as the end time.
-            if (recordEndTime < paymentEndTime) {
-                endTime = recordEndTime;
-            // if the record end time is after the payment end time, then the record has ended
-            // after the getRecords request. In this case, we use the paymentEndTime as end time.
-            } else {
-                endTime = paymentEndTime;
-            }
-        }
-        
-        totalTime = endTime - startTime;
-        return totalTime.doubleValue();
-    }
 
     public ResourceItem getItemFromRecord(Record record) throws InvalidParameterException {
         String resourceType = record.getResourceType();
@@ -72,6 +38,18 @@ public class RecordUtils {
         return item;
     }
 
+    /**
+     * Returns a NavigableMap containing the state changes that occurred in the given period of time.
+     * Also, containing two extra entries, used to make processing the map easier. The first extra entry
+     * maps the paymentStartTime to the state where the Record was in the beginning of the interval. The second
+     * extra entry maps the paymentEndTime to the state where the Record was at the end of the interval.
+     * 
+     * @param record the record to process.
+     * @param paymentStartTime the beginning of the interval.
+     * @param paymentEndTime the end of the interval.
+     * @return A NavigableMap containing the state changes.
+     * @throws InvalidParameterException If the Record contains an invalid field.
+     */
     public NavigableMap<Timestamp, OrderState> getRecordStateHistoryOnPeriod(Record record, Long paymentStartTime,
             Long paymentEndTime) throws InvalidParameterException {
         OrderStateHistory orderHistory = record.getStateHistory();
@@ -80,45 +58,8 @@ public class RecordUtils {
         Map<Timestamp, OrderState> history = convertAccountingStateToRasState(accsHistory);
         return filterStatesByPeriod(history, paymentStartTime, paymentEndTime);        
     }
-    
-    // TODO documentation
-	public Map<OrderState, Double> getTimeFromRecordPerState(Record record, Long paymentStartTime,
-			Long paymentEndTime) throws InvalidParameterException {
-		OrderStateHistory orderHistory = record.getStateHistory();
-		Map<Timestamp, cloud.fogbow.accs.core.models.orders.OrderState> accsHistory = orderHistory.getHistory();
 
-		Map<Timestamp, OrderState> history = convertAccountingStateToRasState(accsHistory);
-		NavigableMap<Timestamp, OrderState> filteredHistory = filterStatesByPeriod(history, paymentStartTime, paymentEndTime);
-		Iterator<Timestamp> timestampsIterator = filteredHistory.navigableKeySet().iterator();
-		
-		Timestamp periodLowerLimit = null;
-		Timestamp periodHigherLimit = null;
-		periodHigherLimit = timestampsIterator.next();
-		
-		Map<OrderState, Double> timePerState = new HashMap<OrderState, Double>();
-		
-		do {
-			periodLowerLimit = periodHigherLimit;
-			periodHigherLimit = timestampsIterator.next();
-			processPeriod(filteredHistory, timePerState, periodLowerLimit, periodHigherLimit);
-		} while (timestampsIterator.hasNext());
-		
-		return timePerState;
-	}
-	
-	private void processPeriod(NavigableMap<Timestamp, OrderState> filteredHistory, 
-			Map<OrderState, Double> timePerState, Timestamp periodLowerLimit, Timestamp periodHigherLimit) {
-		OrderState state = filteredHistory.get(periodLowerLimit);
-		Long periodLength = periodHigherLimit.getTime() - periodLowerLimit.getTime();
-		
-		if (!timePerState.containsKey(state)) {
-			timePerState.put(state, 0.0);
-		}
-		
-		Double currentTotalTime = timePerState.get(state);
-		timePerState.put(state, currentTotalTime + periodLength);
-	}
-
+    // This code must be removed after removing the duplicated Order classes in ACCS
 	private Map<Timestamp, OrderState> convertAccountingStateToRasState(
 			Map<Timestamp, cloud.fogbow.accs.core.models.orders.OrderState> accsHistory) throws InvalidParameterException {
 		Map<Timestamp, OrderState> convertedMap = new HashMap<Timestamp, OrderState>();
@@ -136,10 +77,10 @@ public class RecordUtils {
 		Timestamp lowerLimit = getLowerLimit(history, paymentStartTime);
 		Timestamp higherLimit = getHighestTimestampBeforeTime(history, paymentEndTime);
 		
+		// if the state history of the Record contains no state change before or on the paymentStartTime, then
+	    // it is impossible to determine the Record state in the beginning of the payment period. 
 		if (lowerLimit == null) {
-			// TODO test
-			// TODO add message
-			throw new InvalidParameterException();
+			throw new InvalidParameterException(Messages.Exception.INVALID_RECORD_HISTORY);
 		} else {
 			TreeMap<Timestamp, OrderState> filteredState = new TreeMap<Timestamp, OrderState>();
 			OrderState startState = history.get(lowerLimit);
