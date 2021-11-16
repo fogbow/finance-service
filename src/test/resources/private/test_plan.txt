@@ -1,0 +1,4 @@
+compute1-compute,FULFILLED,2,4,5.0/s
+compute2-compute,CLOSED,4,8,9.0/m
+volume1-volume,FULFILLED,50,2/h
+volume2-volume,CLOSED,10,0.3/ms
